@@ -60,7 +60,7 @@ foreach ($yfull as $yy) {
         $maparray[] = $database->getMInfo($generator->getBaseID($xx, $yy));
     }
 }
-echo "<h1 dir=\"rtl\">Map (<span id=\"x\">".$x."</span>|<span id=\"y\">".$y."</span>)</h1>";
+echo "<h1 dir=\"rtl\">Mapa (<span id=\"x\">".$x."</span>|<span id=\"y\">".$y."</span>)</h1>";
 echo "<div class=\"mapTopBar\"><a href=\"dorf1.php\">&laquo; Aldea</a><a href=\"karte.php?x=".$x."&y=".$y."\">Mapa normal</a></div>";
 $row = 0;
 $coorindex = 0;
@@ -126,38 +126,38 @@ break;
 case 0:
 switch($maparray[$index]['oasistype']) {
 case 1:
-$tt =  "<img class='r1' src='img/x.gif' /> Lumber 25%";
+$tt =  "<img class='r1' src='img/x.gif' /> Madera 25%";
 break;
 case 2:
-$tt =  "<img class='r1' src='img/x.gif' /> Lumber 50%";
+$tt =  "<img class='r1' src='img/x.gif' /> Madera 50%";
 break;
 case 3:
-$tt =  "<img class='r1' src='img/x.gif' /> Lumber 25%<br><img class='r4' src='img/x.gif' /> Crop 25%";
+$tt =  "<img class='r1' src='img/x.gif' /> Madera 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
 break;
 case 4:
-$tt =  "<img class='r2' src='img/x.gif' /> Clay 25%";
+$tt =  "<img class='r2' src='img/x.gif' /> Barro 25%";
 break;
 case 5:
-$tt =  "<img class='r2' src='img/x.gif' /> Clay 50%";
+$tt =  "<img class='r2' src='img/x.gif' /> Barro 50%";
 break;
 case 6:
-$tt =  "<img class='r2' src='img/x.gif' /> Clay 25%<br><img class='r4' src='img/x.gif' /> Crop 25%";
+$tt =  "<img class='r2' src='img/x.gif' /> Barro 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
 break;
 case 7:
-$tt =  "<img class='r3' src='img/x.gif' /> Iron 25%";
+$tt =  "<img class='r3' src='img/x.gif' /> Hierro 25%";
 break;
 case 8:
-$tt =  "<img class='r3' src='img/x.gif' /> Iron 50%";
+$tt =  "<img class='r3' src='img/x.gif' /> Hierro 50%";
 break;
 case 9:
-$tt =  "<img class='r3' src='img/x.gif' /> Iron 25%<br><img class='r4' src='img/x.gif' /> Crop 25%";
+$tt =  "<img class='r3' src='img/x.gif' /> Hierro 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
 break;
 case 10:
 case 11:
-$tt =  "<img class='r4' src='img/x.gif' /> Crop 25%";
+$tt =  "<img class='r4' src='img/x.gif' /> Cereal 25%";
 break;
 case 12:
-$tt =  "<img class='r4' src='img/x.gif' /> Crop 50%";
+$tt =  "<img class='r4' src='img/x.gif' /> Cereal 50%";
 break;
 }
 break;
@@ -170,11 +170,11 @@ break;
     	$allyname = $database->getAllianceName($targetalliance);
     	}
     if($tribe==1) {
-    	$tribename = "Roman";
+    	$tribename = "Romano";
     }elseif($tribe==2) {
-    	$tribename = "Teuton";
+    	$tribename = "Teutón";
     }elseif($tribe==3) {
-    	$tribename = "Gaul";
+    	$tribename = "Galo";
     }elseif($tribe==5) {
     	$tribename = "Natar";
         }
@@ -183,16 +183,16 @@ break;
     $uinfo = $database->getUserField($odata['owner'],'username',0);
 
     if($maparray[$index]['fieldtype'] > 0 && $maparray[$index]['occupied'] == 1) {
-    $targettitle = "<font color='white'><b>Village ".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Player: ".$username."<br>Population: ".$maparray[$index]['pop']."<br>Alliance ".$allyname."<br>Tribe: ".$tribename."";
+    $targettitle = "<font color='white'><b>Aldea ".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Jugador: ".$username."<br>Población: ".$maparray[$index]['pop']."<br>Alianza ".$allyname."<br>Tribu: ".$tribename."";
     }
     if($maparray[$index]['oasistype'] == 0 && $maparray[$index]['occupied'] == 0) {
-    $targettitle = "<font color='white'><b>Abandoned valley ".$tt."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")";
+    $targettitle = "<font color='white'><b>Valle abandonado ".$tt."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")";
     }
 
     if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0 && $maparray[$index]['occupied'] == 0) {
-    $targettitle = "<font color='white'><b>Unoccupied oasis</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."";
+    $targettitle = "<font color='white'><b>Oasis desocupado</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."";
     }elseif($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0 && $maparray[$index]['occupied'] > 0) {
-    $targettitle = "<font color='white'><b>occupied oasis</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."<br>Player: ".$uinfo."<br>Alliance: ".$allyname."<br>Tribe: ".$tribename."";
+    $targettitle = "<font color='white'><b>oasis ocupado</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."<br>Jugador: ".$uinfo."<br>Alianza: ".$allyname."<br>Tribu: ".$tribename."";
     }
 
 
@@ -213,7 +213,7 @@ break;
     if(!$maparray[$index]['fieldtype'] && $maparray[$index]['oasistype'] && $maparray[$index]['occupied']){
     	$occupied = "-s";
     }else{ $occupied = ""; }
-    echo "<a class=\"mapTileLink\" data-x=\"".$maparray[$index]['x']."\" data-y=\"".$maparray[$index]['y']."\" href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied."\" title=\"".$targettitle."\">";
+    echo "<a class=\"mapTileLink\" href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied."\" title=\"".$targettitle."\" onclick=\"return TravianMapTileDetails(event,".(int)$maparray[$index]['x'].",".(int)$maparray[$index]['y'].");\">";
     if($session->plus) {
     echo $att;
     }
@@ -295,36 +295,44 @@ body.map{background:#c8dd9b;}
 (function(){
 	var TILE=<?php echo (int)$TILE; ?>, THRESHOLD=6, WORLD=<?php echo (int)WORLD_MAX; ?>, PERIOD=2*WORLD+1;
 	var curX=<?php echo (int)$x; ?>, curY=<?php echo (int)$y; ?>;
+	var dialogOpen=false;
+	function bindMapLinks(content){
+		$(content).getElements('a[href^="karte.php"]').addEvent('click',function(event){
+			event.stop();
+			var url=new URI(this.href);
+			window.location.href='karte2.php?x='+parseInt(url.getData('x'),10)+'&y='+parseInt(url.getData('y'),10);
+		});
+	}
+	window.TravianMapTileDetails=function(event,x,y){
+		if(event){ event.preventDefault(); event.stopPropagation(); }
+		if(dialogOpen) return false;
+		dialogOpen=true;
+		var popup=new Travian.Dialog({
+			buttonOk:false,
+			title:'Detalles de la casilla ('+x+'|'+y+')',
+			onClose:function(){ dialogOpen=false; }
+		}).setContent('<div class="loading"></div>').show();
+		var showError=function(){
+			popup.setContent('<p>No se pudo cargar la información de esta casilla.</p>');
+			return false;
+		};
+		Travian.ajax({
+			data:{cmd:'viewTileDetails',x:x,y:y},
+			onSuccess:function(response){
+				popup.setTitle(response.title).setContent(response.html);
+				bindMapLinks(popup.content);
+			},
+			onFailure:showError,
+			onException:showError
+		});
+		return false;
+	};
 	function ready(fn){ if(document.readyState!='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
 	ready(function(){
 		var container=document.getElementById('mapContainer');
 		var data=document.getElementById('mapData');
 		if(!container||!data) return;
-		var dragging=false, moved=false, dialogOpen=false, sx=0, sy=0, dx=0, dy=0;
-		data.addEventListener('click', function(e){
-			var link=e.target;
-			while(link&&link!==data&&!link.classList.contains('mapTileLink')) link=link.parentNode;
-			if(!link||link===data) return;
-			e.preventDefault();
-			if(dialogOpen) return;
-			dialogOpen=true;
-			new Travian.Dialog.Ajax({
-				buttonOk:false,
-				data:{
-					cmd:'viewTileDetails',
-					x:parseInt(link.getAttribute('data-x'),10),
-					y:parseInt(link.getAttribute('data-y'),10)
-				},
-				onOpen:function(dialog,content){
-					$(content).getElements('a[href^="karte.php"]').addEvent('click',function(event){
-						event.stop();
-						var url=new URI(this.href);
-						window.location.href='karte2.php?x='+parseInt(url.getData('x'),10)+'&y='+parseInt(url.getData('y'),10);
-					});
-				},
-				onClose:function(){ dialogOpen=false; }
-			});
-		});
+		var dragging=false, moved=false, sx=0, sy=0, dx=0, dy=0;
 		data.addEventListener('dragstart', function(e){ e.preventDefault(); });
 		data.addEventListener('pointerdown', function(e){
 			if(e.button!==0) return;               /* primary mouse button / touch / pen */
