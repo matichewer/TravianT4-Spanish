@@ -3567,7 +3567,8 @@ break;
         	}
 
 			function checkBan($uid){
-				$q = "SELECT * FROM " . TB_PREFIX . "banlist WHERE uid = $uid";
+				$uid = (int) $uid;
+				$q = "SELECT 1 FROM " . TB_PREFIX . "banlist WHERE uid = $uid AND active = 1 LIMIT 1";
 				$result = mysqli_query($this->connection,$q);
 				if(mysqli_num_rows($result)) {
 					return true;
