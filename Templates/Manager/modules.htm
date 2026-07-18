@@ -1,11 +1,11 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
-<title>RashCMS:: ماژول ها :: [module_name]</title>
+<title>RashCMS:: Módulos :: [module_name]</title>
 <script>
 var CurrentStep = 1;
 function SetCurrent(val)
@@ -29,14 +29,14 @@ connect('pages/backup.php',"task=new",'ajax_tabs_0_content',loadingt,'');
 }
 function delback(id){
 hideid("editing_area");
-var msg = "آيا از حذف اين فايل پشتيبان اطمينان داريد؟\n عمليات حذف برگشت پذير نمي باشد.";
+var msg = "¿Seguro que quieres eliminar esta copia?\nEsta acción no se puede deshacer.";
 if(confirm(msg))
 {
 connect('pages/backup.php',"task=del&id="+id,'ajax_tabs_1_content_1',loadingt,'delete_back');
 }
 }
 function restore(id){
-var msg = "آيا از بازگرداني اين فايل پشتيبان اطمينان داريد؟\nبا بازگرداني اين فايل ، اطلاعات بك آپ جايگزين اطلاعات فعلي خوهند شد.\nاكيدا توصيه مي شود قبل از بازگرداني فايل ، يك پشتيبان از اطلاعات فعلي دريافت كنيد تا در صورت بروز مشكل در حين اجراي عمليات اطلاعات شما آسيب نبيند.";
+var msg = "¿Seguro que quieres restaurar esta copia?\nLos datos actuales serán reemplazados. Se recomienda crear una copia antes de continuar.";
 
 if(confirm(msg))
 {
@@ -70,21 +70,21 @@ gv('ajax_tabs_1_content_1') = loadingt;
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -98,19 +98,19 @@ gv('ajax_tabs_1_content_1') = loadingt;
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-			نخست</a></li>
-					
+			Inicio</a></li>
+
 				 <tag:extra_div>
 				 <li><a id="a_title_[id]" onclick="SetCurrent([id]);return false;" href="#">[title]</a></li>
 				</tag:extra_div>
@@ -126,7 +126,7 @@ gv('ajax_tabs_1_content_1') = loadingt;
 <div class='MsgHead info'><div class='MsgBody'>[msg]</div></div>
 <!-- ENDIF Info -->
 
-<div id="div_1"> 
+<div id="div_1">
 [first]
 </div>
 <tag:extra_div>
@@ -139,13 +139,13 @@ gv('ajax_tabs_1_content_1') = loadingt;
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>
-	
+
 </div>
 </div>
 </body>

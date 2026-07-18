@@ -10,7 +10,7 @@ $uid = $session->uid;
 		$silvers = "+ ".$gold*100;
 		$golds = "- ".$gold;
 	}
-	if($session->gold<$gold || $session->silver<$silver){  
+	if($session->gold<$gold || $session->silver<$silver){
 		mysql_query("UPDATE " . TB_PREFIX ."users SET gold = ".$gold.", silver = ".$silver." WHERE id = '".$uid."'");
 	}else{
 		mysql_query("UPDATE ".TB_PREFIX."users SET gold = gold ".$golds." WHERE id = '".$uid."'");
@@ -21,7 +21,7 @@ $uid = $session->uid;
 ?>
 
 <div id="silverExchange">
-	
+
 	<h3>Exchange Office</h3>
 	<p>Enter the amount of Gold or Silver you want to exchange.</p>
 
@@ -34,11 +34,11 @@ $uid = $session->uid;
 			<tbody>
 				<tr>
 					<td>
-						<img src="img/x.gif" class="gold" alt="سکۀ طلای تراوین">
+						<img src="img/x.gif" class="gold" alt="Oro de Travian">
 						<?php echo $session->gold; ?>
                         </td>
 					<td>
-						<img src="img/x.gif" class="silver" alt="سکۀ نقرۀ تراوین">
+						<img src="img/x.gif" class="silver" alt="Plata de Travian">
 						<?php echo $session->silver; ?>
                         </td>
 				</tr>
@@ -60,7 +60,7 @@ $uid = $session->uid;
 			<input type="hidden" name="c" value="18a">
 
 			<button type="submit" value="exchange"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">exchange</div></div></button>
-            
+
             </p>
 
 
@@ -69,11 +69,11 @@ $uid = $session->uid;
 			<tbody>
 				<tr>
 					<td>
-						<img src="img/x.gif" class="gold" alt="سکۀ طلای تراوین">
+						<img src="img/x.gif" class="gold" alt="Oro de Travian">
 						<span id="goldResult">0</span>
 					</td>
 					<td>
-						<img src="img/x.gif" class="silver" alt="سکۀ نقرۀ تراوین">
+						<img src="img/x.gif" class="silver" alt="Plata de Travian">
 						<span id="silverResult">0</span>
 					</td>
 				</tr>
@@ -81,7 +81,7 @@ $uid = $session->uid;
 		</table>
 			</div>
 				</div>	</form>
-                
+
 </div>
 <script type="text/javascript">
 	window.addEvent('domready', function(){

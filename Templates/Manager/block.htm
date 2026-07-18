@@ -1,13 +1,13 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
 <script type="text/javascript">_editor_url="htmlarea/";_editor_lang="en";</script>
 <script type="text/javascript" src="htmlarea/htmlarea.js"></script>
-<title>RashCMS:: بلوك ها</title>
+<title>RashCMS:: Bloques</title>
 <script>
 var CurrentStep = 1;
 var rashcmsfirst = false;
@@ -19,7 +19,7 @@ function SetCurrent(val)
 	 {
 	 if(val== 3 && editing==false)
 		{
-			alert("ابتدا يك بلوك را جهت ويرايش انتخاب كنيد.");
+			alert("Primero selecciona un bloque para editarlo.");
 			return false;
 		}
 	 editing = false;
@@ -83,7 +83,7 @@ editing = false;
 }
 function delblock(id){
 hideid("editing_area");
-var msg = "آيا از حذف اين بلوك اطمينان داريد؟\nعمليات حذف برگشت پذير نميباشد.";
+var msg = "¿Seguro que quieres eliminar este bloque?\nEsta acción no se puede deshacer.";
 if(confirm(msg))
 {
 connect('pages/block.php',"task=delete_block&id="+id,'ajax_tabs_1_content_1',loadingt,'edit_block');
@@ -118,21 +118,21 @@ document.location = '?moveup='+id;
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -146,79 +146,79 @@ document.location = '?moveup='+id;
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-				درج بلوك</a></li>
-					
+				Crear bloque</a></li>
+
 				  <li><a id="a_title_2" onclick="SetCurrent(2);return false;" href="#">
-				مديريت بلوك ها</a></li>
+				Administrar bloques</a></li>
 		<li><a id="a_title_3" onclick="SetCurrent(3);return false;" href="#">
-			ويرايش بلوك</a></li>
+			Editar bloque</a></li>
 
 				</ul>
 				</div>
-				
-<div id="div_1"> 
+
+<div id="div_1">
 <form onsubmit="Mform('new_block');return false" method=post>
 <table border="0" width="100%" class="tbl" id="tabs_0_content">
 <tr>
 <td colspan="2" id="ajax_tabs_0_content"></td>
 </tr>
 <tr>
-<td width="29%">عنوان بلاك :</td>
+<td width="29%">Título del bloque :</td>
 <td width="69%"><input class="rinput" type="text" name="block_title" id="block_title"></td>
 </tr>
 <tr>
-<td width="29%">موقعيت :</td>
+<td width="29%">Posición :</td>
 <td width="69%">
 <select name="block_pos" id="block_pos" class="select" size="1">
-<option selected value="1">بالای صفحه</option>
-<option value="2">پایین صفحه</option>
-<option value="3">سمت راست</option>
-<option value="4">سمت چپ</option>
-<option value="5">مخفي</option>
+<option selected value="1">Parte superior</option>
+<option value="2">Parte inferior</option>
+<option value="3">Derecha</option>
+<option value="4">Izquierda</option>
+<option value="5">Oculto</option>
 
 
 </select>
 </td>
 </tr>
 <tr>
-<td width="29%">قابل نمایش برای: </td>
+<td width="29%">Visible para: </td>
 <td width="69%">
 <select name="block_show" id="block_show" class="select" size="1">
-<option selected value="2">برای عموم کاربران</option>
-<option value="3">فقط کاربران مهمان</option>
-<option value="1">فقط برای کاربران عضو</option>
+<option selected value="2">Todos los usuarios</option>
+<option value="3">Solo invitados</option>
+<option value="1">Solo miembros</option>
 </select>
 </td>
 </tr>
 <tr>
-<td width="29%">ماژول :</td>
+<td width="29%">Módulo :</td>
 <td width="69%">
 <select name="module" id="module" class="select" size="1">
-<option id='module_none' value="none">هيچ كدام</option>
+<option id='module_none' value="none">Ninguno</option>
 <tag:modules>
 <option value="[name]">[title]</option>
 </tag:modules>
 </select></td>
 </tr>
 <tr>
-<td width="99%" id="nofull" colspan="2"  class=""><textarea dir=rtl class="inp" name="text" id="text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
+<td width="99%" id="nofull" colspan="2"  class=""><textarea dir=ltr class="inp" name="text" id="text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
 </tr>
 
 <tr>
 <td colspan="2">
 <center>
-<input onclick="Mform('new_block');return false;" type="submit" name="submit" value="ايجاد بلوك" class="inp"></center>
+<input onclick="Mform('new_block');return false;" type="submit" name="submit" value="Crear bloque" class="inp"></center>
 </td>
 </tr>
 </table></form>
@@ -240,50 +240,50 @@ document.location = '?moveup='+id;
 <td colspan="2" id="ajax_tabs_2_content"></td>
 </tr>
 <tr>
-<td width="29%">عنوان بلاك :</td>
+<td width="29%">Título del bloque :</td>
 <td width="69%"><input class="rinput" type="text" name="edit_block_title" id="edit_block_title"></td>
 </tr>
 <tr>
-<td width="29%">موقعيت :</td>
+<td width="29%">Posición :</td>
 <td width="69%">
 <select name="edit_block_pos" id="edit_block_pos" class="select" size="1">
-<option selected value="1" id="edit_block_pos_1">بالای صفحه</option>
-<option value="2" id="edit_block_pos_2">پایین صفحه</option>
-<option value="3" id="edit_block_pos_3">سمت راست</option>
-<option value="4" id="edit_block_pos_4">سمت چپ</option>
-<option value="5" id="edit_block_pos_5">مخفي</option>
+<option selected value="1" id="edit_block_pos_1">Parte superior</option>
+<option value="2" id="edit_block_pos_2">Parte inferior</option>
+<option value="3" id="edit_block_pos_3">Derecha</option>
+<option value="4" id="edit_block_pos_4">Izquierda</option>
+<option value="5" id="edit_block_pos_5">Oculto</option>
 
 
 </select>
 </td>
 </tr>
 <tr>
-<td width="29%">قابل نمایش برای: </td>
+<td width="29%">Visible para: </td>
 <td width="69%">
 <select name="edit_block_show" id="edit_block_show" class="select" size="1">
-<option value="1" id="edit_block_show_1">فقط برای کاربران عضو</option>
-<option selected value="2" id="edit_block_show_2">برای عموم کاربران</option>
-<option value="3" id="edit_block_show_3">فقط کاربران مهمان</option>
+<option value="1" id="edit_block_show_1">Solo miembros</option>
+<option selected value="2" id="edit_block_show_2">Todos los usuarios</option>
+<option value="3" id="edit_block_show_3">Solo invitados</option>
 
 </select>
 </td>
 </tr>
 <tr>
-<td width="29%">ماژول :</td>
+<td width="29%">Módulo :</td>
 <td width="69%">
 <select name="edit_block_module" id="edit_block_module" class="select" size="1">
-<option id='edit_block_module_none' value="none">هيچ كدام</option>
+<option id='edit_block_module_none' value="none">Ninguno</option>
 <tag:modules>
 <option id='edit_block_module_[name]' value="[name]">[title]</option>
 </tag:modules>
 </select></td>
 </tr>
 <tr>
-<td width="99%" colspan="2"><textarea dir=rtl class="inp" name="edit_text" id="edit_text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
+<td width="99%" colspan="2"><textarea dir=ltr class="inp" name="edit_text" id="edit_text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
 </tr>
 <tr>
 <td colspan="2"><center>
-<input onclick="Mform('edit_block');return false;" type="submit" name="submit" value="ويرايش بلوك" class="inp"></center></td>
+<input onclick="Mform('edit_block');return false;" type="submit" name="submit" value="Editar bloque" class="inp"></center></td>
 </tr>
 </table><input type="hidden" name="edit_block_id" id="edit_block_id" value=""></form>
 
@@ -295,13 +295,13 @@ document.location = '?moveup='+id;
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>
-	
+
 </div>
 </div>
 <script>setup();</script>

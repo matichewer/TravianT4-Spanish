@@ -1,11 +1,11 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
-<title>RashCMS:: خبرنامه</title>
+<title>RashCMS:: Boletín</title>
 <script>
 var CurrentStep = 1;
 function SetCurrent(val)
@@ -72,7 +72,7 @@ SMTP.mailperpack.focus();
 
 function dellmail(id)
 {
-if(confirm("آيا از حذف اين ايميل اطمينان داريد؟"))
+if(confirm("¿Seguro que quieres eliminar este correo??"))
 connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 }
 
@@ -96,21 +96,21 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -124,32 +124,32 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-				تنظيمات</a></li>
-					
+				Configuración</a></li>
+
 				  <li><a id="a_title_2" onclick="SetCurrent(2);return false;" href="#">
-				درج ايميل جديد</a></li>
+				Añadir correo</a></li>
 				 <li><a id="a_title_3" onclick="SetCurrent(3);return false;" href="#">
-				مديريت اعضا</a></li>
+				Administrar miembros</a></li>
 				 <li><a id="a_title_4" onclick="SetCurrent(4);return false;" href="#">
-				ارسال ايميل</a></li>
+				Enviar correo</a></li>
 
 
-		
+
 				</ul>
 				</div>
-				
-<div id="div_1"> 
+
+<div id="div_1">
 <form onsubmit="Mform('smtp');return false;" name="SMTP" autocomplete=off>
 <table border="0" width="100%" class="tbl" id="tabs_0_content">
 <tr>
@@ -157,23 +157,23 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 </tr>
 <tr>
 <td colspan="2">
-<input type="checkbox" name="UseSmtpChk" value="1" id="UseSmtpChk" onclick="EnableSmtpFields(this.checked);" tabindex="1" [SmtpChk_stat]><label for="UseSmtpChk" class="hand">&nbsp; استفاده از SMTP برای ارسال ایمیل.
+<input type="checkbox" name="UseSmtpChk" value="1" id="UseSmtpChk" onclick="EnableSmtpFields(this.checked);" tabindex="1" [SmtpChk_stat]><label for="UseSmtpChk" class="hand">&nbsp; Usar SMTP para enviar correo.
 </label></td>
 
 </tr>
 <tr>
-<td width="41%">نام هاست <span lang="en-us">SMTP </span>:</td>
+<td width="41%">Servidor <span lang="en-us">SMTP </span>:</td>
 <td width="56%">
 <input type="text" class=srinput name="SmtpHost" id="SmtpHost" size="27" dir="ltr" disabled value="[SmtpHost]" onfocus="this.select();" tabindex="2"></td>
 </tr>
 <tr>
 
-<td width="41%">نام کاربری <span lang="en-us">SMTP </span>:</td>
+<td width="41%">Usuario <span lang="en-us">SMTP </span>:</td>
 <td width="56%">
 <input type="text" class=srinput name="SmtpUser" id="SmtpUser" size="27" dir="ltr" disabled value="[SmtpUser]" onfocus="this.select();" tabindex="3"></td>
 </tr>
 <tr>
-<td width="41%">کلمه عبور&nbsp; <span lang="en-us">SMTP </span>:</td>
+<td width="41%">Contraseña&nbsp; <span lang="en-us">SMTP </span>:</td>
 
 <td width="56%">
 <input type="password" class=srinput name="SmtpPassword" id="SmtpPassword" size="27" dir="ltr" disabled value="[SmtpPassword]" onfocus="this.select();" tabindex="4"></td>
@@ -184,30 +184,30 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 </tr>
 
 <tr>
-<td width="97%" colspan="2">در صورتي كه براي ارسال از
-<span lang="en-us">SMTP</span> استفاده نمي كنيد توصيه مي شود جهت 
-جلوگيري از اسپم شدن ايميل ها از تنظيمات زير استفاده كنيد.</td>
+<td width="97%" colspan="2">Si no utilizas
+<span lang="en-us">SMTP</span> para los envíos, se recomienda
+usar la siguiente configuración para evitar que los correos se marquen como spam.</td>
 </tr>
 
 <tr>
 <td width="41%">
-<input type="checkbox" name="UsePack" value="1" id="UsePack" onclick="EnablePackFields(this.checked);" tabindex="5" [PackUse_stat]><label for="UsePack" class="hand"> ارسال ايميل ها به صورت بسته بندي شده
+<input type="checkbox" name="UsePack" value="1" id="UsePack" onclick="EnablePackFields(this.checked);" tabindex="5" [PackUse_stat]><label for="UsePack" class="hand"> Enviar los correos por lotes
 </label>
 </td>
 <td width="56%">&nbsp;</td>
 </tr>
 
 <tr>
-<td height="1" width="169">تعدا ايميل ها در هر بسته :</td>
+<td height="1" width="169">Correos por lote :</td>
 <td height="1" width="325">
 <input name="mailperpack" id="mailperpack" size="20"  value="[mailperpack]" dir="ltr" class="srinput" disabled tabindex="6" > </td>
 </tr>
 
 <tr>
-<td height="1" width="169">فاصله زماني بين ارسال بسته ها:</td>
+<td height="1" width="169">Intervalo entre lotes:</td>
 <td height="1" width="325">
-<input name="msperpack" id="msperpack" size="20"  value="[msperpack]" dir="ltr" class="srinput" disabled tabindex="7" ><span lang="en-us"> 
-- </span>ثانيه</td>
+<input name="msperpack" id="msperpack" size="20"  value="[msperpack]" dir="ltr" class="srinput" disabled tabindex="7" ><span lang="en-us">
+- </span>segundos</td>
 </tr>
 
 <tr>
@@ -219,7 +219,7 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 <tr>
 <td width="169">&nbsp;</td>
 <td width="325">
-<input  type="submit" value="ثبت تنظيمات" name="submit" class="inp"></td>
+<input  type="submit" value="Guardar configuración" name="submit" class="inp"></td>
 </tr>
 
 </table></form>
@@ -232,17 +232,17 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 <td id="ajax_tabs_1_content" colspan="2"></td>
 </tr>
 <tr>
-<td width="25%" valign=top>پست الكترونيك :
+<td width="25%" valign=top>Correo electrónico :
 </td>
-<td width="73%"><textarea rows="5" name="listmails" id="listmails" class="srtarea" dir="rtl"></textarea></td>
+<td width="73%"><textarea rows="5" name="listmails" id="listmails" class="srtarea" dir="ltr"></textarea></td>
 </tr>
 <tr>
-<td width="98%" valign=top colspan="2">براي ثبت بيش از يك ايميل ، ايميل ها را با <span lang="en-us">,</span> از يكديگر 
-جدا كنيد.</td>
+<td width="98%" valign=top colspan="2">Para añadir varios correos, sepáralos con <span lang="en-us">,</span> entre sí
+..</td>
 </tr>
 <tr>
 <td width="25%">&nbsp;</td>
-<td width="73%"><input  type="submit" value="درج ايميل ها" name="submit" class="inp"></td>
+<td width="73%"><input  type="submit" value="Añadir correos" name="submit" class="inp"></td>
 </tr>
 </table></form>
 
@@ -274,7 +274,7 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 </tr><tr>
 </td>
 <td>
-عنوان :</td>
+Título :</td>
 
 <td id="ajax_tabs_3_content">
 <input type="text" class=rinput name="title" id="title" size="27" dir="ltr" value="" tabindex="2"></td>
@@ -283,10 +283,10 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 
 							<tr>
 <td id="ajax_tabs_3_content">
-متن :</td>
+Texto :</td>
 
 <td id="ajax_tabs_3_content">
-<textarea rows="5" name="text" id="text" class="srtarea" dir="rtl"></textarea></td>
+<textarea rows="5" name="text" id="text" class="srtarea" dir="ltr"></textarea></td>
 
 </tr>
 
@@ -295,7 +295,7 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 &nbsp;</td>
 
 <td id="ajax_tabs_3_content" class="style1">
-<input  type="button" value="ارسال" name="submit" onclick="Mform('send');return false;"></td>
+<input  type="button" value="Enviar" name="submit" onclick="Mform('send');return false;"></td>
 
 </tr>
 
@@ -309,9 +309,9 @@ connect('pages/nl.php','task=delete&id='+id,'ajax_tabs_2_content',loadingt,"");
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>

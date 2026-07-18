@@ -8,7 +8,7 @@ $aid = $session->alliance;
 $allianceinfo = $database->getAlliance($aid);
 $allianceInvitations = $database->getAliInvitations($aid);
 echo "<h1>Alliance - ".$allianceinfo['tag']."</h1>";
-include("alli_menu.tpl"); 
+include("alli_menu.tpl");
 ?>
 <h4 class="round">Invite Player</h4>
 <form method="post" action="allianz.php">
@@ -45,11 +45,11 @@ if (count($allianceInvitations) == 0) {
  	foreach($allianceInvitations as $invit) {
 	$invited = $database->getUserField($invit['uid'],'username',0);
     echo "<tr><td class=\"abo\">";
-    echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = '?o=4&s=5&d=".$invit['id']."'; return false;\"><img class=\"del\" src=\"img/x.gif\" alt=\"انصراف\" title=\"Cancel\" /></button></td><td>";    
+    echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = '?o=4&s=5&d=".$invit['id']."'; return false;\"><img class=\"del\" src=\"img/x.gif\" alt=\"Cancelar\" title=\"Cancelar\" /></button></td><td>";
 	echo "<a class=\"a arrow\" href=spieler.php?uid=".$invit['uid'].">Invite for ".$invited."";
     echo "</td></tr>";
-	}   
-}           
+	}
+}
 ?>
 	</tbody>
 </table>

@@ -1,10 +1,10 @@
-<table id="member" border="1" cellpadding="3"> 
+<table id="member" border="1" cellpadding="3">
     <tr>
         <td><b>Log ID</b></td>
         <td><b>Admin</b></td>
-        <td><b>LOG</b></td> 
+        <td><b>LOG</b></td>
         <td><b>Date</b></td>
-        <td><b>عملیات</b></td>
+        <td><b>Acciones</b></td>
     </tr>
 <?php
 	$no = count($database->getAdminLog());
@@ -25,8 +25,8 @@
                 <td>'.$log[$i]['log'].'</td>
                 <td>'. date("d.m.Y H:i:s",$log[$i]['time']+3600*2).'</td>
                 <td><a onclick="dellog('.$log[$i]['id'].')" href="javascript:void(0)"><img border="0" src="../img/admin/delete.png"></a></td>
-			</tr>  
-            
+			</tr>
+
             ';
 		}
 	}

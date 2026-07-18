@@ -1,19 +1,19 @@
 ﻿var sload = '<center><img src=../template/admin/rashcms/images/load1.gif></center>';
 var ncsload= '<img src=../template/admin/rashcms/images/load1.gif>';
-var loadingt = "<center>لطفا صبر کنید...<br><br><img border='0' src='../template/admin/rashcms/images/loading.gif'><center>";
-var note='<br><br><p align="center" dir="rtl">مشکلی در بر قراری ارتباط رخ داد. از وجود ارتباط با سرور مطمئن شوید و مجددا تلاش کنید<br><br><img border="0" src="../template/admin/rashcms/images/error.gif"><br>[ <a onclick="showfrm();" href="#reload">بازیابی فرم</a> ]</p>';
-var smallnote = 'خطا در ارتباط';
+var loadingt = "<center>Espera, por favor...<br><br><img border='0' src='../template/admin/rashcms/images/loading.gif'><center>";
+var note='<br><br><p align="center" dir="ltr">Se produjo un error de conexión. Comprueba la conexión con el servidor e inténtalo de nuevo<br><br><img border="0" src="../template/admin/rashcms/images/error.gif"><br>[ <a onclick="showfrm();" href="#reload">Recuperar formulario</a> ]</p>';
+var smallnote = 'Error de conexión';
 function connect(url,data,id,load,after) {
 showid(id);
 var xmlhttp=false;
-if(!xmlhttp) { 
+if(!xmlhttp) {
 if (window.XMLHttpRequest)
-xmlhttp=new XMLHttpRequest(); 
+xmlhttp=new XMLHttpRequest();
 else if (window.ActiveXObject)
 xmlhttp=new ActiveXObject('Microsoft.XMLHTTP');
-} else if(window.XMLHttpRequest){  
-xmlHttp = new XMLHttpRequest(); 
-} 
+} else if(window.XMLHttpRequest){
+xmlHttp = new XMLHttpRequest();
+}
 xmlhttp.open('POST', url, true);
 xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
  xmlhttp.onreadystatechange = function() {
@@ -31,7 +31,7 @@ document.getElementById(id).innerHTML = smallnote;
 document.getElementById(id).innerHTML = note;
 }
 }
- } 
+ }
 xmlhttp.send(data);
 
 
@@ -72,7 +72,7 @@ function writeid(id,content){
  }
 }
 function waitimg(resultid,hide){
-writeid(resultid,'<center><br><br><img src=../template/admin/websun/images/loading.gif\><br><a onclick=stopajax("frame","currentframe","ajaxcontent","result2"); href="#">[لغو عملیات]</a></center>');
+writeid(resultid,'<center><br><br><img src=../template/admin/websun/images/loading.gif\><br><a onclick=stopajax("frame","currentframe","ajaxcontent","result2"); href="#">[Cancelar operación]</a></center>');
 hideid(hide);
 }
 
@@ -86,7 +86,7 @@ window.frames[lid].document.execCommand('Stop')
 
 //alert(lid);
 //var reza="top.frames["+lid+"].stop();";
-//var reza=  "window.frames["+lid+"].document.execCommand('Stop');"; 
+//var reza=  "window.frames["+lid+"].document.execCommand('Stop');";
 //var reza= "parent."+lid+".stoploading();";
 //eval(reza);
 showid(show);hideid(hide);
@@ -102,7 +102,7 @@ function rajax(note){
 function showid(id){
     if( document.getElementById(id) ){
     document.getElementById(id).style.display ='';
-    
+
 	}
 }
 function hideid(id){
@@ -161,7 +161,7 @@ function trim(stringToTrim)
 		        thisfield.value = trim(thisfield.value);
 	        }
         }
-        
+
 function dofunc(type){
 switch (type){
 case 'delete_link':

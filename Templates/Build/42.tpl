@@ -12,9 +12,9 @@
                 <input type="hidden" name="ft" value="t3" />
                 <table cellpadding="1" cellspacing="1" class="build_details">
                 <thead><tr>
-                    <td>نام</td>
-                    <td>تعداد</td>
-                    <td>ناکزیمم</td>
+                    <td>Nombre</td>
+                    <td>Cantidad</td>
+                    <td>Máximo</td>
                 </tr></thead><tbody>
                 <?php
                     include("42_train.tpl");
@@ -29,9 +29,9 @@
         echo "
     <table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\">
         <thead><tr>
-			<td>در حال آماده سازی</td>
-			<td>زمان</td>
-			<td>اتمام</td>
+			<td>En preparación</td>
+			<td>Tiempo</td>
+			<td>Finalización</td>
         </tr></thead>
         <tbody>";
         $TrainCount = 0;
@@ -48,9 +48,9 @@
             }
             echo "</td><td class=\"fin\">";
             $time = $generator->procMTime($train['commence']+($train['eachtime']*$train['amt']));
-			echo " ".$time[1]." ساعت";
+			echo " ".$time[1]." horas";
         } ?>
-		</tr><tr class="next"><td colspan="3">سرباز بعدی تا <span id="timer2"><?php echo $NextFinished; ?></span> دقیقه آماده خواهد شد</td></tr>
+		</tr><tr class="next"><td colspan="3">La siguiente unidad estará lista en <span id="timer2"><?php echo $NextFinished; ?></span> minutos</td></tr>
         </tbody></table>
     <?php }
 include("upgrade.tpl");

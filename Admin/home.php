@@ -5,7 +5,7 @@
 		<li><a id="a_title_3" onclick="SetCurrent(3);" href="#">Profile server</a></li>
 	</ul>
 </div>
-				
+
 <div id="div_1">
 	<table style="width:100%;">
 		<tr>
@@ -28,16 +28,16 @@
 			<td align="center" style="height: 8px"></td>
 		</tr>
 				<tr>
-			<td align="center"><img title="مديريت لينك ها" longdesc="مديريت لينك ها" src="images/icon/web-search-icon.png"></td>
-			<td align="center"><img title="بلوك ها" longdesc="بلوك ها" src="images/icon/window-b-icon.png"></td>
-			<td align="center"><img title="صفحات اضافي" longdesc="صفحات اضافي" src="images/icon/documents-or-copy-icon.png"></td>
+			<td align="center"><img title="Administrar enlaces" longdesc="Administrar enlaces" src="images/icon/web-search-icon.png"></td>
+			<td align="center"><img title="Bloques" longdesc="Bloques" src="images/icon/window-b-icon.png"></td>
+			<td align="center"><img title="Páginas adicionales" longdesc="Páginas adicionales" src="images/icon/documents-or-copy-icon.png"></td>
 			<td align="center"><img title="Members of Management" longdesc="Members of Management" src="images/icon/group-of-users-icon.png"></td>
 		</tr>
 
 		<tr>
 			<td align="center"><a href="simplelink.php">Link Here</a></td>
-			<td align="center"><a href="block.php">بلوك ها</a></td>
-			<td align="center"><a href="extra.php">صفحات اضافي</a></td>
+			<td align="center"><a href="block.php">Bloques</a></td>
+			<td align="center"><a href="extra.php">Páginas adicionales</a></td>
 			<td align="center"><a href="member.php">Members of Management</a></td>
 		</tr>
 		<tr>
@@ -47,16 +47,16 @@
 			<td align="center" style="height: 8px"></td>
 		</tr>
 				<tr>
-			<td align="center"><img title="صندوق پيام ها" longdesc="صندوق پيام ها" src="images/icon/mail-send-icon.png"></td>
+			<td align="center"><img title="Bandeja de mensajes" longdesc="Bandeja de mensajes" src="images/icon/mail-send-icon.png"></td>
 			<td align="center"><img title="File Manager" longdesc="File Manager" src="images/icon/folder-open-icon.png"></td>
-			<td align="center"><img title="ليست سياه" longdesc="ليست سياه " src="images/icon/delete-user-icon.png"></td>
+			<td align="center"><img title="Lista negra" longdesc="Lista negra " src="images/icon/delete-user-icon.png"></td>
 			<td align="center"><img title="Newsletter" longdesc="Newsletter" src="images/icon/fav-add-icon.png"></td>
 		</tr>
 
 		<tr>
 			<td align="center"><a href="inbox.php">Messages</a></td>
 			<td align="center"><a href="uc.php">File Manager</a></td>
-			<td align="center"><a href="banned.php">ليست سياه</a></td>
+			<td align="center"><a href="banned.php">Lista negra</a></td>
 			<td align="center"><a href="newsletter.php">Newsletter</a></td>
 		</tr>
 		<tr>
@@ -102,16 +102,16 @@
 	</table>
 </div>
 <div id="div_2" style="display:none;">
-    <table id="member" border="1" cellpadding="3"> 
+    <table id="member" border="1" cellpadding="3">
         <tr>
             <td><b>Log ID</b></td>
             <td><b>Admin</b></td>
-            <td><b>LOG</b></td> 
+            <td><b>LOG</b></td>
             <td><b>Date</b></td>
             <td><b>Operations</b></td>
         </tr>
     <?php
-    
+
     $sql = mysql_query("SELECT * FROM ".TB_PREFIX."admin_log ORDER BY id DESC LIMIT 10");
     $query = count($sql);
         if($query>0){
@@ -160,7 +160,7 @@
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
             <tbody>
                 <tr>
-                    <td align="center" colspan="2"><b>اطلاعات سرور</b><br /><br /></td>
+                    <td align="center" colspan="2"><b>Información del servidor</b><br /><br /></td>
                 </tr>
                 <tr>
                     <td>Registered players:</td>
@@ -195,7 +195,7 @@
                     <td><?php echo $notices; ?></td>
                 </tr>
                 <tr>
-                    <td>حرکت ها:</td>
+                    <td>Movimientos:</td>
                     <td><?php echo $movements; ?></td>
                 </tr>
             </tbody>
@@ -205,7 +205,7 @@
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
         <thead align="center">
             <tr>
-                <td colspan="3" align="center"><b>Info playersن</b><br><br></td>
+                <td colspan="3" align="center"><b>Información de los jugadores</b><br><br></td>
             </tr>
             <tr>
                 <td><b>Race</b></td>
@@ -214,7 +214,7 @@
             </tr>
         </thead>
         <tbody>
-            
+
             <tr>
                 <td>Romans:</td>
                 <td><?php echo $tribes[0]; ?></td>
@@ -233,16 +233,16 @@
         </tbody>
     </table>
     </div>
-    
+
     <div style="margin-right:400px;margin-top:-104px;">
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
         <thead align="center">
             <tr>
-                <td colspan="2" align="center"><b>The role of informationه</b><br><br></td>
+                <td colspan="2" align="center"><b>Información del mapa</b><br><br></td>
             </tr>
         </thead>
         <tbody>
-            
+
             <tr>
                 <td>The whole village:</td>
                 <td><?php echo $allvillages; ?></td>
@@ -252,11 +252,11 @@
                 <td><?php echo $villages; ?></td>
             </tr>
             <tr>
-                <td>کل آبادی ها:</td>
+                <td>Total de oasis:</td>
                 <td><?php echo $alloasis; ?></td>
             </tr>
             <tr>
-                <td>آبادی های تسخیر شده:</td>
+                <td>Oasis conquistados:</td>
                 <td><?php echo $occoasis; ?></td>
             </tr>
             <tr>

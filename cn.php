@@ -8,7 +8,7 @@
 |                                                         |
 | Copyright:   TravianX Project All rights reserved       |
 \** --------------------------------------------------- **/
- 
+
         include_once ("GameEngine/Session.php");
         include_once ("config/config.php");
 
@@ -58,47 +58,47 @@
  * THE ARCHITECTS
  */
 
-        $desc = 'نقشه ساخت به شما آموزش مي دهد كه چگونه در يك دهكده ناتار شگفتي جهان ايجاد كنيد . براي ارتقا تا سطح 50 يك نقشه كافي مي باشد . براي ارتقا از سطح 50 به بعد داشتن نقشه اضافه در اتحاد شما ضروري مي باشد .';
-        
-        
+        $desc = 'El plano de construcción permite levantar una Maravilla del Mundo en una aldea natar. Un plano basta para mejorarla hasta el nivel 50; a partir de ese nivel, tu alianza necesita un segundo plano.';
+
+
         $vname = 'WW BuildingPlan';
         $effect = '';
         for($i > 1; $i < 10; $i++) {
-        	Artefact($uid, 1, 1, 'نقشه ساخت ساختمان شگفتی های جهان', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type1.gif');
+		Artefact($uid, 1, 1, 'Plano de construcción de la Maravilla del Mundo', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type1.gif');
         }
 
 
 /**
  * MILITARY HASTE
  */
-		
-        $desc = "اين كتيبه دهكده شما را در برابر منجنيق و دژكوب مقاومتر مي سازد .";
+
+        $desc = "Este artefacto aumenta la resistencia de tu aldea frente a catapultas y arietes.";
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه راز هاي معماري';
+        $vname = 'Secreto del arquitecto';
         $effect = '4x';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 2, 1, 'راز هاي معماري كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
+		Artefact($uid, 2, 1, 'Pequeño secreto del arquitecto', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه راز هاي معماري';
+        $vname = 'Secreto del arquitecto';
         $effect = '3x';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 2, 2, 'راز هاي معماري بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
+		Artefact($uid, 2, 2, 'Gran secreto del arquitecto', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه راز هاي معماري';
+        $vname = 'Secreto del arquitecto';
         $effect = '5x';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 2, 3, 'راز هاي معماري منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
+		Artefact($uid, 2, 3, 'Secreto único del arquitecto', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type2.gif');
         }
 
 
@@ -107,33 +107,33 @@
  */
 
 
-        $desc = "اين كتيبه سرعت حركت سرباز هاي شما را سريعتر مي سازد .";
+        $desc = "Este artefacto aumenta la velocidad de movimiento de tus tropas.";
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چکمه خدايان';
+        $vname = 'Botas de los titanes';
         $effect = '2x';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 4, 1, 'چكمه خدايان كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
+		Artefact($uid, 4, 1, 'Pequeñas botas de los titanes', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چکمه خدايان';
+        $vname = 'Botas de los titanes';
         $effect = '1.5x';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 4, 2, 'چكمه خدايان بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
+		Artefact($uid, 4, 2, 'Grandes botas de los titanes', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چکمه خدايان';
+        $vname = 'Botas de los titanes';
         $effect = '3x';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 4, 3, 'چكمه خدايان منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
+		Artefact($uid, 4, 3, 'Botas únicas de los titanes', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type4.gif');
         }
 
 
@@ -142,33 +142,33 @@
  */
 
 
-        $desc = "اين كتيبه جاسوس هاي شما را قوي تر مي سازد . همچنين جاسوس هاي مستقر در دهكده نيز قوي تر از قبل عمل مي كنند . به علاوه اينكه شما ميتوانيد نوع سرباز هايي كه در حال حمله به شما هستند را در اردوگاه تشخيص دهيد ولي قادر به تشخيص تعداد آن ها نمي باشيد .";
+        $desc = "Este artefacto fortalece a tus exploradores, incluidos los que defienden la aldea. Además, permite reconocer en el punto de reunión el tipo de tropas atacantes, aunque no su cantidad.";
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چشمان عقاب';
+        $vname = 'Ojos del águila';
         $effect = '5x';
         for($i > 1; $i < 5; $i++) {
-        	Artefact($uid, 5, 1, 'چشمان عقاب كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
+		Artefact($uid, 5, 1, 'Pequeños ojos del águila', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چشمان عقاب';
+        $vname = 'Ojos del águila';
         $effect = '3x';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 5, 2, 'چشمان عقاب بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
+		Artefact($uid, 5, 2, 'Grandes ojos del águila', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه چشمان عقاب';
+        $vname = 'Ojos del águila';
         $effect = '10x';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 5, 3, 'چشمان عقاب منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
+		Artefact($uid, 5, 3, 'Ojos únicos del águila', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type5.gif');
         }
 
 
@@ -177,24 +177,24 @@
  */
 
 
-        $desc = "اين كتيبه مصرف گندم سرباز هاي اين دهكده و همچنين سرباز هاي كمكي مستقر در اين دهكده را كاهش مي دهد .";
+        $desc = "Este artefacto reduce el consumo de cereal de las tropas propias y de refuerzo estacionadas en la aldea.";
 
         unset($i);
         unset($vname);
         unset($effect);;
-        $vname = 'كتيبه مرتاض ها';
+        $vname = 'Control de dieta';
         $effect = '1/2';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 6, 1, 'كتيبه مرتاض هاي كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type6.gif');
+		Artefact($uid, 6, 1, 'Pequeño control de dieta', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type6.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'كتيبه مرتاض ها';
+        $vname = 'Control de dieta';
         $effect = '3/4';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 6, 2, 'كتيبه مرتاض هاي بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type6.gif');
+		Artefact($uid, 6, 2, 'Gran control de dieta', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type6.gif');
         }
 
 
@@ -203,34 +203,34 @@
  */
 
 
-        $desc = 'اين كتيبه سرعت ساخت لشكريان شما را در پادگان ، اصطبل ، كارگاه افزايش مي دهد . 
-همچنين سرعت ساخت سرباز در پادگان بزرگ و اصطبل بزرگ نيز تحت تاثير قرار خواهد گرفت .';
+        $desc = 'Este artefacto acelera el entrenamiento de tropas en el cuartel, establo y taller.
+También afecta al cuartel grande y al establo grande.';
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه جنگ آموز';
+        $vname = 'Talento del entrenador';
 		$effect = '1/2';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 8, 1, 'جنگ آموز كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
+		Artefact($uid, 8, 1, 'Pequeño talento del entrenador', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه جنگ آموز';
+        $vname = 'Talento del entrenador';
 		$effect = '3/4';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 8, 2, 'جنگ آموز بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
+		Artefact($uid, 8, 2, 'Gran talento del entrenador', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه جنگ آموز';
+        $vname = 'Talento del entrenador';
 		$effect = '1/2';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 8, 3, 'جنگ آموز منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
+		Artefact($uid, 8, 3, 'Talento único del entrenador', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type8.gif');
         }
 
 
@@ -239,37 +239,37 @@
  */
 
 
-        $desc = 'اين كتيبه ظرفيت مخفيگاه شما را افزايش مي دهد . 
+        $desc = 'Este artefacto aumenta la capacidad de tus escondites.
 
-صاحبان اين كتيبه تنها مورد هدف گيري اتفاقي منجنيق قرار خواهند گرفت ، 
+Las catapultas enemigas solo podrán elegir objetivos al azar.
 
-البته خزانه و شگفتي جهان مورد هدفگيري انتخابي قرار خواهند گرفت و در صورتي كه كتيبه از نوع منحصر به فرد باشد هدف گيري انتخابي خزانه نيز امكان پذير نمي باشد .';
+La tesorería y la Maravilla del Mundo siguen pudiendo seleccionarse; con el artefacto único tampoco se puede seleccionar la tesorería.';
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه گيج كننده';
+        $vname = 'Confusión del rival';
         $effect = '200x';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 7, 1, 'گيج كننده كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
+		Artefact($uid, 7, 1, 'Pequeña confusión del rival', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه گيج كننده';
+        $vname = 'Confusión del rival';
         $effect = '100x';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 7, 2, 'گيح كننده بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
+		Artefact($uid, 7, 2, 'Gran confusión del rival', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه گيج كننده';
+        $vname = 'Confusión del rival';
         $effect = '500x';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 7, 3, 'گيج كننده منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
+		Artefact($uid, 7, 3, 'Confusión única del rival', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type7.gif');
         }
 
 
@@ -278,25 +278,25 @@
  */
 
 
-        $desc = 'اين نقشه به شما ساخت انبار بزرگ و انبار غذاي بزرگ را آموزش مي دهد . 
-شما همچنين براي ارتقا ساختمان هاي مذكور به اين نقشه نياز خواهيد داشت .';
+        $desc = 'Este plano permite construir el gran almacén y el gran granero.
+También es necesario para mejorar ambos edificios.';
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه انبار برتر';
+        $vname = 'Plano de almacenamiento';
         $effect = '';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 9, 1, 'انبار برتر كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type9.gif');
+		Artefact($uid, 9, 1, 'Pequeño plano de almacenamiento', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type9.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه انبار برتر';
+        $vname = 'Plano de almacenamiento';
         $effect = '';
         for($i > 1; $i < 4; $i++) {
-        	Artefact($uid, 9, 2, 'انبار برتر بزرگ', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type9.gif');
+		Artefact($uid, 9, 2, 'Gran plano de almacenamiento', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type9.gif');
         }
 
 
@@ -305,23 +305,23 @@
  */
 
 
-        $desc = "اين كتيبه تاثير دفاعي ديوار هاي دهكده را برابر كاهش مي دهد .";
+        $desc = "Este artefacto reduce la eficacia defensiva de las murallas de la aldea.";
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه دهكده احمق ها';
+        $vname = 'Artefacto del necio';
         $effect = '2x';
         for($i > 1; $i < 6; $i++) {
-        	Artefact($uid, 3, 1, 'دهكده احمق ها كوچك', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type3.gif');
+		Artefact($uid, 3, 1, 'Pequeño artefacto del necio', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type3.gif');
         }
 
         unset($i);
         unset($vname);
         unset($effect);
-        $vname = 'کتیبه دهكده احمق ها';
+        $vname = 'Artefacto del necio';
         $effect = '5x';
         for($i > 1; $i < 1; $i++) {
-        	Artefact($uid, 3, 3, 'دهكده احمق ها منحصر به فرد', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type3.gif');
+		Artefact($uid, 3, 3, 'Artefacto único del necio', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type3.gif');
         }
 header("Location: dorf1.php");

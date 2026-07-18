@@ -460,8 +460,8 @@ Array.implement({
 		delete Function.prototype.bind
 	}
 	catch(e){}
-	
-	
+
+
 	Function.implement({
 		extend:function(a){
 			for(var b in a){
@@ -10175,7 +10175,7 @@ return new Class({
 			Travian.Game.Messages.Write={
 				receivertext:"",
 				initialize:function(){
-					$("ally").addEvent("click",function(){				
+					$("ally").addEvent("click",function(){
 						$("recipient").getElement("input").set("value","[ally]")
 					});
 					new Travian.Game.AutoCompleter.UserName("receiver");
@@ -10812,7 +10812,7 @@ Travian.Game.Hero.Inventory=new Class({
 		.dialog(a);
 		return this
 	},
-	
+
 executeMovement:function(d,b,a){
 	var c=this;
 	Travian.ajax({
@@ -16161,7 +16161,7 @@ return c}
 							}
 						})
 					}
-				
+
 				}
 			};
 function dellog(id){
@@ -16184,11 +16184,11 @@ function newsManage(id,sts){
 		},
 		onSuccess:function(j){
 			$('succes').style.display = 'block'
-			
+
 			if(sts == 0){
-				$('nsts'+id).innerHTML = "<font color='red'>غیر فعال</font>";
+				$('nsts'+id).innerHTML = "<font color='red'>Inactivo</font>";
 			}else{
-				$('nsts'+id).innerHTML = "<font color='green'>فعال</font>";
+				$('nsts'+id).innerHTML = "<font color='green'>Activo</font>";
 			}
 		}
 	})
@@ -16204,4 +16204,3 @@ if(a.options.inpreview){a.addHeader(c);a.adddescription(c)}if(a.prevslide().hasC
 this.stageshow();this.autoshow()},stageshow:function(){var a=this;this.options.stagenav.each(function(c,b){c.addEvents({mouseenter:function(){a.pauseshow();if(!this.hasClass("act"+b)){a.animateStage(b)}},mouseleave:function(d){if(d.relatedTarget!=null&&d.relatedTarget.className.substring()!="stage-content"){a.autoshow()}}})})},autoAnimateState:function(){this.animateStage();clearTimeout(this.options.timeout);var a=this.options.stageduration[this.options.currentCounter];this.options.timeout=this.autoAnimateState.delay(a,this)},animateStage:function(a){$each(this.options.stagenav,function(d,c){d.removeClass("act"+c)});$each(this.options.stagecon,function(c){c.removeClass("shown")});$each(this.options.stagelink,function(c){c.removeClass("shown")});if(typeof a==="undefined"){this.options.currentCounter=this.options.nextCounter;var b=this.options.nextCounter;this.options.nextCounter=(this.options.nextCounter+1)%this.options.numberOfStages}else{b=a;this.options.currentCounter=b;this.options.nextCounter=(b+1)%this.options.numberOfStages
 }this.options.stagecon[b].setStyles({visibility:"hidden",opacity:0});this.options.stagebg.setStyles({visibility:"hidden",opacity:0});this.options.stagenav[b].addClass("act"+b).fade("in");this.options.stagecon[b].addClass("shown").fade("in");this.options.stagelink[b].addClass("shown").fade("in")},autoshow:function(){var a=this.options.stageduration[this.options.currentCounter];this.options.timeout=this.autoAnimateState.delay(a,this)},pauseshow:function(){clearTimeout(this.options.timeout)}});var tooltipWidget=new Class({Implements:[Options,Events],options:{tips:[],details:[]},initialize:function(a){this.setOptions(a);this.tooltip()},tooltip:function(){var a=this;this.options.tips.each(function(c,b){c.addEvents({mouseenter:function(){if(Travian.getDirection()=="ltr"){var g=this.offsetLeft+85}else{var g=this.offsetLeft-275}a.options.details[b].addClass("shown");var f=a.options.details[b].getSize();a.options.details[b].removeClass("shown");var d=this.offsetTop-f.y;a.options.details[b].setStyles({position:"absolute",left:g,top:d,visibility:"hidden",opacity:0});
 if(!this.hasClass("shown")){a.options.details[b].addClass("shown").fade("in");this.addClass("act"+b)}},mouseleave:function(d){if(d.relatedTarget.className.substring(0,7)!="details"){a.options.details[b].removeClass("shown");this.removeClass("act"+b)}}})});this.options.details.each(function(c,b){c.addEvents({mouseleave:function(){this.removeClass("shown")}})})}});window.addEvent("domready",function(){$$(".popcon").addEvent("click",function(c){c.stop();new popupWidget({pop_bg:$("overlaybg"),pop_container:$$("#popup"),close:$$(".pclose"),url:this.get("href"),tour:this.get("href")=="#tutorial"?true:false,insupport:this.get("href")=="#help"?true:false})});var b=new URI();var a=b.get("fragment");if(a&&a=="screenshots"){}else{if(a){new popupWidget({pop_bg:$("overlaybg"),pop_container:$$("#popup"),close:$$(".pclose"),url:b.toString(),tour:a=="#tutorial"?true:false,insupport:a=="#help"?true:false,anchorcheck:true})}}});
-

@@ -28,7 +28,7 @@
 				}
 			}
 			if($inc_atts > 0) {
-				$att = '<a href="build.php?newdid='.$vid.'&id=39"><img class="att1" src="img/x.gif" title="'.count($incoming_attacks).'x حمله به دهکده'.(count($incoming_attacks)>1?'':'').'" alt="'.count($incoming_attacks).'x حمله به دهکده'.(count($incoming_attacks)>1?'':'').'"></a>';
+				$att = '<a href="build.php?newdid='.$vid.'&id=39"><img class="att1" src="img/x.gif" title="'.count($incoming_attacks).' ataque(s) a la aldea" alt="'.count($incoming_attacks).' ataque(s) a la aldea"></a>';
 			}
 
 		}
@@ -39,7 +39,7 @@
 		foreach($unit as $c){
 			$tro = '<a href="build.php?newdid='.$vid.'&gid=19"><img class="unit u'.$c['unit'].'" src="img/x.gif" title="'.$c['amt'].'x '.$technology->getUnitName($c['unit']).'" alt="'.$c['amt'].'x '.$technology->getUnitName($c['unit']).'"></a>';
 		}
-        
+
 		if($vdata['capital'] == 1) { $class = 'hl'; } else {$class = 'hover'; }
 
 echo '

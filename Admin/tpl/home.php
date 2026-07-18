@@ -1,25 +1,25 @@
 ﻿<div align="center">
 	<ul class="tabs">
-		<li><a id="a_title_1" onclick="SetCurrent(1);" class="current" href="#">نخست</a></li>
-		<li><a id="a_title_2" onclick="SetCurrent(2);" href="#">آمار ورود</a></li>
-		<li><a id="a_title_3" onclick="SetCurrent(3);" href="#">مشخصات سرور</a></li>
+		<li><a id="a_title_1" onclick="SetCurrent(1);" class="current" href="#">Inicio</a></li>
+		<li><a id="a_title_2" onclick="SetCurrent(2);" href="#">Estadísticas de acceso</a></li>
+		<li><a id="a_title_3" onclick="SetCurrent(3);" href="#">Información del servidor</a></li>
 	</ul>
 </div>
-				
+
 <div id="div_1">
 	<table style="width:100%;">
 		<tr>
-			<td align="center"><a href="index.php?p=News"><img title="ویرایش خبرها" src="images/icon/edit-icon.png"></a></td>
-			<td align="center"><img title="ويرايش مطلب" src="images/icon/floppy-icon.png"></td>
-			<td align="center"><img title="مديريت نظرات" src="images/icon/fav-b-add-icon.png"></td>
-			<td align="center"><img title="دسته بندي ها" src="images/icon/documents-or-copy-icon.png"></td>
+			<td align="center"><a href="index.php?p=News"><img title="Editar noticias" src="images/icon/edit-icon.png"></a></td>
+			<td align="center"><img title="Editar contenido" src="images/icon/floppy-icon.png"></td>
+			<td align="center"><img title="Administrar comentarios" src="images/icon/fav-b-add-icon.png"></td>
+			<td align="center"><img title="Categorías" src="images/icon/documents-or-copy-icon.png"></td>
 		</tr>
 		<tr>
-			<td align="center"><a href="index.php?p=News">ویرایش خبرها</a></td>
+			<td align="center"><a href="index.php?p=News">Editar noticias</a></td>
 			<td align="center">
-			<a href="postmgr.php">آرشيو مطالب</a></td>
-			<td align="center"><a href="comment.php">مديريت نظرات</a></td>
-			<td align="center"><a href="cat.php">دسته بندي ها</a></td>
+			<a href="postmgr.php">Archivo de contenido</a></td>
+			<td align="center"><a href="comment.php">Administrar comentarios</a></td>
+			<td align="center"><a href="cat.php">Categorías</a></td>
 		</tr>
 		<tr>
 			<td align="center" style="height: 8px"></td>
@@ -28,17 +28,17 @@
 			<td align="center" style="height: 8px"></td>
 		</tr>
 				<tr>
-			<td align="center"><img title="مديريت لينك ها" longdesc="مديريت لينك ها" src="images/icon/web-search-icon.png"></td>
-			<td align="center"><img title="بلوك ها" longdesc="بلوك ها" src="images/icon/window-b-icon.png"></td>
-			<td align="center"><img title="صفحات اضافي" longdesc="صفحات اضافي" src="images/icon/documents-or-copy-icon.png"></td>
-			<td align="center"><img title="مديريت اعضا" longdesc="مديريت اعضا" src="images/icon/group-of-users-icon.png"></td>
+			<td align="center"><img title="Administrar enlaces" longdesc="Administrar enlaces" src="images/icon/web-search-icon.png"></td>
+			<td align="center"><img title="Bloques" longdesc="Bloques" src="images/icon/window-b-icon.png"></td>
+			<td align="center"><img title="Páginas adicionales" longdesc="Páginas adicionales" src="images/icon/documents-or-copy-icon.png"></td>
+			<td align="center"><img title="Administrar miembros" longdesc="Administrar miembros" src="images/icon/group-of-users-icon.png"></td>
 		</tr>
 
 		<tr>
-			<td align="center"><a href="simplelink.php">لينك ها</a></td>
-			<td align="center"><a href="block.php">بلوك ها</a></td>
-			<td align="center"><a href="extra.php">صفحات اضافي</a></td>
-			<td align="center"><a href="member.php">مديريت اعضا</a></td>
+			<td align="center"><a href="simplelink.php">Enlaces</a></td>
+			<td align="center"><a href="block.php">Bloques</a></td>
+			<td align="center"><a href="extra.php">Páginas adicionales</a></td>
+			<td align="center"><a href="member.php">Administrar miembros</a></td>
 		</tr>
 		<tr>
 			<td align="center" style="height: 8px"></td>
@@ -47,17 +47,17 @@
 			<td align="center" style="height: 8px"></td>
 		</tr>
 				<tr>
-			<td align="center"><img title="صندوق پيام ها" longdesc="صندوق پيام ها" src="images/icon/mail-send-icon.png"></td>
-			<td align="center"><img title="مديريت فايل" longdesc="مديريت فايل" src="images/icon/folder-open-icon.png"></td>
-			<td align="center"><img title="ليست سياه" longdesc="ليست سياه " src="images/icon/delete-user-icon.png"></td>
-			<td align="center"><img title="خبرنامه" longdesc="خبرنامه" src="images/icon/fav-add-icon.png"></td>
+			<td align="center"><img title="Bandeja de mensajes" longdesc="Bandeja de mensajes" src="images/icon/mail-send-icon.png"></td>
+			<td align="center"><img title="Administrar archivos" longdesc="Administrar archivos" src="images/icon/folder-open-icon.png"></td>
+			<td align="center"><img title="Lista negra" longdesc="Lista negra " src="images/icon/delete-user-icon.png"></td>
+			<td align="center"><img title="Boletín" longdesc="Boletín" src="images/icon/fav-add-icon.png"></td>
 		</tr>
 
 		<tr>
-			<td align="center"><a href="inbox.php">پيام ها</a></td>
-			<td align="center"><a href="uc.php">مديريت فايل</a></td>
-			<td align="center"><a href="banned.php">ليست سياه</a></td>
-			<td align="center"><a href="newsletter.php">خبرنامه</a></td>
+			<td align="center"><a href="inbox.php">Mensajes</a></td>
+			<td align="center"><a href="uc.php">Administrar archivos</a></td>
+			<td align="center"><a href="banned.php">Lista negra</a></td>
+			<td align="center"><a href="newsletter.php">Boletín</a></td>
 		</tr>
 		<tr>
 			<td align="center" style="height: 8px"></td>
@@ -66,17 +66,17 @@
 			<td align="center" style="height: 8px"></td>
 		</tr>
 				<tr>
-			<td align="center"><img title="تنظيمات" longdesc="تنظيمات" src="images/icon/window-icon.png"></td>
-			<td align="center"><img title="قالب سايت" longdesc="قالب سايت" src="images/icon/paint-icon.png"></td>
-			<td align="center"><img title="پشتيبان گيري" longdesc="پشتيبان گيري " src="images/icon/refresh-icon.png"></td>
-			<td align="center"><img title="بروز رساني" longdesc="بروز رساني" src="images/icon/wizard-icon.png"></td>
+			<td align="center"><img title="Configuración" longdesc="Configuración" src="images/icon/window-icon.png"></td>
+			<td align="center"><img title="Plantilla del sitio" longdesc="Plantilla del sitio" src="images/icon/paint-icon.png"></td>
+			<td align="center"><img title="Copia de seguridad" longdesc="Copia de seguridad " src="images/icon/refresh-icon.png"></td>
+			<td align="center"><img title="Actualizar" longdesc="Actualizar" src="images/icon/wizard-icon.png"></td>
 		</tr>
 
 		<tr>
-			<td align="center"><a href="setting.php">تنظيمات</a></td>
-			<td align="center"><a href="template.php">قالب سايت</a></td>
-			<td align="center"><a href="backup.php">پشتيبان گيري</a></td>
-			<td align="center"><a href="update.php">بروز رساني</a></td>
+			<td align="center"><a href="setting.php">Configuración</a></td>
+			<td align="center"><a href="template.php">Plantilla del sitio</a></td>
+			<td align="center"><a href="backup.php">Copia de seguridad</a></td>
+			<td align="center"><a href="update.php">Actualizar</a></td>
 		</tr>
 		<tr>
 			<td align="center" style="height: 8px"></td>
@@ -86,32 +86,32 @@
 		</tr>
 
 		<tr>
-			<td align="center"><a href="ymsgr:sendim?westehran"><img title="پشتيباني" src="images/icon/help-icon.png"></a></td>
+			<td align="center"><a href="ymsgr:sendim?westehran"><img title="Soporte" src="images/icon/help-icon.png"></a></td>
 			<td align="center"></td>
-			<td align="center"><a href="<?php echo HOMEPAGE; ?>" target="_blank"><img title="مشاهده سايت" src="images/icon/web-icon.png"></a></td>
-			<td align="center"><a href="?action=logout"><img title="خروج" src="images/icon/close-icon.png"></a></td>
+			<td align="center"><a href="<?php echo HOMEPAGE; ?>" target="_blank"><img title="Ver sitio" src="images/icon/web-icon.png"></a></td>
+			<td align="center"><a href="?action=logout"><img title="Cerrar sesión" src="images/icon/close-icon.png"></a></td>
 		</tr>
 
 		<tr>
-			<td align="center"><a href="ymsgr:sendim?trafian_ir">پشتيباني</a></td>
+			<td align="center"><a href="ymsgr:sendim?trafian_ir">Soporte</a></td>
 			<td align="center"></td>
-			<td align="center"><a href="<?php echo HOMEPAGE; ?>" target="_blank">مشاهده سرور</a></td>
-			<td align="center"><a href="?action=logout">خروج</a></td>
+			<td align="center"><a href="<?php echo HOMEPAGE; ?>" target="_blank">Ver servidor</a></td>
+			<td align="center"><a href="?action=logout">Cerrar sesión</a></td>
 		</tr>
 
 	</table>
 </div>
 <div id="div_2" style="display:none;">
-    <table id="member" border="1" cellpadding="3"> 
+    <table id="member" border="1" cellpadding="3">
         <tr>
             <td><b>Log ID</b></td>
             <td><b>Admin</b></td>
-            <td><b>LOG</b></td> 
+            <td><b>LOG</b></td>
             <td><b>Date</b></td>
-            <td><b>عملیات</b></td>
+            <td><b>Acciones</b></td>
         </tr>
     <?php
-    
+
     $sql = mysql_query("SELECT * FROM ".TB_PREFIX."admin_log ORDER BY id DESC LIMIT 10");
     $query = count($sql);
         if($query>0){
@@ -160,42 +160,42 @@
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
             <tbody>
                 <tr>
-                    <td align="center" colspan="2"><b>اطلاعات سرور</b><br /><br /></td>
+                    <td align="center" colspan="2"><b>Información del servidor</b><br /><br /></td>
                 </tr>
                 <tr>
-                    <td>بازیکنان عضو شده:</td>
+                    <td>Jugadores registrados:</td>
                     <td><?php echo $users; ?></td>
                 </tr>
                 <tr>
-                    <td>بازیکنان فعال:</td>
+                    <td>Jugadores activos:</td>
                     <td><?php echo $actives; ?></td>
                 </tr>
                 <tr>
-                    <td>بازیکنان آنلاین:</td>
+                    <td>Jugadores conectados:</td>
                     <td><?php echo $onlines; ?></td>
                 </tr>
                 <tr>
-                    <td>بازداشت شده ها:</td>
+                    <td>Cuentas bloqueadas:</td>
                     <td><?php echo $banned; ?></td>
                 </tr>
                 <tr>
-                    <td>اتحاد ها:</td>
+                    <td>Alianzas:</td>
                     <td><?php echo $alliances; ?></td>
                 </tr>
                 <tr>
-                    <td>ماجراجویی ها:</td>
+                    <td>Aventuras:</td>
                     <td><?php echo $adventures; ?></td>
                 </tr>
                 <tr>
-                    <td>حراجی ها:</td>
+                    <td>Subastas:</td>
                     <td><?php echo $auctions; ?></td>
                 </tr>
                 <tr>
-                    <td>گزارش ها:</td>
+                    <td>Informes:</td>
                     <td><?php echo $notices; ?></td>
                 </tr>
                 <tr>
-                    <td>حرکت ها:</td>
+                    <td>Movimientos:</td>
                     <td><?php echo $movements; ?></td>
                 </tr>
             </tbody>
@@ -205,62 +205,62 @@
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
         <thead align="center">
             <tr>
-                <td colspan="3" align="center"><b>اطلاعات بازیکنان</b><br><br></td>
+                <td colspan="3" align="center"><b>Información de los jugadores</b><br><br></td>
             </tr>
             <tr>
-                <td><b>نژاد</b></td>
-                <td><b>تعداد</b></td>
-                <td><b>درصد</b></td>
+                <td><b>Tribu</b></td>
+                <td><b>Cantidad</b></td>
+                <td><b>Porcentaje</b></td>
             </tr>
         </thead>
         <tbody>
-            
+
             <tr>
-                <td>رومی ها:</td>
+                <td>Romanos:</td>
                 <td><?php echo $tribes[0]; ?></td>
                 <td><?php $percents = 100*($tribes[0] / $users); echo round($percents,1); ?>%</td>
             </tr>
             <tr>
-                <td>توتن ها:</td>
+                <td>Germanos:</td>
                 <td><?php echo $tribes[1]; ?></td>
                 <td><?php $percents = 100*($tribes[1] / $users); echo round($percents,1); ?>%</td>
             </tr>
             <tr>
-                <td width="60">گول ها:</td>
+                <td width="60">Galos:</td>
                 <td width="20"><?php echo $tribes[2]; ?></td>
                 <td><?php $percents = 100*($tribes[2] / $users); echo round($percents,1); ?>%</td>
             </tr>
         </tbody>
     </table>
     </div>
-    
+
     <div style="margin-right:400px;margin-top:-104px;">
     <table id="server_info" width="170" border="1" bgcolor="#E5E5E5" cellpadding="2">
         <thead align="center">
             <tr>
-                <td colspan="2" align="center"><b>اطلاعات نقشه</b><br><br></td>
+                <td colspan="2" align="center"><b>Información del mapa</b><br><br></td>
             </tr>
         </thead>
         <tbody>
-            
+
             <tr>
-                <td>کل دهکده ها:</td>
+                <td>Total de aldeas:</td>
                 <td><?php echo $allvillages; ?></td>
             </tr>
             <tr>
-                <td>دهکده های تسخیر شده:</td>
+                <td>Aldeas conquistadas:</td>
                 <td><?php echo $villages; ?></td>
             </tr>
             <tr>
-                <td>کل آبادی ها:</td>
+                <td>Total de oasis:</td>
                 <td><?php echo $alloasis; ?></td>
             </tr>
             <tr>
-                <td>آبادی های تسخیر شده:</td>
+                <td>Oasis conquistados:</td>
                 <td><?php echo $occoasis; ?></td>
             </tr>
             <tr>
-                <td>حداکثر گنجایش نقشه:</td>
+                <td>Capacidad máxima del mapa:</td>
                 <td><?php echo WORLD_MAX."x".WORLD_MAX; ?></td>
             </tr>
         </tbody>

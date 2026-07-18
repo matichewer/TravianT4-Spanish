@@ -8,7 +8,7 @@ if(isset($_GET['t'])==99 && isset($_POST['action'])=='addList'){
 
 $sql = mysql_query("SELECT * FROM ".TB_PREFIX."farmlist WHERE owner = $session->uid ORDER BY wref = $village->wid DESC");
 $query = mysql_num_rows($sql);
-while($row = mysql_fetch_array($sql)){ 
+while($row = mysql_fetch_array($sql)){
     $lid = $row["id"];
     $lname = $row["name"];
     $lowner = $row["owner"];
@@ -62,10 +62,10 @@ while($row = mysql_fetch_array($sql)){
 <?php
 $sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid ORDER BY distance ASC");
 $query2 = mysql_num_rows($sql2);
-if($query2 == 0) {        
+if($query2 == 0) {
     echo '<td class="noData" colspan="7">There is no any raid list.</td>';
 }else{
-while($row = mysql_fetch_array($sql2)){ 
+while($row = mysql_fetch_array($sql2)){
 $id= $row['id'];$lid = $row['lid'];$towref = $row['towref'];$x = $row['x'];$y = $row['y'];
 if($village->wid == $towref){
 	$distance = '0';
@@ -119,7 +119,7 @@ $vdata = $database->getVillage($towref);
                 <span class="coordText"><?php echo $vdata['name']; ?></span>
                 </span>
                 <?php } ?>
-                
+
                 <span class="clear">‎</span>
                 </label>
 			</td>
@@ -194,13 +194,13 @@ $vdata = $database->getVillage($towref);
         	echo '<div class="troopIcon"><img class="unit u30" title="'.U30.'" src="img/x.gif"><span class="troopIconAmount">'.$t10.'</span></div>'; }
 	}
 ?>
-            
 
-                
+
+
             </td>
 			<td class="lastRaid">
 <?php
-$noticeClass = array("Scout Report","Won as attacker without losses","Won as attacker with losses","Lost as attacker with losses","Won as defender without losses","Won as defender with losses","Lost as defender with losses","Lost as defender without losses","Reinforcement arrived","","Wood Delivered","Clay Delivered","Iron Delivered","Crop Delivered","","Won as defender without losses","Won as defender with losses","Lost as defender with losses","Won scouting as attacker","Lost scouting as attacker","Won scouting as defender","Lost scouting as defender");            
+$noticeClass = array("Scout Report","Won as attacker without losses","Won as attacker with losses","Lost as attacker with losses","Won as defender without losses","Won as defender with losses","Lost as defender with losses","Lost as defender without losses","Reinforcement arrived","","Wood Delivered","Clay Delivered","Iron Delivered","Crop Delivered","","Won as defender without losses","Won as defender with losses","Lost as defender with losses","Won scouting as attacker","Lost scouting as attacker","Won scouting as defender","Lost scouting as defender");
 $limits = "ntype!=4 and ntype!=5 and ntype!=6 and ntype!=7";
 $getnotice = mysql_query("SELECT * FROM ".TB_PREFIX."ndata WHERE $limits AND toWref = ".$towref." AND uid = ".$session->uid." ORDER BY time DESC Limit 1");
 
@@ -208,20 +208,20 @@ while($row2 = mysql_fetch_array($getnotice)){
 	$dataarray = explode(",",$row2['data']);
 	$type2 = $row2['ntype'];
     echo "<img src=\"img/x.gif\" class=\"iReport iReport".$row2['ntype']."\" title=\"".$noticeClass[$type2]."\"> ";
-    
+
     $allres = ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28]);
     $carry = $dataarray[29];
-    
+
     if ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28] == 0) {
     echo "<img title=\"bounty: ".$allres." resouces max carry: ".$carry." resouces.\" src=\"img/x.gif\" class=\"carry empty\">";
-    
+
     } elseif ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28] != $dataarray[29]) {
     echo "<img title=\"bounty: ".$allres." resouces. max carry: ".$carry." resouces.\" src=\"img/x.gif\" class=\"carry half\">";
-    
+
     } else {
     echo "<img title=\"bounty: ".$allres." resouces. max carry: ".$carry." resouces.\" src=\"img/x.gif\" class=\"carry full\">";
     }
-    
+
     $date = $generator->procMtime($row2['time']);
     echo "<a href=\"berichte.php?id=".$row2['id']."\">".$date[0]." ".date('H:i',$row2['time'])."</a> ";
 }
@@ -236,7 +236,7 @@ while($row2 = mysql_fetch_array($getnotice)){
 }
 }
 ?>
-	
+
 </tbody>
 	</table>
     <div class="markAll">
@@ -249,7 +249,7 @@ while($row2 = mysql_fetch_array($getnotice)){
     </div>
 
 	<div class="addSlot">
-		<button type="button" value="افزودن" onclick="Travian.Game.RaidList.addSlot(<?php echo $lid; ?>);"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Add Raid</div></div></button>	</div>
+		<button type="button" value="Añadir" onclick="Travian.Game.RaidList.addSlot(<?php echo $lid; ?>);"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Añadir saqueo</div></div></button>	</div>
 </div>
 <div class="clear"></div>
 
@@ -268,7 +268,7 @@ for($i=$start;$i<=$end;$i++){
 		<div class="clear"></div>
 </div>
 
-<button type="submit" value="آغاز غارت"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Start Raid</div></div></button>											</div>
+<button type="submit" value="Iniciar saqueo"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Iniciar saqueo</div></div></button>											</div>
 </form>
 
 </div>
@@ -341,7 +341,7 @@ $lid = $row['id'];
 				"<?php echo $lid; ?>":{
 					"troops":{"1":<?php echo $unit1; ?>,"2":<?php echo $unit2; ?>,"3":<?php echo $unit3; ?>,"4":<?php echo $unit4; ?>,"5":<?php echo $unit5; ?>,"6":<?php echo $unit6; ?>,"7":<?php echo $unit7; ?>,"8":<?php echo $unit8; ?>,"9":<?php echo $unit9; ?>,"10":<?php echo $unit10; ?>,"11":<?php echo $getUnit['hero']; ?>},
 					"directions":{"village":"none","ew":"none","distance":"asc","troops":"none","lastRaid":"none"},
-					"slots":{<?php 
+					"slots":{<?php
 $result3 = mysql_query('SELECT * FROM '.TB_PREFIX.'raidlist WHERE lid = '.$lid.'');
 $query2 = mysql_num_rows($result3);
 $NUM2 = 1;

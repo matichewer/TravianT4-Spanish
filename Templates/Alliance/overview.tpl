@@ -5,7 +5,7 @@ $aid = $_GET['aid'];
 else {
 $aid = $session->alliance;
 }
-$varmedal = $database->getProfileMedalAlly($aid);  
+$varmedal = $database->getProfileMedalAlly($aid);
 
 
 $allianceinfo = $database->getAlliance($aid);
@@ -21,7 +21,7 @@ $profiel="".$allianceinfo['notice']."".md5('skJkev3')."".$allianceinfo['desc']."
 require("medal.php");
 $profiel=explode("".md5('skJkev3')."", $profiel);
 
-include("alli_menu.tpl"); 
+include("alli_menu.tpl");
 
 ?>
 <div id="details">
@@ -50,7 +50,7 @@ include("alli_menu.tpl");
 						<th>Members</th>
 						<td><?php echo count($memberlist); ?></td>
 					</tr>
-					
+
 				</tbody>
 			</table>
 		</div>
@@ -60,27 +60,27 @@ include("alli_menu.tpl");
 					<tbody>
                 <?php
                 foreach($memberlist as $member) {
-                
+
                 //rank name
                 $rank = $database->getAlliancePermission($member['id'],"rank",0);
-                
+
                 //username
                 $name = $database->getUserField($member['id'],"username",0);
-                
+
                 //if there is no rank defined, user will not be printed
                 if($rank == ''){
                 echo '';
                 }
-                
+
                 //if there is user rank defined, user will be printed
                 else if($rank != ''){
                 echo "<tr>";
                 echo "<th>".$rank."</th>";
                 echo "<td><a href='spieler.php?uid=".$member['id']."'>".$name."</td>";
                 echo "</tr>";
-                } 
+                }
                 }?>
-			
+
 					</tbody>
 				</table>
 </div>
@@ -110,32 +110,32 @@ foreach($memberlist as $member) {
 
     $rank = $rank+1;
   $TotalUserPop = $database->getVSumField($member['id'],"pop");
-    $TotalVillages = $database->getProfileVillages($member['id']);    
-    
+    $TotalVillages = $database->getProfileVillages($member['id']);
+
   echo "<tr>";
     echo "<td class=pla>";
-    if($aid == $session->alliance){    
+    if($aid == $session->alliance){
         if ((time()-600) < $member['timestamp']){ // 0 Min - 10 Min
-            echo "<img class='online online1' src=img/x.gif title='آنلاین' alt='آنلاین' />";
+            echo "<img class='online online1' src=img/x.gif title='En línea' alt='En línea' />";
         }elseif ((time()-86400) < $member['timestamp'] && (time()-600) > $member['timestamp']){ // 10 Min - 1 Days
-            echo "<img class='online online2' src=img/x.gif title='حداکثر 24 ساعت' alt='حداکثر 24 ساعت' />";              
+            echo "<img class='online online2' src=img/x.gif title='Hace 24 horas como máximo' alt='Hace 24 horas como máximo' />";
             }elseif ((time()-259200) < $member['timestamp'] && (time()-86400) > $member['timestamp']){ // 1-3 Days
-            echo "<img class='online online3' src=img/x.gif title='حداکثر 3 روز' alt='حداکثر 3 روز' />";    
+            echo "<img class='online online3' src=img/x.gif title='Hace 3 días como máximo' alt='Hace 3 días como máximo' />";
         }elseif ((time()-604800) < $member['timestamp'] && (time()-259200) > $member['timestamp']){ // 3-7 Days
-            echo "<img class='online online4' src=img/x.gif title='حداکثر 7 روز' alt='حداکثر 7 روز' />";    
+            echo "<img class='online online4' src=img/x.gif title='Hace 7 días como máximo' alt='Hace 7 días como máximo' />";
         }else{
-             echo "<img class='online online5' src=img/x.gif title='کم کار' alt='کم کار' />";   
+             echo "<img class='online online5' src=img/x.gif title='Inactivo' alt='Inactivo' />";
         }
     }
-    echo "<a href=spieler.php?uid=".$member['id'].">".$member['username']."</a></td>"; 
-    echo "<td class=hab>".$TotalUserPop."</td>"; 
+    echo "<a href=spieler.php?uid=".$member['id'].">".$member['username']."</a></td>";
+    echo "<td class=hab>".$TotalUserPop."</td>";
     echo "<td class=vil>".count($TotalVillages)."</td>";
-    
-    
-    echo "</tr>";    
+
+
+    echo "</tr>";
 }
 
-?>             
+?>
 
     </tbody>
     </table>

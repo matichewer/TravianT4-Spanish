@@ -1,7 +1,7 @@
 <?php
         class MYSQL_DB {
         	var $connection;
-			
+
         	function MYSQL_DB() {
         		$this->connection = mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS) or die(mysql_error());
         		mysql_select_db(SQL_DB, $this->connection) or die(mysql_error());
@@ -61,7 +61,7 @@
         			return false;
         		}
         	}
-			
+
         	function checkExist_activate($ref, $mode) {
 
         		if(!$mode) {
@@ -94,21 +94,21 @@
         		$result = mysql_query($q, $this->connection);
         		return $this->mysql_fetch_all($result);
         	}
-			
+
 			function getSitee1($uid) {
         		$q = "SELECT * from " . TB_PREFIX . "users where sit1 = $uid";
         		$result = mysql_query($q, $this->connection);
 				$dbarray = mysql_fetch_array($result);
         		return $dbarray;
         	}
-			
+
 			function getSitee2($uid) {
         		$q = "SELECT * from " . TB_PREFIX . "users where sit2 = $uid";
         		$result = mysql_query($q, $this->connection);
         		$dbarray = mysql_fetch_array($result);
         		return $dbarray;
         	}
-			
+
         	function removeMeSit($uid, $uid2) {
         		$q = "UPDATE " . TB_PREFIX . "users set sit1 = 0 where id = $uid and sit1 = $uid2";
         		mysql_query($q, $this->connection);
@@ -126,13 +126,13 @@
         		$dbarray = mysql_fetch_array($result);
         		return $dbarray[$field];
         	}
-			
+
 			function getInvitedUser($uid) {
 				$q = "SELECT * FROM " . TB_PREFIX . "users where invited = $uid order by regtime desc";
 				$result = mysql_query($q, $this->connection);
 				return $this->mysql_fetch_all($result);
 			}
-			
+
 			function getStarvation(){
                     $q = "SELECT * FROM " . TB_PREFIX . "vdata where starv != 0";
                     $result = mysql_query($q, $this->connection);
@@ -245,7 +245,7 @@
         		$result = mysql_query($q, $this->connection);
         		return mysql_fetch_array($result);
         	}
-			
+
 			function getUserWithEmail($email) {
         		$q = "SELECT * FROM " . TB_PREFIX . "users where email = '$email'";
 				$result = mysql_query($q, $this->connection);
@@ -284,7 +284,7 @@
         	}
 
 			function checkSitter($username){
-				$q = "SELECT * FROM ".TB_PREFIX."online WHERE name = '".$username."'";	
+				$q = "SELECT * FROM ".TB_PREFIX."online WHERE name = '".$username."'";
 				$result = mysql_query($q, $this->connection);
 				$dbarray = mysql_fetch_array($result);
 				return $dbarray['sitter'];
@@ -1048,7 +1048,7 @@
 
         	/*****************************************
         	Function to delete alliance if empty
-        	References: 
+		References:
         	*****************************************/
         	function deleteAlliance($aid) {
         		$result = mysql_query("SELECT * FROM " . TB_PREFIX . "users where alliance = $aid");
@@ -3277,7 +3277,7 @@ break;
         	}
 
 			function removeOases($wref) {
-                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, name = 'آبادی تسخیر نشده' WHERE wref = $wref";
+                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, name = 'Oasis no conquistado' WHERE wref = $wref";
                 return mysql_query($q, $this->connection);
             }
 
@@ -3334,7 +3334,7 @@ break;
                     $this->addHeroItem($aucData['owner'], $aucData['btype'], $aucData['type'], $aucData['num']);
                 }
 				$q = "DELETE FROM " . TB_PREFIX . "auction where id = $id and finish = 0";
-				
+
         		return mysql_query($q, $this->connection);
         	}
 
@@ -3389,7 +3389,7 @@ break;
 			function checkHeroItem($uid, $btype){
                 $q = "SELECT * FROM ".TB_PREFIX."heroitems WHERE uid = '$uid' and btype = '$btype' and proc = 0";
 				$result = mysql_query($q, $this->connection);
-				$dbarray = mysql_fetch_array($result);					
+				$dbarray = mysql_fetch_array($result);
 				if($dbarray['btype']==$btype) {
 					return $dbarray['id'];
 				} else {
@@ -3639,7 +3639,7 @@ break;
         		return mysql_num_rows($result);
         	}
 
-			function addHeroinventory($uid){				
+			function addHeroinventory($uid){
 				$q = "INSERT into " . TB_PREFIX . "heroinventory (`uid`) values ('$uid')";
         		return mysql_query($q, $this->connection) or die(mysql_error());
 			}

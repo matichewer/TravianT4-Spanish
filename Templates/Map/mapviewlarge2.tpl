@@ -25,7 +25,7 @@ else {
 }
 $xm7 = ($x-7) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-6 : $x-7;
 $xm6 = ($x-6) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-5 : $x-6;
-$xm5 = ($x-5) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-4 : $x-5; 
+$xm5 = ($x-5) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-4 : $x-5;
 $xm4 = ($x-4) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-3 : $x-4;
 $xm3 = ($x-3) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-2 : $x-3;
 $xm2 = ($x-2) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-1 : $x-2;
@@ -96,7 +96,7 @@ for($i=0;$i<=12;$i++) {
     $neutralarray = array();
     }
        $image = ($maparray[$index]['occupied'] == 1 && $maparray[$index]['fieldtype'] > 0)? (($maparray[$index]['owner'] == $session->uid)? ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b30': 'b20' :'b10' : 'b00') : (($targetalliance != 0)? (in_array($targetalliance,$friendarray)? ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b31': 'b21' :'b11' : 'b01') : (in_array($targetalliance,$enemyarray)? ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b32': 'b22' :'b12' : 'b02') : (in_array($targetalliance,$neutralarray)? ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b35': 'b25' :'b15' : 'b05') : ($targetalliance == $session->alliance? ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b33': 'b23' :'b13' : 'b03') : ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b34': 'b24' :'b14' : 'b04'))))) : ($maparray[$index]['pop']>=50? $maparray[$index]['pop']>= 100?$maparray[$index]['pop']>=200? 'b34': 'b24' :'b14' : 'b04'))) : $maparray[$index]['image'];
-    
+
     echo "<div id=\"i_".$row1."_".$i."\" class=\"".$image."\" ></div>\n";
     if($i == 12 && $row1 <= 11) {
         $row1 += 1;
@@ -117,14 +117,14 @@ for($i=0;$i<=12;$i++) {
 
 ?>
 </div>
-<map id="map_overlay_large" name="map_overlay_large"> 
+<map id="map_overlay_large" name="map_overlay_large">
 <?php
 $coorarray = array(
 "48, 253, 85, 273, 48, 293, 11, 273"
-,"84, 233, 121, 253, 84, 273, 47, 253" 
+,"84, 233, 121, 253, 84, 273, 47, 253"
 ,"120, 213, 157, 233, 120, 253, 83, 233"
-,"156, 193, 193, 213, 156, 233, 119, 213" 
-,"192, 173, 229, 193, 192, 213, 155, 193" 
+,"156, 193, 193, 213, 156, 233, 119, 213"
+,"192, 173, 229, 193, 192, 213, 155, 193"
 ,"228, 153, 265, 173, 228, 193, 191, 173"
 ,"264, 133, 301, 153, 264, 173, 227, 153"
 ,"300, 113, 337, 133, 300, 153, 263, 133"
@@ -155,8 +155,8 @@ $coorarray = array(
 ,"338, 173, 375, 193, 338, 213, 301, 193"
 ,"374, 153, 411, 173, 374, 193, 337, 173"
 ,"410, 133, 447, 153, 410, 173, 373, 153"
-,"446, 113, 483, 133, 446, 153, 409, 133" 
-,"482, 93, 519, 113, 482, 133, 445, 113" 
+,"446, 113, 483, 133, 446, 153, 409, 133"
+,"482, 93, 519, 113, 482, 133, 445, 113"
 ,"518, 73, 555, 93, 518, 113, 481, 93"
 ,"554, 53, 591, 73, 554, 93, 517, 73"
 ,"159, 313, 196, 333, 159, 353, 122, 333"
@@ -193,15 +193,15 @@ for($i=0;$i<=12;$i++) {
     $coorindex+=1;
 }
 ?>
-<area id="ma_n1" href="karte2.php?z=<?php echo $generator->getBaseID($x,$yp1);?>" coords="762,115,30" shape="circle" title="شمال"/>
-<area id="ma_n2" href="karte2.php?z=<?php echo $generator->getBaseID($xp1,$y);?>" coords="770,430,30" shape="circle" title="شرق"/>
-<area id="ma_n3" href="karte2.php?z=<?php echo $generator->getBaseID($x,$ym1);?>" coords="210,430,30" shape="circle" title="جنوب"/>
-<area id="ma_n4" href="karte2.php?z=<?php echo $generator->getBaseID($xm1,$y);?>" coords="200,115,30" shape="circle" title="غرب"/>
+<area id="ma_n1" href="karte2.php?z=<?php echo $generator->getBaseID($x,$yp1);?>" coords="762,115,30" shape="circle" title="Norte"/>
+<area id="ma_n2" href="karte2.php?z=<?php echo $generator->getBaseID($xp1,$y);?>" coords="770,430,30" shape="circle" title="Este"/>
+<area id="ma_n3" href="karte2.php?z=<?php echo $generator->getBaseID($x,$ym1);?>" coords="210,430,30" shape="circle" title="Sur"/>
+<area id="ma_n4" href="karte2.php?z=<?php echo $generator->getBaseID($xm1,$y);?>" coords="200,115,30" shape="circle" title="Oeste"/>
 </map><img id="map_links" src="img/x.gif" usemap="#map_overlay_large">
                 <script type="text/javascript">
                     m_c.az = {"n1":<?php echo $generator->getBaseID($x,$yp1) ?>,"n1p7":<?php echo $generator->getBaseID($x,$yp7) ?>,"n2":<?php echo $generator->getBaseID($xp1,$y) ?>,"n2p7":<?php echo $generator->getBaseID($xm7,$y) ?>,"n3":<?php echo $generator->getBaseID($x,$ym1) ?>,"n3p7":<?php echo $generator->getBaseID($x,$ym7) ?>,"n4":<?php echo $generator->getBaseID($xm1,$y) ?>,"n4p7":<?php echo $generator->getBaseID($xp7,$y) ?>};
                     m_c.ad = [
-                               <?php 
+                               <?php
                                $yrow = 0;
 $regcount = 0;
     echo "[";
@@ -252,7 +252,7 @@ for($h=0;$h<=12;$h++) {
                         map_init();
                     }
                 </script>
-                
+
             <img id="map_navibox" src="img/x.gif" usemap="#map_navibox"/>
             <map name="map_navibox">
             <area id="ma_n1p7" href="karte.php?z=<?php echo $generator->getBaseID($x,$yp7) ?>" coords="51,15,73,3,95,15,73,27" shape="poly" title="Észak"/>

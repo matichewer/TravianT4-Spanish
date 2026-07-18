@@ -1,12 +1,12 @@
-﻿<?php  
+﻿<?php
 
 if(isset($aid)) {
 $aid = $aid;
 }
 else {
 $aid = $session->alliance;
-} 
-$varmedal = $database->getProfileMedalAlly($aid); 
+}
+$varmedal = $database->getProfileMedalAlly($aid);
 $allianceinfo = $database->getAlliance($aid);
 $memberlist = $database->getAllMember($aid);
 $totalpop = 0;
@@ -15,8 +15,8 @@ foreach($memberlist as $member) {
 }
 
 echo "<h1>Alliance - ".$allianceinfo['tag']."</h1>";
-include("alli_menu.tpl");  
-  
+include("alli_menu.tpl");
+
 ?>
 <h4 class="round">Description</h4>
 <form method="post" action="allianz.php">
@@ -65,9 +65,9 @@ INDELING CATEGORIEEN:
 == 7. in top 3 - Defenders  ==
 == 8. in top 3 - Climbers   ==
 == 9. in top 3 - Raiders    ==
-******************************/                
-                
-                
+******************************/
+
+
     foreach($varmedal as $medal) {
     $titel="Medal";
     switch ($medal['categorie']) {
@@ -107,7 +107,7 @@ INDELING CATEGORIEEN:
     case "12":
         $titel="Attackers of the Week ".$medal['points']." top 10.";
         break;
-    }            
+    }
                  echo"<tr>
                    <td> ".$titel."</td>
                    <td>".$medal['plaats']."</td>
@@ -118,7 +118,7 @@ INDELING CATEGORIEEN:
                  </table></p>
 
 	<p class="btn">
-		<button type="submit" value="ذخیره" name="s1" id="btn_save" tabindex="3"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Save</div></div></button>
+		<button type="submit" value="Guardar" name="s1" id="btn_save" tabindex="3"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Guardar</div></div></button>
 		</p>
 	</form>
 

@@ -1,11 +1,11 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
-<title>RashCMS:: پيغام خصوصي</title>
+<title>RashCMS:: Mensaje privado</title>
 <script>
 var editing = false;
 var CurrentStep = 1;
@@ -37,14 +37,14 @@ place = (type == 'inbox') ? 'ajax_tabs_1_content_1' : 'ajax_tabs_2_content_2';
 connect('pages/pm.php',"task=read_pm&id="+id+"&folder="+type,place,loadingt,'');
 }
 function delpm(id){
-var msg = "آيا از حذف اين پيام اطمينان داريد؟\nعمليات حذف برگشت پذير نميباشد.";
+var msg = "¿Seguro que quieres eliminar este mensaje?\nEsta acción no se puede deshacer.";
 if(confirm(msg))
 {
 connect('pages/pm.php',"task=delete_pm&id="+id,'ajax_tabs_1_content_1',loadingt,'edit_pm_in');
 }
 }
 function delpmo(id){
-var msg = "آيا از حذف اين پيام اطمينان داريد؟\nعمليات حذف برگشت پذير نميباشد.";
+var msg = "¿Seguro que quieres eliminar este mensaje?\nEsta acción no se puede deshacer.";
 if(confirm(msg))
 {
 connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt,'edit_pm_out');
@@ -70,21 +70,21 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -98,58 +98,58 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-				ارسال پيغام خصوصي</a></li>
-					
+				Enviar mensaje privado</a></li>
+
 				  <li><a id="a_title_2" onclick="SetCurrent(2);return false;" href="#">
-			صندوق ورودي</a></li>
+			Bandeja de entrada</a></li>
 					<li><a id="a_title_3" onclick="SetCurrent(3);return false;" href="#">
-					صندوق خروجي </a></li>
-			
+					Bandeja de salida </a></li>
+
 				</ul>
 				</div>
-				
-<div id="div_1"> 
+
+<div id="div_1">
 <form onsubmit="Mform('post_msg');return false" method=post>
 <table border="0" width="100%" class="tbl" id="tabs_0_content">
 <tr>
 <td colspan="3" id="ajax_tabs_0_content"></td>
 </tr>
 <tr>
-<td width="23%">عنوان پيام :</td>
+<td width="23%">Asunto :</td>
 <td width="76%" colspan="2">
-<input class="rinput" type="text" name="msg_title" id="msg_title"  dir="rtl" ></td>
+<input class="rinput" type="text" name="msg_title" id="msg_title"  dir="ltr" ></td>
 </tr>
 <tr>
-<td width="23%">نام كاربري دريافت كننده :</td>
+<td width="23%">Usuario destinatario :</td>
 <td width="76%" colspan="2">
 <input class="rinput" type="text" name="msg_reciver" id="msg_reciver"  dir="ltr" ></td>
 </tr>
 <tr>
 <td width="23%">&nbsp;</td>
 <td width="76%" colspan="2">
-براي ارسال به بيش از يك كاربر ؛ نام هاي كاربري را با <span lang="en-us">,</span> 
-از يكديگر جدا كنيد.<br>
-براي ارسال پيام به تمام كاربران از عبارت <font color="#008000"> <span lang="en-us">[rashcms::all]</span></font> 
-استفاده كنيد.</td>
+Para enviar a varios usuarios, separa los nombres con <span lang="en-us">,</span>
+entre sí.<br>
+Para enviar el mensaje a todos los usuarios, utiliza <font color="#008000"> <span lang="en-us">[rashcms::all]</span></font>
+..</td>
 </tr>
 <tr>
-<td width="23%" valign=top>متن پيام :</td>
+<td width="23%" valign=top>Texto del mensaje :</td>
 <td width="38%" rowspan="2">
-<textarea dir=rtl class="srtarea" name="msg_text" id="msg_text" cols="10" rows="10"></textarea></td>
+<textarea dir=ltr class="srtarea" name="msg_text" id="msg_text" cols="10" rows="10"></textarea></td>
 <td width="38%" rowspan="2" valign=top>
-متن پيام مي توانيد شامل متغير هايي مانند عنوان و آدرس سايت و ... باشد.<br>
-اطلاعات بيشتر</td>
+El mensaje puede incluir variables como el título y la dirección del sitio.<br>
+Más información</td>
 </tr>
 <tr>
 <td width="23%">&nbsp;</td>
@@ -158,7 +158,7 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 <td><center>
 &nbsp;</center></td>
 <td>
-<input onclick="Mform('post_msg');return false;" type="submit" name="submit" value="ارسال پيغام خصوصي" class="inp"></td>
+<input onclick="Mform('post_msg');return false;" type="submit" name="submit" value="Enviar mensaje privado" class="inp"></td>
 <td>&nbsp;</td>
 </tr>
 </table></form>
@@ -170,7 +170,7 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 <form action="inbox.php?task=view&inbox=true&page=1" method=post>
 
 <td width="161">
-<legend>پيام ها در صفحه : </td>
+<legend>Mensajes por página : </td>
 <td colspan="4">
 <select class="select" name=number size="1">
 <option>5</option>
@@ -183,28 +183,28 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 <option>100</option>
 </select></td>
 <td colspan="3">
-<input type="button" onclick="document.location='inbox.php?reset=true&inbox&page=1'" name="reset" size="22" class=inp value="بازگشت به حالت پيشفرض">
+<input type="button" onclick="document.location='inbox.php?reset=true&inbox&page=1'" name="reset" size="22" class=inp value="Restablecer valores predeterminados">
 </td><input type="hidden" name="act" value="1">
 
 </tr>
 <tr>
 <td width="161">
-ترتیب نمایش : </td>
+Orden : </td>
 <td colspan="3">
 <select class="select" name="type" size="1">
-<option value="ASC">صعودی</option>
-<option value="DESC" selected>نزولی</option>
-<option value="notread">خوانده نشده ها اول</option>
+<option value="ASC">Ascendente</option>
+<option value="DESC" selected>Descendente</option>
+<option value="notread">No leídos primero</option>
 </select>
-<input type="submit" name="show" size="22" class=inp value="نمایش"></td></form>
+<input type="submit" name="show" size="22" class=inp value="Mostrar"></td></form>
 <form action="inbox.php" method=get>
 <td colspan="2">
-صفحه :</td>
+Página :</td>
 <td>
 <input type="text" name="page" size="9" class=inp></td>
 <td>
 <input type="hidden" name="inbox" size="22" class=inp value="true">
-<input type="submit" name="show" size="22" class=inp value="نمایش"></td></form>
+<input type="submit" name="show" size="22" class=inp value="Mostrar"></td></form>
 </tr>
 <tr>
 <td colspan="8">
@@ -225,7 +225,7 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 <form action="inbox.php?task=view&outbox=true&page=1" method=post>
 
 <td width="161">
-<legend>پيام ها در صفحه : </td>
+<legend>Mensajes por página : </td>
 <td colspan="4">
 <select class="select" name=number size="1">
 <option>5</option>
@@ -238,28 +238,28 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 <option>100</option>
 </select></td>
 <td colspan="3">
-<input type="button" onclick="document.location='inbox.php?reset=true&outbox&page=1'" name="reset" size="22" class=inp value="بازگشت به حالت پيشفرض">
+<input type="button" onclick="document.location='inbox.php?reset=true&outbox&page=1'" name="reset" size="22" class=inp value="Restablecer valores predeterminados">
 </td><input type="hidden" name="act" value="1">
 
 </tr>
 <tr>
 <td width="161">
-ترتیب نمایش : </td>
+Orden : </td>
 <td colspan="3">
 <select class="select" name="type" size="1">
-<option value="ASC">صعودی</option>
-<option value="DESC" selected>نزولی</option>
-<option value="notread">خوانده نشده ها اول</option>
+<option value="ASC">Ascendente</option>
+<option value="DESC" selected>Descendente</option>
+<option value="notread">No leídos primero</option>
 </select>
-<input type="submit" name="show" size="22" class=inp value="نمایش"></td></form>
+<input type="submit" name="show" size="22" class=inp value="Mostrar"></td></form>
 <form action="inbox.php" method=get>
 <td colspan="2">
-صفحه :</td>
+Página :</td>
 <td>
 <input type="text" name="page" size="9" class=inp></td>
 <td>
 <input type="hidden" name="outbox" size="22" class=inp value="true">
-<input type="submit" name="show" size="22" class=inp value="نمایش"></td></form>
+<input type="submit" name="show" size="22" class=inp value="Mostrar"></td></form>
 </tr>
 <tr>
 <td colspan="8">
@@ -279,13 +279,13 @@ connect('pages/pm.php',"task=delete_pmo&id="+id,'ajax_tabs_2_content_2',loadingt
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>
-	
+
 </div>
 </div>
 </body>

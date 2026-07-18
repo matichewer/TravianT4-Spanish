@@ -1,5 +1,5 @@
 <div class="fighterType">
-				<div class="boxes boxesColor red"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">حمله کننده: گول‌ها	</div>
+				<div class="boxes boxesColor red"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Atacante: Galos	</div>
 				</div>			</div>
 <div class="clear"></div>
 <table class="results attacker" cellpadding="1" cellspacing="1">
@@ -7,31 +7,31 @@
 					<tr>
 						<td class="role">
 						</td><td>
-								<img src="img/x.gif" class="unit u21" alt="سرباز پیاده">
+								<img src="img/x.gif" class="unit u21" alt="Falange">
 							</td><td>
-								<img src="img/x.gif" class="unit u22" alt="شمشیرزن">
+								<img src="img/x.gif" class="unit u22" alt="Espadachín">
 							</td><td>
-								<img src="img/x.gif" class="unit u23" alt="رد یاب">
+								<img src="img/x.gif" class="unit u23" alt="Buscador de senderos">
 							</td><td>
-								<img src="img/x.gif" class="unit u24" alt="رعد">
+								<img src="img/x.gif" class="unit u24" alt="Rayo de Teutates">
 							</td><td>
-								<img src="img/x.gif" class="unit u25" alt="کاهن سواره">
+								<img src="img/x.gif" class="unit u25" alt="Jinete druida">
 							</td><td>
-								<img src="img/x.gif" class="unit u26" alt="شوالیه‌ی گول">
+								<img src="img/x.gif" class="unit u26" alt="Haeduano">
 							</td><td>
-								<img src="img/x.gif" class="unit u27" alt="دژکوب">
+								<img src="img/x.gif" class="unit u27" alt="Ariete">
 							</td><td>
-								<img src="img/x.gif" class="unit u28" alt="منجنیق">
+								<img src="img/x.gif" class="unit u28" alt="Catapulta">
 							</td><td>
-								<img src="img/x.gif" class="unit u29" alt="رئیس قبیله">
+								<img src="img/x.gif" class="unit u29" alt="Cacique">
 							</td><td>
-								<img src="img/x.gif" class="unit u30" alt="مهاجر">
+								<img src="img/x.gif" class="unit u30" alt="Colono">
 							</td></tr>
 				</thead>
 				<tbody>
 					<tr>
 						<th>
-							لشکریان
+							Tropas
 						</th><td <?php if (!$form->getValue('a1_1')) { echo "class=\"none\">0"; }else{ echo ">".$form->getValue('a1_1');} ?></td>
                         <td <?php if (!$form->getValue('a1_2')) { echo "class=\"none\">0"; }else{ echo ">".$form->getValue('a1_2');} ?></td>
                         <td <?php if (!$form->getValue('a1_3')) { echo "class=\"none\">0"; }else{ echo ">".$form->getValue('a1_3');} ?></td>
@@ -44,7 +44,7 @@
                         <td <?php if (!$form->getValue('a1_10')) { echo "class=\"none\">0"; }else{ echo ">".$form->getValue('a1_10');} ?></td></tr>
 					<tr>
 						<th>
-							تلفات
+							Bajas
 						</th><td <?php if (!$troops = $form->getValue('a1_1')) { echo "class=\"none\">0"; }else{ echo ">".$dead = round($troops * $_POST['result'][1]);} ?></td>
                         <td <?php if (!$troops = $form->getValue('a1_2')) { echo "class=\"none\">0"; }else{ echo ">".$dead = round($troops * $_POST['result'][1]);} ?></td>
                         <td <?php if (!$troops = $form->getValue('a1_3')) { echo "class=\"none\">0"; }else{ echo ">".$dead = round($troops * $_POST['result'][1]);} ?></td>

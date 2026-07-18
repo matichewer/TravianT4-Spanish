@@ -3272,7 +3272,7 @@ break;
         	}
 
 			function removeOases($wref) {
-                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, name = 'آبادی تسخیر نشده' WHERE wref = $wref";
+                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, name = 'Oasis no conquistado' WHERE wref = $wref";
                 return mysqli_query($this->connection,$q);
             }
 

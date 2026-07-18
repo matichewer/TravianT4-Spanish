@@ -43,7 +43,7 @@ $start = $generator->pageLoadTimeStart();
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<meta name="content-language" content="ir" />
 		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd423" rel="stylesheet" type="text/css" />
-        <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />										
+        <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />
         <link href="img/travian_basics.css" rel="stylesheet" type="text/css" />
         <script src="crypt.js" type="text/javascript"></script>
 
@@ -62,14 +62,14 @@ Travian.Game.worldId = 'ir33';
 </script>
 </head>
 <body class="v35 webkit chrome hero_inventory">
-	<div id="wrapper"> 
-		<img id="staticElements" src="img/x.gif" alt="" /> 
-		<div id="logoutContainer"> 
-			<a id="logout" href="logout.php" title="<?php echo LOGOUT; ?>">&nbsp;</a> 
-		</div> 
-		<div class="bodyWrapper"> 
-			<img style="filter:chroma();" src="img/x.gif" id="msfilter" alt="" /> 
-			<div id="header"> 
+	<div id="wrapper">
+		<img id="staticElements" src="img/x.gif" alt="" />
+		<div id="logoutContainer">
+			<a id="logout" href="logout.php" title="<?php echo LOGOUT; ?>">&nbsp;</a>
+		</div>
+		<div class="bodyWrapper">
+			<img style="filter:chroma();" src="img/x.gif" id="msfilter" alt="" />
+			<div id="header">
 				<div id="mtop">
 					<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="<?php echo SERVER_NAME ?>"></a>
 					<ul id="navigation">
@@ -89,12 +89,12 @@ Travian.Game.worldId = 'ir33';
     	if(count($database->getMessage($session->uid,7)) >= 1000) {
 			$unmsg = "+1000";
 		} else { $unmsg = count($database->getMessage($session->uid,7)); }
-		
+
     	if(count($database->getMessage($session->uid,8)) >= 1000) {
 			$unnotice = "+1000";
 		} else { $unnotice = count($database->getMessage($session->uid,8)); }
 ?>
-<li id="n5" class="reports"> 
+<li id="n5" class="reports">
 <a href="berichte.php" accesskey="5" title="<?php echo HEADER_NOTICES; ?><?php if($message->nunread){ echo' ('.count($database->getMessage($session->uid,8)).')'; } ?>"></a>
 <?php
 if($message->nunread){
@@ -105,8 +105,8 @@ if($message->nunread){
 }
 ?>
 </li>
-<li id="n6" class="messages"> 
-<a href="nachrichten.php" accesskey="6" title="<?php echo HEADER_MESSAGES; ?><?php if($message->unread){ echo' ('.count($database->getMessage($session->uid,7)).')'; } ?>"></a> 
+<li id="n6" class="messages">
+<a href="nachrichten.php" accesskey="6" title="<?php echo HEADER_MESSAGES; ?><?php if($message->unread){ echo' ('.count($database->getMessage($session->uid,7)).')'; } ?>"></a>
 <?php
 if($message->unread) {
 	echo "<div class=\"ltr bubble\" title=\"".$unmsg." ".HEADER_MESSAGES_NEW."\" style=\"display:block\">
@@ -118,19 +118,19 @@ if($message->unread) {
 </li>
 
 </ul>
-<div class="clear"></div> 
-</div> 
+<div class="clear"></div>
+</div>
 </div>
 					<div id="mid">
-<a id="ingameManual" href="help.php"><img class="question" alt="Help" src="img/x.gif"></a>					
+<a id="ingameManual" href="help.php"><img class="question" alt="Help" src="img/x.gif"></a>
 <?php include("Templates/menu.tpl"); ?>
 
-												<div class="clear"></div> 
-						<div id="contentOuterContainer"> 
-							<div class="contentTitle">&nbsp;</div> 
+												<div class="clear"></div>
+						<div id="contentOuterContainer">
+							<div class="contentTitle">&nbsp;</div>
 
 <div class="contentContainer">
-								<div id="content" class="hero_inventory"><h1 class="titleInHeader">قهرمان</h1>
+								<div id="content" class="hero_inventory"><h1 class="titleInHeader">Héroe</h1>
 <div class="contentNavi subNavi">
 				<div class="container active">
 					<div class="background-start">&nbsp;</div>
@@ -207,7 +207,7 @@ Will not (will escape).
 				<div class="market">
 			<a class="buy arrow" href="hero_auction.php?action=buy">Buy Item.</a>
 			<a class="sell arrow" href="hero_auction.php?action=sell">Selling Item.</a>
-            
+
 			<div class="clear"></div>
 		</div>
 		<div class="clear"></div>
@@ -239,7 +239,7 @@ Will not (will escape).
 				{
 					id:	107345,
 					typeId:	103,
-					name:	'اسب',
+					name:	'Caballo',
 					placeId:	1,
 					place:	'inventory',
 					slot:	'bag',
@@ -292,7 +292,7 @@ include("Templates/footer.tpl");
 include("Templates/header.tpl");
 include("Templates/res.tpl");
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 	resources.production = {
 'l1': <?php echo $village->getProd("wood"); ?>,'l2': <?php echo $village->getProd("clay"); ?>,'l3': <?php echo $village->getProd("iron"); ?>,'l4': <?php echo $village->getProd("crop"); ?>			};
 </script>
@@ -307,5 +307,4 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-
 

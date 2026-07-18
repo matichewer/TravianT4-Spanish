@@ -7,7 +7,7 @@ $aid = $session->alliance;
 }
 $allianceinfo = $database->getAlliance($aid);
 echo "<h1>".$allianceinfo['tag']." - ".$allianceinfo['name']."</h1>";
-include("alli_menu.tpl"); 
+include("alli_menu.tpl");
 ?>
 <form method="post" action="allianz.php">
 <input type="hidden" name="a" value="5">
@@ -15,7 +15,7 @@ include("alli_menu.tpl");
 <input type="hidden" name="s" value="5">
 
 <tr>
-<th colspan="2"><b>لینک به فروم</b></th>
+<th colspan="2"><b>Enlace al foro</b></th>
 </tr>
 
 </thead><tbody>
@@ -25,7 +25,7 @@ include("alli_menu.tpl");
 </tr>
 <br />
 <tr>
-<td colspan="2" class="info">اگر شما فروم خارج از بازی دارید، میتوانید اینجا لینکش را بذارید</td>
+<td colspan="2" class="info">Si tienes un foro externo, puedes introducir aquí su enlace.</td>
 </tr></tbody>
 </table>
 

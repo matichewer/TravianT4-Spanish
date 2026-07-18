@@ -2,12 +2,12 @@
 
    if(is_numeric($_GET['x']) AND is_numeric($_GET['y'])) {
        $coor2['x'] = $_GET['x'];
-       $coor2['y'] = $_GET['y'];       
+       $coor2['y'] = $_GET['y'];
    } else {
        $wref2 = $village->wid;
-       $coor2 = $database->getCoor($wref2);      
+       $coor2 = $database->getCoor($wref2);
    }
-   
+
 ?>
 <h1 class="titleInHeader">15-9 Crop Finder</h1>
 <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>?s" id="cropfinder_form">
@@ -17,7 +17,7 @@
 			<tr>
 				<td>
 					<span class="coordInputLabel">Coordinates</span>
-					
+
 			<div class="coordinatesInput">
 				<div class="xCoord">
 					<label for="xCoordInput">X:</label>
@@ -46,14 +46,14 @@
 	<br /></table><br />
 		</div>
 				</div>
-	<button type="submit" value="جستجو" name="Search" id="Search"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Search</div></div></button>	<div class="spacer"></div>
+	<button type="submit" value="Buscar" name="Search" id="Search"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Buscar</div></div></button>	<div class="spacer"></div>
 	</form>
     <?php
 
    $type15 = mysql_query("SELECT id,x,y,occupied FROM ".TB_PREFIX."wdata WHERE fieldtype = 6 LIMIT 100");
    $type9 = mysql_query("SELECT id,x,y,occupied FROM ".TB_PREFIX."wdata WHERE fieldtype = 1 LIMIT 100");
    $type_both = mysql_query("SELECT id,x,y,occupied,fieldtype FROM ".TB_PREFIX."wdata WHERE fieldtype = 1 OR fieldtype = 6 LIMIT 100");
-   
+
    if(is_numeric($_GET['x']) AND is_numeric($_GET['y'])) {
        $coor['x'] = $_GET['x'];
        $coor['y'] = $_GET['y'];
@@ -204,7 +204,7 @@ echo "</tr>";
        } elseif($row['fieldtype'] == 6) {
            $field = '15 Cropper';
        }
-   
+
 echo "<tr>";
 echo "<td class=\"dist\">".getDistance($coor['x'], $coor['y'], $row['x'], $row['y'])."</td>";
 echo "<td class=\"coords\"><a href=\"karte.php?x=".$row['x']."&y=".$row['y']."\">(".$row['x']."|".$row['y'].")</a></td>";

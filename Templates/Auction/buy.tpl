@@ -39,27 +39,27 @@
 </div>
 	<div class="clear"></div>
 		</div></div></div></div>
-        
+
 <?php
 $prefix = "".TB_PREFIX."auction";
 	if(isset($_GET['filter'])){ $mmm = "AND btype=".$_GET['filter']; }else{ $mmm = ""; }
 $sql = mysql_query("SELECT * FROM $prefix WHERE finish = 0 and owner != $session->uid $mmm ORDER BY time ASC");
-$query = mysql_num_rows($sql); // دریافت تعداد کوئری ها از دیتابیس
+$query = mysql_num_rows($sql); // Obtener el número de consultas de la base de datos
 
-if (isset($_GET['page'])) { // دریافت شماره صفحه
-    $page = preg_replace('#[^0-9]#i', '', $_GET['page']); // فیلتر کردن همه چیز به جز اعداد
+if (isset($_GET['page'])) { // Obtener el número de página
+    $page = preg_replace('#[^0-9]#i', '', $_GET['page']); // Filtrar todo excepto los números
 } else {
     $page = 1;
-} 
+}
 
-$itemsPerPage = 20; //تعداد آیتم های قابل نمایش در هر صفحه
-$lastPage = ceil($query / $itemsPerPage); // دریافت مقدار آخرین صفحه
+$itemsPerPage = 20; //Número de elementos mostrados por página
+$lastPage = ceil($query / $itemsPerPage); // Obtener el número de la última página
 
 if ($page < 1) {
     $page = 1;
 } else if ($page > $lastPage) {
     $page = $lastPage;
-} 
+}
 
 if(isset($_GET['filter'])){
 	$filterPages = "&filter=".$_GET['filter']; }else{ $filterPages = ""; }
@@ -73,37 +73,37 @@ $add3 = $page + 3;
 
 if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<span class="number currentPage">1</span>';
-	
+
 }elseif ($page == 1 && $lastPage == 2) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=2">2</a>';
-	
+
 }elseif ($page == 1 && $lastPage == 3) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=2">2</a> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=3">3</a>';
-	
+
 }elseif ($page == 1) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $add1 . '">' . $add1 . '</a> ';
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $add2 . '">' . $add2 . '</a> ... ';
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $lastPage . '">' . $lastPage . '</a>';
-	
+
 } else if ($page == $lastPage && $lastPage == 2) {
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=1">1</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == $lastPage && $lastPage == 3) {
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=1">1</a> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=2">2</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == $lastPage) {
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=1">1</a> ... ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $sub2 . '">' . $sub2 . '</a> ';
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == ($lastPage - 1) && $lastPage == 3) {
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=1">1</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
@@ -115,7 +115,7 @@ if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $add1 . '">' . $add1 . '</a> ... ';
 	$centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $lastPage . '">' . $lastPage . '</a>';
-	
+
 }else if ($page == ($lastPage - 1)) {
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=1">1</a> ... ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $sub1 . '">' . $sub1 . '</a> ';
@@ -126,7 +126,7 @@ if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $add1 . '">' . $add1 . '</a>';
-    
+
 } else if ($page > 1 && $page < $lastPage) {
     $centerPages .= '<a class="number" href="?action=buy'.$filterPages.'&page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
@@ -140,43 +140,43 @@ $nextPage = $page + 1;
 $previous = $page - 1;
 
 if ($page == "1" && $lastPage == "1"){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 
 }elseif ($lastPage == 0){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 
 }elseif ($page == "1" && $lastPage != "1"){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<a class="next" href="?action=buy'.$filterPages.'&page=' . $nextPage . '"><img alt="صفحه بعد" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="last" href="?action=buy'.$filterPages.'&page=' . $lastPage . '"><img alt="صفحه آخر" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="next" href="?action=buy'.$filterPages.'&page=' . $nextPage . '"><img alt="Página siguiente" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="last" href="?action=buy'.$filterPages.'&page=' . $lastPage . '"><img alt="Última página" src="img/x.gif"></a>';
 
 }elseif ($page != "1" && $page != $lastPage){
-$paginationDisplay .=  '<a class="first" href="?action=buy'.$filterPages.'&page=1"><img alt="صفحه اول" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="previous" href="?action=buy'.$filterPages.'&page=' . $previous . '"><img alt="صفحه قبل" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="first" href="?action=buy'.$filterPages.'&page=1"><img alt="Primera página" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="previous" href="?action=buy'.$filterPages.'&page=' . $previous . '"><img alt="Página anterior" src="img/x.gif"></a>';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<a class="next" href="?action=buy'.$filterPages.'&page=' . $nextPage . '"><img alt="صفحه بعد" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="last" href="?action=buy'.$filterPages.'&page=' . $lastPage . '"><img alt="صفحه آخر" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="next" href="?action=buy'.$filterPages.'&page=' . $nextPage . '"><img alt="Página siguiente" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="last" href="?action=buy'.$filterPages.'&page=' . $lastPage . '"><img alt="Última página" src="img/x.gif"></a>';
 
 }elseif ($page == $lastPage){
-$paginationDisplay .=  '<a class="first" href="?action=buy'.$filterPages.'&page=1"><img alt="صفحه اول" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="previous" href="?action=buy'.$filterPages.'&page=' . $previous . '"><img alt="صفحه قبل" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="first" href="?action=buy'.$filterPages.'&page=1"><img alt="Primera página" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="previous" href="?action=buy'.$filterPages.'&page=' . $previous . '"><img alt="Página anterior" src="img/x.gif"></a>';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 }
 
 if(isset($_GET['filter'])){ $mmm = "AND btype=".$_GET['filter']; }else{ $mmm = ""; }
-$limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage; 
+$limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
 $sql2 = mysql_query("SELECT * FROM $prefix WHERE finish = 0 and owner != $session->uid $mmm ORDER BY time ASC $limit");
 
 
@@ -185,14 +185,14 @@ $typeArray = array("","helmet","body","leftHand","rightHand","shoes","horse","ba
 
 $outputList = '';
 $timer = 1;
-if($query == 0) {        
+if($query == 0) {
     $outputList .= "<td colspan=\"7\" class=\"none\"><center>No Items Available.</center></td>";
 }else{
-while($row = mysql_fetch_array($sql2)){ 
+while($row = mysql_fetch_array($sql2)){
 $id = $row["id"];$owner = $row["owner"];$btype = $row["btype"];$type = $row["type"];$num = $row["num"];$uid = $row["uid"];$bids = $row["bids"];$silver = $row["silver"];$newsilver = $row["newsilver"];$time = $row["time"];
 
 include "Templates/Auction/alt.tpl";
-    
+
     if(isset($_GET['a']) && $_GET['a']==$id){
     	$sStyle = " selected";
         $switchStyle = "Opened";
@@ -201,7 +201,7 @@ include "Templates/Auction/alt.tpl";
         $switchStyle = "Closed";
         }
 	$outputList .= "<tr><td class=\"icon".$sStyle."\"><img class=\"itemCategory itemCategory_".$typeArray[$btype]."\" src=\"img/x.gif\" title=\"".$name."||".$title."\"></td>";
-	
+
 	$outputList .= "<td class=\"name".$sStyle."\">".$num." x ".$name."</td>";
 	$outputList .= "<td class=\"bids".$sStyle."\">";
     if($bids==0){ $outputList .= "<span class=\"none\">".$bids."</span>"; }else{ $outputList .= $bids; }
@@ -209,7 +209,7 @@ include "Templates/Auction/alt.tpl";
 	$outputList .= "<td class=\"silver".$sStyle."\" title=\"".round($silver/$num, 2)." per unit\">".$silver."</td>";
 	$outputList .= "<td class=\"time".$sStyle."\"><span id=\"timer".$timer."\">".$generator->getTimeFormat($time-time())."</span></td>";
 	$outputList .= "";
-    
+
     if($session->silver > $silver || $session->uid == $uid){
     	if(isset($_GET['page'])){
         	$pURL = "&page=".$_GET['page'];
@@ -218,13 +218,13 @@ include "Templates/Auction/alt.tpl";
         	$fURL = "&filter=".$_GET['filter'];
         }
     	if($session->uid == $uid){ $bidd = "change"; }else{ $bidd = "bid"; }
-   
+
     	$outputList .= "<td class=\"bid".$sStyle."\"><a class=\"bidButton openedClosedSwitch switch".$switchStyle."\" href=\"?action=buy".$pURL."".$fURL."&a=".$id."\">".$bidd."</a></td>";
     }else{
     	$outputList .= "<td class=\"notEnoughSilver".$sStyle."\">Silver Shortage</td>";
     }
 	$outputList .= "</tr>";
-    
+
 	if(isset($_GET['a']) && $_GET['a']==$id){
     $outputList .= "<tr><td class=\"icon selected\"></td><td colspan=\"5\" class=\"name selected detail\">";
 	$outputList .= "<form class=\"auctionDetails\" id=\"auctionDetails".$_GET['a']."\" action=\"hero_auction.php\" method=\"POST\">";
@@ -242,9 +242,9 @@ include "Templates/Auction/alt.tpl";
 	if($session->uid != $uid){ $minimum++; }
     $outputList .= "<span></span><br>New bid:<input class=\"maxBid text\" type=\"text\" name=\"maxBid\" value=\"".$bidvalue."\">";
     $outputList .= "<span> (min <img title=\"silver\" class=\"silver\" src=\"img/x.gif\"> ".$minimum.")</span>";
-    $outputList .= '<div class="submitBid"><button type="submit" value="پیشنهاد"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Bid</div></div></button></div></div></form></td></tr>';
+    $outputList .= '<div class="submitBid"><button type="submit" value="Ofertar"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Bid</div></div></button></div></div></form></td></tr>';
 	}
-    
+
     $timer++;
 }
  }
@@ -262,9 +262,9 @@ include "Templates/Auction/alt.tpl";
             <th class="bid">Auctions</th>
 		</tr>
 	</thead>
-    
+
 	<tbody>
-    <?php echo $outputList; ?> 
+    <?php echo $outputList; ?>
     </tbody>
 </table>
 

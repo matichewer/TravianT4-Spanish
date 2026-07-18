@@ -7,7 +7,7 @@ include("Templates/Plus/pmenu.tpl");
 
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="waitingLoop" src="img/x.gif" alt="قراردادن در نویت ساخت"></a>
+		<a href="plus.php?id=3"><img class="waitingLoop" src="img/x.gif" alt="Cola de construcción"></a>
 	</td>
 	<th>Waiting loop for constructions</th>
 </tr>
@@ -18,10 +18,10 @@ include("Templates/Plus/pmenu.tpl");
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="mapFullscreen" src="img/x.gif" alt="نقشه بزرگ"></a>
+		<a href="plus.php?id=3"><img class="mapFullscreen" src="img/x.gif" alt="Mapa grande"></a>
 	</td>
 	<th>Larger map</th>
 </tr>
@@ -32,10 +32,10 @@ include("Templates/Plus/pmenu.tpl");
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="archive" src="img/x.gif" alt="امکان آرشیو کردن گزارش ها و پیام ها"></a>
+		<a href="plus.php?id=3"><img class="archive" src="img/x.gif" alt="Archivar informes y mensajes"></a>
 	</td>
 	<th>Archive function for reports and messages</th>
 </tr>
@@ -47,10 +47,10 @@ include("Templates/Plus/pmenu.tpl");
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="sorting" src="img/x.gif" alt="امکان مرتب کردن پیام ها و گزارش ها"></a>
+		<a href="plus.php?id=3"><img class="sorting" src="img/x.gif" alt="Ordenar mensajes e informes"></a>
 	</td>
 	<th>Sorting function for reports and messages</th>
 </tr>
@@ -62,26 +62,26 @@ include("Templates/Plus/pmenu.tpl");
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="market" src="img/x.gif" alt="امکان مرتب سازی در بازار"></a>
+		<a href="plus.php?id=3"><img class="market" src="img/x.gif" alt="Ordenar ofertas del mercado"></a>
 	</td>
 	<th>Sorting function for the marketplace</th>
 </tr>
 
 <tr>
-	<td class="text">To use the marketplace more efficiently, you can filter the offers for certain resources only. Additionally, you can use a ratio filter to only see 1:1 offers. 
+	<td class="text">To use the marketplace more efficiently, you can filter the offers for certain resources only. Additionally, you can use a ratio filter to only see 1:1 offers.
 
 This feature is available for everything and NOT part of the plus account any more</td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="autoCompletion" src="img/x.gif" alt="تکمیل اتوماتیک"></a>
+		<a href="plus.php?id=3"><img class="autoCompletion" src="img/x.gif" alt="Autocompletar"></a>
 	</td>
 	<th>Auto-completion</th>
 </tr>
@@ -92,10 +92,10 @@ This feature is available for everything and NOT part of the plus account any mo
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="reportFilter" src="img/x.gif" alt="فیلتر گزارش ها"></a>
+		<a href="plus.php?id=3"><img class="reportFilter" src="img/x.gif" alt="Filtrar informes"></a>
 	</td>
 	<th>Report filter</th>
 </tr>
@@ -106,10 +106,10 @@ This feature is available for everything and NOT part of the plus account any mo
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="directLinks" src="img/x.gif" alt="لینک های مستقیم"></a>
+		<a href="plus.php?id=3"><img class="directLinks" src="img/x.gif" alt="Enlaces directos"></a>
 	</td>
 	<th>Freely definable direct links</th>
 </tr>
@@ -120,10 +120,10 @@ This feature is available for everything and NOT part of the plus account any mo
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="graphicStatistics" src="img/x.gif" alt="آمار گرافیکی"></a>
+		<a href="plus.php?id=3"><img class="graphicStatistics" src="img/x.gif" alt="Estadísticas gráficas"></a>
 	</td>
 	<th>Graphical statistics</th>
 </tr>
@@ -134,10 +134,10 @@ This feature is available for everything and NOT part of the plus account any mo
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="villageOverview" src="img/x.gif" alt="دیدکلی دهکده"></a>
+		<a href="plus.php?id=3"><img class="villageOverview" src="img/x.gif" alt="Resumen de aldeas"></a>
 	</td>
 	<th>Central account overview</th>
 </tr>
@@ -149,10 +149,10 @@ This feature is available for everything and NOT part of the plus account any mo
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="notepad" src="img/x.gif" alt="یادداشت"></a>
+		<a href="plus.php?id=3"><img class="notepad" src="img/x.gif" alt="Bloc de notas"></a>
 	</td>
 	<th>Notepad</th>
 </tr>
@@ -168,97 +168,97 @@ This feature is available for everything and NOT part of the plus account any mo
 <h4 class="round spacer">Features of Travian <font color="#71D000">Gold</font></h4>
 <table id="gold_features" class="features transparent" cellpadding="1" cellspacing="1">
 	<tbody>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="p25Lumber" src="img/x.gif" alt="افزایش تولید چوب"></a>
+		<a href="plus.php?id=3"><img class="p25Lumber" src="img/x.gif" alt="Aumentar la producción de madera"></a>
 	</td>
 	<th>Production bonus for lumber</th>
 </tr>
 
 <tr>
-	<td class="text">With this Gold advantage all your villages' lumber production will be increased by 25%. 
+	<td class="text">With this Gold advantage all your villages' lumber production will be increased by 25%.
 
-The bonus will not be added to the single resource fields but to the sum of the production 
+The bonus will not be added to the single resource fields but to the sum of the production
 </td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="p25Clay" src="img/x.gif" alt="افزایش تولید خشت"></a>
+		<a href="plus.php?id=3"><img class="p25Clay" src="img/x.gif" alt="Aumentar la producción de barro"></a>
 	</td>
 	<th>Production bonus for clay</th>
 </tr>
 
 <tr>
-	<td class="text">With this Gold advantage, all of your villages' clay production will be increased by 25%. 
+	<td class="text">With this Gold advantage, all of your villages' clay production will be increased by 25%.
 
-The bonus will not be added to the single resource fields, but to the sum of the production instead 
+The bonus will not be added to the single resource fields, but to the sum of the production instead
 </td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="p25Iron" src="img/x.gif" alt="افزایش تولید آهن"></a>
+		<a href="plus.php?id=3"><img class="p25Iron" src="img/x.gif" alt="Aumentar la producción de hierro"></a>
 	</td>
 	<th>Production bonus for iron</th>
 </tr>
 
 <tr>
-	<td class="text">With this Gold advantage, all of your villages' iron production will be increased by 25%. 
+	<td class="text">With this Gold advantage, all of your villages' iron production will be increased by 25%.
 
-The bonus will not be added to the single resource fields, but to the sum of the production instead 
+The bonus will not be added to the single resource fields, but to the sum of the production instead
 </td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="p25Crop" src="img/x.gif" alt="افزایش تولید گندم"></a>
+		<a href="plus.php?id=3"><img class="p25Crop" src="img/x.gif" alt="Aumentar la producción de cereal"></a>
 	</td>
 	<th>Production bonus for crop</th>
 </tr>
 
 <tr>
-	<td class="text">With this Gold advantage, all of your villages' crop production will be increased by 25%. 
+	<td class="text">With this Gold advantage, all of your villages' crop production will be increased by 25%.
 
-The bonus will not be added to the single resource fields, but to the sum of the production instead 
+The bonus will not be added to the single resource fields, but to the sum of the production instead
 
 </td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="constructionComplete" src="img/x.gif" alt="ساخت ساختمان ها و تحقیقات را فورا به پایان برسانید."></a>
+		<a href="plus.php?id=3"><img class="constructionComplete" src="img/x.gif" alt="Completar edificios e investigaciones al instante"></a>
 	</td>
 	<th>Complete construction orders & research immediately..</th>
 </tr>
 
 <tr>
-	<td class="text">In the selected village, all construction and research orders in the academy as well as the smithy will be completed immediately. 
+	<td class="text">In the selected village, all construction and research orders in the academy as well as the smithy will be completed immediately.
 
-However, the Residence and Palace buildings and villages with a wonder of the world are excluded from this feature 
+However, the Residence and Palace buildings and villages with a wonder of the world are excluded from this feature
 
 </td>
 </tr>
 <tr>
 	<td colspan="2" class="empty"></td>
 </tr>
-	
+
 <tr>
 	<td rowspan="2" class="preview">
-		<a href="plus.php?id=3"><img class="npcMerchant" src="img/x.gif" alt="تاجر تعدیل منابع"></a>
+		<a href="plus.php?id=3"><img class="npcMerchant" src="img/x.gif" alt="Mercader NPC"></a>
 	</td>
 	<th>NPC Merchant</th>
 </tr>

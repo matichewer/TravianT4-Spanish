@@ -1,22 +1,22 @@
 ﻿<?php
 $prefix = "".TB_PREFIX."mdata";
 $sql = mysql_query("SELECT * FROM $prefix WHERE target = $session->uid AND archived = 0 AND deltarget = 0 ORDER BY time DESC");
-$query = mysql_num_rows($sql); // دریافت تعداد کوئری ها از دیتابیس
+$query = mysql_num_rows($sql); // Obtener el número de consultas de la base de datos
 
-if (isset($_GET['page'])) { // دریافت شماره صفحه
-    $page = preg_replace('#[^0-9]#i', '', $_GET['page']); // فیلتر کردن همه چیز به جز اعداد
+if (isset($_GET['page'])) { // Obtener el número de página
+    $page = preg_replace('#[^0-9]#i', '', $_GET['page']); // Filtrar todo excepto los números
 } else {
     $page = 1;
-} 
+}
 
-$itemsPerPage = 10; //تعداد آیتم های قابل نمایش در هر صفحه
-$lastPage = ceil($query / $itemsPerPage); // دریافت مقدار آخرین صفحه
+$itemsPerPage = 10; //Número de elementos mostrados por página
+$lastPage = ceil($query / $itemsPerPage); // Obtener el número de la última página
 
 if ($page < 1) {
     $page = 1;
 } else if ($page > $lastPage) {
     $page = $lastPage;
-} 
+}
 
 $centerPages = "";
 $sub1 = $page - 1;
@@ -28,37 +28,37 @@ $add3 = $page + 3;
 
 if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<span class="number currentPage">1</span>';
-	
+
 }elseif ($page == 1 && $lastPage == 2) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=2">2</a>';
-	
+
 }elseif ($page == 1 && $lastPage == 3) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=2">2</a> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=3">3</a>';
-	
+
 }elseif ($page == 1) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $add1 . '">' . $add1 . '</a> ';
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $add2 . '">' . $add2 . '</a> ... ';
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '">' . $lastPage . '</a>';
-	
+
 } else if ($page == $lastPage && $lastPage == 2) {
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=1">1</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == $lastPage && $lastPage == 3) {
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=1">1</a> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=2">2</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == $lastPage) {
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=1">1</a> ... ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $sub2 . '">' . $sub2 . '</a> ';
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span>';
-	
+
 } else if ($page == ($lastPage - 1) && $lastPage == 3) {
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=1">1</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
@@ -70,7 +70,7 @@ if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $add1 . '">' . $add1 . '</a> ... ';
 	$centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '">' . $lastPage . '</a>';
-	
+
 }else if ($page == ($lastPage - 1)) {
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=1">1</a> ... ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $sub1 . '">' . $sub1 . '</a> ';
@@ -81,7 +81,7 @@ if ($page <= 1 && $lastPage <= 1) {
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $add1 . '">' . $add1 . '</a>';
-    
+
 } else if ($page > 1 && $page < $lastPage) {
     $centerPages .= '<a class="number" href="' . $_SERVER['PHP_SELF'] . '?page=' . $sub1 . '">' . $sub1 . '</a> ';
     $centerPages .= '<span class="number currentPage">' . $page . '</span> ';
@@ -92,55 +92,55 @@ if ($page <= 1 && $lastPage <= 1) {
 
 
 
-$limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage; 
+$limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
 $sql2 = mysql_query("SELECT * FROM $prefix WHERE target = $session->uid AND archived = 0 AND deltarget = 0 ORDER BY time DESC $limit");
 $paginationDisplay = "";
 $nextPage = $_GET['page'] + 1;
 $previous = $_GET['page'] - 1;
 
 if ($page == "1" && $lastPage == "1"){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 
 }elseif ($lastPage == 0){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 
 }elseif ($page == "1" && $lastPage != "1"){
-$paginationDisplay .=  '<img alt="صفحه اول" src="img/x.gif" class="first disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه قبل" src="img/x.gif" class="previous disabled">';
+$paginationDisplay .=  '<img alt="Primera página" src="img/x.gif" class="first disabled"> ';
+$paginationDisplay .=  '<img alt="Página anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<a class="next" href="' . $_SERVER['PHP_SELF'] . '?page=' . $nextPage . '"><img alt="صفحه بعد" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '"><img alt="صفحه آخر" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="next" href="' . $_SERVER['PHP_SELF'] . '?page=' . $nextPage . '"><img alt="Página siguiente" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '"><img alt="Última página" src="img/x.gif"></a>';
 
 }elseif ($page != "1" && $page != $lastPage){
-$paginationDisplay .=  '<a class="first" href="' . $_SERVER['PHP_SELF'] . '?page=1"><img alt="صفحه اول" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="previous" href="' . $_SERVER['PHP_SELF'] . '?page=' . $previous . '"><img alt="صفحه قبل" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="first" href="' . $_SERVER['PHP_SELF'] . '?page=1"><img alt="Primera página" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="previous" href="' . $_SERVER['PHP_SELF'] . '?page=' . $previous . '"><img alt="Página anterior" src="img/x.gif"></a>';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<a class="next" href="' . $_SERVER['PHP_SELF'] . '?page=' . $nextPage . '"><img alt="صفحه بعد" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '"><img alt="صفحه آخر" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="next" href="' . $_SERVER['PHP_SELF'] . '?page=' . $nextPage . '"><img alt="Página siguiente" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?page=' . $lastPage . '"><img alt="Última página" src="img/x.gif"></a>';
 
 }elseif ($page == $lastPage){
-$paginationDisplay .=  '<a class="first" href="' . $_SERVER['PHP_SELF'] . '?page=1"><img alt="صفحه اول" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="previous" href="' . $_SERVER['PHP_SELF'] . '?page=' . $previous . '"><img alt="صفحه قبل" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="first" href="' . $_SERVER['PHP_SELF'] . '?page=1"><img alt="Primera página" src="img/x.gif"></a> ';
+$paginationDisplay .=  '<a class="previous" href="' . $_SERVER['PHP_SELF'] . '?page=' . $previous . '"><img alt="Página anterior" src="img/x.gif"></a>';
 $paginationDisplay .= $centerPages;
-$paginationDisplay .=  '<img alt="صفحه بعد" src="img/x.gif" class="next disabled"> ';
-$paginationDisplay .=  '<img alt="صفحه آخر" src="img/x.gif" class="last disabled">';
+$paginationDisplay .=  '<img alt="Página siguiente" src="img/x.gif" class="next disabled"> ';
+$paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last disabled">';
 }
 
 
 $outputList = '';
 $name = 1;
-if($query == 0) {        
+if($query == 0) {
     $outputList .= "<td colspan=\"4\" class=\"none\">There are no messages available.</td>";
 }else{
-while($row = mysql_fetch_array($sql2)){ 
+while($row = mysql_fetch_array($sql2)){
     $id = $row["id"];
     $target = $row["target"];
     $owner = $row["owner"];
@@ -150,13 +150,13 @@ while($row = mysql_fetch_array($sql2)){
     $archived = $row["archived"];
     $send = $row["send"];
     $time = $row["time"];
-	
-    
+
+
     $outputList .= "<tr><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"subject\"><div class=\"subjectWrapper\">";
     if($viewed == 0) {
 			$viewed = "Unread";
 			} else { $viewed = "Read"; }
-    $outputList .= "<img src=\"img/x.gif\" class=\"messageStatus messageStatus".$viewed."\" alt=\"خوانده شده\">
+    $outputList .= "<img src=\"img/x.gif\" class=\"messageStatus messageStatus".$viewed."\" alt=\"Leído\">
 				<a href=\"nachrichten.php?id=".$id."\">".$topic."</a></div></td>";
     $date = $generator->procMtime($time);
     if($owner <= 1) {
@@ -165,7 +165,7 @@ while($row = mysql_fetch_array($sql2)){
     $outputList .= "<td class=\"send\"><a href=\"spieler.php?uid=".$owner."\">".$database->getUserField($owner,'username',0)."</a></td>";
     }
     $outputList .= "<td class=\"dat\">".$date[0]." ".date('H:i',$time)."</td>";
-    
+
 	$name++;
 }
  }
@@ -183,7 +183,7 @@ while($row = mysql_fetch_array($sql2)){
 			</tr>
 		</thead>
 <tbody>
-   <?php 
+   <?php
 
     if(isset($_GET['s'])) {
     $s = $_GET['s'];
@@ -191,13 +191,13 @@ while($row = mysql_fetch_array($sql2)){
     else {
     $s = 0;
     }
-    
+
     print "$outputList";
-    
+
     ?>
 
-      
-      
+
+
 </tbody>
 </table>
 
@@ -222,7 +222,7 @@ while($row = mysql_fetch_array($sql2)){
 <button name="delmsg" type="submit" value="del" id="del" class="delete">
 <div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Delete</div></div>
 </button>
-                    
+
 <?php if($session->plus) { ?>
 <button name="archive" type="submit" value="archive" id="archive" class="delete">
 <div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Archive</div></div>

@@ -10,7 +10,7 @@ include "Templates/html.tpl";
 <div id="wrapper">
 <img id="staticElements" src="img\x.gif" alt="" />
 <div class="bodyWrapper">
-					
+
 <img style="filter:chroma();" src="img\x.gif" id="msfilter" alt="" />
 <div id="header">
 <div id="mtop">
@@ -37,7 +37,7 @@ include "Templates/html.tpl";
 				<li>
 			<a href="#" target="_blank" title="<?php echo FORUM; ?>"><?php echo FORUM; ?></a>
 		</li>
-		
+
 		<li class='support' >
 			<a href="contact.php" title="<?php echo SUPPORT; ?>"><?php echo SUPPORT; ?></a>
 		</li>
@@ -49,7 +49,7 @@ include "Templates/html.tpl";
 							<div class="contentTitle">&nbsp;</div>
 							<div class="contentContainer">
 								<div id="content" class="activate">
-<h1 class="titleInHeader">ورود</h1>
+<h1 class="titleInHeader">Iniciar sesión</h1>
 <div id="passwordForgotten">
 <?php
 $npw = $_GET['npw'];
@@ -64,16 +64,16 @@ if($database->checkExist($user, 0)){
         	$newPassword = md5($npw);
         	$database->updateUserField($user, password, $newPassword, 0);
             $database->editTableField('newproc', 'proc', 1, 'uid', $getUser['id']);
-			echo 'رمز عبور با موفقیت تغییر یافت.<br /><br />این لینک را ادامه دهید تا <a class="a arrow" href="login.php?user='.$user.'&pw='.$npw.'">ورود</a>';
+			echo 'La contraseña se cambió correctamente.<br /><br />Sigue este enlace para <a class="a arrow" href="login.php?user='.$user.'&pw='.$npw.'">iniciar sesión</a>';
 			$database->removeProc($getUser['id']);
         }else{
-        	echo '<font color="#FF0000">کد استاندارد اشتباه است!</font>';
+		echo '<font color="#FF0000">El código de verificación es incorrecto.</font>';
         }
     }else{
-        	echo '<font color="#FF0000">رمز عبور اشتباه است!</font>';
+		echo '<font color="#FF0000">La contraseña es incorrecta.</font>';
         }
 }else{
-	echo '<font color="#FF0000">این کاربر ثبت نشده است.</font>';
+	echo '<font color="#FF0000">Este usuario no está registrado.</font>';
 }
 ?>
 
@@ -83,7 +83,7 @@ if($database->checkExist($user, 0)){
 <div class="clear"></div></div>
 <div class="contentFooter">&nbsp;</div></div>
 		<div id="side_info">
-        
+
 	<?php if(NEWSBOX1) { ?>
                 <div class="news news1">
                 <?php include("Templates/News/newsbox1.tpl"); ?>
@@ -94,9 +94,9 @@ if($database->checkExist($user, 0)){
                 <?php include("Templates/News/newsbox2.tpl"); ?>
                 </div>
                <?php } ?>
-            
+
 		</div>
-        
+
 				<?php
 				include("Templates/footer.tpl");
 				?>
@@ -106,4 +106,3 @@ if($database->checkExist($user, 0)){
 </div>
 </body>
 </html>
-

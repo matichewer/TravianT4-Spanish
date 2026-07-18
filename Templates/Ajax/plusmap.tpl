@@ -1,4 +1,4 @@
-<?php 
+<?php
 include("GameEngine/Session.php");
 header("Content-Type: application/json;");
 $currentcoor = $database->getCoor($z);
@@ -68,7 +68,7 @@ for($i=0;$i<=12;$i++) {
 	}
 	if($row1 != 13 && $i != 12) {
 		echo "\\n";
-	}	
+	}
 	$index+=1;
 }
 echo "<\\/div><div id=\\\"map_rulers\\\">";
@@ -95,34 +95,34 @@ for($i=0;$i<=12;$i++) {
 }
 echo "<area id=\\\"ma_n1\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($x,$yp1);
-echo "\\\" coords=\\\"762,115,30\\\" shape=\\\"circle\\\" title=\\\"شمال\\\"\\/>\\n";
+echo "\\\" coords=\\\"762,115,30\\\" shape=\\\"circle\\\" title=\\\"Norte\\\"\\/>\\n";
 echo "<area id=\\\"ma_n2\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($xp1,$y);
-echo "\\\" coords=\\\"770,430,30\\\" shape=\\\"circle\\\" title=\\\"شرق\\\"\\/>\\n";
+echo "\\\" coords=\\\"770,430,30\\\" shape=\\\"circle\\\" title=\\\"Este\\\"\\/>\\n";
 echo "<area id=\\\"ma_n3\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($x,$ym1);
-echo "\\\" coords=\\\"210,430,30\\\" shape=\\\"circle\\\" title=\\\"جنوب\\\"\\/>\\n";
+echo "\\\" coords=\\\"210,430,30\\\" shape=\\\"circle\\\" title=\\\"Sur\\\"\\/>\\n";
 echo "<area id=\\\"ma_n4\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($xm1,$y);
-echo "\\\" coords=\\\"200,115,30\\\" shape=\\\"circle\\\" title=\\\"غرب\\\"\\/>\\n";
+echo "\\\" coords=\\\"200,115,30\\\" shape=\\\"circle\\\" title=\\\"Oeste\\\"\\/>\\n";
 echo "<\\/map><img id=\\\"map_links\\\" src=\\\"img\\/x.gif\\\" usemap=\\\"#map_overlay_large\\\" \\/><img id=\\\"map_navibox\\\" src=\\\"img\\/x.gif\\\" usemap=\\\"#map_navibox\\\"\\/><map name=\\\"map_navibox\\\">";
 echo"<area id=\\\"ma_n1p7\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($x,$yp13);
-echo "\\\" coords=\\\"51,15,73,3,95,15,73,27\\\" shape=\\\"poly\\\" title=\\\"شمال\\\"\\/>\\n";
+echo "\\\" coords=\\\"51,15,73,3,95,15,73,27\\\" shape=\\\"poly\\\" title=\\\"Norte\\\"\\/>\\n";
 echo"<area id=\\\"ma_n2p7\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($xm13,$y);
-echo "\\\" coords=\\\"51,41,73,29,95,41,73,53\\\" shape=\\\"poly\\\" title=\\\"شرق\\\"\\/>\\n";
+echo "\\\" coords=\\\"51,41,73,29,95,41,73,53\\\" shape=\\\"poly\\\" title=\\\"Este\\\"\\/>\\n";
 echo"<area id=\\\"ma_n3p7\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($x,$ym13);
-echo "\\\" coords=\\\"4,41,26,29,48,41,26,53\\\" shape=\\\"poly\\\" title=\\\"جنوب\\\"\\/>\\n";
+echo "\\\" coords=\\\"4,41,26,29,48,41,26,53\\\" shape=\\\"poly\\\" title=\\\"Sur\\\"\\/>\\n";
 echo"<area id=\\\"ma_n4p7\\\" href=\\\"karte2.php?z=";
 echo $generator->getBaseID($xp13,$y);
-echo "\\\" coords=\\\"4,15,26,3,48,15,26,27\\\" shape=\\\"poly\\\" title=\\\"غرب\\\"\\/>\\n";
+echo "\\\" coords=\\\"4,15,26,3,48,15,26,27\\\" shape=\\\"poly\\\" title=\\\"Oeste\\\"\\/>\\n";
 echo "<\\/map><div id=\\\"map_coords\\\"><form name=\\\"map_coords\\\" method=\\\"post\\\" action=\\\"karte2.php\\\">\\n\\t\\t\\t<span>x <\\/span><input id=\\\"mcx\\\" class=\\\"text\\\" name=\\\"xp\\\" value=\\\"";
-echo $x; 
+echo $x;
 echo "\\\" maxlength=\\\"4\\\"\\/>\\n\\t\\t\\t<span>y <\\/span><input id=\\\"mcy\\\" class=\\\"text\\\" name=\\\"yp\\\" value=\\\"";
 echo $y;
-echo "\\\" maxlength=\\\"4\\\"\\/>\\n\\t\\t\\t<input type=\\\"image\\\" id=\\\"btn_ok\\\" class=\\\"dynamic_img\\\" value=\\\"ok\\\" name=\\\"s1\\\" src=\\\"img\\/x.gif\\\" alt=\\\"\\\" \\/>\\n\\t\\t\\t<\\/form><\\/div><table cellpadding=\\\"1\\\" cellspacing=\\\"1\\\" id=\\\"map_infobox\\\" class=\\\"default\\\"><thead><tr><th colspan=\\\"2\\\">جزئیات<\\/th><\\/tr><\\/thead><tbody><tr><th>بازیکن:<\\/th><td>-<\\/td><\\/tr><tr><th>جمعیت:<\\/th><td>-<\\/td><\\/tr><tr><th>اتحاد:<\\/th><td>-<\\/td><\\/tr><\\/tbody><\\/table><\\/div><\\/div><\\/div><\\/div>\",\"dat\":{\"m_c\":{\"az\":{\"n1\":";
+echo "\\\" maxlength=\\\"4\\\"\\/>\\n\\t\\t\\t<input type=\\\"image\\\" id=\\\"btn_ok\\\" class=\\\"dynamic_img\\\" value=\\\"ok\\\" name=\\\"s1\\\" src=\\\"img\\/x.gif\\\" alt=\\\"\\\" \\/>\\n\\t\\t\\t<\\/form><\\/div><table cellpadding=\\\"1\\\" cellspacing=\\\"1\\\" id=\\\"map_infobox\\\" class=\\\"default\\\"><thead><tr><th colspan=\\\"2\\\">Detalles<\\/th><\\/tr><\\/thead><tbody><tr><th>Jugador:<\\/th><td>-<\\/td><\\/tr><tr><th>Población:<\\/th><td>-<\\/td><\\/tr><tr><th>Alianza:<\\/th><td>-<\\/td><\\/tr><\\/tbody><\\/table><\\/div><\\/div><\\/div><\\/div>\",\"dat\":{\"m_c\":{\"az\":{\"n1\":";
 echo $generator->getBaseID($x,$yp1);
 echo ",\"n1p7\":";
 echo $generator->getBaseID($x,$yp13);
@@ -183,5 +183,5 @@ echo "],\"z\":{\"x\":";
 echo $x;
 echo ",\"y\":";
 echo $y;
-echo "},\"size\":13},\"mdim\":{\"x\":13,\"y\":13,\"rad\":6},\"mmode\":0}}";																																																																																																									
+echo "},\"size\":13},\"mdim\":{\"x\":13,\"y\":13,\"rad\":6},\"mmode\":0}}";
 ?>

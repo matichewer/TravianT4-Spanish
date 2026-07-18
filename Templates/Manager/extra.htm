@@ -1,13 +1,13 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
 <script type="text/javascript">_editor_url="htmlarea/";_editor_lang="en";</script>
 <script type="text/javascript" src="htmlarea/htmlarea.js"></script>
-<title>RashCMS:: صفحات اضافي</title>
+<title>RashCMS:: Páginas adicionales</title>
 <script>
 var rashcmsfirst= false;
 var CurrentStep = 1;
@@ -19,7 +19,7 @@ function SetCurrent(val)
 	 {
 	 if(val== 3 && editing==false)
 		{
-			alert("ابتدا يك بلوك را جهت ويرايش انتخاب كنيد.");
+			alert("Primero selecciona una página para editarla.");
 			return false;
 		}
 	 editing = false;
@@ -72,7 +72,7 @@ editing = false;
 }
 function delpage(id){
 hideid("editing_area");
-var msg = "آيا از حذف اين صفحه اطمينان داريد؟\nعمليات حذف برگشت پذير نميباشد.";
+var msg = "¿Seguro que quieres eliminar esta página?\nEsta acción no se puede deshacer.";
 if(confirm(msg))
 {
 connect('pages/page.php',"task=delete_page&id="+id,'ajax_tabs_1_content_1',loadingt,'edit_page');
@@ -99,21 +99,21 @@ connect('pages/page.php',"task=delete_page&id="+id,'ajax_tabs_1_content_1',loadi
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -127,53 +127,53 @@ connect('pages/page.php',"task=delete_page&id="+id,'ajax_tabs_1_content_1',loadi
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-			درج صفحه</a></li>
-					
+			Crear página</a></li>
+
 				  <li><a id="a_title_2" onclick="SetCurrent(2);return false;" href="#">
-				مديريت صفحه ها</a></li>
+				Administrar páginas</a></li>
 		<li><a id="a_title_3" onclick="SetCurrent(3);return false;" href="#">
-		ويرايش صفحه</a></li>
+		Editar página</a></li>
 
 				</ul>
 				</div>
-				
-<div id="div_1"> 
+
+<div id="div_1">
 <form onsubmit="Mform('new_page');return false" method=post>
 <table border="0" width="100%" class="tbl" id="tabs_0_content">
 <tr>
 <td colspan="2" id="ajax_tabs_0_content"></td>
 </tr>
 <tr>
-<td width="29%">عنوان صفحه :</td>
+<td width="29%">Título de la página :</td>
 <td width="69%"><input class="rinput" type="text" name="page_title" id="page_title"></td>
 </tr>
 <tr>
-<td width="29%">قابل نمایش برای: </td>
+<td width="29%">Visible para: </td>
 <td width="69%">
 <select name="page_show" id="page_show" class="select" size="1">
-<option selected value="2">برای عموم کاربران</option>
-<option value="3">فقط کاربران مهمان</option>
-<option value="1">فقط برای کاربران عضو</option>
+<option selected value="2">Todos los usuarios</option>
+<option value="3">Solo invitados</option>
+<option value="1">Solo miembros</option>
 </select>
 </td>
 </tr>
 <tr>
-<td width="99%" colspan="2"><textarea dir=rtl class="inp" name="text" id="text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
+<td width="99%" colspan="2"><textarea dir=ltr class="inp" name="text" id="text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
 </tr>
 <tr>
 <td colspan="2"><center>
-<input onclick="Mform('new_page');return false;" type="submit" name="submit" value="ايجاد صفحه" class="inp"></center></td>
+<input onclick="Mform('new_page');return false;" type="submit" name="submit" value="Crear página" class="inp"></center></td>
 </tr>
 </table></form>
 
@@ -195,26 +195,26 @@ connect('pages/page.php',"task=delete_page&id="+id,'ajax_tabs_1_content_1',loadi
 <td colspan="2" id="ajax_tabs_2_content"></td>
 </tr>
 <tr>
-<td width="29%">عنوان صفحه :</td>
+<td width="29%">Título de la página :</td>
 <td width="69%"><input class="rinput" type="text" name="edit_page_title" id="edit_page_title"></td>
 </tr>
 <tr>
-<td width="29%">قابل نمایش برای: </td>
+<td width="29%">Visible para: </td>
 <td width="69%">
 <select name="edit_page_show" id="edit_page_show" class="select" size="1">
-<option value="1" id="edit_page_show_1">فقط برای کاربران عضو</option>
-<option selected value="2" id="edit_page_show_2">برای عموم کاربران</option>
-<option value="3" id="edit_page_show_3">فقط کاربران مهمان</option>
+<option value="1" id="edit_page_show_1">Solo miembros</option>
+<option selected value="2" id="edit_page_show_2">Todos los usuarios</option>
+<option value="3" id="edit_page_show_3">Solo invitados</option>
 
 </select>
 </td>
 </tr>
 <tr>
-<td width="99%" colspan="2"><textarea dir=rtl class="inp" name="edit_text" id="edit_text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
+<td width="99%" colspan="2"><textarea dir=ltr class="inp" name="edit_text" id="edit_text" style="height: 193; width: 428;" cols="10" rows="10"></textarea></td>
 </tr>
 <tr>
 <td colspan="2"><center>
-<input onclick="Mform('edit_page');return false;" type="submit" name="submit" value="ويرايش صفحه" class="inp"></center></td>
+<input onclick="Mform('edit_page');return false;" type="submit" name="submit" value="Editar página" class="inp"></center></td>
 </tr>
 </table><input type="hidden" name="edit_page_id" id="edit_page_id" value=""></form>
 
@@ -225,13 +225,13 @@ connect('pages/page.php',"task=delete_page&id="+id,'ajax_tabs_1_content_1',loadi
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>
-	
+
 </div>
 </div>
 <script>setup();</script>

@@ -13,7 +13,7 @@ else {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	<title><?php echo SERVER_NAME ?></title> 
+	<title><?php echo SERVER_NAME ?></title>
     <link REL="shortcut icon" HREF="favicon.ico"/>
 	<meta http-equiv="cache-control" content="max-age=0" />
 	<meta http-equiv="pragma" content="no-cache" />
@@ -24,14 +24,14 @@ else {
         <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />
         <link href="img/travian_basics2.css" rel="stylesheet" type="text/css" />
         <script src="crypt.js?1314084856" type="text/javascript"></script>
-        
+
 <script type="text/javascript">
 
 		window.addEvent('domready', start);
 	</script>
 </head>
- 
- 
+
+
 <body class="v35 webkit chrome map qualificationServerMap" onload="start()">
 
 <?php
@@ -42,17 +42,17 @@ if(isset($_GET['d']) && isset($_GET['c'])) {
 	else {
 		header("Location: dorf1.php");
 	}
-} 
+}
 else {
 	include("Templates/Map/mapviewlarge.tpl");
 }
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 	Travian.Translation.add(
 	{
-		'close' : 'بستن'
+		'close' : 'Cerrar'
 	});
-</script> 
+</script>
 </div>
 <div id="ce"></div>
 </div>

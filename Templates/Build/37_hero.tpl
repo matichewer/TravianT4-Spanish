@@ -52,8 +52,8 @@
 
 		<div class="clear"></div>
 
-  <div class="attribute defBonus tooltip" title="<font color=white><b>امتیاز دفاعی</b></font><br>باعث افزایش قدرت دفاعی تمامی لشکریانی خواهد شد که همراه قهرمان می‌باشند.<br><font color='#5dcbfb'>امتیاز دفاعی: <?php echo ($hero_info['defencebonus']/200); ?>%</font>">
-			<div class="element attribName">امتیاز دفاعی</div>
+  <div class="attribute defBonus tooltip" title="<font color=white><b>Bonificación defensiva</b></font><br>Aumenta la fuerza defensiva de todas las tropas que acompañan al héroe.<br><font color='#5dcbfb'>Bonificación defensiva: <?php echo ($hero_info['defencebonus']/200); ?>%</font>">
+			<div class="element attribName">Bonificación defensiva</div>
 			<div class="element current power"><span class="value"><?php echo ($hero_info['defencebonus']/200); ?></span>%</div>
 			<div class="element progress">
 				<div class="bar-bg">
@@ -74,9 +74,9 @@
 
 		<div class="clear"></div>
 
-  <div class="attribute productionPoints tooltip" title="<font color=white><b>منابع</b></font><br>باعث افزایش تولید منابع دهکده‌ای خواهد شد که قهرمان در حال حاضر در آن مقیم است.
-<br><font color='#5dcbfb'>افزایش تولید منابع: <?php echo ($hero_info['resource']); ?>%</font>">
-			<div class="element attribName">منابع</div>
+  <div class="attribute productionPoints tooltip" title="<font color=white><b>Recursos</b></font><br>Aumenta la producción de recursos de la aldea en la que reside actualmente el héroe.
+<br><font color='#5dcbfb'>Aumento de producción: <?php echo ($hero_info['resource']); ?>%</font>">
+			<div class="element attribName">Recursos</div>
 			<div class="element current power"><?php echo ($hero_info['resource']/10); ?></div>
 			<div class="element progress">
 				<div class="bar-bg">
@@ -100,7 +100,7 @@
   </div>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">	<div class="attribute res" id="setResource">
 		<div class="changeResourcesHeadline">
-			تغییر نوع تولید منابع از طرف قهرمان		</div>
+			Cambiar el tipo de recurso producido por el héroe		</div>
 		<div class="clear"></div>
 		<div class="resource">
 		  <input type="radio" name="resource" value="0" id="resourceHero0" checked="checked">
@@ -137,10 +137,10 @@
 		</div>
   </div>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
-    
-<div class="attribute health tooltip" title="<font color=white><b>سلامتی</b></font><br>بازسازی قهرمان شما: 20% برای هر روز
-<br><font color='#5dcbfb'>سلامتی: 20% در روز از قهرمان</font>">
-			<div class="element attribName">سلامتی</div>
+
+<div class="attribute health tooltip" title="<font color=white><b>Salud</b></font><br>Regeneración del héroe: 20% al día
+<br><font color='#5dcbfb'>Salud: 20% al día</font>">
+			<div class="element attribName">Salud</div>
 			<div class="element current power"><span class="value"><?php echo floor($hero_info['health']); ?></span>%</div>
 			<div class="element progress">
 				<div class="bar-bg">
@@ -168,9 +168,9 @@
 			</div>
   </div>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
-    
-<div class="attribute experience tooltip" title="<font color=white><b>تجربه <?php echo floor($hero_info['level']/2); ?>%</b></font><br>Level <?php echo ($hero_info['experience']+1); ?> قهرمان شما به <?php echo (150-$hero_info['level']); ?> تجربه نیاز دارد.">
-			<div class="element attribName">تجربه</div>
+
+<div class="attribute experience tooltip" title="<font color=white><b>Experiencia <?php echo floor($hero_info['level']/2); ?>%</b></font><br>Para alcanzar el nivel <?php echo ($hero_info['experience']+1); ?>, tu héroe necesita <?php echo (150-$hero_info['level']); ?> puntos de experiencia.">
+			<div class="element attribName">Experiencia</div>
 			<div class="element current power"><?php echo $hero_info['level']; ?></div>
 			<div class="element progress">
 				<div class="bar-bg">
@@ -186,7 +186,7 @@
 
 
 
-  <div class="attribute level tooltip" title="<font color=white><b>Nivel</b></font><br>Nivel<br><font color='#5dcbfb'>قدرت هجومی قهرمان شما برای هر امتیازی که به آن داده می‌شود به جای اینکه به میزان 80 افزایش یابد به میزان 100 افزایش خواهد یافت.</font>">
+  <div class="attribute level tooltip" title="<font color=white><b>Nivel</b></font><br>Nivel<br><font color='#5dcbfb'>La fuerza ofensiva de tu héroe aumentará 100 puntos, en lugar de 80, por cada punto asignado.</font>">
 			<div class="element attribName">Nivel</div>
 			<div class="element current power"><?php echo $hero_info['experience']; ?></div>
 			<div class="element progress">
@@ -199,4 +199,3 @@
 
 		</div>
   </div></div>
-    

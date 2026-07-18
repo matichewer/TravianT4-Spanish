@@ -1,11 +1,11 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Language" content="fa">
+<meta http-equiv="Content-Language" content="es">
 <link rel="stylesheet" type="text/css" href="main.css">
 <link rel="stylesheet" type="text/css" href="../template/admin/rashcms/main.css">
 <script language="javascript" src="../template/admin/rashcms/ajax.js" type="text/javascript"></script>
-<title>RashCMS:: ماژول ها</title>
+<title>RashCMS:: Módulos</title>
 <script>
 var CurrentStep = 1;
 function SetCurrent(val)
@@ -35,21 +35,21 @@ function SetCurrent(val)
 		<tag:rashcms_links>
 		<div class="point"> <a target=[target] href=[url] class="[class]">[title]</a></div>
 		</tag:rashcms_links>
-<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">راش سي ام اس</a></div>
-<div class="point"> <a target=_blank href="[site]" class="rash">مشاهده سايت</a></div>
-<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">خروج از سيستم</a></div>
+<div class="point"> <a target=_blank href="http://rashcms.com" class="rashcms">RashCMS</a></div>
+<div class="point"> <a target=_blank href="[site]" class="rash">Ver sitio</a></div>
+<div class="point"> <a target=_blank href="login.php?logout=true" class="rashcms">Cerrar sesión</a></div>
 </div>
 		</td>
 		<td width="670" valign="top">
 		<table align="center" cellpadding="0" cellspacing="3">
 			<tr>
 				<td height="86" width="425" valign="middle">
-				<div class="point">سيستم مديريت محتواي راش</div>
-				<div class="point">امروز 
-				<b>[todayfarsi]</b> 
-				مي باشد .</div>
-				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font> عزیز به مدیریت سیستم خوش آمدید ! خسته نباشید .</div>
-				<div class="point">آی پی : 
+				<div class="point">Sistema de gestión de contenidos RashCMS</div>
+				<div class="point">Hoy es
+				<b>[todayfarsi]</b>
+				.</div>
+				<div class="point"><font color="#FF33CC"><b>[fullname]</b></font>, bienvenido al panel de administración.</div>
+				<div class="point">IP :
 				[ip]</div></td>
 				<td height="86" width="236">
 				<p align="center">
@@ -63,38 +63,38 @@ function SetCurrent(val)
 			</tr>
 			<tr>
 				<td width="664" colspan="2" valign="top">
-									
+
 			</td>
 			</tr>
 			<tr>
 				<td height="261" width="664" colspan="2" valign="top">
-									
+
 				<div class="page">
-				
+
 				<div align="center">
 				<ul class="tabs">
 				  <li><a id="a_title_1" onclick="SetCurrent(1);return false;" class="current" href="#">
-			ماژول ها</a></li>
-					
+			Módulos</a></li>
+
 				 <tag:extra_div>
 				 <li><a id="a_title_[id]" onclick="SetCurrent([id]);return false;" href="#">[title]</a></li>
 				</tag:extra_div>
 				</ul>
 				</div>
-				
-<div id="div_1"> 
+
+<div id="div_1">
 <center>
 	<table border="0" width="95%" id="duplicate">
 <tr>
 
 <td bgcolor="#d1dde0" height="26">
-<strong>نام ماژول</strong></td>
+<strong>Nombre del módulo</strong></td>
 <td bgcolor="#d1dde0" height="26">
-<strong>وضعيت</strong></td>
+<strong>Estado</strong></td>
 <td bgcolor="#d1dde0" height="26">
-<strong>عمليات</strong></td>
+<strong>Acciones</strong></td>
 <td bgcolor="#d1dde0" height="26">
-<strong>سازنده</strong></td>
+<strong>Autor</strong></td>
 </tr>
 <tag:modulelist>
 <tr>
@@ -105,16 +105,16 @@ function SetCurrent(val)
 [stat]</td>
 <td>
 <!-- IF Install -->
-<a href="modules.php?module=[file]&task=install&return=module.php">نصب</a> -
+<a href="modules.php?module=[file]&task=install&return=module.php">Instalar</a> -
 <!-- ENDIF Install -->
 <!-- IF UInstall -->
-<a href="modules.php?module=[file]&task=uninstall&return=module.php">حذف</a> -
+<a href="modules.php?module=[file]&task=uninstall&return=module.php">Desinstalar</a> -
 <!-- ENDIF UInstall -->
 <!-- IF Activate -->
-<a href="modules.php?module=[file]&task=activate&return=module.php">فعال سازي </a>-
+<a href="modules.php?module=[file]&task=activate&return=module.php">Activar </a>-
 <!-- ENDIF Activate -->
 <!-- IF InActivate -->
-<a href="modules.php?module=[file]&task=inactivate&return=module.php">غير فعال سازي
+<a href="modules.php?module=[file]&task=inactivate&return=module.php">Desactivar
 <!-- ENDIF InActivate -->
 
 </a>
@@ -139,13 +139,13 @@ function SetCurrent(val)
 				<p>&nbsp;</td>
 			</tr>
 		</table>
-		<p align="center" style="height: 28px">كليه حقوق براي
-		<a href="http://rashcms.com" target="_blank"><strong>راش سي ام اس</strong></a> محفوظ است. 
-		<strong><a href="http://mihanphp.com" target="_blank">مــــــيهن پي اچ پي</a></strong><br><br>
+		<p align="center" style="height: 28px">Todos los derechos de
+		<a href="http://rashcms.com" target="_blank"><strong>RashCMS</strong></a> están reservados.
+		<strong><a href="http://mihanphp.com" target="_blank">MihanPHP</a></strong><br><br>
 		</td>
 	</tr>
 	</table>
-	
+
 </div>
 </div>
 </body>

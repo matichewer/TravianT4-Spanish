@@ -11,54 +11,56 @@
 #################################################################################
 
 class Mailer {
-	
+
 	function sendActivate($email,$username,$pass,$act) {
-		
-	$subject = "خوش آمدید ".SERVER_NAME." به";
-	$message = "سلام ".$username."
 
-بخاطر عضویت شما متشکریم
+	$subject = "Bienvenido a ".SERVER_NAME;
+	$message = "Hola ".$username."
+
+Gracias por registrarte.
 
 ----------------------------
-نام: ".$username."
-رمز عبور: ".$pass."
-کد فعالسازی: ".$act."
+Usuario: ".$username."
+Contraseña: ".$pass."
+Código de activación: ".$act."
 ----------------------------
 
-برای فعال کردن اکانت خود لطفا روی این لینک کلیک کنید:
+Para activar tu cuenta, haz clic en este enlace:
 ".HOMEPAGE."activate.php?code=".$act."
 
-با تشکر، ".SERVER_NAME;
-				
+Gracias,
+".SERVER_NAME;
+
 	$headers = "From: ".ADMIN_EMAIL."\n";
-		
+
 	mail($email, $subject, $message, $headers);
 	}
-	
-	
+
+
 	function sendPassword($email, $npw, $act, $username) {
-		
-	$subject = "رمز عبور را فراموش کردید؟";
-	$message = "سلام ".$username."
 
-این ایمیل بخاطر درخواست شما برای رمز عبور جدید ارسال شده است!
-اگر شما این درخواست را کردید با دقت ادامه دهید
+	$subject = "¿Has olvidado tu contraseña?";
+	$message = "Hola ".$username."
+
+Este correo se envió porque solicitaste una contraseña nueva.
+Si realizaste la solicitud, continúa con las instrucciones.
 
 ----------------------------
-نام اکانت: ".$username."
-رمز عبور جدید: ".$npw."
+Usuario: ".$username."
+Contraseña nueva: ".$npw."
 ----------------------------
 
-برای فعال کردن رمز جدید لطفا روی این لینک کلیک کنید:
+Para activar la contraseña nueva, haz clic en este enlace:
 ".HOMEPAGE."password.php?user=".$username."&npw=".$npw."&code=".$act."
 
-با تشکر، ".SERVER_NAME;
-				
+Gracias,
+".SERVER_NAME;
+
 	$headers = "From: ".ADMIN_EMAIL."\n";
-		
+
 	mail($email, $subject, $message, $headers);
 	}
-	
+
 };
 $mailer = new Mailer;
 ?>
