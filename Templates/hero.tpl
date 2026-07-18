@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 $hero = $database->getHeroData($session->uid);
 $herodetail = $database->HeroFace($session->uid);
 $tribe = $session->tribe;

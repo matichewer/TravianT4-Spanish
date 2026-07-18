@@ -1,4 +1,4 @@
-﻿<div id="villageName">
+<div id="villageName">
 	<div class="clickable" ondblclick="Travian.Game.showEditVillageDialog('<?php echo SIDEINFO_CHANGEVIL_TITLE; ?>', '<?php echo SIDEINFO_CHANGEVIL_LABEL; ?>', '<?php echo SIDEINFO_CHANGEVIL_BTN; ?>', <?php echo $village->wid; ?>);" title="<?php echo SIDEINFO_CHANGE_TITLE; ?>" >		
         
         

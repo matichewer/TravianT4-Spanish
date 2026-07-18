@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 $displayarray = $database->getUserArray($session->uid,1);
 if ($displayarray['fquest'] != "1,1,1,1,1,1,1,1,1,1,1" && QUEST==true){
 ?>

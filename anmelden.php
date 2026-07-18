@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include('GameEngine/Account.php');
 include "Templates/html.tpl";
 ?>

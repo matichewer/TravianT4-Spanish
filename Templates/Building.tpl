@@ -1,4 +1,4 @@
-﻿<div class="boxes buildingList">
+<div class="boxes buildingList">
 <div class="boxes-tl"></div>
 <div class="boxes-tr"></div>
 <div class="boxes-tc"></div>

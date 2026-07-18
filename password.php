@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include('config/config.php');
 include('GameEngine/database.php');
 include('GameEngine/lang/'.LANG.'.php');

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 include("GameEngine/Database.php");
 include("config/config.php");

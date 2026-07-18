@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (date('H')>=20 or date('H')<6){
 $hclass = "night";
 $htitle = HEADER_NIGHT;

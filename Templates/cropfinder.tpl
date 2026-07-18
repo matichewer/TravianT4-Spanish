@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
    if(is_numeric($_GET['x']) AND is_numeric($_GET['y'])) {
        $coor2['x'] = $_GET['x'];

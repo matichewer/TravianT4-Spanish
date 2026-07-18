@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 ob_start();
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
