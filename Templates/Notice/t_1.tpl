@@ -158,7 +158,8 @@ while($row = mysql_fetch_array($sql2)){
     $dataarray = explode(",",$data);
     
     
-    $outputList .= "<tr><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
+    $rowClass = ($viewed == 0) ? " class=\"reportUnread\"" : "";
+    $outputList .= "<tr".$rowClass."><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
     
     if($type==9){
     	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport21\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";

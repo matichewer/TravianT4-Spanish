@@ -154,7 +154,8 @@ while($row = mysql_fetch_array($sql2)){
     $archive = $row["archive"];
     $dataarray = explode(",",$data);
 
-    $outputList .= "<tr><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
+    $rowClass = ($viewed == 0) ? " class=\"reportUnread\"" : "";
+    $outputList .= "<tr".$rowClass."><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
     $outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$ntype\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
 
     $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";

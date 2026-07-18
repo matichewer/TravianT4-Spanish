@@ -3,3 +3,7 @@
 /* ------------------- New CSS styles ------------------- */
 /* ------------------------------------------------------ */
 
+/* Keep unread reports visible at a glance in every report list. */
+div.reports table#overview tbody tr.reportUnread td {
+	background-color: #fce6c4;
+}
