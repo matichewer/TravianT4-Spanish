@@ -1,5 +1,5 @@
 #!/bin/bash
 
 git pull
-docker compose -b -d
+docker compose --build --dettach
 
