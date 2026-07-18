@@ -7,11 +7,11 @@ for($y=0;$y < $total_for;$y++){
 $timer += 1;
 if ($units[$y]['sort_type']==3){
 	if ($units[$y]['attack_type']==3){
-		$actionType = "Attack on ";
+		$actionType = "Ataque a la aldea ";
 	} else if ($units[$y]['attack_type']==4){
-		$actionType = "Raid on ";
+		$actionType = "Saqueo a la aldea ";
 	} else if ($units[$y]['attack_type']==2){
-		$actionType = "Reinforcement from ";
+		$actionType = "Refuerzo desde la aldea ";
 	}
 
 	if($units[$y]['attack_type'] != 1){
@@ -23,7 +23,7 @@ if ($units[$y]['sort_type']==3){
                   <td colspan=\"11\" class=\"troopHeadline\">";
                   echo "<a href=\"spieler.php?uid=".$database->getVillageField($units[$y]['to'],"owner")."\">";
                   echo $actionType ." ". $village->vname;
-                  echo " village</a></td></tr></thead><tbody class=\"units\">";
+                  echo "</a></td></tr></thead><tbody class=\"units\">";
                   $tribe = $database->getUserField($database->getVillageField($units[$y]['from'],"owner"),"tribe",0);
                   $start = ($tribe-1)*10+1;
                   $end = ($tribe*10);
@@ -39,7 +39,7 @@ if ($units[$y]['sort_type']==3){
                   	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";	
                   }
                   echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(52)."\" alt=\"".$technology->getUnitName(52)."\" /></td>";	
-                  echo "</tr><tr><th>Troops</th>";
+                  echo "</tr><tr><th>Tropas</th>";
                   
                   
 
@@ -63,12 +63,12 @@ if($village->resarray['f39'] >= 5){
                   echo '
                   <tbody class="infos">
 									<tr>
-										<th>Arrival</th>
+										<th>Llegada</th>
 										<td colspan="11">
-										<div class="in small"><span id=timer'.$timer.'>'.$generator->getTimeFormat($units[$y]['endtime']-time()).'</span> hrs.</div>';
+										<div class="in small"><span id=timer'.$timer.'>'.$generator->getTimeFormat($units[$y]['endtime']-time()).'</span> hs</div>';
 										    $datetime = $generator->procMtime($units[$y]['endtime']);
 										    echo "<div class=\"at small\">";
-										    echo " ".$datetime[1]." hrs</div>
+										    echo " ".$datetime[1]." hs</div>
 											</div>
 										</td>
 									</tr>
@@ -78,13 +78,13 @@ if($village->resarray['f39'] >= 5){
 	} 
 }elseif ($units[$y]['sort_type']==4){
 	if ($units[$y]['attack_type']==1){
-		$actionType = "Return to ";
+		$actionType = "Regreso a ";
 	} else if ($units[$y]['attack_type']==2){
-		$actionType = "Return to ";
+		$actionType = "Regreso a ";
 	} else if ($units[$y]['attack_type']==3){
-		$actionType = "Return to ";
+		$actionType = "Regreso a ";
 	} else if ($units[$y]['attack_type']==4){
-		$actionType = "Return to ";
+		$actionType = "Regreso a ";
 	}
 
 $to = $database->getMInfo($units[$y]['vref']);
@@ -118,7 +118,7 @@ $to = $database->getMInfo($units[$y]['vref']);
                   }	
 			?>
 			</tr>
- <tr><th>Troops</th>
+ <tr><th>Tropas</th>
             <?php
             for($i=1;$i<=10;$i++) {
             	if($units[$y]['t'.$i] == 0) {
@@ -146,15 +146,15 @@ $to = $database->getMInfo($units[$y]['vref']);
         $dataarray = explode(",",$units[$y]['data']);
         
         ?>
-    <tr><th>Bounty</th>
+    <tr><th>Botín</th>
     <td colspan="<?php echo $colspan; ?>">
     <div class="res">
-    <span class="resource" title="Wood"><img class="r1" src="img/x.gif" alt="Wood"><?php echo $dataarray['0']; ?></span>
-    <span class="resource" title="Lumber"><img class="r1" src="img/x.gif" alt="Lumber"><?php echo $dataarray['0']; ?></span>
+    <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $dataarray['0']; ?></span>
+    <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $dataarray['0']; ?></span>
 
-    <span class="resource" title="Clay"><img class="r2" src="img/x.gif" alt="Clay"><?php echo $dataarray['1']; ?></span>
-    <span class="resource" title="Iron"><img class="r3" src="img/x.gif" alt="Iron"><?php echo $dataarray['2']; ?></span>
-    <span class="resource" title="Crop"><img class="r4" src="img/x.gif" alt="Crop"><?php echo $dataarray['3']; ?></span>
+    <span class="resource" title="Barro"><img class="r2" src="img/x.gif" alt="Barro"><?php echo $dataarray['1']; ?></span>
+    <span class="resource" title="Hierro"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo $dataarray['2']; ?></span>
+    <span class="resource" title="Cereal"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo $dataarray['3']; ?></span>
     </div>
     <div class="carry">
     <?php
@@ -178,11 +178,11 @@ $to = $database->getMInfo($units[$y]['vref']);
     </tr>
     <?php } ?>
 			<tr>
-				<th>Arrival</th>
+				<th>Llegada</th>
 				<td colspan="<?php echo $colspan; ?>">
 				<?php
                 
-				    echo "<div class=\"in small\"><span id=timer".$timer.">".$generator->getTimeFormat($units[$y]['endtime']-time())."</span> hrs.</div>";
+				    echo "<div class=\"in small\"><span id=timer".$timer.">".$generator->getTimeFormat($units[$y]['endtime']-time())."</span> hs</div>";
 				    $datetime = $generator->procMtime($units[$y]['endtime']);
 				    echo "<div class=\"at small\">";
 				    echo " ".$datetime[1]."</div>";

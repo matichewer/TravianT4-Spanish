@@ -3,25 +3,25 @@ $_GET['bid'] = 14;
 $bid = $_GET['bid'];
 $uprequire = $building->resourceRequired($id,$bid);
 ?>
-<h2>Tournament Square</h2>
+<h2>Plaza de torneos</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(14,4);" class="build_logo">
-		<img class="building big white g14" src="img/x.gif" alt="Tournament Square">
+		<img class="building big white g14" src="img/x.gif" alt="Plaza de torneos">
 
 
 	</a>
-	At the tournament square your troops can train their stamina. The further the building is upgraded the faster your troops will travel over longer distances (minimum distance of 20 squares).</div>
+	En la plaza de torneos tus tropas pueden entrenar su resistencia. Cuanto más se mejore el edificio, más rápido viajarán tus tropas en distancias largas (distancia mínima de 20 casillas).</div>
 <div id="contract" class="contract contractNew contractWrapper">
-	<div class="contractText">Cost:</div>
+	<div class="contractText">Costo:</div>
 	<div class="contractCosts">
     <div class="showCosts">
-    <span class="resources r1 little_res"><img class="r1" src="img/x.gif" alt="Wood"><?php echo $uprequire['wood']; ?></span>
-    <span class="resources r2 little_res"><img class="r2" src="img/x.gif" alt="Clay"><?php echo $uprequire['clay']; ?></span>
-    <span class="resources r3 little_res"><img class="r3" src="img/x.gif" alt="Iron"><?php echo $uprequire['iron']; ?></span>
-    <span class="resources r4"><img class="r4" src="img/x.gif" alt="Crop"><?php echo $uprequire['crop']; ?></span>
-    <span class="resources r5"><img class="r5" src="img/x.gif" alt="Crop consumption"><?php echo $uprequire['pop']; ?></span>
+    <span class="resources r1 little_res"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $uprequire['wood']; ?></span>
+    <span class="resources r2 little_res"><img class="r2" src="img/x.gif" alt="Barro"><?php echo $uprequire['clay']; ?></span>
+    <span class="resources r3 little_res"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo $uprequire['iron']; ?></span>
+    <span class="resources r4"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo $uprequire['crop']; ?></span>
+    <span class="resources r5"><img class="r5" src="img/x.gif" alt="Consumo de cereal"><?php echo $uprequire['pop']; ?></span>
     <div class="clear"></div>
-    <span class="clocks"><img class="clock" src="img/x.gif" alt="Duration">
+    <span class="clocks"><img class="clock" src="img/x.gif" alt="Duración">
     
 
     <?php echo $generator->getTimeFormat($uprequire['time']); ?>
@@ -29,9 +29,9 @@ $uprequire = $building->resourceRequired($id,$bid);
     <div class="clear"></div>
     </div></div>
 	<div class="contractLink">
-    <div class="contractText">Required:</div>
+    <div class="contractText">Necesario:</div>
     <span class="buildingCondition">
-    <a href="#" onclick="return Travian.Game.iPopup(15,4, 'gid');">Rally Point</a> <span>Level 15</span></span>
+    <a href="#" onclick="return Travian.Game.iPopup(15,4, 'gid');">Plaza de reuniones</a> <span>Nivel 15</span></span>
     </div>
 	<div class="clear"></div>
 </div>

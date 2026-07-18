@@ -1,9 +1,9 @@
-﻿<h2>Rally Point</h2>
+﻿<h2>Plaza de reuniones</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(16,4);" class="build_logo">
-		<img class="building big white g16" src="img/x.gif" alt="Rally Point">
+		<img class="building big white g16" src="img/x.gif" alt="Plaza de reuniones">
 	</a>
-	The village's troops meet at the rally point. From here you can send them out to reinforce, raid, or conquer another village..</div>
+	Las tropas de la aldea se reúnen en la plaza de reuniones. Desde aquí puedes enviarlas a reforzar, saquear o conquistar otra aldea.</div>
 		<?php
         $_GET['bid'] = 16;
         include("availupgrade.tpl");

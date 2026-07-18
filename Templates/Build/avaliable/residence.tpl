@@ -1,9 +1,9 @@
-﻿<h2>Residence</h2>
+﻿<h2>Residencia</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(25,4);" class="build_logo">
-		<img class="building big white g25" src="img/x.gif" alt="Residence">
+		<img class="building big white g25" src="img/x.gif" alt="Residencia">
 	</a>
-	The residence is a small palace that the king lives in when he visits the village. The residence protects the village from being conquered by enemies. A residence and palace may not be built in the same village.</div>
+	La residencia es un pequeño palacio donde vive el rey cuando visita la aldea. La residencia protege la aldea de ser conquistada por enemigos. No se pueden construir una residencia y un palacio en la misma aldea.</div>
 		<?php
         $_GET['bid'] = 25;
         include("availupgrade.tpl");

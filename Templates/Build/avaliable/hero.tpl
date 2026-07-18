@@ -1,9 +1,9 @@
-﻿<h2>Hero's Mansion</h2>
+﻿<h2>Mansión del héroe</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(37,4);" class="build_logo">
-		<img class="building big white g37" src="img/x.gif" alt="Hero's Mansion">
+		<img class="building big white g37" src="img/x.gif" alt="Mansión del héroe">
 	</a>
-	At building levels 10, 15 and 20, you can use your hero to annex an unoccupied oasis to your village, one per each of these levels respectively. Depending on the oasis, you will get a production increase for a certain type of resource (or even two resources, from some oasis).</div>
+	En los niveles 10, 15 y 20 del edificio puedes usar a tu héroe para anexar un oasis desocupado a tu aldea, uno por cada uno de esos niveles. Según el oasis, obtendrás un aumento de producción de un tipo de recurso (o incluso de dos, en algunos oasis).</div>
 ﻿		<?php
         $_GET['bid'] = 37;
         include("availupgrade.tpl");

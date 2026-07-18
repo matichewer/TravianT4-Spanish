@@ -1,10 +1,10 @@
-﻿<h1 class="titleInHeader">Market <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Mercado <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid17">
 <div class="build_desc">
 <a href="#" onClick="return Travian.Game.iPopup(17,4);" class="build_logo"> 
-	<img class="building big white g17" src="img/x.gif" alt="Piac" title="Piac" /> 
+	<img class="building big white g17" src="img/x.gif" alt="Mercado" title="Mercado" /> 
 </a> 
-At the marketplace you can trade resources with other players. The higher its level, the more resources can be transported at the same time.</div>  
+En el mercado puedes comerciar recursos con otros jugadores. Cuanto mayor sea su nivel, más recursos se pueden transportar al mismo tiempo.</div>  
 <?php
 include("upgrade.tpl");
 include("17_menu.tpl"); 
@@ -13,12 +13,12 @@ include("17_menu.tpl");
 if(isset($_GET['c'])){
 ?>
 
-<p><b>Raw Materials Distributed.</b> Cost: <b>3 </b><img src="img/x.gif" class="gold" alt="Arany" title="Gold" /></p>
-<a href="javascript: history.go(-2)">Back to the building</a> 
+<p><b>Recursos redistribuidos.</b> Costo: <b>3 </b><img src="img/x.gif" class="gold" alt="Oro" title="Oro" /></p>
+<a href="javascript: history.go(-2)">Volver al edificio</a> 
 
 <?php } else { ?>
 
-<p>You can redistribute the resources in your warehouse with the NPC merchants.<br><br>The first row shows the current warehouse contents. In the second, you can specify a different distribution. The third shows the difference between the new and old proportions.</p>
+<p>Puedes redistribuir los recursos de tu almacén con los mercaderes NPC.<br><br>La primera fila muestra el contenido actual del almacén. En la segunda puedes indicar una distribución diferente. La tercera muestra la diferencia entre la proporción nueva y la anterior.</p>
 
 
 <script language="JavaScript"> 
@@ -153,7 +153,7 @@ function portionOut() {
  
 function testSum() {
 	if (document.getElementById("remain").innerHTML!=0) {
-		document.getElementById("submitText").innerHTML="<p id='submitText' style='display: block; '><button type='submit' value='(1/2) nyersanyag elosztás' onclick='javascript:portionOut();'><div class='button-container'><div class='button-position'><div class='btl'><div class='btr'><div class='btc'></div></div></div><div class='bml'><div class='bmr'><div class='bmc'></div></div></div><div class='bbl'><div class='bbr'><div class='bbc'></div></div></div></div><div class='button-contents'>Redistribute resources (1/2)</div></div></button></p>";
+		document.getElementById("submitText").innerHTML="<p id='submitText' style='display: block; '><button type='submit' value='(1/2) nyersanyag elosztás' onclick='javascript:portionOut();'><div class='button-container'><div class='button-position'><div class='btl'><div class='btr'><div class='btc'></div></div></div><div class='bml'><div class='bmr'><div class='bmc'></div></div></div><div class='bbl'><div class='bbr'><div class='bbc'></div></div></div></div><div class='button-contents'>Redistribuir recursos (1/2)</div></div></button></p>";
 		document.getElementById("submitText").style.display="block";
 		document.getElementById("submitButton").style.display="none";
 	} else {
@@ -174,22 +174,22 @@ function testSum() {
 				<tr> 
 	
 			<td class="all"> 
-				<a href="javascript:fillup(0);"><img class="r1" src="img/x.gif" alt="Wood" title="Wood" /></a> 
+				<a href="javascript:fillup(0);"><img class="r1" src="img/x.gif" alt="Madera" title="Madera" /></a> 
 				<span id="org0"><?php echo floor($village->awood); ?></span> 
 			</td> 
 		
 			<td class="all"> 
-				<a href="javascript:fillup(1);"><img class="r2" src="img/x.gif" alt="Clay" title="Clay" /></a> 
+				<a href="javascript:fillup(1);"><img class="r2" src="img/x.gif" alt="Barro" title="Barro" /></a> 
 				<span id="org1"><?php echo floor($village->aclay); ?></span> 
 			</td> 
 		
 			<td class="all"> 
-				<a href="javascript:fillup(2);"><img class="r3" src="img/x.gif" alt="Iron" title="Iron" /></a> 
+				<a href="javascript:fillup(2);"><img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /></a> 
 				<span id="org2"><?php echo floor($village->airon); ?></span> 
 			</td> 
 		
 			<td class="all"> 
-				<a href="javascript:fillup(3);"><img class="r4" src="img/x.gif" alt="Wheat" title="Wheat" /></a> 
+				<a href="javascript:fillup(3);"><img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /></a> 
 				<span id="org3"><?php echo floor($village->acrop); ?></span> 
 			</td> 
 		
@@ -239,7 +239,7 @@ function testSum() {
 				<span id="diff3"><?php echo 0-floor($village->acrop); ?></span> 
 			</td> 
 		
-					<td class="sum">Remainder&nbsp;<span id="remain">
+					<td class="sum">Resto&nbsp;<span id="remain">
                     <?php if(isset($_GET['r1']) && isset($_GET['r2']) && isset($_GET['r3']) && isset($_GET['r4'])) { 
                     echo floor($village->awood+$village->acrop+$village->airon+$village->aclay)-($_GET['r1']+$_GET['r2']+$_GET['r3']+$_GET['r4']); 
                     } else { echo floor($village->awood+$village->acrop+$village->airon+$village->aclay); } ?></span></td> 
@@ -248,9 +248,9 @@ function testSum() {
 		</table>
         <p id="submitButton" style="display: block; ">
         <?php if($session->userinfo['gold'] > 3) { ?>
-        <button type="submit" value="Trade resources (2/2)" id="npc_market_button" onclick="$('npc_market_button').addClass('disabled').disabled = true;document.snd.submit();"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Trade resources (2/2)
-</div></div></button><span class="npc_price"><b>3</b><img src="img/x.gif" class="gold" /> Gold</span></p>
-		<?php } else { echo"<a href=\"plus.php\"><span class=\"none\">Not enough Gold</span></a>"; }?></p>
+        <button type="submit" value="Intercambiar recursos (2/2)" id="npc_market_button" onclick="$('npc_market_button').addClass('disabled').disabled = true;document.snd.submit();"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Intercambiar recursos (2/2)
+</div></div></button><span class="npc_price"><b>3</b><img src="img/x.gif" class="gold" /> Oro</span></p>
+		<?php } else { echo"<a href=\"plus.php\"><span class=\"none\">Oro insuficiente</span></a>"; }?></p>
 		<p id="submitText"></p> 
 		</form> 
 		<script> 

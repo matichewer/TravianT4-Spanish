@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Hero's Mansion <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Mansión del héroe <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid37">
     <div class="build_desc">

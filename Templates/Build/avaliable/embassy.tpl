@@ -1,9 +1,9 @@
-﻿<h2>Embassy</h2>
+﻿<h2>Embajada</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(18,4);" class="build_logo">
-		<img class="building big white g18" src="img/x.gif" alt="Embassy">
+		<img class="building big white g18" src="img/x.gif" alt="Embajada">
 	</a>
-	The embassy is the office for the diplomats. The higher the level, the more options are available to the king.</div>
+	La embajada es la oficina de los diplomáticos. Cuanto mayor sea el nivel, más opciones tendrá el rey.</div>
 		<?php
         $_GET['bid'] = 18;
         include("availupgrade.tpl");

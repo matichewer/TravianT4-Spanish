@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Wonder of the World <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Maravilla del mundo <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid40">
     <div class="build_desc">

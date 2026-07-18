@@ -18,7 +18,7 @@ $i = 20;
 						<img class=\"unit u".$i."\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($i)."\" title=\"".$technology->getUnitName($i)."\" />
 						<a href=\"#\" onClick=\"return Popup(".$i.",1);\">".$technology->getUnitName($i)."</a>  <span class=\"info\">(Available: ".$village->unitarray['u'.$i].")</span>
 					</div>
-					<div class=\"details\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Fa\" title=\"Fa\" />".${'u'.$i}['wood']."|<img class=\"r2\" src=\"img/x.gif\" alt=\"Agyag\" title=\"Agyag\" />".${'u'.$i}['clay']."|<img class=\"r3\" src=\"img/x.gif\" alt=\"Vasérc\" title=\"Vasérc\" />".${'u'.$i}['iron']."|<img class=\"r4\" src=\"img/x.gif\" alt=\"Búza\" title=\"Búza\" />".${'u'.$i}['crop']."|<img class=\"clock\" src=\"img/x.gif\" alt=\"Időtartam\" title=\"Időtartam\" />";
+					<div class=\"details\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" />".${'u'.$i}['wood']."|<img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" />".${'u'.$i}['clay']."|<img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" />".${'u'.$i}['iron']."|<img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" />".${'u'.$i}['crop']."|<img class=\"clock\" src=\"img/x.gif\" alt=\"Időtartam\" title=\"Időtartam\" />";
                     echo $generator->getTimeFormat(round(${'u'.$i}['time']/SPEED));
                     //if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) > 1) {
                    //echo "|<a href=\"build.php?gid=17&t=3&r1=".${'r'.$i}['wood']."&r2=".${'r'.$i}['clay']."&r3=".${'r'.$i}['iron']."&r4=".${'r'.$i}['crop']."\" title=\"NPC trade\"><img class=\"npc\" src=\"img/x.gif\" alt=\"NPC trade\" title=\"NPC trade\" /></a>";

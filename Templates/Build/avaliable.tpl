@@ -43,12 +43,16 @@ $greatwarehouse = $building->getTypeLevel(38);
 $greatgranary = $building->getTypeLevel(39);  
 $greatworkshop = $building->getTypeLevel(42);
 
+// Map by building id: procResType() is now translated, so variable names
+// can no longer be derived from the English building name
+$UnderConstructionVars = array(1=>'woodcutter',2=>'claypit',3=>'ironmine',4=>'cropland',5=>'sawmill',6=>'brickyard',7=>'ironfoundry',8=>'grainmill',9=>'bakery',10=>'warehouse',11=>'granary',12=>'blacksmith',13=>'armoury',14=>'tournamentsquare',15=>'mainbuilding',16=>'rallypoint',17=>'marketplace',18=>'embassy',19=>'barracks',20=>'stable',21=>'workshop',22=>'academy',23=>'cranny',24=>'townhall',25=>'residence',26=>'palace',27=>'treasury',28=>'tradeoffice',29=>'greatbarracks',30=>'greatstable',31=>'citywall',32=>'earthwall',33=>'palisade',34=>'stonemasonslodge',35=>'brewery',36=>'trapper',37=>'herosmansion',38=>'greatwarehouse',39=>'greatgranary',40=>'wonderoftheworld',41=>'horsedrinkingtrough',42=>'greatworkshop');
 foreach ($database->getJobs($_SESSION['wid']) as $bdata) {
-    $UnderConstruction = strtolower(str_replace(array(" ","'"),"",$building->procResType($bdata['type'])));
+    if(!isset($UnderConstructionVars[$bdata['type']])) continue;
+    $UnderConstruction = $UnderConstructionVars[$bdata['type']];
     $$UnderConstruction = ($$UnderConstruction == 0 ? -1 : $$UnderConstruction);
 }
 ?>
-<h1 class="titleInHeader">Construction of new building</h1>
+<h1 class="titleInHeader">Construcción de nuevo edificio</h1>
 <div id="build" class="gid0">
 <?php
 if($mainbuilding == 0 && !$database->getBuildList(15) && $id != 39  && $id != 40) {
@@ -196,7 +200,7 @@ if($greatworkshop == 0 && !$database->getBuildList(42) && $workshop == 20 && $vi
 }
 if($id != 39 && $id != 40) {
 ?>
-<div class="switch"><a id="soon_link" class="openedClosedSwitch switchClosed" href="javascript:show_build_list('soon');">View constructions available soon</a></div>
+<div class="switch"><a id="soon_link" class="openedClosedSwitch switchClosed" href="javascript:show_build_list('soon');">Ver construcciones disponibles próximamente</a></div>
 <div id="build_list_soon" class="hide">
 <?php
 if($rallypoint == 0 && $session->tribe == 3) {
@@ -309,7 +313,7 @@ if($greatworkshop == 0 && $workshop >= 15 && $workshop < 20 && $village->capital
 }
    ?>
     </div>
-<div class="switch"><a id="all_link" class="openedClosedSwitch switchClosed hide" href="#">More</a></div>
+<div class="switch"><a id="all_link" class="openedClosedSwitch switchClosed hide" href="#">Más</a></div>
     
     <div id="build_list_all" class="hide">
     <?php
@@ -426,7 +430,7 @@ window.addEvent('domready', function()
 				{
 					if (link == soon_link)
 					{
-						link.innerHTML = 'Hide constructions available soon';
+						link.innerHTML = 'Ocultar construcciones disponibles próximamente';
 						if (all_link !== null)
 						{
 							all_link.removeClass('hide');
@@ -434,24 +438,24 @@ window.addEvent('domready', function()
 					}
 					else
 					{
-						link.innerHTML = 'Less';
+						link.innerHTML = 'Menos';
 					}
 				}
 				else
 				{
 					if (link == soon_link)
 					{
-						link.innerHTML = 'View constructions available soon';
+						link.innerHTML = 'Ver construcciones disponibles próximamente';
 						if (all_link !== null)
 						{
-							all_link.innerHTML = 'More';
+							all_link.innerHTML = 'Más';
 							all_link.addClass('hide');
 							build_list_all.addClass('hide');
 						}
 					}
 					else
 					{
-						link.innerHTML = 'More';
+						link.innerHTML = 'Más';
 					}
 				}
 			});

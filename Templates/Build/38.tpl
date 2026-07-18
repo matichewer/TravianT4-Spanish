@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Great Warehouse <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Gran almacén <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid38">
     <div class="build_desc">

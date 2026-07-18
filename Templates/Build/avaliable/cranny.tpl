@@ -1,9 +1,9 @@
-﻿<h2>Cranny</h2>
+﻿<h2>Escondite</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(23,4);" class="build_logo">
-		<img class="building big white g23" src="img/x.gif" alt="Cranny">
+		<img class="building big white g23" src="img/x.gif" alt="Escondite">
 	</a>
-	In the event of an attack on your village, a portion of the resources in the warehouse can be hidden in the cranny. These resources can not be taken by the attackers.
+	En caso de un ataque a tu aldea, una parte de los recursos del almacén puede ocultarse en el escondite. Los atacantes no pueden llevarse esos recursos.
 .</div>
 		<?php
         $_GET['bid'] = 23;

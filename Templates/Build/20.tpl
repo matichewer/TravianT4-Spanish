@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">stable <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">stable <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid20">
 <p class="build_desc">
 <a href="#" onClick="return Travian.Game.iPopup(20,4);" class="build_logo">

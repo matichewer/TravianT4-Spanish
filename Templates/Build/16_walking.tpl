@@ -6,16 +6,16 @@ for($y=0;$y<$total_for;$y++){
 $timer += 1;
 
 if($units[$y]['attack_type'] == 2){
-	$attack_type = "Reinforcing";
+	$attack_type = "Refuerzo a";
 	}
 if($units[$y]['attack_type'] == 1){
-	$attack_type = "Scouting";
+	$attack_type = "Exploración a";
 	}
 if($units[$y]['attack_type'] == 3){
-	$attack_type = "Attack to";
+	$attack_type = "Ataque a";
 	}
 if($units[$y]['attack_type'] == 4){
-	$attack_type = "Raid to";
+	$attack_type = "Saqueo a";
 	}
 $isoasis = $database->isVillageOases($units[$y]['to']);
 if ($isoasis ==0){ 	
@@ -61,7 +61,7 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
                   	echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(52)."\" alt=\"".$technology->getUnitName(52)."\" /></td>";	
 			?>
 			</tr>
- <tr><th>Troops</th>
+ <tr><th>Tropas</th>
             <?php
             for($i=1;$i<=11;$i++) {
             	if($units[$y]['t'.$i] == 0) {
@@ -77,13 +77,13 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
            </tr></tbody>
 		<tbody class="infos">
 			<tr>
-				<th>Arrival</th>
+				<th>Llegada</th>
 				<td colspan="11">
 				<?php
-				    echo "<div class=\"in small\"> <span id=timer$timer>".$generator->getTimeFormat($units[$y]['endtime']-time())."</span> hrs</div>";
+				    echo "<div class=\"in small\"> <span id=timer$timer>".$generator->getTimeFormat($units[$y]['endtime']-time())."</span> hs</div>";
 				    $datetime = $generator->procMtime($units[$y]['endtime']);
 				    echo "<div class=\"at small\">";
-				    echo " ".$datetime[1]." hrs </div>";
+				    echo " ".$datetime[1]." hs</div>";
     		?>
 					<!--<div class="abort"><a href="build.php?id=39&a=4&t=5360004"><img src="img/x.gif" class="del" title="Annuleren" alt="Annuleren" /></a>-->
 					</div>
@@ -107,7 +107,7 @@ $timer += 1;
     <thead>
         <tr>
             <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-            <td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $adventures[$y]['to']."&c=".$generator->getMapCheck($adventures[$y]['to']); ?>">Go to adventure (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
+            <td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $adventures[$y]['to']."&c=".$generator->getMapCheck($adventures[$y]['to']); ?>">Ir a la aventura (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
         </tr>
     </thead>
     <tbody class="units">
@@ -129,7 +129,7 @@ $timer += 1;
                   echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(52)."\" alt=\"".$technology->getUnitName(52)."\" /></td>"; 
             ?>
             </tr>
- <tr><th>Troops</th>
+ <tr><th>Tropas</th>
             <td class="none">0</td>
             <td class="none">0</td>
             <td class="none">0</td>
@@ -145,13 +145,13 @@ $timer += 1;
            </tr></tbody>
         <tbody class="infos">
             <tr>
-                <th>Arrival</th>
+                <th>Llegada</th>
                 <td colspan="11">
                 <?php
-                    echo "<div class=\"in small\"><span id=timer$timer>".$generator->getTimeFormat($adventures[$y]['endtime']-time())."</span> hrs</div>";
+                    echo "<div class=\"in small\"><span id=timer$timer>".$generator->getTimeFormat($adventures[$y]['endtime']-time())."</span> hs</div>";
                     $datetime = $generator->procMtime($adventures[$y]['endtime']);
                     echo "<div class=\"at small\">";
-                    echo $datetime[1]." hrs</div>";
+                    echo $datetime[1]." hs</div>";
             ?>
                     <!--<div class="abort"><a href="build.php?id=39&a=4&t=5360004"><img src="img/x.gif" class="del" title="Annuleren" alt="Annuleren" /></a>-->
                     </div>
@@ -176,7 +176,7 @@ $timer += 1;
     <thead>
         <tr>
             <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to']); ?>">Új falu alapítás (<?php echo $coor['y']."|".$coor['x']; ?>)</a></td>
+            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to']); ?>">Fundación de nueva aldea (<?php echo $coor['y']."|".$coor['x']; ?>)</a></td>
         </tr>
     </thead>
     <tbody class="units">
@@ -197,7 +197,7 @@ $timer += 1;
                   }
             ?>
             </tr>
- <tr><th>Troops</th>
+ <tr><th>Tropas</th>
             <td class="none">0</td>
             <td class="none">0</td>
             <td class="none">0</td>
@@ -212,10 +212,10 @@ $timer += 1;
            </tr></tbody>
         <tbody class="infos">
             <tr>
-                <th>Arrival</th>
+                <th>Llegada</th>
                 <td colspan="10">
                 <?php
-                    echo "<div class=\"in small\"><span id=timer$timer>".$generator->getTimeFormat($settlers[$y]['endtime']-time())."</span> hrs</div>";
+                    echo "<div class=\"in small\"><span id=timer$timer>".$generator->getTimeFormat($settlers[$y]['endtime']-time())."</span> hs</div>";
                     $datetime = $generator->procMtime($settlers[$y]['endtime']);
                     echo "<div class=\"at small\">";
                     echo " ".$datetime[1]."</div>";

@@ -1,9 +1,9 @@
-﻿<h2>Iron Foundry</h2>
+﻿<h2>Fundición de hierro</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(7,4);" class="build_logo">
-		<img class="building big white g7" src="img/x.gif" alt="Iron foundry" title="Iron Foundry">
+		<img class="building big white g7" src="img/x.gif" alt="Fundición de hierro" title="Fundición de hierro">
 	</a>
-	Iron is smelted in the iron foundry. Every level raises iron production up to a maximum of 25 percent.</div>
+	El hierro se funde en la fundición de hierro. Cada nivel aumenta la producción de hierro hasta un máximo de 25 por ciento.</div>
 		<?php
         $_GET['bid'] = 7;
         include("availupgrade.tpl");

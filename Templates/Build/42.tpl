@@ -1,4 +1,4 @@
-<h1 class="titleInHeader">Műhely <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+<h1 class="titleInHeader">Műhely <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid42">
     <div class="build_desc">

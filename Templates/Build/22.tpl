@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Academy <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Academia <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
 <div id="build" class="gid22">
 <div class="build_desc">

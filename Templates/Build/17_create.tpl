@@ -5,13 +5,13 @@
 			<table cellpadding="1" cellspacing="1" id="npc" class="transparent">
 			<thead>
 			<tr>
-			<th colspan="2">Create trade route</th>
+			<th colspan="2">Crear ruta comercial</th>
 			</tr>
 			</thead>
 				<tbody>
 				<tr>
 					<th>
-						Target village:					</th>
+						Aldea de destino:					</th>
 					<td>
                     
 						<select id="tvillage" name="tvillage">
@@ -37,23 +37,23 @@
 				</tr>
 				<tr>
 					<th>
-						Resources:					</th>
+						Recursos:					</th>
 					<td>
-						<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Wood" title="Wood"> <input class="text" type="text" name="r1" id="r1" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Clay" title="Clay"> <input class="text" type="text" name="r2" id="r2" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Iron" title="Iron"> <input class="text" type="text" name="r3" id="r3" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Crop" title="Crop"> <input class="text" type="text" name="r4" id="r4" value="" maxlength="5" tabindex="1" style="width:50px;">
-						<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Lumber" title="Lumber"> <input class="text" type="text" name="r1" id="r1" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Clay" title="Clay"> <input class="text" type="text" name="r2" id="r2" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Iron" title="Iron"> <input class="text" type="text" name="r3" id="r3" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Crop" title="Crop"> <input class="text" type="text" name="r4" id="r4" value="" maxlength="5" tabindex="1" style="width:50px;">
+						<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Madera" title="Madera"> <input class="text" type="text" name="r1" id="r1" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Barro" title="Barro"> <input class="text" type="text" name="r2" id="r2" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Hierro" title="Hierro"> <input class="text" type="text" name="r3" id="r3" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Cereal" title="Cereal"> <input class="text" type="text" name="r4" id="r4" value="" maxlength="5" tabindex="1" style="width:50px;">
+						<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Madera" title="Madera"> <input class="text" type="text" name="r1" id="r1" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Barro" title="Barro"> <input class="text" type="text" name="r2" id="r2" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Hierro" title="Hierro"> <input class="text" type="text" name="r3" id="r3" value="" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Cereal" title="Cereal"> <input class="text" type="text" name="r4" id="r4" value="" maxlength="5" tabindex="1" style="width:50px;">
 
 					</td>
 				</tr>
 				<tr>
 					<th>
-						Start time:					</th>
+						Hora de inicio:					</th>
 					<td>
 						<select name="start"><option value="0" selected="selected">00</option><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
 					</td>
 				</tr>
 				<tr>
 					<th>
-						Deliveries:					</th>
+						Envíos:					</th>
 					<td>
 						<select name="deliveries"><option value="1" selected="selected">1</option><option value="2">2</option><option value="3">3</option></select>
 					</td>
@@ -62,6 +62,6 @@
 
 			</div>
 				</div>
-<p><button type="submit" value="save"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">save</div></div></button></p>
+<p><button type="submit" value="save"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">guardar</div></div></button></p>
 </form>
 </div>

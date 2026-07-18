@@ -15,7 +15,7 @@
                   }
                   echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(52)."\" alt=\"".$technology->getUnitName(52)."\" /></td>";	
 			?>
-			</tr><tr><th>Troops</th>
+			</tr><tr><th>Tropas</th>
             <?php
             for($i=$start;$i<=$end;$i++) {
             	if($village->unitarray['u'.$i] == 0) {
@@ -34,5 +34,5 @@
                 echo $village->unitarray['hero']."</td>";
             ?>
            </tr></tbody>
-            <tbody class="infos"><tr><th>Upkeep</th>
-            <td colspan="11"><div class="sup"><?php echo $technology->getUpkeep($village->unitarray,$session->tribe); ?><img class="r4" src="img/x.gif" title="" alt="Crop" />per hour</div></td></tr>
+            <tbody class="infos"><tr><th>Manutención</th>
+            <td colspan="11"><div class="sup"><?php echo $technology->getUpkeep($village->unitarray,$session->tribe); ?><img class="r4" src="img/x.gif" title="" alt="Cereal" />por hora</div></td></tr>

@@ -17,10 +17,10 @@ echo "
             </div>
             <div class=\"costs\">
 				<div class=\"showCosts\">
-                    <span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Fa\">".$cel[$i]['wood']."</span>
-                    <span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Agyag\">".$cel[$i]['clay']."</span>
-                    <span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Vasérc\">".$cel[$i]['iron']."</span>
-                    <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Búza\">".$cel[$i]['crop']."</span>
+                    <span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".$cel[$i]['wood']."</span>
+                    <span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".$cel[$i]['clay']."</span>
+                    <span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".$cel[$i]['iron']."</span>
+                    <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".$cel[$i]['crop']."</span>
                     <div class=\"clear\"></div>
                     <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Időtartam\">";
 					echo $generator->getTimeFormat(round($cel[$i]['time'] * ($bid24[$building->getTypeLevel(24)]['attri'] / 100)/SPEED));
@@ -65,10 +65,10 @@ echo "
 </div>
 <div class=\"costs\">
 				<div class=\"showCosts\">
-                <span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Fa\">".$cel[$i]['wood']."</span>
-                <span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Agyag\">".$cel[$i]['clay']."</span>
-                <span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Vasérc\">".$cel[$i]['iron']."</span>
-                <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Búza\">".$cel[$i]['crop']."</span>
+                <span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".$cel[$i]['wood']."</span>
+                <span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".$cel[$i]['clay']."</span>
+                <span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".$cel[$i]['iron']."</span>
+                <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".$cel[$i]['crop']."</span>
                 <div class=\"clear\"></div>
                 <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Időtartam\">";
                 echo $generator->getTimeFormat(round($cel[$i]['time'] * ($bid24[$building->getTypeLevel(24)]['attri'] / 100)/SPEED));

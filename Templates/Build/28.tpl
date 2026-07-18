@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Trade Office <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Oficina de comercio <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid28">
     <div class="build_desc">

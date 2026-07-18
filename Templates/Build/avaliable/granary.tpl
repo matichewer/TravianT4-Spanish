@@ -1,9 +1,9 @@
-﻿<h2>Granary</h2>
+﻿<h2>Granero</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(11,4);" class="build_logo">
-		<img class="building big white g11" src="img/x.gif" alt="Granary">
+		<img class="building big white g11" src="img/x.gif" alt="Granero">
 	</a>
-	The wheat from the wheat fields is stored in the granary. The higher its level, the more wheat can be stored. At level 20, it is possible to build additional granaries.</div>
+	El cereal de las granjas se almacena en el granero. Cuanto mayor sea su nivel, más cereal puede almacenarse. En el nivel 20 es posible construir graneros adicionales.</div>
 		<?php
         $_GET['bid'] = 11;
         include("availupgrade.tpl");

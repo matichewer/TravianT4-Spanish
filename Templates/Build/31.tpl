@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">City Wall <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Muralla <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid31">
     <div class="build_desc">

@@ -1,9 +1,9 @@
-﻿<h2>Stable</h2>
+﻿<h2>Establo</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(20,4);" class="build_logo">
-		<img class="building big white g20" src="img/x.gif" alt="Stable">
+		<img class="building big white g20" src="img/x.gif" alt="Establo">
 	</a>
-	All mounted troops are trained in the stable. The higher the level, the faster the troops are trained.</div>
+	Todas las tropas montadas se entrenan en el establo. Cuanto mayor sea el nivel, más rápido se entrenan las tropas.</div>
 		<?php
         $_GET['bid'] = 20;
         include("availupgrade.tpl");

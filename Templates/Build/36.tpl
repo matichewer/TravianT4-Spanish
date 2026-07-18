@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Trapper <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Trampero <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid36">
     <div class="build_desc">
@@ -70,10 +70,10 @@ include("upgrade.tpl");
 			</div>
 
 			<div class="showCosts">
-			<span class="resources r1"><img class="r1" src="img/x.gif" alt="Wood">35</span>
-			<span class="resources r2"><img class="r2" src="img/x.gif" alt="Clay">30</span>
-			<span class="resources r3"><img class="r3" src="img/x.gif" alt="Iron">10</span>
-			<span class="resources r4"><img class="r4" src="img/x.gif" alt="Crop">20</span>
+			<span class="resources r1"><img class="r1" src="img/x.gif" alt="Madera">35</span>
+			<span class="resources r2"><img class="r2" src="img/x.gif" alt="Barro">30</span>
+			<span class="resources r3"><img class="r3" src="img/x.gif" alt="Hierro">10</span>
+			<span class="resources r4"><img class="r4" src="img/x.gif" alt="Cereal">20</span>
 			<span class="resources r5"><img class="r5" src="img/x.gif" alt="Crop consumption">0</span>
 			<div class="clear"></div>
 			<span class="clocks"><img class="clock" src="img/x.gif" alt="Duration"><?php $dur=$generator->getTimeFormat(round(${'u99'}['time'] * ($bid19[$village->resarray['f'.$id]]['attri']*TRAPPER_CAPACITY / 100) / SPEED)); echo ($dur=="0:00:00")? "0:00:01":$dur; ?></span><div class="clear"></div></div>

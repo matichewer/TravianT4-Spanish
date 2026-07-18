@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Palisade <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Empalizada <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid33">
     <div class="build_desc">

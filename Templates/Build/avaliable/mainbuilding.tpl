@@ -1,9 +1,9 @@
-﻿<h2>Main Building</h2>
+﻿<h2>Edificio principal</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(15,4);" class="build_logo">
-		<img class="building big white g15" src="img/x.gif" alt="Main Building">
+		<img class="building big white g15" src="img/x.gif" alt="Edificio principal">
 	</a>
-	The architects of the village live in the main building. The higher the level, the faster other buildings will be built or upgraded.</div>
+	Los arquitectos de la aldea viven en el edificio principal. Cuanto mayor sea el nivel, más rápido se construyen o mejoran los demás edificios.</div>
 		<?php
         $_GET['bid'] = 15;
         include("availupgrade.tpl");

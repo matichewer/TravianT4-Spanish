@@ -6,24 +6,24 @@ else {
 $u=0;
 }
 ?>
-<h1 class="titleInHeader">Market <span class="level">Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+<h1 class="titleInHeader">Mercado <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid17">
 <div class="build_desc">
 <a href="#" onClick="return Travian.Game.iPopup(17,4);" class="build_logo"> 
-    <img class="building big white g17" src="img/x.gif" alt="Piac" title="Piac" /> 
+    <img class="building big white g17" src="img/x.gif" alt="Mercado" title="Mercado" /> 
 </a> 
-At the marketplace you can trade resources with other players. The higher its level, the more resources can be transported at the same time.</div> 
+En el mercado puedes comerciar recursos con otros jugadores. Cuanto mayor sea su nivel, más recursos se pueden transportar al mismo tiempo.</div> 
 <?php
 include("upgrade.tpl");
 include("17_menu.tpl");
 if($session->plus) {
 ?>
-<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Merchants <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
+<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Mercaderes <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
 				</div><div class="clear"></div>
 <div class="boxes boxesColor gray search_select"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><table id="search_select" class="buy_select transparent" cellpadding="1" cellspacing="1">
 	<thead>
 		<tr>
-			<td colspan="4">I'm Searching</td>
+			<td colspan="4">Busco</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -68,7 +68,7 @@ if($session->plus) {
 <div class="boxes boxesColor gray bid_select"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
 <table id="bid_select" class="buy_select transparent" cellpadding="1" cellspacing="1">
 <thead><tr>
-<td colspan="4">I'm Offering</td>
+<td colspan="4">Ofrezco</td>
 </tr></thead>
 <tbody>
 <tr>
@@ -96,17 +96,17 @@ if($session->plus) {
  }
  ?>
 <div class="clear"></div>
-<h4 class="spacer">Offered on the market</h4>
+<h4 class="spacer">Ofertas en el mercado</h4>
 
 <table id="range" cellpadding="1" cellspacing="1">
 	<thead>
 		<tr>
-			<th>Offered</th>
-			<th><img src="img/x.gif" class="ratio" alt="Ratio"></th>
-			<th>Searched</th>
-			<th>Players</th>
-			<th>Duration</th>
-			<th>Action</th>
+			<th>Ofrecido</th>
+			<th><img src="img/x.gif" class="ratio" alt="Proporción"></th>
+			<th>Buscado</th>
+			<th>Jugador</th>
+			<th>Duración</th>
+			<th>Acción</th>
 		</tr>
 	</thead>
 <tbody>
@@ -134,10 +134,10 @@ if($market->onsale[$i]['wamt'] > $market->maxcarry) {
         }
             
 switch($market->onsale[$i]['gtype']) {
-    case 1: echo "<img src=\"img/x.gif\" class=\"r1\" alt=\"Wood\" title=\"Wood\" /> "; break;
-    case 2: echo "<img src=\"img/x.gif\" class=\"r2\" alt=\"Clay\" title=\"Clay\" /> "; break;
-    case 3: echo "<img src=\"img/x.gif\" class=\"r3\" alt=\"Iron\" title=\"Iron\" /> "; break;
-    case 4: echo "<img src=\"img/x.gif\" class=\"r4\" alt=\"Wheat\" title=\"Wheat\" /> "; break;
+    case 1: echo "<img src=\"img/x.gif\" class=\"r1\" alt=\"Madera\" title=\"Madera\" /> "; break;
+    case 2: echo "<img src=\"img/x.gif\" class=\"r2\" alt=\"Barro\" title=\"Barro\" /> "; break;
+    case 3: echo "<img src=\"img/x.gif\" class=\"r3\" alt=\"Hierro\" title=\"Hierro\" /> "; break;
+    case 4: echo "<img src=\"img/x.gif\" class=\"r4\" alt=\"Cereal\" title=\"Cereal\" /> "; break;
  	}
     echo $market->onsale[$i]['gamt'];
     
@@ -146,10 +146,10 @@ switch($market->onsale[$i]['gtype']) {
       </div>
       </td><td class=\"val\">";
     switch($market->onsale[$i]['wtype']) {
-    case 1: echo "<img src=\"img/x.gif\" class=\"r1\" alt=\"Wood\" title=\"Wood\" /> "; break;
-    case 2: echo "<img src=\"img/x.gif\" class=\"r2\" alt=\"Clay\" title=\"Clay\" /> "; break;
-    case 3: echo "<img src=\"img/x.gif\" class=\"r3\" alt=\"Iron\" title=\"Iron\" /> "; break;
-    case 4: echo "<img src=\"img/x.gif\" class=\"r4\" alt=\"Wheat\" title=\"Wheat\" /> "; break;
+    case 1: echo "<img src=\"img/x.gif\" class=\"r1\" alt=\"Madera\" title=\"Madera\" /> "; break;
+    case 2: echo "<img src=\"img/x.gif\" class=\"r2\" alt=\"Barro\" title=\"Barro\" /> "; break;
+    case 3: echo "<img src=\"img/x.gif\" class=\"r3\" alt=\"Hierro\" title=\"Hierro\" /> "; break;
+    case 4: echo "<img src=\"img/x.gif\" class=\"r4\" alt=\"Cereal\" title=\"Cereal\" /> "; break;
     }
     echo $market->onsale[$i]['wamt'];
     echo "</td><td class=\"pla\">";
@@ -158,24 +158,24 @@ switch($market->onsale[$i]['gtype']) {
     echo "<td class=\"dur\">".$generator->getTimeFormat($market->onsale[$i]['duration'])."</td>";
     
     if(($market->onsale[$i]['wtype'] == 1 && $village->awood <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 2 && $village->aclay <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 3 && $village->airon <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 4 && $village->acrop <= $market->onsale[$i]['wamt'])) {
-    echo "<td class=\"act none\">Not enough materials.</td></tr>";
+    echo "<td class=\"act none\">Materiales insuficientes.</td></tr>";
     }
     else if($market->merchantAvail() == 0 && $reqMerc <= $market->merchantAvail()) {
-    echo "<td class=\"act none\">Not enough merchants</td></tr>";
+    echo "<td class=\"act none\">Mercaderes insuficientes</td></tr>";
     }
     else {
     echo "<td class=\"act\">
     <button type=\"button\" class=\"build\" onclick=\"window.location.href = 'build.php?id=$id&t=1&a=".$session->mchecker."&g=".$market->onsale[$i]['id']."'; return false;\">
 <div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
 <div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div>
-</div><div class=\"button-contents\">Accept Offer</div></div></button></td>";
+</div><div class=\"button-contents\">Aceptar oferta</div></div></button></td>";
     }
     echo"</tr>";
     }
 }
 }
 else {
-echo "<tr><td class=\"none\" colspan=\"6\"><center>No Offers Currently</center></td></tr>";
+echo "<tr><td class=\"none\" colspan=\"6\"><center>No hay ofertas actualmente</center></td></tr>";
 }
 ?>
 </tbody></table>
@@ -183,20 +183,20 @@ echo "<tr><td class=\"none\" colspan=\"6\"><center>No Offers Currently</center><
 <span class="none">
 <?php
 if(!isset($_GET['u']) && count($market->onsale) < 40) {
-    echo "<span class=\"none\"><b>&laquo;</b></span> Pages <span class=\"none\"><b>&raquo;</b></span>";
+    echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <span class=\"none\"><b>&raquo;</b></span>";
     }
     else if (!isset($_GET['u']) && count($market->onsale) > 40) {
-    echo "<span class=\"none\"><b>&laquo;</b></span> Pages <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
+    echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
     }
     else if(isset($_GET['u']) && count($market->onsale) > $_GET['u']) {
     	if(count($market->onsale) > ($_GET['u']+40) && $_GET['u']-40 < count($market->onsale) && $_GET['u'] != 0) {
-         echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&laquo;</a> Pages <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
+         echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&laquo;</a> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
          }
          else if(count($market->onsale) > $_GET['u']+40) {
-         	echo "<span class=\"none\"><b>&laquo;</b></span> Pages <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
+         	echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
          }
         else {
-        echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']-40)."\">&laquo;</a> Pages <span class=\"none\"><b>&raquo;</b></span>";
+        echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']-40)."\">&laquo;</a> Páginas <span class=\"none\"><b>&raquo;</b></span>";
         }
     }
 ?>

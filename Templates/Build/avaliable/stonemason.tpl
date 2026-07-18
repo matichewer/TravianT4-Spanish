@@ -1,9 +1,9 @@
-﻿<h2>Stonemason's Lodge</h2>
+﻿<h2>Cabaña del picapedrero</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(34,4);" class="build_logo">
-		<img class="building big white g34" src="img/x.gif" alt="Stonemason's Lodge">
+		<img class="building big white g34" src="img/x.gif" alt="Cabaña del picapedrero">
 	</a>
-	The Stonemason's Lodge is an expert at manipulating stone. The higher the level, the stronger each of the buildings in your village.</div>
+	La cabaña del picapedrero es experta en trabajar la piedra. Cuanto mayor sea el nivel, más resistentes serán los edificios de tu aldea.</div>
 		<?php
         $_GET['bid'] = 34;
         include("availupgrade.tpl");

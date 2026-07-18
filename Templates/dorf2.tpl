@@ -12,10 +12,10 @@
 <div id="village_map">
 <?php
 if($building->walling()) {
-	$wtitle = $building->procResType($building->walling())." Level ".$village->resarray['f40'];
+	$wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
 }
 else {
-	$wtitle = ($village->resarray['f40'] == 0)? "Outer building site" : $building->procResType($village->resarray['f40t'],0)." Level ".$village->resarray['f40'];
+	$wtitle = ($village->resarray['f40'] == 0)? "Solar exterior" : $building->procResType($village->resarray['f40t'],0)." Nivel ".$village->resarray['f40'];
 }
 ?>
 <map name="clickareas" id="clickareas">
@@ -44,10 +44,10 @@ $coords = array(19=>"110,135,132,120,132,121,160,122,179,136,179,151,158,163,128
 "71,450,2,374,3,374,-10,243,13,142,120,81,214,34,340,18,500,43,615,130,641,239,643,350,601,425,534,494,358,534,282,532,180,526,77,456,117,378,163,413,242,442,331,454,425,443,499,417,576,344,596,304,598,221,571,157,481,90,385,61,313,56,217,72,135,113,77,165,46,217,44,269,65,326,119,379");
 for($t=19;$t<=40;$t++) {
 	if(($village->resarray['f99t'] == 40 AND ($t)=='26') or ($village->resarray['f99t'] == 40 AND ($t)=='30') or ($village->resarray['f99t'] == 40 AND ($t)=='31') or ($village->resarray['f99t'] == 40 AND ($t)=='32')) {
-	echo "<area href=\"build.php?id=99\" title=\"<div style=color:#FFF><b>WorldWonder</b></div> Level ".$village->resarray['f99']."\" coords=\"$coords[$t]\" shape=\"poly\"/>";
+	echo "<area href=\"build.php?id=99\" title=\"<div style=color:#FFF><b>WorldWonder</b></div> Nivel ".$village->resarray['f99']."\" coords=\"$coords[$t]\" shape=\"poly\"/>";
 	} else {
 if($village->resarray['f'.$t.'t'] != 0) {
-$title = "<div style=color:#FFF><b>".$building->procResType($village->resarray['f'.$t.'t'])."</b></div> Level ".$village->resarray['f'.$t];
+$title = "<div style=color:#FFF><b>".$building->procResType($village->resarray['f'.$t.'t'])."</b></div> Nivel ".$village->resarray['f'.$t];
 }
 else {
     $title = "Building Site";
@@ -62,13 +62,13 @@ else {
 <?php
  if($village->resarray['f40'] == 0) { 
 if($building->walling()) {
-    $wtitle = $building->procResType($building->walling())." Level ".$village->resarray['f40'];
+    $wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
     echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Top \" alt=\"$wtitle level ".$village->resarray['f40']."\">";
      echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."bBottom \" alt=\"$wtitle level ".$village->resarray['f40']."\">";
 
     }
 }else {
-          $wtitle = $building->procResType($building->walling())." Level ".$village->resarray['f40'];
+          $wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
     echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Top \" alt=\"$wtitle level ".$village->resarray['f40']."\">";
     echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Bottom \" alt=\"$wtitle level ".$village->resarray['f40']."\">";
 }
@@ -82,13 +82,13 @@ for ($i=1;$i<=20;$i++) {
 	$text = "Construction Site";
 	$img = "iso";
     	if($village->resarray['f'.($i+18).'t'] != 0) {
-        	$text = $building->procResType($village->resarray['f'.($i+18).'t'])." Level ".$village->resarray['f'.($i+18)];
+        	$text = $building->procResType($village->resarray['f'.($i+18).'t'])." Nivel ".$village->resarray['f'.($i+18)];
             $img = "g".$village->resarray['f'.($i+18).'t'];
        }
     foreach($building->buildArray as $job) {
     	if($job['field'] == ($i+18)) {
         	$img = 'g'.$job['type'].'b';
-            $text = $building->procResType($job['type'])." Level ".$village->resarray['f'.$job['field']];
+            $text = $building->procResType($job['type'])." Nivel ".$village->resarray['f'.$job['field']];
         }
     }
 	echo "<img src=\"img/x.gif\" class=\"building d$i $img\" alt=\"$text\" />";

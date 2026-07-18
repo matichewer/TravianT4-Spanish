@@ -18,10 +18,10 @@ for($i=4;$i<=6;$i++) {
 							<span class=\"furtherInfo\">(Available: ".$village->unitarray['u'.$i].")</span>
 						</div>
                         <div class=\"showCosts\">
-                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Fa\">".(${'u'.$i}['wood']*3)."</span>
-                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Agyag\">".(${'u'.$i}['clay']*3)."</span>
-                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Vasérc\">".(${'u'.$i}['iron']*3)."</span>
-                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Búza\">".(${'u'.$i}['crop']*3)."</span>
+                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".(${'u'.$i}['wood']*3)."</span>
+                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".(${'u'.$i}['clay']*3)."</span>
+                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".(${'u'.$i}['iron']*3)."</span>
+                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".(${'u'.$i}['crop']*3)."</span>
                         <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Búzafogyasztás\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"óra\">";

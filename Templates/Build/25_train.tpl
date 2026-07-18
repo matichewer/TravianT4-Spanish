@@ -39,10 +39,10 @@ echo "<div class=\"action first\">
 							<span class=\"furtherInfo\">(Current: ".$village->unitarray['u'.$i].")</span>
 						</div>
                         <div class=\"showCosts\">
-                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Fa\">".${'u'.$i}['wood']."</span>
-                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Agyag\">".${'u'.$i}['clay']."</span>
-                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Vasérc\">".${'u'.$i}['iron']."</span>
-                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Búza\">".${'u'.$i}['crop']."</span>
+                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".${'u'.$i}['wood']."</span>
+                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".${'u'.$i}['clay']."</span>
+                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".${'u'.$i}['iron']."</span>
+                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".${'u'.$i}['crop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Időtartam\">";
 echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid25[$village->resarray['f'.$id]]['attri'] / 100) / SPEED));

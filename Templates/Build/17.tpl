@@ -1,10 +1,10 @@
-﻿<h1 class="titleInHeader">Market <span class="level"> Level <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Mercado <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid17">
 <div class="build_desc">
 <a href="#" onClick="return Travian.Game.iPopup(17,4);" class="build_logo"> 
-	<img class="building big white g17" src="img/x.gif" alt="Piac" title="Piac" /> 
+	<img class="building big white g17" src="img/x.gif" alt="Mercado" title="Mercado" /> 
 </a> 
-At the marketplace you can trade resources with other players. The higher its level, the more resources can be transported at the same time.</div> 
+En el mercado puedes comerciar recursos con otros jugadores. Cuanto mayor sea su nivel, más recursos se pueden transportar al mismo tiempo.</div> 
  
 <?php
 include("upgrade.tpl");
@@ -15,7 +15,7 @@ include("17_menu.tpl");
 var haendler = <?php echo $market->merchantAvail(); ?>;
 var carry = <?php echo $market->maxcarry; ?>;
 </script>
-<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Merchants <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
+<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Mercaderes <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
 				</div><div class="clear"></div>
 <?php
 
@@ -45,34 +45,34 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 <input type="hidden" name="vid" value="<?php echo $getwref; ?>">
 <table id="send_select" class="send_res" cellpadding="1" cellspacing="1">
 	<tr>
-		<td class="ico"><img class="r1" src="img/x.gif" alt="Wood" title="Wood" /></td> 
-		<td class="nam"> Wood</td> 
+		<td class="ico"><img class="r1" src="img/x.gif" alt="Madera" title="Madera" /></td> 
+		<td class="nam"> Madera</td> 
 		<td class="val"><input class="text disabled" type="text" name="r1" id="r1" value="<?php echo $_POST['r1']; ?>" readonly="readonly"></td> 
 		<td class="max"> / <span class="none"><B><?php echo $market->maxcarry; ?></B></span> </td> 
 	</tr>
     <tr> 
-		<td class="ico"><img class="r2" src="img/x.gif" alt="Iron" title="Iron" /></td> 
-		<td class="nam"> Clay</td> 
+		<td class="ico"><img class="r2" src="img/x.gif" alt="Hierro" title="Hierro" /></td> 
+		<td class="nam"> Barro</td> 
 		<td class="val"><input class="text disabled" type="text" name="r2" id="r2" value="<?php echo $_POST['r2']; ?>" readonly="readonly"></td> 
 		<td class="max"> / <span class="none"><b><?php echo$market->maxcarry; ?></b></span> </td> 
 	</tr>
     <tr> 
-		<td class="ico"><img class="r3" src="img/x.gif" alt="Iron" title="Iron" /></td> 
-		<td class="nam"> Iron</td> 
+		<td class="ico"><img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /></td> 
+		<td class="nam"> Hierro</td> 
 		<td class="val"><input class="text disabled" type="text" name="r3" id="r3" value="<?php echo $_POST['r3']; ?>" readonly="readonly"> 
 		</td> 
 		<td class="max"> / <span class="none"><b><?php echo $market->maxcarry; ?></b></span> </td> 
 	</tr>
     <tr> 
-		<td class="ico"><img class="r4" src="img/x.gif" alt="Crop" title="Crop" /></td> 
-		<td class="nam"> Crop</td> 
+		<td class="ico"><img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /></td> 
+		<td class="nam"> Cereal</td> 
 		<td class="val"> <input class="text disabled" type="text" name="r4" id="r4" value="<?php echo $_POST['r4']; ?>" readonly="readonly"> 
 		</td> 
 		<td class="max"> / <span class="none"><B><?php echo $market->maxcarry; ?></B></span></td> 
 	</tr></table> 
 <table id="target_validate" class="res_target" cellpadding="1" cellspacing="1">
 	<tbody><tr>
-		<th>Coordinates:</th>
+		<th>Coordenadas:</th>
         <?php
 		if($_POST['x']!="" && $_POST['y']!=""){
         $getwref = $database->getVilWref($_POST['x'],$_POST['y']);
@@ -93,15 +93,15 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 		<td class="vil"><a href="position_details.php?x=<?php echo $getvilcoor['y']; ?>&y=<?php echo $getvilcoor['x']; ?>"><span class="coordinates coordinatesWithText"><span class="coordText"><?php echo $getvilname; ?></span><span class="coordinatesWrapper"><span class="coordinateY">(<?php echo $getvilcoor['y']; ?></span><span class="coordinatePipe">|</span><span class="coordinateX"><?php echo $getvilcoor['x']; ?>)</span></span></span><span class="clear"></span></a></td>
 	</tr>
 	<tr>
-		<th>Player:</th>
+		<th>Jugador:</th>
 		<td><a href="spieler.php?uid=<?php echo $getvilowner; ?>"><?php echo $database->getUserField($getvilowner,'username',0); ?></a></td>
 	</tr>
 	<tr>
-		<th>Duration:</th>
+		<th>Duración:</th>
 		<td><?php echo $generator->getTimeFormat($time); ?></td>
 	</tr>
 	<tr>
-		<th>Merchants:</th>
+		<th>Mercaderes:</th>
 		<td><?php
         $resource = array($_POST['r1'],$_POST['r2'],$_POST['r3'],$_POST['r4']); 
         echo ceil((array_sum($resource)-0.1)/$market->maxcarry); ?></td>
@@ -115,7 +115,7 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 </tbody></table>
 <div class="clear"></div>
 <p>
-<button type="submit" value="ok" name="s1" id="btn_ok" class="dynamic_img" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Send Merchants</div></div></button>
+<button type="submit" value="ok" name="s1" id="btn_ok" class="dynamic_img" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Enviar mercaderes</div></div></button>
 </p></form>
 <?php }else{ ?>
 <form method="POST" name="snd" action="build.php"> 
@@ -126,10 +126,10 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 <tr>
 
 		<td class="ico"> 
-			<a href="#" onClick="upd_res(1,1); return false;"><img class="r1" src="img/x.gif" alt="Wood" title="Wood" /></a> 
+			<a href="#" onClick="upd_res(1,1); return false;"><img class="r1" src="img/x.gif" alt="Madera" title="Madera" /></a> 
 		</td> 
 		<td class="nam"> 
-			Wood
+			Madera
 		</td> 
 		<td class="val"> 
 			<input class="text" type="text" name="r1" id="r1" value="<?php echo $_POST['r1']; ?>" maxlength="5" onKeyUp="upd_res(1)" tabindex="1"> 
@@ -139,11 +139,11 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
-			<a href="#" onClick="upd_res(2,1); return false;"><img class="r2" src="img/x.gif" alt="Clay" title="Clay" /></a> 
+			<a href="#" onClick="upd_res(2,1); return false;"><img class="r2" src="img/x.gif" alt="Barro" title="Barro" /></a> 
 
 		</td> 
 		<td class="nam"> 
-			Clay
+			Barro
 		</td> 
 		<td class="val"> 
 			<input class="text" type="text" name="r2" id="r2" value="<?php echo $_POST['r2']; ?>" maxlength="5" onKeyUp="upd_res(2)" tabindex="2"> 
@@ -153,11 +153,11 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
-			<a href="#" onClick="upd_res(3,1); return false;"><img class="r3" src="img/x.gif" alt="Iron" title="Iron" /></a> 
+			<a href="#" onClick="upd_res(3,1); return false;"><img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /></a> 
 
 		</td> 
 		<td class="nam"> 
-			Iron
+			Hierro
 		</td> 
 		<td class="val"> 
 			<input class="text" type="text" name="r3" id="r3" value="<?php echo $_POST['r3']; ?>" maxlength="5" onKeyUp="upd_res(3)" tabindex="3"> 
@@ -167,11 +167,11 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
-			<a href="#" onClick="upd_res(4,1); return false;"><img class="r4" src="img/x.gif" alt="Crop" title="Crop" /></a> 
+			<a href="#" onClick="upd_res(4,1); return false;"><img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /></a> 
 
 		</td> 
 		<td class="nam"> 
-			Crop
+			Cereal
 		</td> 
 		<td class="val"> 
 			<input class="text" type="text" name="r4" id="r4" value="<?php echo $_POST['r4']; ?>" maxlength="5" onKeyUp="upd_res(4)" tabindex="4"> 
@@ -187,7 +187,7 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 				<tbody>
 					<tr>
 						<td>
-							<span>Village Name:</span>
+							<span>Nombre de la aldea:</span>
 						</td>
 						<td class="compactInput">
                         	<input class="text village" type="text" name="dname" value="<?php echo stripslashes($_POST['dname']); ?>" maxlength="30" tabindex="5">
@@ -200,7 +200,7 @@ if(isset($_POST['ft'])=='check' && $allres!=0 && $allres <= $canSend && ($_POST[
 				<tbody>
 					<tr>
 						<td>
-							<span class="or">Coordinates</span>
+							<span class="or">Coordenadas</span>
 <?php
 if(isset($_GET['z'])){
 $coor = $database->getCoor($_GET['z']);
@@ -228,7 +228,7 @@ $coor['y'] = "";
 								</div>
 				</div>
 <?php if($session->goldclub == 1){?>
-<p><select name="send3"><option value="1" selected="selected">1x</option><option value="2">2x</option><option value="3">3x</option></select>go</p>
+<p><select name="send3"><option value="1" selected="selected">1x</option><option value="2">2x</option><option value="3">3x</option></select> envíos</p>
 <?php
 }else{
 ?>
@@ -238,10 +238,10 @@ $coor['y'] = "";
 ?>
 				</div>
 <div class="clear"></div>
-<p>Each merchant can carry <b><?php echo $market->maxcarry; ?></b> units of resource</p>
+<p>Cada mercader puede transportar <b><?php echo $market->maxcarry; ?></b> unidades de recursos</p>
 <p>
 
-<button type="submit" value="ok" name="s1" id="btn_ok" class="dynamic_img" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Check</div></div></button>
+<button type="submit" value="ok" name="s1" id="btn_ok" class="dynamic_img" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Comprobar</div></div></button>
 </p>
 </form>
 <?php
@@ -249,13 +249,13 @@ $error = '';
 if(isset($_POST['ft'])=='check'){
 
 	if(!$checkexist){
-		$error = '<span class="error"><b>There is no village at these coordinates.</b></span>';
+		$error = '<span class="error"><b>No hay ninguna aldea en esas coordenadas.</b></span>';
     }elseif($_POST['r1']==0 && $_POST['r2']==0 && $_POST['r3']==0 && $_POST['r4']==0){
-		$error = '<span class="error"><b>Resources not selected.</b></span>';
+		$error = '<span class="error"><b>No se seleccionaron recursos.</b></span>';
     }elseif(!$_POST['x'] && !$_POST['y'] && !$_POST['dname']){
-		$error = '<span class="error"><b>Enter coordinates or village name.</b></span>';
+		$error = '<span class="error"><b>Introduce las coordenadas o el nombre de la aldea.</b></span>';
     }elseif($allres >= $canSend){
-		$error = '<span class="error"><b>Too few merchants.</b></span>';
+		$error = '<span class="error"><b>Mercaderes insuficientes.</b></span>';
     }
     echo $error;
 }
@@ -323,7 +323,7 @@ document.snd.r1.focus();
 <?php
 $timer = 1;
 if(count($market->recieving) > 0) { 
-echo "<h4>Incoming Merchants</h4>";
+echo "<h4>Mercaderes entrantes</h4>";
     foreach($market->recieving as $recieve) {
        echo "<table class=\"traders\" cellpadding=\"1\" cellspacing=\"1\">";
     $ownerid = $database->getVillageField($recieve['from'],"owner");
@@ -331,66 +331,66 @@ echo "<h4>Incoming Merchants</h4>";
     $sendtovil = $database->getVillage($recieve['from']);
 	$villageowner = $database->getVillageField($recieve['from'],"owner");
 	echo "<thead><tr><td><a href=\"spieler.php?uid=".$ownerid."\">".$ownername."</a></td>";
-    echo "<td class=\"dorf\">Resources from <a href=\"karte.php?d=".$recieve['from']."&c=".$generator->getMapCheck($recieve['from'])."\">".$sendtovil['name']."</a></td>";
-    echo "</tr></thead><tbody><tr><th>Arrival</th><td>";
-    echo "<div class=\"in\"><span id=timer$timer>".$generator->getTimeFormat($recieve['endtime']-time())."</span> Hours</div>";
+    echo "<td class=\"dorf\">Recursos desde <a href=\"karte.php?d=".$recieve['from']."&c=".$generator->getMapCheck($recieve['from'])."\">".$sendtovil['name']."</a></td>";
+    echo "</tr></thead><tbody><tr><th>Llegada</th><td>";
+    echo "<div class=\"in\"><span id=timer$timer>".$generator->getTimeFormat($recieve['endtime']-time())."</span> horas</div>";
     $datetime = $generator->procMtime($recieve['endtime']);
     echo "<div class=\"at\">";
 
     echo $datetime[1]."</div>";
-    echo "</td></tr></tbody> <tr class=\"res\"> <th>Resources</th> <td colspan=\"2\"><span class=\"f10\">";
-    echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Wood\" title=\"Wood\" /> ".$recieve['wood']
-    ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Clay\" title=\"Clay\" /> ".$recieve['clay']
-    ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Iron\" title=\"Iron\" /> ".$recieve['iron']
-    ." <img class=\"r4\" src=\"img/x.gif\" alt=\"Crop\" title=\"Crop\" /> ".$recieve['crop']."</td></tr></tbody>";
+    echo "</td></tr></tbody> <tr class=\"res\"> <th>Recursos</th> <td colspan=\"2\"><span class=\"f10\">";
+    echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$recieve['wood']
+    ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$recieve['clay']
+    ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$recieve['iron']
+    ." <img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" /> ".$recieve['crop']."</td></tr></tbody>";
     echo "</table>";
     $timer +=1;
     }
 }
 if(count($market->sending) > 0) {
-	echo "<h4>Merchants Moving:</h4>";
+	echo "<h4>Mercaderes en movimiento:</h4>";
     foreach($market->sending as $send) {
         $ownerid = $database->getVillageField($send['to'],"owner");
         $ownername = $database->getUserField($ownerid,"username",0);
         $sendtovil = $database->getVillage($send['to']);
         echo "<table class=\"traders\" cellpadding=\"1\" cellspacing=\"1\">";
         echo "<thead><tr> <td><a href=\"spieler.php?uid=".$ownerid."\">".$ownername."</a></td>";
-        echo "<td class=\"dorf\">Sending Supplies To <a href=\"karte.php?d=".$send['to']."&c=".$generator->getMapCheck($send['to'])."\">".$sendtovil['name']."</a></td>";
-        echo "</tr></thead> <tbody><tr> <th>Arrival</th> <td>";
-        echo "<div class=\"in\"><span id=timer".$timer.">".$generator->getTimeFormat($send['endtime']-time())."</span> Hours</div>";
+        echo "<td class=\"dorf\">Enviando suministros a <a href=\"karte.php?d=".$send['to']."&c=".$generator->getMapCheck($send['to'])."\">".$sendtovil['name']."</a></td>";
+        echo "</tr></thead> <tbody><tr> <th>Llegada</th> <td>";
+        echo "<div class=\"in\"><span id=timer".$timer.">".$generator->getTimeFormat($send['endtime']-time())."</span> horas</div>";
         $datetime = $generator->procMtime($send['endtime']);
         echo "<div class=\"at\">";
 
         echo $datetime[1]."</div>";
-        echo "</td> </tr> <tr class=\"res\"> <th>Resources</th><td>";
-        echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Wood\" title=\"Wood\" /> ".$send['wood']
-        ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Clay\" title=\"Clay\" /> ".$send['clay']
-        ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Iron\" title=\"Iron\" /> ".$send['iron'].
-        " <img class=\"r4\" src=\"img/x.gif\" alt=\"Crop\" title=\"Crop\" /> ".$send['crop']."</td></tr></tbody>";
+        echo "</td> </tr> <tr class=\"res\"> <th>Recursos</th><td>";
+        echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$send['wood']
+        ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$send['clay']
+        ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$send['iron'].
+        " <img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" /> ".$send['crop']."</td></tr></tbody>";
         echo "</table>";
         $timer += 1;
     }
 }
 if(count($market->return) > 0) {
-	echo "<h4>Merchants Moving:</h4>";
+	echo "<h4>Mercaderes en movimiento:</h4>";
     foreach($market->return as $return) {
         $villageowner = $database->getVillageField($return['from'],"owner");
         $ownername = $database->getUserField($villageowner,"username",0);
         $villagename = $database->getVillageField($return['from'],"name");
         echo "<table class=\"traders\" cellpadding=\"1\" cellspacing=\"1\">";
         echo "<thead><tr> <td></td>";
-        //echo "<td class=\"dorf\">Return from <a href=\"karte.php?d=".$return['from']."&c=".$generator->getMapCheck($return['from'])." \">$ownername</a></td>";
-        echo "<td class=\"dorf\">Return from <a href=\"karte.php?d=".$return['from']."&c=".$generator->getMapCheck($return['from'])." \">$villagename</a></td>";
-        echo "</tr></thead> <tbody><tr> <th>Arrival</th> <td>";
-        echo "<div class=\"in\"><span id=timer".$timer.">".$generator->getTimeFormat($return['endtime']-time())."</span> Hours</div>";
+        //echo "<td class=\"dorf\">Regreso desde <a href=\"karte.php?d=".$return['from']."&c=".$generator->getMapCheck($return['from'])." \">$ownername</a></td>";
+        echo "<td class=\"dorf\">Regreso desde <a href=\"karte.php?d=".$return['from']."&c=".$generator->getMapCheck($return['from'])." \">$villagename</a></td>";
+        echo "</tr></thead> <tbody><tr> <th>Llegada</th> <td>";
+        echo "<div class=\"in\"><span id=timer".$timer.">".$generator->getTimeFormat($return['endtime']-time())."</span> horas</div>";
         $datetime = $generator->procMtime($return['endtime']);
         echo "<div class=\"at\">";
         if($datetime[0] != "today") {
         echo $datetime[0]." ";
         }
         echo $datetime[1]."</div>";
-        echo "</td> </tr> <tr class=\"res\"> <th>Resources</th><td>";
-                echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Wood\" title=\"Wood\" /> ".$return['wood']."<img class=\"r2\" src=\"img/x.gif\" alt=\"Clay\" title=\"Clay\" /> ".$return['clay']."<img class=\"r3\" src=\"img/x.gif\" alt=\"Iron\" title=\"Iron\" /> ".$return['iron']."<img class=\"r4\" src=\"img/x.gif\" alt=\"Crop\" title=\"Crop\" />".$return['crop']."</td></tr></tbody>";
+        echo "</td> </tr> <tr class=\"res\"> <th>Recursos</th><td>";
+                echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$return['wood']."<img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$return['clay']."<img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$return['iron']."<img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" />".$return['crop']."</td></tr></tbody>";
 
         echo "</tbody></table>";
         $timer += 1;

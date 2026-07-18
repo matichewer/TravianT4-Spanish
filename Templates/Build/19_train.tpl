@@ -18,15 +18,15 @@
 							<span class=\"furtherInfo\">(Available: ".$village->unitarray['u'.$i].")</span>
 						</div>
                         <div class=\"showCosts\">
-                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Wood\">".(${'u'.$i}['wood'])."</span>
-                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Lumber\">".(${'u'.$i}['wood'])."</span>
+                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".(${'u'.$i}['wood'])."</span>
+                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".(${'u'.$i}['wood'])."</span>
 
-                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Clay\">".(${'u'.$i}['clay'])."</span>
-                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Iron\">".(${'u'.$i}['iron'])."</span>
-                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Crop\">".(${'u'.$i}['crop'])."</span>
+                        <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".(${'u'.$i}['clay'])."</span>
+                        <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".(${'u'.$i}['iron'])."</span>
+                        <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".(${'u'.$i}['crop'])."</span>
                         <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Crop consumption\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
-                        <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"duration\">";
+                        <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"duración\">";
                         echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid19[$village->resarray['f'.$id]]['attri'] / 100) / SPEED));
 if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
 echo "&nbsp;&nbsp;<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".((${'u'.$i}['wood'])*$technology->maxUnitPlus($i))."&r2=".((${'u'.$i}['clay'])*$technology->maxUnitPlus($i))."&r3=".((${'u'.$i}['iron'])*$technology->maxUnitPlus($i))."&r4=".((${'u'.$i}['crop'])*$technology->maxUnitPlus($i))."'; return false;\">&nbsp;<img src=\"img/x.gif\" style=\"margin-top:6px;\" class=\"npc\" alt=\"npc\"></button>";

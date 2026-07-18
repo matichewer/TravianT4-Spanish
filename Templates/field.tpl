@@ -2,7 +2,7 @@
                                 <?php 
     $coorarray = array(1=>"180,80,28","269,81,28","338,93,28","122,119,28","235,132,28","292,139,28","377,137,28","62,170,28","143,171,28","333,171,28","420,171,28","70,231,28","143,221,28","279,257,28","401,226,28","174,311,28","265,316,28","355,293,28");
         for($i=1;$i<=18;$i++) {
-            echo "<area href=\"build.php?id=$i\" coords=\"$coorarray[$i]\" shape=\"circle\" title=\"<div style=color:#FFF><b>".$building->procResType($village->resarray['f'.$i.'t'])."</b></div> Level ".$village->resarray['f'.$i]."\"/>";
+            echo "<area href=\"build.php?id=$i\" coords=\"$coorarray[$i]\" shape=\"circle\" title=\"<div style=color:#FFF><b>".$building->procResType($village->resarray['f'.$i.'t'])."</b></div> Nivel ".$village->resarray['f'.$i]."\"/>";
         }
     ?>
 <area href="dorf2.php" coords="250,191,32" shape="circle" title="Fields">
