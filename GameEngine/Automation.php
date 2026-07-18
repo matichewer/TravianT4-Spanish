@@ -4289,7 +4289,7 @@ class Automation {
                 $inbuild = 1;
             }
             $usergold = $database->getUserField($owner, 'gold', 0);
-            if($bdata < $inbuild && $buildwood < $villwood && $buildclay < $villclay && $buildiron < $villiron && $buildcrop < $villcrop && $usergold > 0) {
+            if($bdata < $inbuild && $buildwood <= $villwood && $buildclay <= $villclay && $buildiron <= $villiron && $buildcrop <= $villcrop && $usergold > 0) {
                 $time = $master['timestamp'] + time();
                 if(!empty($bdata1)) {
                     foreach ($bdata1 as $master1) {

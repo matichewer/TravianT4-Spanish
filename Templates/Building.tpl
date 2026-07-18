@@ -13,9 +13,9 @@
 				<thead>
 					<tr>
 						<th colspan="4"><?php echo BUILDING_UPGRADING;?>
-			<?php if($session->gold >= 2) { ?> 
+			<?php if($database->getUserField($session->uid, 'gold', 0) >= 2 && $building->canFinishAll()) { ?>
 		<div class="finishNow">
-		  <a class="arrow" href="?cmd=buildingFinish" onclick="return confirm('Complete instantly for 2 gold?')">Finish all</a>
+		  <a class="arrow" href="?cmd=buildingFinish&amp;c=<?php echo $session->checker; ?>" onclick="return confirm('Complete instantly for 2 gold?')">Finish all</a>
 		  <b> (price: <img src="img/x.gif" class="gold" alt="Arany"> 2)</b>
 		</div>
 			<?php
@@ -24,13 +24,7 @@
 		</tr></thead>
 		<tbody>
         <?php 
-        if($_GET['buildingFinish'] == 1 AND $session->gold >= 2) {
-        	$gold=$database->getUserField($_SESSION['username'],'gold','username');
-		      $gold-=2;
-		      $database->updateUserField($_SESSION['username'],'gold',$gold,0);
-        }
-        
-        if(!isset($timer)) {
+		if(!isset($timer)) {
         $timer = 1;
         }
         foreach($building->buildArray as $jobs) {
