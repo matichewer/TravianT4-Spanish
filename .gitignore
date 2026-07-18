@@ -1,3 +1,4 @@
 config/installed
 config/connection.php
 .claude/
+.env

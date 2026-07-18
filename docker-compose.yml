@@ -3,10 +3,11 @@ name: traviant4-php7
 services:
   web:
     build: ./docker
+    restart: unless-stopped
     environment:
       TZ: America/Argentina/Buenos_Aires
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     volumes:
       - .:/var/www/html
     depends_on:
@@ -15,14 +16,15 @@ services:
 
   db:
     image: mariadb:10.6
+    restart: unless-stopped
     # Legacy schema: zero dates ('0000-00-00') and non-strict inserts
     command: --sql-mode= --character-set-server=utf8 --collation-server=utf8_general_ci
     environment:
       TZ: America/Argentina/Buenos_Aires
-      MARIADB_ROOT_PASSWORD: root
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
       MARIADB_DATABASE: travian_t4
       MARIADB_USER: travian
-      MARIADB_PASSWORD: travian
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-travian}
     ports:
       - "127.0.0.1:3308:3306"
     volumes:
