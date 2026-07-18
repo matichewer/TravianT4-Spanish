@@ -9,7 +9,6 @@
 ##  Version:       2011.12.03                                                  ##
 ##  Filename:      index.php                                                   ##
 ##  Developed by:  ZZJHONS                                                     ##
-##  Little changes by:  yi12345                                                ##
 ##  License:       Creative Commons BY-NC-SA 3.0                               ##
 ##  Copyright:     ZravianX (c) 2011 - All rights reserved                     ##
 ##  URLs:          http://zravianx.zzjhons.com                                 ##

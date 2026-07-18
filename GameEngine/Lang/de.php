@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                           TRAVIAN 4                                              //
 //            Only for advanced users, do not edit if you dont know what are you doing!             //
-//                                		  Made by: yi12345                                          //
 //                                      Edited by: Captain09                                        //
 //                              - Travian 4 = Travian 4 Clone Project -                             //
 //                                 DO NOT REMOVE COPYRIGHT NOTICE!                                  //

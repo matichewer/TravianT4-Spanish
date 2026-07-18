@@ -553,6 +553,8 @@ $lang['HELP1']['Partie_5'] = "Forum";
 $lang['HELP1']['Text_5'] ="On the forum, chat with other players.";
 $lang['HELP1']['Partie_6'] = "Quick information";
 $lang['HELP1']['Text_6'] ="Here you can find short and quick information about the troops and buildings Travian";
+$lang['HELP1']['Partie_7'] = "Acknowledgements";
+$lang['HELP1']['Text_7'] = "Testers: MBeluS, PandaFoss and Fedro. Developer: Chewer.";
 
 
 //warsim

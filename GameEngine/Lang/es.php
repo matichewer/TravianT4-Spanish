@@ -496,5 +496,7 @@ $lang['HELP1']['Partie_5'] = "Foro";
 $lang['HELP1']['Text_5'] = "En el foro puedes charlar con otros jugadores.";
 $lang['HELP1']['Partie_6'] = "Información rápida";
 $lang['HELP1']['Text_6'] = "Aquí puedes encontrar información breve y rápida sobre las tropas y los edificios de Travian.";
+$lang['HELP1']['Partie_7'] = "Agradecimientos";
+$lang['HELP1']['Text_7'] = "Testers: MBeluS, PandaFoss y Fedro. Desarrollador: Chewer.";
 
 ?>

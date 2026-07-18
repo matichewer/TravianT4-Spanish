@@ -3,7 +3,6 @@
 ##              -= YOU MAY NOT REMOVE OR CHANGE THIS NOTICE =-                 ##
 ## --------------------------------------------------------------------------- ##
 ##  Filename       ban_msq.tpl                                                 ##
-##  Developed by:  yi12345                                                     ##
 ##  Copyright:     TravianX (c) 2010-2011. All rights reserved.                ##
 ##                                                                             ##
 #################################################################################

@@ -60,6 +60,11 @@ include "Templates/html.tpl";
 	<a href="#" class="helpHeadLine" onclick="return Travian.Game.iPopup(0,0);"><?php echo $lang['HELP1']['Partie_6']; ?></a>
 	<a href="#" onclick="return Travian.Game.iPopup(0,0);" class="helpText"><?php echo $lang['HELP1']['Text_6']; ?></a>
 </div>
+
+<div class="helpInfoBlock helpInfoLinkLess">
+	<div class="helpHeadLine"><?php echo $lang['HELP1']['Partie_7']; ?></div>
+	<div class="helpText"><?php echo $lang['HELP1']['Text_7']; ?></div>
+</div>
 <div class="clear"></div>
 </div></div>
 <div class="contentFooter">&nbsp;</div>
@@ -78,4 +83,3 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-

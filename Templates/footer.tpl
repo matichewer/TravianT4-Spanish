@@ -9,5 +9,4 @@
 						<a href="contact.php"><?php echo SUPPORT; ?></a>
 						<div class="clear"></div>
 					</div>
-                    <p class="copyright">&copy; 2011 - 2012. <b><br />Gracias a <a href="#" style="color:red">Mehran EBDa</a></b> (desarrollador)<br /> <b><a href="#" style="color:red">Papa Grumps</a></b> (traductor al inglés)<br /> <b><a href="#" style="color:red">akshay9</a></b> (desarrollador)<br /><a href="#" style="color:red">yi12345</a></b> (desarrollador) <br /><a href="#" style="color:red">amtr</a></b> (algunas correcciones)</p>
 				</div>
