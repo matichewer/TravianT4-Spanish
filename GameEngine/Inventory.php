@@ -447,6 +447,7 @@ if($_POST && $_POST['a']=='inventory'){
 			$database->modifyHero2('dead', 0, $uid, 0);
 			$database->modifyHero2('health', 100, $uid, 0);
 			$database->modifyHero2('wref', $village->wid, $uid, 0);
+			$database->editTableField('units', 'hero', 1, 'vref', $village->wid);
 			$database->editProcItem($data['id'], 1);
 		}
 	}
