@@ -1,0 +1,37 @@
+name: traviant4-php7
+
+services:
+  web:
+    build: ./docker
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:10.6
+    # Legacy schema: zero dates ('0000-00-00') and non-strict inserts
+    command: --sql-mode= --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: travian_t4
+      MARIADB_USER: travian
+      MARIADB_PASSWORD: travian
+    ports:
+      - "127.0.0.1:3308:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dbdata:
