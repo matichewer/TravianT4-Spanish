@@ -28,38 +28,33 @@ else {
     $bigmid = $village->wid;
 }
 
-$south1 = ($y-1) < -WORLD_MAX? $y+WORLD_MAX+WORLD_MAX : $y-1;
-$south2 = ($y-2) < -WORLD_MAX? $y+WORLD_MAX+WORLD_MAX-1 : $y-2;
-$south3 = ($y-3) < -WORLD_MAX? $y+WORLD_MAX+WORLD_MAX-2 : $y-3;
+/* --- Map grid with a render buffer, so dragging doesn't reveal blank tiles --- */
+$BUF    = 4;              /* extra tiles rendered beyond the visible area, each side */
+$HX     = 4 + $BUF;       /* half width  (visible half 4 + buffer) -> 2*HX+1 = 17 cols */
+$HY     = 3 + $BUF;       /* half height (visible half 3 + buffer) -> 2*HY+1 = 15 rows */
+$COLS   = 2 * $HX + 1;
+$ROWS   = 2 * $HY + 1;
+$PERIOD = 2 * WORLD_MAX + 1;
+$wrapCoord = function($v) use ($PERIOD) {
+    while ($v >  WORLD_MAX) { $v -= $PERIOD; }
+    while ($v < -WORLD_MAX) { $v += $PERIOD; }
+    return $v;
+};
 
-$north1 = ($y+1) > WORLD_MAX? $y-WORLD_MAX-WORLD_MAX : $y+1;
-$north2 = ($y+2) > WORLD_MAX? $y-WORLD_MAX-WORLD_MAX+1 : $y+2;
-$north3 = ($y+3) > WORLD_MAX? $y-WORLD_MAX-WORLD_MAX+2 : $y+3;
+$xfull = array();
+for ($dx = -$HX; $dx <= $HX; $dx++) { $xfull[] = $wrapCoord($x + $dx); }   /* west -> east */
+$yfull = array();
+for ($dy = $HY; $dy >= -$HY; $dy--) { $yfull[] = $wrapCoord($y + $dy); }   /* north -> south */
 
-$west1 = ($x-1) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX : $x-1;
-$west2 = ($x-2) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-1 : $x-2;
-$west3 = ($x-3) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-2 : $x-3;
-$west4 = ($x-4) < -WORLD_MAX? $x+WORLD_MAX+WORLD_MAX-3 : $x-4;
-
-$east1 = ($x+1) > WORLD_MAX? $x-WORLD_MAX-WORLD_MAX : $x+1;
-$east2 = ($x+2) > WORLD_MAX? $x-WORLD_MAX-WORLD_MAX+1 : $x+2;
-$east3 = ($x+3) > WORLD_MAX? $x-WORLD_MAX-WORLD_MAX+2 : $x+3;
-$east4 = ($x+4) > WORLD_MAX? $x-WORLD_MAX-WORLD_MAX+3 : $x+4;
-
-$xarray = array($west4,$west3,$west2,$west1,$x,$east1,$east2,$east3,$east4);
-$yarray = array($north3,$north2,$north1,$y,$south1,$south2,$south3);
-
+/* visible center slices, used only for the coordinate rulers */
+$xarray = array_slice($xfull, $HX - 4, 9);
+$yarray = array_slice($yfull, $HY - 3, 7);
 
 $maparray = array();
-$ycount = 0;
-for($i=0;$i<=8;$i++) {
-    if($ycount != 7) {
-    	array_push($maparray,$database->getMInfo($generator->getBaseID($xarray[$i],$yarray[$ycount])));
-    	if($i==8) {
-    		$i = -1;
-    		$ycount +=1;
-    	}
-	}
+foreach ($yfull as $yy) {
+    foreach ($xfull as $xx) {
+        $maparray[] = $database->getMInfo($generator->getBaseID($xx, $yy));
+    }
 }
 echo "<h1 dir=\"rtl\">Map</h1>";
 $row = 0;
@@ -87,14 +82,15 @@ $coorindex = 0;
 	</div>
 </div>
 <?php } ?>
-<div class="mapContainerData" id="mapData">
+<div id="mapViewport" style="position:relative;width:540px;height:420px;overflow:hidden;">
+<div class="mapContainerData" id="mapData" style="position:absolute;left:-<?php echo $BUF*60; ?>px;top:-<?php echo $BUF*60; ?>px;width:<?php echo $COLS*60; ?>px;height:<?php echo $ROWS*60; ?>px;">
 <?php
 $index = 0;
 $row1 = 0;
 
 
-for($i=0;$i<=62;$i++) {
-	
+for($i=0;$i<count($maparray);$i++) {
+	$row1 = intdiv($i, $COLS);
 	if($maparray[$index]['occupied'] > 0 && $maparray[$index]['fieldtype'] >= 0) {
 	$targetalliance = $database->getUserField($maparray[$index]['owner'],"alliance",0);
     $tribe = $database->getUserField($maparray[$index]['owner'],"tribe",0);
@@ -231,14 +227,12 @@ break;
     }
     echo "</div></a>\n";
     
-	if($i == 8 || $i == 17 || $i == 26 && $row1 <= 5) {
-		$row1 += 1;
-	}
 	$index+=1;
 
 }
 ?>
-
+</div><!-- #mapData -->
+</div><!-- #mapViewport -->
 <div class="clear"></div>
 <div class="ruler x">
 	<div class="rulerContainer">
@@ -257,7 +251,6 @@ break;
 				echo "<div class=\"coordinate zoom1\">".$yarray[$i]."</div>\n";
 			}
 		?>
-</div>
 </div>
 </div>
 		<div class="navigation">
@@ -318,7 +311,6 @@ break;
 </script>
 <style type="text/css">
 #mapContainer.lowRes #mapData{cursor:grab;cursor:-webkit-grab;}
-#mapContainer.lowRes.dragPanning{overflow:hidden;}
 #mapContainer.lowRes.dragPanning #mapData{cursor:grabbing;cursor:-webkit-grabbing;}
 #mapContainer.lowRes #mapData a,#mapContainer.lowRes #mapData img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 </style>
