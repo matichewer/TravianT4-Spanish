@@ -2065,10 +2065,12 @@
         	}
 
 			function getBuildList($type) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "bdata WHERE type = $type";
-        		$result = mysqli_query($this->connection,$q);
-        		return $this->mysqli_fetch_all($result);
-        	}
+				$type = (int) $type;
+				$wid = isset($_SESSION['wid']) ? (int) $_SESSION['wid'] : 0;
+				$q = "SELECT * FROM " . TB_PREFIX . "bdata WHERE wid = $wid AND type = $type";
+				$result = mysqli_query($this->connection,$q);
+				return $this->mysqli_fetch_all($result);
+			}
 
         	function getVRanking() {
         		$q = "SELECT v.wref,v.name,v.owner,v.pop FROM " . TB_PREFIX . "vdata AS v," . TB_PREFIX . "users AS u WHERE v.owner=u.id AND u.tribe<=3 AND v.wref != '' AND u.access<" . (INCLUDE_ADMIN ? "10" : "8");
