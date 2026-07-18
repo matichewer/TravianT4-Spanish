@@ -133,8 +133,9 @@ echo '<img class="ww g40 g40_10" src="img/x.gif" alt="Wonder of the World">'; }
 if($village->resarray['f99'] == 100) {
 echo '<img class="ww g40 g40_11" src="img/x.gif" alt="Wonder of the World">'; }
 }
+$showBuildingLevels = !isset($_COOKIE['t4level']) || $_COOKIE['t4level'] !== '0';
 ?>
-    <div id="levels" <?php if(isset($_COOKIE['t4level'])) { echo "class=\"on\""; } ?>>
+    <div id="levels" <?php if($showBuildingLevels) { echo "class=\"on\""; } ?>>
 <?php
 for($i=1;$i<=20;$i++) {
 if ($village->resarray['f'.($i+18)] != 0) {
@@ -152,18 +153,18 @@ echo "<div class=\"aid40\"><div style=\"background-color: white !important; back
 
 		</div>
         
-<img src="img/x.gif" id="lswitch" <?php if(isset($_COOKIE['t4level'])) { echo "class=\"lswitchMinus\""; }else{ echo "class=\"lswitchPlus\""; } ?> onclick=" 
-				$('lswitch').toggleClass('lswitchMinus');
-				$('lswitch').toggleClass('lswitchPlus');
-				if ($('levels').toggleClass('on').hasClass('on'))
-				{
-					document.cookie = 't4level=1; expires=Wed, 1 Jan 2020 00:00:00 GMT';
-				}
-				else
-				{
-					document.cookie = 't4level=1; expires=Thu, 01-Jan-1970 00:00:01 GMT';
-				}
-			" />
+	<img src="img/x.gif" id="lswitch" class="<?php echo $showBuildingLevels ? 'lswitchMinus' : 'lswitchPlus'; ?>" onclick="
+					$('lswitch').toggleClass('lswitchMinus');
+					$('lswitch').toggleClass('lswitchPlus');
+					if ($('levels').toggleClass('on').hasClass('on'))
+					{
+						document.cookie = 't4level=1; max-age=31536000; path=/; SameSite=Lax';
+					}
+					else
+					{
+						document.cookie = 't4level=0; max-age=31536000; path=/; SameSite=Lax';
+					}
+				" />
 	<img class="clickareas" usemap="#clickareas" src="img/x.gif" alt="" />
             </div><div class="clear">&nbsp;</div>
             
