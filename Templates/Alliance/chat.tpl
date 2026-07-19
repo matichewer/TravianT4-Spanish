@@ -16,7 +16,7 @@ include("alli_menu.tpl");
 
 <script type="text/javascript">
 <?php sajax_show_javascript();?>
-function show_data_cb(text) { console.log("chat get_data ->", text); document.getElementById("div_chat").innerHTML = text; }
+function show_data_cb(text) { document.getElementById("div_chat").innerHTML = text; }
 function start_it() { x_get_data(show_data_cb); setTimeout("start_it()",1000); }
 function add_cb() {}
 function send_data() {

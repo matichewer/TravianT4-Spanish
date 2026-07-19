@@ -67,13 +67,6 @@ if (!isset($SAJAX_INCLUDED)) {
 	function sajax_handle_client_request() {
 		global $sajax_export_list;
 
-		if (isset($_GET["rs"])) {
-			file_put_contents("/tmp/chat_debug.log", date("H:i:s")
-				." RAW query_string=[".($_SERVER['QUERY_STRING'] ?? '')."]"
-				." raw_get=".var_export($_GET,true)
-				."\n", FILE_APPEND);
-		}
-
 		$mode = "";
 
 		if (! empty($_GET["rs"]))
@@ -109,17 +102,6 @@ if (!isset($SAJAX_INCLUDED)) {
 				$args = array();
 		}
 		
-		global $session, $database;
-		file_put_contents("/tmp/chat_debug.log", date("H:i:s")
-			." func=[$func_name] args=".var_export($args,true)
-			." exported=".var_export($sajax_export_list,true)
-			." in_array=".var_export(in_array($func_name, $sajax_export_list),true)
-			." session_set=".var_export(isset($session),true)
-			." session_user=".var_export(isset($session) ? $session->username : null, true)
-			." db_set=".var_export(isset($database),true)
-			." db_ping=".var_export(isset($database) && $database->connection ? mysqli_ping($database->connection) : null, true)
-			."\n", FILE_APPEND);
-
 		if (! in_array($func_name, $sajax_export_list))
 			echo "-:$func_name not callable";
 		else {
@@ -378,8 +360,7 @@ if (!isset($SAJAX_INCLUDED)) {
 		$alliance = $session->alliance;
 		$now = time();
 			$q = "INSERT into ".TB_PREFIX."chat (id_user,name,alli,date,msg) values ('$id_user','$name','$alliance','$now','$msg')";
-			$ok = mysql_query($q, $database->connection);
-			file_put_contents("/tmp/chat_debug.log", date("H:i:s")." add_data data=[$data] name=[$name] id_user=[$id_user] alliance=[$alliance] ok=".var_export($ok,true)." error=[".mysqli_error($database->connection)."] q=[$q]\n", FILE_APPEND);
+			mysql_query($q, $database->connection);
 	}
 
 	function get_data() {
