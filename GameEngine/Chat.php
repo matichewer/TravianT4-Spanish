@@ -359,7 +359,8 @@ if (!isset($SAJAX_INCLUDED)) {
 		$alliance = $session->alliance;
 		$now = time();
 			$q = "INSERT into ".TB_PREFIX."chat (id_user,name,alli,date,msg) values ('$id_user','$name','$alliance','$now','$msg')";
-			mysql_query($q, $database->connection);
+			$ok = mysql_query($q, $database->connection);
+			file_put_contents(__DIR__."/../chat_debug.log", date("H:i:s")." data=[$data] name=[$name] id_user=[$id_user] alliance=[$alliance] ok=".var_export($ok,true)." error=[".mysqli_error($database->connection)."] q=[$q]\n", FILE_APPEND);
 	}
 
 	function get_data() {
