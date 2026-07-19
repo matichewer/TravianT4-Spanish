@@ -288,6 +288,28 @@ body.map{background:#c8dd9b;}
 #mapContainer.lowRes.dragPanning #mapData{cursor:grabbing;cursor:-webkit-grabbing;}
 #mapContainer.lowRes #mapData a,#mapContainer.lowRes #mapData img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 #mapContainer.lowRes .ruler.y .coordinate{height:<?php echo $TILE; ?>px;}
+.dialog.mapTileDetailsDialog{color:#333;font-size:13px;}
+.dialog.mapTileDetailsDialog .dialog-container{background:#fff;border:1px solid #9a9a9a;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.45);}
+.dialog.mapTileDetailsDialog .dialog-tl,.dialog.mapTileDetailsDialog .dialog-tc,.dialog.mapTileDetailsDialog .dialog-tr,
+.dialog.mapTileDetailsDialog .dialog-ml,.dialog.mapTileDetailsDialog .dialog-mc,.dialog.mapTileDetailsDialog .dialog-mr,
+.dialog.mapTileDetailsDialog .dialog-bl,.dialog.mapTileDetailsDialog .dialog-bc,.dialog.mapTileDetailsDialog .dialog-br,
+.dialog.mapTileDetailsDialog .dialog-background-tl,.dialog.mapTileDetailsDialog .dialog-background-tc,.dialog.mapTileDetailsDialog .dialog-background-tr,
+.dialog.mapTileDetailsDialog .dialog-background-ml,.dialog.mapTileDetailsDialog .dialog-background-mc,.dialog.mapTileDetailsDialog .dialog-background-mr,
+.dialog.mapTileDetailsDialog .dialog-background-bl,.dialog.mapTileDetailsDialog .dialog-background-bc,.dialog.mapTileDetailsDialog .dialog-background-br{background-image:none!important;}
+.dialog.mapTileDetailsDialog .title,.dialog.mapTileDetailsDialog #tileDetails,.dialog.mapTileDetailsDialog #tileDetails h4{color:#333;}
+.dialog.mapTileDetailsDialog #tileDetails .detailImage .option{background:#f4f4f4;border-top:1px solid #ddd;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-1 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w2-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-2 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w3-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-3 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w4-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-4 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w6-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-5 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w8-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-6 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w7-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-7 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w10-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-8 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w12-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-9 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w11-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-10 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w10-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-11 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w14-rtl.jpg')!important;}
+.dialog.mapTileDetailsDialog #tileDetails.oasis-12 .detailImage{background-image:url('gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w15-rtl.jpg')!important;}
 </style>
 <script type="text/javascript">
 /* Click-and-drag panning (mouse + touch) for the fullscreen map: grab, release
@@ -309,6 +331,7 @@ body.map{background:#c8dd9b;}
 		dialogOpen=true;
 		var popup=new Travian.Dialog({
 			buttonOk:false,
+			cssClass:'white mapTileDetailsDialog',
 			title:'Detalles de la casilla ('+x+'|'+y+')',
 			onClose:function(){ dialogOpen=false; }
 		}).setContent('<div class="loading"></div>').show();
