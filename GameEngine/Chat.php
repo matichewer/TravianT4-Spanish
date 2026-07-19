@@ -95,8 +95,9 @@ if (!isset($SAJAX_INCLUDED)) {
 			header ("Cache-Control: no-cache, must-revalidate");  
 			header ("Pragma: no-cache");                         
 			$func_name = $_GET["rs"];
-			if (! empty($_GET["rsargs"])) 
-				$args = $_GET["rsargs"];
+			parse_str($_SERVER['QUERY_STRING'], $qs);
+			if (! empty($qs["rsargs"]))
+				$args = $qs["rsargs"];
 			else
 				$args = array();
 		}
