@@ -60,8 +60,7 @@ foreach ($yfull as $yy) {
         $maparray[] = $database->getMInfo($generator->getBaseID($xx, $yy));
     }
 }
-echo "<h1 dir=\"rtl\">Mapa (<span id=\"x\">".$x."</span>|<span id=\"y\">".$y."</span>)</h1>";
-echo "<div class=\"mapTopBar\"><a href=\"dorf1.php\">&laquo; Aldea</a><a href=\"karte.php?x=".$x."&y=".$y."\">Mapa normal</a></div>";
+echo "<div class=\"mapTopBar\"><a href=\"dorf1.php\">&laquo; Aldea</a></div>";
 $row = 0;
 $coorindex = 0;
 ?>
