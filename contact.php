@@ -46,7 +46,7 @@ include("GameEngine/Lang/".$result['lang'].".php");
 							<div class="contentTitle">&nbsp;</div>
 							<div class="contentContainer">
 								<div id="content" class="support"><h1 class="titleInHeader"><?php echo Szupport; ?></h1>
-<div class="supportDescription"><?php echo "In the following form you can contact for assistance (eg admin). Fill in as many fields to a question / answer and process your request as soon as we can. It is important that a valid e-mail address, in the absence of a question / request, we are not able to answer"; ?></div>
+<div class="supportDescription"><?php echo "En el siguiente formulario puedes ponerte en contacto con nosotros para recibir asistencia (por ejemplo, con un administrador). Completa los campos con tu pregunta o consulta y procesaremos tu solicitud lo antes posible. Es importante indicar una dirección de correo electrónico válida, ya que sin ella no podremos responder a tu pregunta o solicitud"; ?></div>
 <div class="supportForm">
 <?php
 if($_POST){
@@ -67,10 +67,10 @@ if($_POST){
 					}
 $message = "[b]".CONTACT_SUPPORT."[/b]
 
-Subject: [b]".$mSubject."[/b]
-Email: [b]".$_POST['email']."[/b]
+Asunto: [b]".$mSubject."[/b]
+Correo electrónico: [b]".$_POST['email']."[/b]
 
-[b]Message:[/b] ".$_POST['message']."
+[b]Mensaje:[/b] ".$_POST['message']."
 ";
 					$database->sendMessage(1, $userID, ''.$subject.'', ''.$message.'', 0);
 					echo '<center><font color="green">'.CONTACT_SENT.'</font></center>';
@@ -85,13 +85,13 @@ Email: [b]".$_POST['email']."[/b]
 <div id="group_support_category">
 <table class="form_table form_tablel_support" width="100%"><tbody><tr>
 	<td class="form_table_label form_table_label_support_category">
-		<label class="form_label" for="category"><?php echo 'Category'; ?></label></td>
+		<label class="form_label" for="category"><?php echo 'Categoría'; ?></label></td>
 	<td class="form_table_element form_table_element_support_category">
 		<select id="support_category" name="category">
-			<option value="please_select"><?php echo 'Select'; ?></option>
-			<option value="1"><?php echo "General Question"; ?></option>
-			<option value="2"><?php echo "I can't login"; ?></option>
-			<option value="3"><?php echo "I can't register"; ?></option>
+			<option value="please_select"><?php echo 'Selecciona'; ?></option>
+			<option value="1"><?php echo "Pregunta general"; ?></option>
+			<option value="2"><?php echo "No puedo iniciar sesión"; ?></option>
+			<option value="3"><?php echo "No puedo registrarme"; ?></option>
 		</select>
 	</td></tr></tbody>
 </table>
@@ -103,10 +103,10 @@ Email: [b]".$_POST['email']."[/b]
 	<tbody>
 		<tr>
 			<td class="form_table_label form_table_label_support_username">
-				<label class="form_label" for="username"><?php echo "Username"; ?></label>
+				<label class="form_label" for="username"><?php echo "Nombre de usuario"; ?></label>
 			</td>
 			<td class="form_table_element form_table_element_support_username">
-				<input type="text" id="support_username" name="username" label="<?php echo "Username"; ?>" value="<?php echo $_POST['username']; ?>">
+				<input type="text" id="support_username" name="username" label="<?php echo "Nombre de usuario"; ?>" value="<?php echo $_POST['username']; ?>">
                 <?php
 				if($_POST && $_POST['username']==''){
 					echo '<span class="error">'.USRNM_EMPTY.'</span>';
@@ -125,10 +125,10 @@ Email: [b]".$_POST['email']."[/b]
 	<tbody>
     	<tr>
         <td class="form_table_label form_table_label_support_email">
-        	<label class="form_label" for="email"><?php echo 'Email'; ?></label>
+        	<label class="form_label" for="email"><?php echo 'Correo electrónico'; ?></label>
         </td>
         <td class="form_table_element form_table_element_support_email">
-        	<input type="text" id="support_email" name="email" label="<?php echo 'Email'; ?>" value="<?php echo $_POST['email']; ?>">
+        	<input type="text" id="support_email" name="email" label="<?php echo 'Correo electrónico'; ?>" value="<?php echo $_POST['email']; ?>">
                 <?php if($_POST && $_POST['email']==''){ echo '<span class="error">'.USRNM_EMPTY.'</span>';} ?>
         </td>
         </tr>
@@ -141,10 +141,10 @@ Email: [b]".$_POST['email']."[/b]
 	<tbody>
     	<tr>
         <td class="form_table_label form_table_label_support_message">
-        	<label class="form_label" for="message"><?php echo 'Message'; ?></label>
+        	<label class="form_label" for="message"><?php echo 'Mensaje'; ?></label>
         </td>
         <td class="form_table_element form_table_element_support_message">
-        	<textarea name="message" cols="43" rows="7" label="<?php echo 'Message'; ?>" helper=""><?php echo $_POST['message']; ?></textarea>
+        	<textarea name="message" cols="43" rows="7" label="<?php echo 'Mensaje'; ?>" helper=""><?php echo $_POST['message']; ?></textarea>
                 <?php if($_POST && $_POST['message']==''){ echo '<p class="error">'.USRNM_EMPTY.'</p>';} ?>
 		</td>
         </tr>
@@ -160,8 +160,8 @@ Email: [b]".$_POST['email']."[/b]
         	<label class="form_label" for="submit"></label>
 		</td>
         <td class="form_table_element form_table_element_support_submit">
-        	<button type="submit" value="<?php echo 'Send'; ?>" name="submit" id="submit" submit="1">
-        	<div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo 'Send'; ?></div></div>
+        	<button type="submit" value="<?php echo 'Enviar'; ?>" name="submit" id="submit" submit="1">
+        	<div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo 'Enviar'; ?></div></div>
             </button>
 		</td>
         </tr>

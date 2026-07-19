@@ -38,7 +38,7 @@ if(count($result) > 1) ## Natar Account Exists
 		$wid = $database->generateBase($kid); 
 		$type = $database->getVillageType($wid); 
 		$database->setFieldTaken($wid); 
-        mysql_query("INSERT INTO `".TB_PREFIX."vdata`(`wref`,`owner`,`name`,`capital`,`pop`,`cp`,`celebration`,`type`,`wood`,`clay`,`iron`,`maxstore`,`crop`,`maxcrop`,`lastupdate`,`loyalty`,`exp1`,`exp2`,`exp3`,`created`) values ('$wid','3','WW Village',0,200,0,0,0,80000.00,80000.00,80000.00,80000,80000.00,80000,1314974534,100,0,0,0,1314968914)") or die(mysql_error()); 
+        mysql_query("INSERT INTO `".TB_PREFIX."vdata`(`wref`,`owner`,`name`,`capital`,`pop`,`cp`,`celebration`,`type`,`wood`,`clay`,`iron`,`maxstore`,`crop`,`maxcrop`,`lastupdate`,`loyalty`,`exp1`,`exp2`,`exp3`,`created`) values ('$wid','3','Aldea de la Maravilla',0,200,0,0,0,80000.00,80000.00,80000.00,80000,80000.00,80000,1314974534,100,0,0,0,1314968914)") or die(mysql_error()); 
         $database->addResourceFields($wid, $type); 
         ## Add residence and treasury: Residence  =  25 (Level 20) 
         mysql_query("UPDATE `".TB_PREFIX."fdata` SET `f28` = '20', `f28t` = '25', `f99t` = '40', `f99` = '0', `wwname` = 'World Wonder' WHERE `vref` = $wid") or die(mysql_error()); 

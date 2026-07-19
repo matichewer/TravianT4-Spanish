@@ -40,7 +40,7 @@ include "Templates/html.tpl";
 </div> 
 </div>
 					<div id="mid"> 
-<a id="ingameManual" href="help.php"><img class="question" alt="Help" src="img/x.gif"></a>
+<a id="ingameManual" href="help.php"><img class="question" alt="Ayuda" src="img/x.gif"></a>
 					<div class="clear"></div> 
 						<div id="contentOuterContainer"> 
 							<div class="contentTitle">&nbsp;</div> 

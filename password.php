@@ -14,7 +14,7 @@ include "Templates/html.tpl";
 <img style="filter:chroma();" src="img\x.gif" id="msfilter" alt="" />
 <div id="header">
 <div id="mtop">
-<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="Trafian"></a>
+<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="<?php echo SERVER_NAME; ?>"></a>
 <div class="clear"></div>
 </div>
 </div>

@@ -104,7 +104,7 @@ for($i=$start;$i<=$end;$i++) {
 				<img src="img/x.gif" class="injury" title="Lesión:">
 				-<?php echo round($dataarray[4]); ?>%
             <?php }else{
-            		echo '<img src="img/x.gif" class="adventureDifficulty0" title="Your hero is dead">'.$dataarray[2];
+            		echo '<img src="img/x.gif" class="adventureDifficulty0" title="Tu héroe ha muerto">'.$dataarray[2];
                   }
             ?>
             	

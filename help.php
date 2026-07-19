@@ -21,8 +21,8 @@ include "Templates/html.tpl";
 </div>
 </div>
 					<div id="mid">
-												<a id="ingameManual" href="help.php" title="Aide">
-							<img src="img/x.gif" class="question" alt="Aide"/>
+												<a id="ingameManual" href="help.php" title="Ayuda">
+							<img src="img/x.gif" class="question" alt="Ayuda"/>
 						</a>
 
 												<div class="clear"></div>

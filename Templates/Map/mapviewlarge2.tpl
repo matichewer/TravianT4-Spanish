@@ -65,7 +65,7 @@ $xcount +=1;
 }
 }
 ?>
-<div id="mbig"><div id="lightframe"><div id="darkframe"><a id="map_popclose" href="karte.php?z=<?php echo $_GET['z'];?>"><img src="img/x.gif" alt="Close Map" title="Close Map"></a><h1>Koordináta(<span id="x"><?php echo $x;?></span>|<span id="y"><?php echo $y;?></span>)</h1><div id="map"><script type="text/javascript">
+<div id="mbig"><div id="lightframe"><div id="darkframe"><a id="map_popclose" href="karte.php?z=<?php echo $_GET['z'];?>"><img src="img/x.gif" alt="Cerrar mapa" title="Cerrar mapa"></a><h1>Coordenada(<span id="x"><?php echo $x;?></span>|<span id="y"><?php echo $y;?></span>)</h1><div id="map"><script type="text/javascript">
 
 <!--
 var text_k = {}
@@ -255,10 +255,10 @@ for($h=0;$h<=12;$h++) {
 
             <img id="map_navibox" src="img/x.gif" usemap="#map_navibox"/>
             <map name="map_navibox">
-            <area id="ma_n1p7" href="karte.php?z=<?php echo $generator->getBaseID($x,$yp7) ?>" coords="51,15,73,3,95,15,73,27" shape="poly" title="Észak"/>
-<area id="ma_n2p7" href="karte.php?z=<?php echo $generator->getBaseID($xm7,$y) ?>" coords="51,41,73,29,95,41,73,53" shape="poly" title="Kelet"/>
-<area id="ma_n3p7" href="karte.php?z=<?php echo $generator->getBaseID($x,$ym7) ?>" coords="4,41,26,29,48,41,26,53" shape="poly" title="Dél"/>
-<area id="ma_n4p7" href="karte.php?z=<?php echo $generator->getBaseID($xp7,$y) ?>" coords="4,15,26,3,48,15,26,27" shape="poly" title="Nyugat"/><!--z = baseid-->
+            <area id="ma_n1p7" href="karte.php?z=<?php echo $generator->getBaseID($x,$yp7) ?>" coords="51,15,73,3,95,15,73,27" shape="poly" title="Norte"/>
+<area id="ma_n2p7" href="karte.php?z=<?php echo $generator->getBaseID($xm7,$y) ?>" coords="51,41,73,29,95,41,73,53" shape="poly" title="Este"/>
+<area id="ma_n3p7" href="karte.php?z=<?php echo $generator->getBaseID($x,$ym7) ?>" coords="4,41,26,29,48,41,26,53" shape="poly" title="Sur"/>
+<area id="ma_n4p7" href="karte.php?z=<?php echo $generator->getBaseID($xp7,$y) ?>" coords="4,15,26,3,48,15,26,27" shape="poly" title="Oeste"/><!--z = baseid-->
 </map><div id="map_coords"><form name="map_coords" method="post" action="karte.php">
             <span>x </span><input id="mcx" class="text" name="xp" value="" maxlength="4"/>
             <span>y </span><input id="mcy" class="text" name="yp" value="" maxlength="4"/>

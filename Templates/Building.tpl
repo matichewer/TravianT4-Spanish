@@ -15,8 +15,8 @@
 						<th colspan="4"><?php echo BUILDING_UPGRADING;?>
 			<?php if($database->getUserField($session->uid, 'gold', 0) >= 2 && $building->canFinishAll()) { ?>
 		<div class="finishNow">
-		  <a class="arrow" href="?cmd=buildingFinish&amp;c=<?php echo $session->checker; ?>" onclick="return confirm('Complete instantly for 2 gold?')">Finish all</a>
-		  <b> (price: <img src="img/x.gif" class="gold" alt="Arany"> 2)</b>
+		  <a class="arrow" href="?cmd=buildingFinish&amp;c=<?php echo $session->checker; ?>" onclick="return confirm('¿Completar todo al instante por 2 de oro?')">Finalizar todo</a>
+		  <b> (precio: <img src="img/x.gif" class="gold" alt="Oro"> 2)</b>
 		</div>
 			<?php
             }

@@ -1,4 +1,4 @@
-<h1><img class="unit u1" src="img/x.gif" alt="Legionnaire" title="Legionnaire" /> Legionnaire <span class="tribe">(Romanos)</span></h1>
+<h1><img class="unit u1" src="img/x.gif" alt="Legionnario" title="Legionnario" /> Legionnario <span class="tribe">(Romanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u1" src="img/x.gif" alt="Legionnaire" title="Legionnaire" /><div id="t_desc">The Legionnaire is the simple and all-purpose infantry of the Roman Empire. With his well-rounded training, he is good at both defence and attack. However, the Legionnaire will never reach the levels of the more specialized troops.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=19">Barracks</a> Nivel 1</div><map id="nav" name="nav">
+<img id="big_unit" class="big_u1" src="img/x.gif" alt="Legionnario" title="Legionnario" /><div id="t_desc">El Legionario es la infantería sencilla y versátil del Imperio Romano. Con un entrenamiento equilibrado, es bueno tanto en defensa como en ataque. Sin embargo, el Legionario nunca alcanzará el nivel de las tropas más especializadas.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=19">Cuartel</a> Nivel 1</div><map id="nav" name="nav">
  <area href="manual.php?s=1" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?typ=1&amp;s=2" title="adelante" coords="71,0,116,18" shape="rect" alt="" />

@@ -142,7 +142,7 @@ echo $form->getError('agree');
 ?>
 		</ul>
 		<div class="btn">
-			<button type="submit" value="anmelden" name="s1" id="btn_signup" title="Register">
+			<button type="submit" value="anmelden" name="s1" id="btn_signup" title="Registrarse">
             <div class="button-container">
             <div class="button-position">
             <div class="btl">

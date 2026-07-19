@@ -24,6 +24,12 @@ define("UPDATE_T_10","Actualizar top 10");
 define("SYSTEM_MESSAGE","Mens. del sistema");
 define("TRAVIAN_PLUS","Travian <b><span class=\"plus_g\">P</span><span class=\"plus_o\">l</span><span class=\"plus_g\">u</span><span class=\"plus_o\">s</span></span></span></b>");
 define("CONTACT","Contactenos!");
+define("CONTACT_SUBJECT1","Pregunta general");
+define("CONTACT_SUBJECT2","No puedo iniciar sesión");
+define("CONTACT_SUBJECT3","No puedo registrarme");
+define("CONTACT_SUPPORT","Soporte del servidor");
+define("CONTACT_USER_NOT_EXIST","Este nombre de usuario no está registrado.");
+define("CONTACT_SENT","Enviado con éxito.");
 
 //MENU
 define("REG","Registrarse");

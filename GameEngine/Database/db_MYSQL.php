@@ -2746,7 +2746,7 @@ break;
 }
         			$basearray = $this->getOMInfo($wid);
         			//We switch type of oasis and instert record with apropriate infomation.
-        			$q = "INSERT into " . TB_PREFIX . "odata VALUES ('" . $basearray['id'] . "'," . $basearray['oasistype'] . ",0,".$tt."," . time() .",".time(). ",100,3,'Unoccupied oasis')";
+        			$q = "INSERT into " . TB_PREFIX . "odata VALUES ('" . $basearray['id'] . "'," . $basearray['oasistype'] . ",0,".$tt."," . time() .",".time(). ",100,3,'Oasis sin ocupar')";
         			$result = mysql_query($q, $this->connection);
         		}
         	}

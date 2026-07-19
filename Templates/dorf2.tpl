@@ -109,29 +109,29 @@ for ($i=1;$i<=20;$i++) {
 <?php
 if($village->resarray['f99t'] == 40) {
 if($village->resarray['f99'] >= 0 && $village->resarray['f99'] <= 9) {
-echo '<img class="ww g40 g40_0" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_0" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 10 && $village->resarray['f99'] <= 19) {
-echo '<img class="ww g40 g40_1" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_1" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 20 && $village->resarray['f99'] <= 29) {
-echo '<img class="ww g40 g40_2" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_2" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 30 && $village->resarray['f99'] <= 39) {
-echo '<img class="ww g40 g40_3" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_3" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 40 && $village->resarray['f99'] <= 49) {
-echo '<img class="ww g40 g40_4" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_4" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 50 && $village->resarray['f99'] <= 59) {
-echo '<img class="ww g40 g40_5" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_5" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 60 && $village->resarray['f99'] <= 69) {
-echo '<img class="ww g40 g40_6" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_6" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 70 && $village->resarray['f99'] <= 79) {
-echo '<img class="ww g40 g40_7" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_7" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 80 && $village->resarray['f99'] <= 89) {
-echo '<img class="ww g40 g40_8" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_8" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 90 && $village->resarray['f99'] <= 94) {
-echo '<img class="ww g40 g40_9" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_9" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] >= 95 && $village->resarray['f99'] <= 99) {
-echo '<img class="ww g40 g40_10" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_10" src="img/x.gif" alt="Maravilla del mundo">'; }
 if($village->resarray['f99'] == 100) {
-echo '<img class="ww g40 g40_11" src="img/x.gif" alt="Wonder of the World">'; }
+echo '<img class="ww g40 g40_11" src="img/x.gif" alt="Maravilla del mundo">'; }
 }
 $showBuildingLevels = !isset($_COOKIE['t4level']) || $_COOKIE['t4level'] !== '0';
 ?>

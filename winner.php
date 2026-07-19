@@ -197,7 +197,7 @@ if($message->unread) {
 </div> 
 </div>
 			<div id="mid">
-<a id="ingameManual" href="help.php"><img class="question" alt="Help" src="img/x.gif"></a>			
+<a id="ingameManual" href="help.php"><img class="question" alt="Ayuda" src="img/x.gif"></a>			
 <div class="clear"></div>
 			<div id="contentOuterContainer"> 
 							<div class="contentTitle">&nbsp;</div>
@@ -206,34 +206,34 @@ if($message->unread) {
 					<img src="<?php echo GP_LOCATE; ?>img/g/g40_100-rtl.png" align="right" style="padding-top: 40px;">
 					<div style="width:50%">
 					<p>
-					<b>Dear <?php echo SERVER_NAME; ?> Players,</b>
+					<b>Estimados jugadores de <?php echo SERVER_NAME; ?>,</b>
 					<br /><br />
-					All good things must come to an end, and so too must this age. Once solomon was given a ring, upon which was inscribed a message that could take away all
-					the joys or sorrows of the world, that message was roughly translated "this too shall pass". It is both our joy and sorrow to announce to all Players that
-					this too has now passed! We hope you enjoyed your time with us as much as we enjoyed serving you and thank you for staying until the very end!<br /><br />
+					Todas las cosas buenas deben llegar a su fin, y esta era no es la excepción. Cuentan que a Salomón le fue entregado un anillo, en el que estaba inscrito un mensaje que podía disipar
+					todas las alegrías o penas del mundo; ese mensaje, traducido a grandes rasgos, decía "esto también pasará". Con alegría y también con tristeza anunciamos a todos los jugadores que
+					¡esto también ha pasado! Esperamos que hayan disfrutado su tiempo con nosotros tanto como nosotros disfrutamos servirles, y les agradecemos por quedarse hasta el final.<br /><br />
 
-					The results: Day had long since passed into night, yet the workers in <?php echo "<a href=\"karte.php?d=$vref&c=".$generator->getMapCheck($vref)."\">$winningvillagename</a>"; ?>,
-					laboured on throught the wintery eve, every wary of the countless armies marching to destroy their work, knowing that they raced against time and the greatest
-					threat that had ever faced the free people. Their tireless struggles were rewared at <strike><b>Time</b></strike> on <strike><b>Date</b></strike> after a
-					nameless worker laid the dinal stone in what will forever known as the greatest and most magnificent creation in all of history since the fall of the Natars<br /><br />
+					El resultado: el día había dado paso a la noche hacía tiempo, pero los trabajadores de <?php echo "<a href=\"karte.php?d=$vref&c=".$generator->getMapCheck($vref)."\">$winningvillagename</a>"; ?>
+					siguieron trabajando durante la fría noche de invierno, siempre atentos a los incontables ejércitos que marchaban para destruir su obra, sabiendo que corrían contra el tiempo y contra la mayor
+					amenaza que jamás había enfrentado el pueblo libre. Sus incansables esfuerzos fueron recompensados a las <strike><b>Hora</b></strike> del <strike><b>Fecha</b></strike>, cuando un
+					trabajador anónimo colocó la piedra final de lo que será recordado para siempre como la creación más grande y magnífica de toda la historia desde la caída de los Natars.<br /><br />
 
-					Together with the alliance "<?php echo "<a href=\"allianz.php?aid=$allianceid\">$winningalliancetag</a>"; ?>", "<?php echo "<a href=\"spieler.php?uid=$owner\">$username</a>"; ?>"
-					was the first to finish the Wonder of the World, using millions of resources whilst also protecting it with hundereds of thousands of brave defenders. It is therefore <b><?php echo "<a href=\"spieler.php?uid=$owner\">$username</a>"; ?></b>
-					who recieves the title "Winner of this era"!<br /><br />
+					Junto con la alianza "<?php echo "<a href=\"allianz.php?aid=$allianceid\">$winningalliancetag</a>"; ?>", "<?php echo "<a href=\"spieler.php?uid=$owner\">$username</a>"; ?>"
+					fue el primero en completar la Maravilla del Mundo, empleando millones de recursos y protegiéndola con cientos de miles de valientes defensores. Por ello, es <b><?php echo "<a href=\"spieler.php?uid=$owner\">$username</a>"; ?></b>
+					quien recibe el título de "¡Ganador de esta era"!<br /><br />
 
 
-					"<a href="spieler.php?uid=<?php echo $datas[0]['userid']; ?>" title="Total Villages: <?php echo $datas[0]['totalvillages']; echo "\n";?>Total Population: <?php echo $datas[0]['totalpop']; ?>"><?php echo $datas[0]['username']; ?></a>" was the ruler over the largest personal empire, followed closely by "<a href="spieler.php?uid=<?php echo $datas[1]['userid']; ?>" title="Total Villages: <?php echo $datas[1]['totalvillages']; echo "\n";?>Total Population: <?php echo $datas[1]['totalpop']; ?>"><?php echo $datas[1]['username']; ?></a>" and "<a href="spieler.php?uid=<?php echo $datas[2]['userid']; ?>" title="Total Villages: <?php echo $datas[2]['totalvillages']; echo "\n";?>Total Population: <?php echo $datas[2]['totalpop']; ?>"><?php echo $datas[2]['username']; ?></a>".<br />
-					"<a href="spieler.php?uid=<?php echo $attacker[0]['userid']; ?>" title="Total Villages: <?php echo $attacker[0]['totalvillages']; echo "\n"; ?>Attack Points: <?php echo $attacker[0]['apall']; ?>"><?php echo $attacker[0]['username']; ?></a>" slew more than any other, and was the mightiest, most fearsome commander.<br />
-					"<a href="spieler.php?uid=<?php echo $defender[0]['userid']; ?>" title="Total Villages: <?php echo $defender[0]['totalvillages']; echo "\n"; ?>Defence Points: <?php echo $defender[0]['dpall'];?>"><?php echo $defender[0]['username']; ?></a>" was the most glorious defender, slaugtering enemies at the village gates, staining the lands around those villages with their blood.
+					"<a href="spieler.php?uid=<?php echo $datas[0]['userid']; ?>" title="Aldeas totales: <?php echo $datas[0]['totalvillages']; echo "\n";?>Población total: <?php echo $datas[0]['totalpop']; ?>"><?php echo $datas[0]['username']; ?></a>" fue el gobernante del mayor imperio personal, seguido de cerca por "<a href="spieler.php?uid=<?php echo $datas[1]['userid']; ?>" title="Aldeas totales: <?php echo $datas[1]['totalvillages']; echo "\n";?>Población total: <?php echo $datas[1]['totalpop']; ?>"><?php echo $datas[1]['username']; ?></a>" y "<a href="spieler.php?uid=<?php echo $datas[2]['userid']; ?>" title="Aldeas totales: <?php echo $datas[2]['totalvillages']; echo "\n";?>Población total: <?php echo $datas[2]['totalpop']; ?>"><?php echo $datas[2]['username']; ?></a>".<br />
+					"<a href="spieler.php?uid=<?php echo $attacker[0]['userid']; ?>" title="Aldeas totales: <?php echo $attacker[0]['totalvillages']; echo "\n"; ?>Puntos de ataque: <?php echo $attacker[0]['apall']; ?>"><?php echo $attacker[0]['username']; ?></a>" acabó con más enemigos que ningún otro, y fue el comandante más poderoso y temido.<br />
+					"<a href="spieler.php?uid=<?php echo $defender[0]['userid']; ?>" title="Aldeas totales: <?php echo $defender[0]['totalvillages']; echo "\n"; ?>Puntos de defensa: <?php echo $defender[0]['dpall'];?>"><?php echo $defender[0]['username']; ?></a>" fue el defensor más glorioso, masacrando enemigos a las puertas de la aldea y tiñendo con su sangre las tierras alrededor de esas aldeas.
 					<br /><br />
-					<p>Congratulations to everyone.</p>
+					<p>Felicitaciones a todos.</p>
 					<br /><br />
-					Best Regards,<br />
-					<?php echo SERVER_NAME; ?> Team<br /><br /><br /><br />
+					Saludos cordiales,<br />
+					Equipo de <?php echo SERVER_NAME; ?><br /><br /><br /><br />
 					<small><i>(By: aggenkeech & Eyas95)</i></small></p></div>
 
 					<br /><br />
-					<center><a href="dorf1.php">&raquo; Continue</a></center>
+					<center><a href="dorf1.php">&raquo; Continuar</a></center>
 <div class="clear">&nbsp;</div>
 </div>
 <div class="clear"></div>

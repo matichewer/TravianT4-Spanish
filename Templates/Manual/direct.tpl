@@ -1,32 +1,32 @@
-<h1><img class="point" src="img/x.gif" alt="" title="" /> direct links</h1>
- 
-		<p>With the direct links one can set links to any target and speed up the navigation.</p>
+<h1><img class="point" src="img/x.gif" alt="" title="" /> enlaces directos</h1>
+
+		<p>Con los enlaces directos puedes crear enlaces a cualquier destino y agilizar la navegación.</p>
 		<table id="examples" cellpadding="1" cellspacing="1">
 			<thead><tr>
-				<th colspan="2">example for direct links</th>
+				<th colspan="2">ejemplo de enlaces directos</th>
 			</tr>
 			<tr>
-				<td>Link name</td>
-				<td>Link target</td>
+				<td>Nombre del enlace</td>
+				<td>Destino del enlace</td>
 			</tr></thead>
 			<tbody><tr>
-				<th>Barracks</th>
+				<th>Cuartel</th>
 				<td>build.php?gid=19</td>
 			</tr>
 			<tr>
-				<th>Marketplace</th>
+				<th>Mercado</th>
 				<td>build.php?gid=17</td>
 			</tr>
 			<tr>
-				<th>Rally Point</th>
+				<th>Plaza de reuniones</th>
 				<td>build.php?gid=16</td>
 			</tr>
 			<tr>
-				<th>Notes</th>
+				<th>Notas</th>
 				<td>nachrichten.php?t=4*</td>
 			</tr></tbody>
 		</table>
-		<p>Adding an * to the URL will cause the direct link to open in a new window.</p><map id="nav" name="nav">
+		<p>Añadir un * a la URL hará que el enlace directo se abra en una nueva ventana.</p><map id="nav" name="nav">
  <area href="manual.php?s=1" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="adelante" coords="71,0,116,18" shape="rect" alt="" />

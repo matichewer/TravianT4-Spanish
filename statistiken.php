@@ -31,7 +31,7 @@ include "Templates/html.tpl";
 </div> 
 </div>
 					<div id="mid">
-<a id="ingameManual" href="help.php"><img class="question" alt="Help" src="img/x.gif"></a>
+<a id="ingameManual" href="help.php"><img class="question" alt="Ayuda" src="img/x.gif"></a>
 												<div class="clear"></div> 
 <div id="contentOuterContainer"> 
 <div class="contentTitle">&nbsp;</div> 
@@ -47,32 +47,32 @@ include "Templates/html.tpl";
 					});
 				</script>
 
-<h1 class="titleInHeader">Statistics<?php if($session->access == ADMIN) { echo " (<a href=\"medals.php\">Aggiorna Top 10</a>)"; } ?></h1>
+<h1 class="titleInHeader">Estadísticas<?php if($session->access == ADMIN) { echo " (<a href=\"medals.php\">Actualizar Top 10</a>)"; } ?></h1>
 <div class="contentNavi subNavi">
 				<div title="" <?php if(!isset($_GET['tid']) || (isset($_GET['tid']) && ($_GET['tid'] == 1 || $_GET['tid'] == 31 || $_GET['tid'] == 32 || $_GET['tid'] == 7))) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="statistiken.php"><span class="tabItem">Players</span></a></div> 
+					<div class="content"><a href="statistiken.php"><span class="tabItem">Jugadores</span></a></div>
 				</div> 
 				<div title="" <?php if(isset($_GET['tid']) && ($_GET['tid'] == 4 || $_GET['tid'] == 41 || $_GET['tid'] == 42 || $_GET['tid'] == 43)) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 
 					<div class="background-end">&nbsp;</div> 
-					<div class="content"><a href="statistiken.php?tid=4"><span class="tabItem">Alliances</span></a></div> 
+					<div class="content"><a href="statistiken.php?tid=4"><span class="tabItem">Alianzas</span></a></div>
 				</div> 
 				<div title="" <?php if(isset($_GET['tid']) && $_GET['tid'] == 2) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 
 					<div class="background-end">&nbsp;</div> 
-					<div class="content"><a href="statistiken.php?tid=2"><span class="tabItem">Villages</span></a></div> 
+					<div class="content"><a href="statistiken.php?tid=2"><span class="tabItem">Aldeas</span></a></div>
 				</div> 
 				<div title="" <?php if(isset($_GET['tid']) && $_GET['tid'] == 8) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 
 					<div class="background-end">&nbsp;</div> 
-					<div class="content"><a href="statistiken.php?tid=8"><span class="tabItem">Heroes</span></a></div> 
+					<div class="content"><a href="statistiken.php?tid=8"><span class="tabItem">Héroes</span></a></div>
 				</div> 
 				<div title="" <?php if(isset($_GET['tid']) && $_GET['tid'] == 0) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 
 					<div class="background-end">&nbsp;</div> 
-					<div class="content"><a href="statistiken.php?tid=0"><span class="tabItem">General</span></a></div> 
+					<div class="content"><a href="statistiken.php?tid=0"><span class="tabItem">General</span></a></div>
 				</div> 
 				<?php if(WW == true){ include "Templates/Ranking/ww2.tpl"; }?>
 				<div class="clear"></div>

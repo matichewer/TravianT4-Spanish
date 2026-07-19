@@ -965,9 +965,9 @@ class Automation {
             $from = $database->getMInfo($data['from']);
             $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-            $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' sent resources to '.addslashes($to['name']).'', ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].'', $data['endtime']);
+            $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].'', $data['endtime']);
             if($from['owner'] != $to['owner']) {
-                $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' sent resources to '.addslashes($to['name']).'', ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].'', $data['endtime']);
+                $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].'', $data['endtime']);
             }
             $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
             $tocoor = $database->getCoor($data['from']);
@@ -1580,18 +1580,18 @@ class Automation {
                         if($scout) {
                             if($totaldead_att > 0) {
                                 if($totaldead_att == $totalsend_att) {
-                                    $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 15, 'Reinforcement in '.addslashes($to['name']).' was attacked', $data2, $AttackArrivalTime);
+                                    $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                                 } else {
-                                    $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 16, 'Reinforcement in '.addslashes($to['name']).' was attacked', $data2, $AttackArrivalTime);
+                                    $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                                 }
                             }
                         } else {
                             if($totalnotlife == 0) {
-                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 15, 'Reinforcement in '.addslashes($to['name']).' was attacked', $data2, $AttackArrivalTime);
+                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                             } else if($totallife > $totalnotlife) {
-                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 16, 'Reinforcement in '.addslashes($to['name']).' was attacked', $data2, $AttackArrivalTime);
+                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                             } else {
-                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 17, 'Reinforcement in '.addslashes($to['name']).' was attacked', $data2, $AttackArrivalTime);
+                                $database->addNotice($database->getVillageField($enforce['from'], "owner"), $from['wref'], $ownally, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                             }
                             //delete reinf sting when its killed all.
                             if($wrong == '0') {
@@ -2707,7 +2707,7 @@ class Automation {
                     for ($i = 1; $i <= 11; $i++) {
                         if($battlepart['casualties_attacker'][$i]) {
                             $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' scouts '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                             break;
                         }
                     }
@@ -2825,17 +2825,17 @@ class Automation {
                             }
                         }
                         if($eee == 0) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 7, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 7, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 4, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 4, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         }
 
                     } else {
                         $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                         if($totalsend_def > $totaldead_def) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 5, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 5, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 6, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 6, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         }
                     }
                 }
@@ -2847,14 +2847,14 @@ class Automation {
                     //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' scouts '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                     } else {
                         if($totaldead_att == 0 && $totaltraped_att == 0) {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         } else {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                         }
                     }
 
@@ -2883,10 +2883,10 @@ class Automation {
                     $database->setMovementProc($data['moveid']);
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' scouts '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                     } else {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 3, ''.addslashes($from['name']).' attacks '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 3, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                     }
                 }
 
@@ -3011,7 +3011,7 @@ class Automation {
                 $targetally = $database->getUserField($from['owner'], 'alliance', 0);
                 $unitssend_att = ''.$data['t1'].','.$data['t2'].','.$data['t3'].','.$data['t4'].','.$data['t5'].','.$data['t6'].','.$data['t7'].','.$data['t8'].','.$data['t9'].','.$data['t10'].','.$data['t11'].'';
                 $data_fail = '0,0,4,'.$unitssend_att.','.$to['wref'].','.$to['owner'];
-                $database->addNotice($to['owner'], $to['wref'], $targetally, 8, 'nature reinforced '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                $database->addNotice($to['owner'], $to['wref'], $targetally, 8, 'la naturaleza reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                 $database->setMovementProc($data['moveid']);
             } else {
                 //set base things
@@ -3064,10 +3064,10 @@ class Automation {
                 $unitssend_att = ''.$data['t1'].','.$data['t2'].','.$data['t3'].','.$data['t4'].','.$data['t5'].','.$data['t6'].','.$data['t7'].','.$data['t8'].','.$data['t9'].','.$data['t10'].','.$data['t11'].'';
                 $data_fail = ''.$from['wref'].','.$from['owner'].','.$owntribe.','.$unitssend_att.','.$to['wref'].','.$to['owner'].'';
                 $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                $database->addNotice($from['owner'], $to['wref'], $fromAlly, 8, ''.addslashes($from['name']).' reinforced '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                $database->addNotice($from['owner'], $to['wref'], $fromAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                 if($from['owner'] != $to['owner']) {
                     $toAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                    $database->addNotice($to['owner'], $to['wref'], $toAlly, 8, ''.addslashes($from['name']).' reinforced '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                    $database->addNotice($to['owner'], $to['wref'], $toAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                 }
                 //update status
                 $database->setMovementProc($data['moveid']);
@@ -3320,7 +3320,7 @@ class Automation {
                     if(($getHero['health'] - $health) <= 0) {
                         $database->modifyHero2('dead', 1, $ownerID, 0);
                         $database->modifyHero2('health', $health, $ownerID, 2);
-                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,your hero did not survive the adventure.,,'.$health.','.$exp.'', $data['endtime']);
+                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,tu héroe no sobrevivió a la aventura.,,'.$health.','.$exp.'', $data['endtime']);
                     } else {
                         if($btype >= 7) {
                             $nntype = $ntype[$btype];
@@ -3359,9 +3359,9 @@ class Automation {
                             }
                         }
                         if($btype == 0 or $btype == 2) {
-                            $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',,Nothing valuable was found,,'.$health.','.$exp.'', $data['endtime']);
+                            $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',,No se encontró nada valioso,,'.$health.','.$exp.'', $data['endtime']);
                         } else {
-                            $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].','.$btype.','.$nntype.','.$num.','.$health.','.$exp.'', $data['endtime']);
+                            $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].','.$btype.','.$nntype.','.$num.','.$health.','.$exp.'', $data['endtime']);
                         }
                         $database->modifyHero2('health', $health, $ownerID, 2);
                         $ref = $database->addAttack($from['wref'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 0, 0, 0);
@@ -3394,10 +3394,10 @@ class Automation {
                     if(($getHero['health'] - $health) <= 0) {
                         $database->modifyHero2('dead', 1, $ownerID, 0);
                         $database->modifyHero2('health', $health, $ownerID, 2);
-                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,your hero did not survive the adventure.,,'.$health.','.$exp.'', $data['endtime']);
+                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,tu héroe no sobrevivió a la aventura.,,'.$health.','.$exp.'', $data['endtime']);
                     } else {
                         $amt = rand(300, 1000);
-                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',17,0,'.$amt.','.$health.','.$exp.'', $data['endtime']);
+                        $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',17,0,'.$amt.','.$health.','.$exp.'', $data['endtime']);
 
                         $database->modifyHero2('health', $health, $ownerID, 2);
                         $database->updateUserField($ownerID, 'silver', $amt, 2);
@@ -3432,7 +3432,7 @@ class Automation {
                 if(($getHero['health'] - $health) <= 0) {
                     $database->modifyHero2('dead', 1, $ownerID, 0);
                     $database->modifyHero2('health', $health, $ownerID, 2);
-                    $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,your hero did not survive the adventure.,,'.$health.','.$exp.'', $data['endtime']);
+                    $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',dead,tu héroe no sobrevivió a la aventura.,,'.$health.','.$exp.'', $data['endtime']);
                 } else {
                     $unit = rand(1, 6);
                     if(($tribe != 3 && $unit < 4) or ($tribe == 3 && $unit < 3)) {
@@ -3442,7 +3442,7 @@ class Automation {
                     } else {
                         $amt = rand(5, 10);
                     }
-                    $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explores ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',16,'.$unit.','.$amt.','.$health.','.$exp.'', $data['endtime']);
+                    $database->addNotice($ownerID, $data['to'], $ally, 9, ''.addslashes($from['name']).' explora ('.addslashes($coor['x']).'|'.addslashes($coor['y']).')', ''.$from['wref'].',16,'.$unit.','.$amt.','.$health.','.$exp.'', $data['endtime']);
 
                     $database->modifyHero2('health', $health, $ownerID, 2);
                     $ref = $database->addAttack($from['wref'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 0, 0, 0);
