@@ -352,9 +352,8 @@ if (!isset($SAJAX_INCLUDED)) {
 	function add_data($data) {
 		global $session,$database;
 
-		$data = explode("|",$data);
 		$name = $session->username;
-		$msg = htmlspecialchars($data[1]);
+		$msg = htmlspecialchars($data);
 		$id_user = $session->uid;
 		$alliance = $session->alliance;
 		$now = time();
