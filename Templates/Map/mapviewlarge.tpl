@@ -280,14 +280,15 @@ break;
 </form>	</div>
 </div>
 <style type="text/css">
-body.map{background:#c8dd9b;}
+html{overflow-y:hidden;}
+body.map{background:#c8dd9b;overflow-y:hidden;}
 .mapTopBar{position:fixed;top:12px;right:20px;z-index:1000;}
 .mapTopBar a{display:inline-block;margin-left:8px;padding:7px 15px;background:#6b8e23;color:#fff;text-decoration:none;border-radius:4px;font-size:13px;font-weight:bold;border:1px solid #4d6619;box-shadow:0 1px 2px rgba(0,0,0,.3);}
 .mapTopBar a:hover{background:#7ba428;}
 #mapContainer.lowRes #mapData{cursor:grab;cursor:-webkit-grab;touch-action:none;user-select:none;-webkit-user-select:none;}
 #mapContainer.lowRes.dragPanning #mapData{cursor:grabbing;cursor:-webkit-grabbing;}
 #mapContainer.lowRes #mapData a,#mapContainer.lowRes #mapData img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
-#mapContainer.lowRes .ruler.y .coordinate{height:<?php echo $TILE; ?>px;}
+#mapContainer.lowRes .ruler.y .coordinate{box-sizing:border-box;height:<?php echo $TILE; ?>px;}
 .dialog.mapTileDetailsDialog{color:#333;font-size:13px;}
 .dialog.mapTileDetailsDialog .dialog-container{background:#fff;border:1px solid #9a9a9a;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.45);}
 .dialog.mapTileDetailsDialog .dialog-tl,.dialog.mapTileDetailsDialog .dialog-tc,.dialog.mapTileDetailsDialog .dialog-tr,
@@ -357,8 +358,31 @@ body.map{background:#c8dd9b;}
 	function ready(fn){ if(document.readyState!='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
 	ready(function(){
 		var container=document.getElementById('mapContainer');
+		var mapBox=container&&container.parentNode;
+		var viewport=document.getElementById('mapViewport');
 		var data=document.getElementById('mapData');
-		if(!container||!data) return;
+		var rulerX=container&&container.querySelector('.ruler.x');
+		var rulerY=container&&container.querySelector('.ruler.y');
+		var rulerYContainer=rulerY&&rulerY.querySelector('.rulerContainer');
+		if(!container||!mapBox||!viewport||!data||!rulerX||!rulerY||!rulerYContainer) return;
+		/* Keep the complete fullscreen UI inside the browser viewport, even when
+		   browser zoom reduces the available CSS height. Crop the map equally at
+		   the top and bottom so the requested coordinate remains centred. */
+		function fitMapToWindow(){
+			var windowHeight=document.documentElement.clientHeight||window.innerHeight;
+			var mapTop=viewport.getBoundingClientRect().top;
+			var borders=mapBox.offsetHeight-mapBox.clientHeight;
+			var available=Math.floor(windowHeight-mapTop-rulerX.offsetHeight-borders-1);
+			var fullHeight=<?php echo (int)($VROWS*$TILE); ?>;
+			var viewportHeight=Math.max(120,Math.min(fullHeight,available));
+			var centreOffset=Math.floor((viewportHeight-fullHeight)/2);
+			viewport.style.height=viewportHeight+'px';
+			rulerY.style.height=viewportHeight+'px';
+			data.style.top=(-<?php echo (int)($BUF*$TILE); ?>+centreOffset)+'px';
+			rulerYContainer.style.top=centreOffset+'px';
+		}
+		fitMapToWindow();
+		window.addEventListener('resize',fitMapToWindow);
 		var dragging=false, moved=false, sx=0, sy=0, dx=0, dy=0;
 		data.addEventListener('dragstart', function(e){ e.preventDefault(); });
 		data.addEventListener('pointerdown', function(e){
