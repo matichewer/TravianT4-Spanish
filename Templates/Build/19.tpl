@@ -51,7 +51,7 @@ include("upgrade.tpl");
 			}
 			echo "</td><td class=\"fin\">";
 			$time = $generator->procMTime($train['timestamp']);
-			if($time[0] != "today") {
+			if($time[0] != "hoy") {
 				echo "el ".$time[0]." a las ";
             }
 			echo $time[1];

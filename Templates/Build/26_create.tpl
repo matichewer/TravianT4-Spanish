@@ -52,7 +52,7 @@ $i = 20;
         echo "<img class=\"unit u".$train['unit']."\" src=\"img/x.gif\" alt=\"".$train['name']."\" title=\"".$train['name']."\" />".$train['amt']." ".$train['name']."</td><td class=\"dur\"><span id=timer".$timer.">".$generator->getTimeFormat(($train['commence']+($train['eachtime']*$train['amt']))-time())."</span></td><td class=\"fin\">";
         $timer -= 1;
         $time = $generator->procMTime($train['commence']+(1*$train['amt']));
-        if($time[0] != "today") {
+        if($time[0] != "hoy") {
             echo $time[0];
             }
             echo $time[1]."</span><span></td>

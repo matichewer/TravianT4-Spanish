@@ -144,7 +144,7 @@ if($fail > 0) {
 }
 
 if(count($acares) > 0) {
-    echo "<table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\"><thead><tr><td>Training</td><td>Duración</td><td>Finaliza</td></tr>
+    echo "<table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\"><thead><tr><td>Entrenamiento</td><td>Duración</td><td>Finaliza</td></tr>
     </thead><tbody>";
             $timer = 1;
     foreach($acares as $aca) {

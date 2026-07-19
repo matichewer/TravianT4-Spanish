@@ -218,27 +218,27 @@ $database->modifyHero2('hide', 1, $session->uid, 0);
 							<div class="contentTitle">&nbsp;</div> 
 
 <div class="contentContainer">
-								<div id="content" class="hero_inventory"><h1 class="titleInHeader">Hero</h1>
+								<div id="content" class="hero_inventory"><h1 class="titleInHeader">Héroe</h1>
 <div class="contentNavi subNavi">
 				<div class="container active">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="hero_inventory.php"><span class="tabItem">Attributes</span></a></div>
+					<div class="content"><a href="hero_inventory.php"><span class="tabItem">Atributos</span></a></div>
 				</div>
 				<div class="container normal">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="hero.php"><span class="tabItem">Appearance</span></a></div>
+					<div class="content"><a href="hero.php"><span class="tabItem">Apariencia</span></a></div>
 				</div>
 				<div class="container normal">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="hero_adventure.php"><span class="tabItem">Adventures</span></a></div>
+					<div class="content"><a href="hero_adventure.php"><span class="tabItem">Aventuras</span></a></div>
 				</div>
 				<div class="container normal">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="hero_auction.php"><span class="tabItem">Auctions</span></a></div>
+					<div class="content"><a href="hero_auction.php"><span class="tabItem">Subastas</span></a></div>
 				</div><div class="clear"></div>
 		</div>
 		<script type="text/javascript">
@@ -331,11 +331,11 @@ if($gi['bag']!=0){
 	<?php
 	if($hero['hide'] == 1){
 	?>
-		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?showhero=<?php echo $hero['heroid'];?>';" checked="checked"> When checked hero will hide when village attacked.
+		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?showhero=<?php echo $hero['heroid'];?>';" checked="checked"> Si está marcado, el héroe se esconderá cuando ataquen la aldea.
 	<?php 
 	}else{
 	?>
-		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?hidehero=<?php echo $hero['heroid'];?>';"> When checked hero will hide when village attacked.
+		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?hidehero=<?php echo $hero['heroid'];?>';"> Si está marcado, el héroe se esconderá cuando ataquen la aldea.
 	<?php } ?>
 	</div>
 </div>
@@ -364,7 +364,7 @@ include "Templates/Auction/alt.tpl";
 		if($hero['dead']==1){
 			$dis = ' disabled';
 			$deadTitle = "
-			<span class='itemNotMoveable'>You cannot use this item when your hero is dead.</span><br>";
+			<span class='itemNotMoveable'>No puedes usar este objeto mientras tu héroe está muerto.</span><br>";
 		}else{
 			$dis = '';
 			$deadTitle = '';
@@ -404,8 +404,8 @@ if($inv <= 12){
 }
 ?>
 			<div class="market">
-				<a class="buy arrow" href="hero_auction.php?action=buy">Buy Items</a>
-				<a class="sell arrow" href="hero_auction.php?action=sell">Sell Items</a>
+				<a class="buy arrow" href="hero_auction.php?action=buy">Comprar objetos</a>
+				<a class="sell arrow" href="hero_auction.php?action=sell">Vender objetos</a>
 				<div class="clear"></div>
 			</div>
 			<div class="clear"></div>

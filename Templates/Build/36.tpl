@@ -93,7 +93,7 @@ include("upgrade.tpl");
     	echo "
     <table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\">
 		<thead><tr>
-			<td>Training</td>
+			<td>Entrenamiento</td>
 			<td>Duración</td>
 			<td>Finaliza</td>
 		</tr></thead>
@@ -112,7 +112,7 @@ include("upgrade.tpl");
 			}
 			echo "</td><td class=\"fin\">";
 			$time = $generator->procMTime($train['timestamp']);
-			if($time[0] != "today") {
+			if($time[0] != "hoy") {
 				echo "el ".$time[0]." a las ";
             }
 			echo $time[1];

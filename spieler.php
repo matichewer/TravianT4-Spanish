@@ -47,7 +47,7 @@ include "Templates/html.tpl";
 <div class="contentContainer">
 <div id="content" class="player">
 <?php $username = $database->getUserField($_GET['uid'],"username",0); ?>
-<h1 class="titleInHeader">Player profile <?php if(isset($_GET['uid']) && is_numeric($_GET['uid'])){ echo "- ".$username; } ?></h1>
+<h1 class="titleInHeader">Perfil del jugador <?php if(isset($_GET['uid']) && is_numeric($_GET['uid'])){ echo "- ".$username; } ?></h1>
 <script type="text/javascript"> 
 					window.addEvent('domready', function()
 					{

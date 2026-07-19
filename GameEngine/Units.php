@@ -93,20 +93,20 @@ class Units {
 				// Confirmamos y buscamos las coordenadas por nombre de pueblo
 				if(	!$post['t1'] && !$post['t2'] && !$post['t3'] && !$post['t4'] && !$post['t5'] && 
 					!$post['t6'] && !$post['t7'] && !$post['t8'] && !$post['t9'] && !$post['t10'] && !$post['t11']){
-				$form->addError("error","You need to mark min. one troop");				
+				$form->addError("error","Debes seleccionar al menos una tropa");				
 				}				
 
 				$validX = is_numeric($post['x']) && floor($post['x']) == $post['x'];
 				$validY = is_numeric($post['y']) && floor($post['y']) == $post['y'];
 
 				if(!$post['dname'] && !$validX && !$validY){
-				$form->addError("error","Insert name or coordinates");			
+				$form->addError("error","Ingresa un nombre o coordenadas");			
 				}
 
 				if(isset($post['dname']) && $post['dname'] != "") {
 					$id = $database->getVillageByName(stripslashes($post['dname']));
 					if (!isset($id)){				
-					$form->addError("error","Village do not exist");
+					$form->addError("error","La aldea no existe");
 					}else{
 					$coor = $database->getCoor($id);
 					}
@@ -117,7 +117,7 @@ class Units {
 					$coor = array('x'=>$post['x'], 'y'=>$post['y']);
 					$id = $generator->getBaseID($coor['x'],$coor['y']);
 					if (!$database->getVillageState($id)){
-						$form->addError("error","Coordinates do not exist");
+						$form->addError("error","Las coordenadas no existen");
 					}
 				}
 					$offset =($session->tribe - 1) * 10;
@@ -128,13 +128,13 @@ class Units {
                             
 							if ($post['t'.$i] > $village->unitarray['u'.($offset+$i)])
 							{
-								$form->addError("error","You can't send more units than you have");
+								$form->addError("error","No puedes enviar más unidades de las que tienes");
 								break;
 							}
 
 							if($post['t'.$i]<0)
 							{
-								$form->addError("error","You can't send negative units.");
+								$form->addError("error","No puedes enviar una cantidad negativa de unidades.");
 								break;
 							}
 
@@ -144,33 +144,33 @@ class Units {
 					{
 							if ($post['t11'] > $village->unitarray['hero'])
                             {
-                                $form->addError("error","You can't send more units than you have");
+                                $form->addError("error","No puedes enviar más unidades de las que tienes");
                                 //break;
                             }
                             
                             if($post['t11']<0)
                             {
-                                $form->addError("error","You can't send negative units.");
+                                $form->addError("error","No puedes enviar una cantidad negativa de unidades.");
                                 //break;
                             }
 					}
 
                 if ($database->isVillageOases($id) == 0) {
 				if($database->hasBeginnerProtection($id)==1) {
-	                $form->addError("error","Player is under beginners protection. You can't attack him");
+	                $form->addError("error","El jugador está bajo protección de principiante. No puedes atacarlo");
                 }    
                 
 				//check if banned:
 				$villageOwner = $database->getVillageField($id,'owner');
 				$userAccess = $database->getUserField($villageOwner,'access',0);
 					if($userAccess == '0'){
-								$form->addError("error","Player is Banned. You can't attack him");
+								$form->addError("error","El jugador está baneado. No puedes atacarlo");
 								//break;
 					}
 
 				//check if attacking same village that units are in
 					if($id == $village->wid){
-								$form->addError("error","You cant attack same village you are sending from.");
+								$form->addError("error","No puedes atacar la misma aldea desde la que envías.");
 								//break;
 					}
 				// Procesamos el array con los errores dados en el formulario
@@ -220,13 +220,13 @@ class Units {
 
                             if ($data['u'.$i] > $village->unitarray['u'.$Gtribe.$i])
 							{
-								$form->addError("error","You can't send more units than you have");
+								$form->addError("error","No puedes enviar más unidades de las que tienes");
 								break;
 							}
 
 							if($data['u'.$i]<0)
 							{
-								$form->addError("error","You can't send negative units.");
+								$form->addError("error","No puedes enviar una cantidad negativa de unidades.");
 								break;
 							}
 
@@ -234,13 +234,13 @@ class Units {
 					}
                     if ($data['u11'] > $village->unitarray['hero'])
                             {
-                                $form->addError("error","You can't send more units than you have");
+                                $form->addError("error","No puedes enviar más unidades de las que tienes");
                                 //break;
                             }
                             
                             if($data['u11']<0)
                             {
-                                $form->addError("error","You can't send negative units.");
+                                $form->addError("error","No puedes enviar una cantidad negativa de unidades.");
                                 //break;
                             }
 				if($form->returnErrors() > 0) {
@@ -342,13 +342,13 @@ class Units {
 							if($i!=10){
 								if ($post['t'.$i] > $enforce['u'.$Gtribe.$i])
 								{
-									$form->addError("error","You can't send more units than you have");
+									$form->addError("error","No puedes enviar más unidades de las que tienes");
 									break;
 								}
 
 								if($post['t'.$i]<0)
 								{
-									$form->addError("error","You can't send negative units.");
+									$form->addError("error","No puedes enviar una cantidad negativa de unidades.");
 									break;
 								}
 							}
@@ -408,7 +408,7 @@ class Units {
 
 				}
 		} else {
-			$form->addError("error","You cant change someones troops.");
+			$form->addError("error","No puedes cambiar las tropas de otro jugador.");
 				if($form->returnErrors() > 0) {
 					$_SESSION['errorarray'] = $form->getErrors();
 					$_SESSION['valuearray'] = $_POST;

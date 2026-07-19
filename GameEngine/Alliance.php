@@ -127,7 +127,7 @@
 				// Insertamos invitacion
 				$database->sendInvitation($UserData['id'], $aid, $session->uid);
 				// Log the notice
-				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has invited  <a href="spieler.php?uid=' . $UserData['id'] . '">' . addslashes($UserData['username']) . '</a> into the alliance.');
+				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> invitó a  <a href="spieler.php?uid=' . $UserData['id'] . '">' . addslashes($UserData['username']) . '</a> a la alianza.');
 			}
 			}else{
 			header("Location: banned.php");
@@ -143,7 +143,7 @@
 			foreach($this->inviteArray as $invite) {
 				if($invite['id'] == $get['d']) {
 					$database->removeInvitation($get['d']);
-					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has rejected the invitation.');
+					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> rechazó la invitación.');
 				}
 			}
 			header("Location: build.php?id=".$get['id']);
@@ -163,7 +163,7 @@
 				if($invite['id'] == $get['d']) {
 				$invitename = $database->getUserArray($invite['uid'], 1);
 					$database->removeInvitation($get['d']);
-					$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has deleted the invitation for <a href="spieler.php?uid=' . $invitename['id'] . '">' . addslashes($invitename['username']) . '</a>.');
+					$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> eliminó la invitación de <a href="spieler.php?uid=' . $invitename['id'] . '">' . addslashes($invitename['username']) . '</a>.');
 				}
 			}
 			header("Location: allianz.php?delinvite");
@@ -188,7 +188,7 @@
 					$database->updateUserField($database->RemoveXSS($invite['uid']), "alliance", $database->RemoveXSS($invite['alliance']), 1);
 					$database->createAlliPermissions($database->RemoveXSS($invite['uid']), $database->RemoveXSS($invite['alliance']), '', '0', '0', '0', '0', '0', '0', '0', '0');
 					// Log the notice
-					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has joined the alliance.');
+					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> se unió a la alianza.');
 				}else{
 				$accept_error = 1;
 				$max = $alliance_info['max'];
@@ -197,7 +197,7 @@
 			}
 			}
 			if($accept_error == 1){
-			$form->addError("ally_accept", "The alliance can contain only ".$max." peoples right now.");
+			$form->addError("ally_accept", "La alianza solo puede tener ".$max." miembros por ahora.");
 			}else{
 			header("Location: build.php?id=" . $get['id']);
 			}
@@ -236,7 +236,7 @@
        			// Asign Permissions
        			$database->createAlliPermissions($database->RemoveXSS($session->uid), $database->RemoveXSS($aid), 'Alliance Founder', '1', '1', '1', '1', '1', '1', '1', '1');
        			// log the notice
-       			$database->insertAlliNotice($session->alliance, 'The alliance has been founded by <a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a>.');
+       			$database->insertAlliNotice($session->alliance, 'La alianza fue fundada por <a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a>.');
        			header("Location: build.php?id=" . $post['id']);
        		}
        	}
@@ -269,7 +269,7 @@
 			} else {
 				$database->setAlliName($database->RemoveXSS($session->alliance), $database->RemoveXSS($get['ally2']), $database->RemoveXSS($get['ally1']));
 				// log the notice
-				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has changed the alliance name.');
+				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> cambió el nombre de la alianza.');
 			}
 			}else{
 			header("Location: banned.php");
@@ -292,7 +292,7 @@
 			} else {
 				$database->submitAlliProfile($database->RemoveXSS($session->alliance), $post['be2'], $post['be1']);
 				// log the notice
-				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has changed the alliance description.');
+				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> cambió la descripción de la alianza.');
 			}
 			}else{
 			header("Location: banned.php");
@@ -318,7 +318,7 @@
                  */
 				$database->updateAlliPermissions($post['a_user'], $session->alliance, $post['a_titel'], $post['e1'], $post['e2'], $post['e3'], $post['e4'], $post['e5'], $post['e6'], $post['e7'], 0);
 				// log the notice
-				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has changed permissions.');
+				$database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> cambió los permisos.');
                 // Need to redirect if successful
                 header("Location: allianz.php?s=5");
 			}
@@ -345,17 +345,17 @@
                     if ($database->isAllianceOwner($UserData['id']))
                     {
                         // Can't kick owner
-                        $form->addError("name", "You cannot kick the owner!");
+                        $form->addError("name", "¡No puedes expulsar al líder!");
                     }
                     else
                     {
                         $database->updateUserField($post['a_user'], 'alliance', 0, 1);
                         $database->deleteAlliPermissions($post['a_user']);
                         $database->deleteAlliance($session->alliance);
-                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $UserData['id'] . '">' . addslashes($UserData['username']) . '</a> has been kicked from the alliance!');
+                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $UserData['id'] . '">' . addslashes($UserData['username']) . '</a> fue expulsado de la alianza.');
                     }
 				}
-                $form->addError("name", "You cannot kick yourself!");
+                $form->addError("name", "¡No puedes expulsarte a ti mismo!");
 			}
             else
             {
@@ -411,7 +411,7 @@
                         $database->deleteAlliPermissions($session->uid);
                         // log the notice
                         $database->deleteAlliance($session->alliance);
-                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has quit the alliance.');
+                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> abandonó la alianza.');
                         header("Location: spieler.php?uid=".$session->uid);
                     }
                     else
@@ -420,7 +420,7 @@
                         $database->deleteAlliPermissions($session->uid);
                         // log the notice
                         $database->deleteAlliance($session->alliance);
-                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> has quit the alliance.');
+                        $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> abandonó la alianza.');
                         header("Location: spieler.php?uid=".$session->uid);
                     }
                 }
@@ -442,26 +442,26 @@
 						if(!$database->diplomacyInviteCheck($database->getAllianceID($aName), $session->alliance)) {
 							$database->diplomacyInviteAdd($session->alliance, $database->getAllianceID($aName), $aType);
 							if($aType == 1){
-							$notice = "offer a confederation to";
+							$notice = "ofrece una confederación a";
 							}else if($aType == 2){
-							$notice = "offer non-aggression pact to";
+							$notice = "ofrece un pacto de no agresión a";
 							}else if($aType == 3){
-							$notice = "declare war on";
+							$notice = "declara la guerra a";
 							}
 							$database->insertAlliNotice($session->alliance, '<a href="allianz.php?aid=' . $session->alliance . '">' . $database->getAllianceName($session->alliance) . '</a> '. $notice .' <a href="allianz.php?aid=' . $database->getAllianceID($aName) . '">' . $aName . '</a>.');
-							$form->addError("name", "Invite sent");
+							$form->addError("name", "Invitación enviada");
 						} else {
-							$form->addError("name", "You have already sent them an invite");
+							$form->addError("name", "Ya les enviaste una invitación");
 						}
 
 					} else {
-						$form->addError("name", "wrong choice made");
+						$form->addError("name", "Elección incorrecta");
 					}
 				} else {
-					$form->addError("name", "You can not invite your own alliance");
+					$form->addError("name", "No puedes invitar a tu propia alianza");
 				}
 			} else {
-				$form->addError("name", "Alliance does not exist");
+				$form->addError("name", "La alianza no existe");
 			}
 			}else{
 			header("Location: banned.php");

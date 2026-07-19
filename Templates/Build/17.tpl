@@ -385,7 +385,7 @@ if(count($market->return) > 0) {
         echo "<div class=\"in\"><span id=timer".$timer.">".$generator->getTimeFormat($return['endtime']-time())."</span> horas</div>";
         $datetime = $generator->procMtime($return['endtime']);
         echo "<div class=\"at\">";
-        if($datetime[0] != "today") {
+        if($datetime[0] != "hoy") {
         echo $datetime[0]." ";
         }
         echo $datetime[1]."</div>";

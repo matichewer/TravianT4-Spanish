@@ -104,9 +104,9 @@ class GeneratorX {
 		
 		if (date('Y/m/d',time()) == date('Y/m/d',$time)) {
 		//if ((time()-$time) < 24*60*60 && (time()-$time) > 0) {
-			$day = "today";
+			$day = "hoy";
 		}elseif($today == date('d',$time)){
-			$day = "yesterday";
+			$day = "ayer";
 		}
 		else {
 			$pref = 3;

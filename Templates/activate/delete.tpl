@@ -1,21 +1,20 @@
 <h4>¿No recibiste el correo?</h4>
 <div class="activation">
-			To be able to play Travian a valid email address that will be sent an activation code that you need. Possible in very special circumstances do not receive the registration email.
+			Para poder jugar a Travian necesitas una dirección de correo electrónico válida, a la que se enviará un código de activación. En circunstancias muy especiales, es posible que no recibas el correo de registro.
 			<br>
 			<br>
-			The reason can be one of the following:
+			El motivo puede ser alguno de los siguientes:
 
 			<ul>
-				<li>Typographical error in the address.</li>
-				<li>Address space filling.</li>
-				<li>Second mistake: for example the email address .ir But your mistake is .com Typed.</li>
-				<li>Your email address is sending spam email folder by mistake.</li>
+				<li>Error tipográfico en la dirección.</li>
+				<li>La bandeja de entrada está llena.</li>
+				<li>Confusión con la dirección: por ejemplo, escribiste .com en lugar de .ir por error.</li>
+				<li>Tu dirección de correo está enviando este correo por error a la carpeta de spam.</li>
 			</ul>
-			You can cancel your registration and <u> again with another email address </ u> sign. We will send you a new activation code.
-			<p>(This side have been translated with GoogleTranslator...)</p>
+			Puedes cancelar tu registro y volver a registrarte con otra dirección de correo. Te enviaremos un nuevo código de activación.
 		</div>
         <hr>
-        <h4>Delete this account</h4>
+        <h4>Eliminar esta cuenta</h4>
         <form action="activate.php" method="post">
         <input type="hidden" name="id" value="<?php echo $_GET['id']; ?>" />
 		<input type="hidden" name="ft" value="a3" />
