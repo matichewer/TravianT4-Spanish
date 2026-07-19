@@ -33,59 +33,59 @@ foreach($varmedal as $medal) {
 
 switch ($medal['categorie']) {
     case "1":
-        $titel="Attackers of the Week";
-		$woord="Score";
+        $titel="Atacantes de la semana";
+		$woord="Puntuación";
         break;
     case "2":
-        $titel="Defenders of the Week";
- 		$woord="Score";
+        $titel="Defensores de la semana";
+ 		$woord="Puntuación";
        break;
     case "3":
-        $titel="Climbers of the Week";
- 		$woord="Score";
+        $titel="Ascenso de la semana";
+ 		$woord="Puntuación";
        break;
     case "4":
-        $titel="Raiders of the Week";
-		$woord="Score";
+        $titel="Saqueadores de la semana";
+		$woord="Puntuación";
         break;
 	 case "5":
-        $titel="Top 10 both attackers and defenders.";
+        $titel="Top 10 en ataque y defensa.";
         $bonus[$medal['id']]=1;
 		break;
 	 case "6":
-        $titel="Top Attackers of the Week ".$medal['points']." top 3.";
+        $titel="Top atacantes de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
 		break;
 	 case "7":
-        $titel="Top Defenders of the Week ".$medal['points']." top 3.";
+        $titel="Top defensores de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
 		break;
 	 case "8":
-        $titel="Top Climbers of the Week ".$medal['points']." top 3.";
+        $titel="Top en ascenso de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
 		break;
 	 case "9":
-        $titel="Top Raiders of the Week  ".$medal['points']." top 3.";
+        $titel="Top saqueadores de la semana  ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
 		break;
     case "11":
-        $titel="Climbers of the Week".$medal['points']." top 3.";
+        $titel="Ascenso de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
         break;
          case "12":
-        $titel="Attackers of the Week ".$medal['points']." top 10.";
+        $titel="Atacantes de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
         case "13":
-        $titel="Defenders of the Week ".$medal['points']." top 10.";
+        $titel="Defensores de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
         case "15":
-        $titel="Raiders of the Week ".$medal['points']." top 10.";
+        $titel="Saqueadores de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
         case "16":
-        $titel="Climbers of the Week ".$medal['points']." top 10.";
+        $titel="Ascenso de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
 
@@ -99,11 +99,11 @@ switch ($medal['categorie']) {
 
 if(isset($bonus[$medal['id']]))
 {
-	$profiel = preg_replace("/\[#".$medal['id']."]/is",'<img class="medal '.$medal['img'].'" src="img/x.gif" title="'.$titel.'<br />Week: '.$medal['week'].'">', $profiel, 1);
+	$profiel = preg_replace("/\[#".$medal['id']."]/is",'<img class="medal '.$medal['img'].'" src="img/x.gif" title="'.$titel.'<br />Semana: '.$medal['week'].'">', $profiel, 1);
 }
 else
 {
-	$profiel = preg_replace("/\[#".$medal['id']."]/is",'<img class="medal '.$medal['img'].'" src="img/x.gif" title="Category: '.$titel.'<br />Week: '.$medal['week'].'<br />Rank: '.$medal['plaats'].'<br />'.$woord.': '.$medal['points'].'<br />">', $profiel, 1);
+	$profiel = preg_replace("/\[#".$medal['id']."]/is",'<img class="medal '.$medal['img'].'" src="img/x.gif" title="Categoría: '.$titel.'<br />Semana: '.$medal['week'].'<br />Posición: '.$medal['plaats'].'<br />'.$woord.': '.$medal['points'].'<br />">', $profiel, 1);
 }
 }
 
