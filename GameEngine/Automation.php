@@ -4744,10 +4744,15 @@ class Automation {
     }
 
     private function weeklyMedals() {
-        if(!file_exists("GameEngine/Prevention/medals.txt") or time() - filemtime("GameEngine/Prevention/medals.txt") > 604800) {
-            $ourFileHandle = @fopen("GameEngine/Prevention/medals.txt", 'w');
-            @fclose($ourFileHandle);
-            $this->giveOutMedals();
+        // date('N') == 1 is Monday; medals are given out once, on the first page
+        // load of the week (i.e. right after Sunday ends / Monday begins).
+        if(date('N') == 1) {
+            $today = date('Y-m-d');
+            $lastRun = file_exists("GameEngine/Prevention/medals.txt") ? file_get_contents("GameEngine/Prevention/medals.txt") : '';
+            if($lastRun !== $today) {
+                file_put_contents("GameEngine/Prevention/medals.txt", $today);
+                $this->giveOutMedals();
+            }
         }
     }
 
