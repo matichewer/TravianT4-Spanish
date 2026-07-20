@@ -18,6 +18,7 @@ define("TRIBE2","Teutons");
 define("TRIBE3","Gauls"); 
 define("TRIBE4","Nature"); 
 define("TRIBE5","Natars");
+define("NATARS","Natars");
 define("TRIBE6","Monsters");
  
 define("HOME","Homepage"); 

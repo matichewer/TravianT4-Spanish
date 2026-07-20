@@ -6,6 +6,7 @@ define("TRIBE2","توتن ها");
 define("TRIBE3","گول ها"); 
 define("TRIBE4","طبیعت"); 
 define("TRIBE5","ناتار ها");
+define("NATARS","ناتار ها");
 define("TRIBE6","حیوانات");
 
 

@@ -18,6 +18,7 @@ define("TRIBE2","Германцы");
 define("TRIBE3","Галлы");
 define("TRIBE4","Природа");
 define("TRIBE5","Натары");
+define("NATARS","Натары");
 define("TRIBE6","Монстры");
  
 define("HOME","Главная");

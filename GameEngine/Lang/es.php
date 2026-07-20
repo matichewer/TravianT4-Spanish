@@ -456,6 +456,7 @@ define("TRIBE2","Germanos");
 define("TRIBE3","Galos");
 define("TRIBE4","Naturaleza");
 define("TRIBE5","Natares");
+define("NATARS","Natares");
 define("TRIBE6","Monstruos");
 define("U0","Héroe");
 define("U50","Colono natar");
