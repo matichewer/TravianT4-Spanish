@@ -59,7 +59,7 @@
     }
     $gid = $_GET['gid'];
 	echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
-    <a id=\"".$sid."\" title=\"".$database->getVillageField($session->villages[$i-1],'name')." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$session->villages[$i-1]."".$vill."\" class=\"".$select."\">".$database->getVillageField($session->villages[$i-1],'name')." <span class=\"villageCoords\" style=\"font-size:11px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
+    <a id=\"".$sid."\" title=\"".$database->getVillageField($session->villages[$i-1],'name')." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$session->villages[$i-1]."".$vill."\" class=\"".$select."\">".$database->getVillageField($session->villages[$i-1],'name')."<span class=\"villageCoords\" style=\"display:block;font-size:10px;line-height:10px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
 	}
     	?>
 		
