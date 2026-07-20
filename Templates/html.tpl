@@ -9,7 +9,7 @@
 		<meta http-equiv="imagetoolbar" content="no" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta name="content-language" content="ir" />
-		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd424" rel="stylesheet" type="text/css" />
+		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd423" rel="stylesheet" type="text/css" />
         <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />										
         <link href="img/travian_basics.css?v=2" rel="stylesheet" type="text/css" />
 		<script src="jquery-1.10.1.min.js" type="text/javascript"></script>
