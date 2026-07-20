@@ -6,7 +6,7 @@ class MYSQLi_DB {
 
     var $connection;
 
-    function MYSQLi_DB() {
+    function __construct() {
         $this->connection = mysqli_connect(SQL_SERVER, SQL_USER, SQL_PASS, SQL_DB) or die(mysqli_error());
     }
 
@@ -20,7 +20,7 @@ class MYSQL_DB {
 
     var $connection;
 
-    function MYSQL_DB() {
+    function __construct() {
         $this->connection = mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS) or die(mysql_error());
         mysql_select_db(SQL_DB, $this->connection) or die(mysql_error());
     }

@@ -1,4 +1,8 @@
 <?php
+// Este codigo es de la epoca de PHP 5 y dispara avisos de deprecacion en PHP 7.
+// Imprimirlos rompe los header("Location: ...") de mas abajo con "headers
+// already sent", asi que se silencian. Warnings y errores reales siguen visibles.
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
 date_default_timezone_set('Asia/Tehran');
 if (file_exists("installconfig/constant.php") && file_exists("installconfig/connection.php")) {
 set_time_limit(0);
@@ -9,7 +13,7 @@ set_time_limit(0);
 
 class Process {
 
-    function Process() {
+    function __construct() {
         if (isset($_POST['subconst'])) {
             $this->constForm();
         } else
