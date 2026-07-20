@@ -4,7 +4,12 @@
 <a href="#" onClick="return Travian.Game.iPopup(12,4);" class="build_logo">
 <img class="building big white g13" src="img/x.gif" alt="Herrería" title="Herrería" />
 </a>
-La herrería mejora las armas y armaduras de tus tropas. Al aumentar su nivel, puedes encargar la fabricación de armas y armaduras aún mejores.<?php
+La herrería mejora las armas de tus tropas. Al aumentar su nivel, puedes encargar mejoras ofensivas más avanzadas.
+<?php
+$buildingHelpType = 'smithy';
+$buildingHelpLevel = $village->resarray['f'.$id];
+include('build_level_help.tpl');
+
 include("upgrade.tpl");
 	if ($building->getTypeLevel(12) > 0) {
 		include("12_upgrades.tpl");

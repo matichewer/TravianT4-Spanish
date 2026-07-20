@@ -136,6 +136,74 @@ if ($buildingHelpType === 'rally-point') {
 	);
 	$buildingHelpNote = 'Atención: en esta instalación los diez niveles tienen una bonificación configurada de 0% y el combate no aplica el efecto de la Cervecería. Hasta corregir esa mecánica, subirla solo aporta población y puntos de cultura.';
 	$buildingHelpWarning = true;
+} elseif ($buildingHelpType === 'main-building') {
+	$buildingHelpTitle = 'Ventajas del Edificio principal';
+	$buildingHelpItems = array(
+		1 => 'Acelera la construcción y mejora de todos los campos de recursos y edificios de la aldea.',
+		10 => 'Desbloquea la demolición controlada de edificios, un nivel por vez.',
+		20 => 'Alcanza la reducción máxima del tiempo de construcción que ofrece este edificio.'
+	);
+	$buildingHelpNote = 'Todos los niveles reducen progresivamente el tiempo de construcción.';
+	if (isset($bid15[$buildingHelpLevel]['attri'])) {
+		$buildingHelpCurrentValue = str_replace('.', ',', (string) round($bid15[$buildingHelpLevel]['attri'], 2));
+		$buildingHelpNote = 'Tiempo actual: '.$buildingHelpCurrentValue.'% del tiempo base.';
+		if (isset($bid15[$buildingHelpLevel + 1]['attri'])) {
+			$buildingHelpNextValue = str_replace('.', ',', (string) round($bid15[$buildingHelpLevel + 1]['attri'], 2));
+			$buildingHelpNote .= ' En el próximo nivel será '.$buildingHelpNextValue.'%.';
+		}
+	}
+} elseif ($buildingHelpType === 'marketplace') {
+	$buildingHelpTitle = 'Ventajas del Mercado';
+	$buildingHelpItems = array(
+		1 => 'Permite enviar recursos, comprar y vender ofertas. Proporciona un mercader.',
+		20 => 'Proporciona 20 mercaderes y, junto con un Establo de nivel 10, cumple el requisito para construir la Oficina de comercio.'
+	);
+	$buildingHelpNote = 'Cada nivel añade exactamente un mercader. La capacidad de cada mercader depende de la tribu y de la Oficina de comercio; subir el Mercado aumenta la cantidad de mercaderes, no la carga individual.';
+	if (isset($bid17[$buildingHelpLevel]['attri'])) {
+		$buildingHelpCurrentValue = (int) $bid17[$buildingHelpLevel]['attri'];
+		$buildingHelpNote = 'Mercaderes proporcionados por este nivel: '.$buildingHelpCurrentValue.'. '.$buildingHelpNote;
+	}
+} elseif ($buildingHelpType === 'smithy') {
+	$buildingHelpTitle = 'Ventajas de la Herrería';
+	$buildingHelpItems = array(
+		1 => 'Permite mejorar el ataque de las unidades investigadas hasta el mismo nivel que tenga la Herrería.',
+		20 => 'Permite llevar las mejoras ofensivas de las unidades hasta el nivel máximo 20.'
+	);
+	$buildingHelpNote = 'El nivel del edificio funciona como límite: con Herrería 8, cada unidad puede mejorarse como máximo hasta nivel 8. Todos los niveles reducen además la duración de esas mejoras.';
+	if (isset($bid12[$buildingHelpLevel]['attri'])) {
+		$buildingHelpCurrentValue = str_replace('.', ',', (string) round($bid12[$buildingHelpLevel]['attri'], 2));
+		$buildingHelpNote = 'Duración actual: '.$buildingHelpCurrentValue.'% del tiempo base. '.$buildingHelpNote;
+	}
+	$buildingHelpNote .= ' Esta instalación no ofrece mejoras de armadura: la Herrería solo gestiona y aplica las mejoras ofensivas.';
+	$buildingHelpWarning = true;
+} elseif (in_array($buildingHelpType, array('roman-wall', 'earth-wall', 'palisade'), true)) {
+	if ($buildingHelpType === 'roman-wall') {
+		$buildingHelpTitle = 'Ventajas de la Muralla romana';
+		$buildingHelpValues = $bid31;
+		$buildingHelpWallComparison = 'Es la muralla que ofrece la mayor bonificación defensiva, pero también la más vulnerable a los arietes.';
+	} elseif ($buildingHelpType === 'earth-wall') {
+		$buildingHelpTitle = 'Ventajas del Muro de tierra';
+		$buildingHelpValues = $bid32;
+		$buildingHelpWallComparison = 'Ofrece la menor bonificación defensiva, pero es la muralla más resistente frente a los arietes.';
+	} else {
+		$buildingHelpTitle = 'Ventajas de la Empalizada gala';
+		$buildingHelpValues = $bid33;
+		$buildingHelpWallComparison = 'Mantiene un equilibrio entre bonificación defensiva y resistencia frente a los arietes.';
+	}
+	$buildingHelpItems = array(
+		1 => 'Añade una bonificación multiplicativa a la defensa de todas las tropas que protegen la aldea.',
+		20 => 'Alcanza la bonificación defensiva máxima de este tipo de muralla.'
+	);
+	$buildingHelpNote = $buildingHelpWallComparison;
+	if (isset($buildingHelpValues[$buildingHelpLevel]['attri'])) {
+		$buildingHelpCurrentValue = $buildingHelpValues[$buildingHelpLevel]['attri'];
+		$buildingHelpNote = 'Bonificación actual: '.$buildingHelpCurrentValue.'%. ';
+		if (isset($buildingHelpValues[$buildingHelpLevel + 1]['attri'])) {
+			$buildingHelpNextValue = $buildingHelpValues[$buildingHelpLevel + 1]['attri'];
+			$buildingHelpNote .= 'Próximo nivel: '.$buildingHelpNextValue.'%. ';
+		}
+		$buildingHelpNote .= $buildingHelpWallComparison;
+	}
 } else {
 	return;
 }
@@ -191,6 +259,9 @@ unset(
 	$buildingHelpText,
 	$buildingHelpItemClass,
 	$buildingHelpTribe,
-	$buildingHelpCurrentValue
+	$buildingHelpCurrentValue,
+	$buildingHelpNextValue,
+	$buildingHelpValues,
+	$buildingHelpWallComparison
 );
 ?>

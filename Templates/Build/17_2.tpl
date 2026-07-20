@@ -6,6 +6,10 @@
 </a> 
 Puedes comerciar recursos con otros jugadores a través del mercado. Cuanto mayor sea el nivel, más mercaderes estarán disponibles.</div> 
 <?php
+$buildingHelpType = 'marketplace';
+$buildingHelpLevel = $village->resarray['f'.$id];
+include('build_level_help.tpl');
+
 include("upgrade.tpl");
 include("17_menu.tpl");
 ?>

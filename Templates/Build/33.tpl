@@ -6,6 +6,12 @@
         <img class="building big white g33" src="img/x.gif" alt="Empalizada" title="Empalizada"></a>
        La empalizada protege tu aldea de los ataques. Cuanto mayor sea el nivel, más fácil será para tus defensores repeler con éxito a las hordas saqueadoras de tus enemigos. </div>
 
+<?php
+$buildingHelpType = 'palisade';
+$buildingHelpLevel = $village->resarray['f'.$id];
+include('build_level_help.tpl');
+?>
+
 <table cellpadding="1" cellspacing="1" id="build_value">
         <tr>
             <th>

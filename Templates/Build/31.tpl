@@ -6,6 +6,12 @@
         <img class="building big white g31" src="img/x.gif" alt="Muralla" title="Muralla"></a>
         La muralla protege la aldea de los ataques. Cuanto mayor sea el nivel, más fácil será para tus defensores repeler con éxito a las hordas saqueadoras de tus enemigos. </div>
 
+<?php
+$buildingHelpType = 'roman-wall';
+$buildingHelpLevel = $village->resarray['f'.$id];
+include('build_level_help.tpl');
+?>
+
 <table cellpadding="1" cellspacing="1" id="build_value">
 		<tr>
 			<th>

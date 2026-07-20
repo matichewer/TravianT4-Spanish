@@ -5,6 +5,11 @@
 <img class="building big white g15" src="img/x.gif" alt="Edificio principal" title="Edificio principal" />
 </a>Los arquitectos de la aldea viven en el edificio principal. Cuanto mayor sea el nivel, más rápido se construyen o mejoran los demás edificios.</div>
 
+<?php
+$buildingHelpType = 'main-building';
+$buildingHelpLevel = $village->resarray['f'.$id];
+include('build_level_help.tpl');
+?>
 
 	<table cellpadding="1" cellspacing="1" id="build_value">
 		<tr>
