@@ -118,11 +118,11 @@ foreach($memberlist as $member) {
         if ((time()-600) < $member['timestamp']){ // 0 Min - 10 Min
             echo "<img class='online online1' src=img/x.gif title='En línea' alt='En línea' />";
         }elseif ((time()-86400) < $member['timestamp'] && (time()-600) > $member['timestamp']){ // 10 Min - 1 Days
-            echo "<img class='online online2' src=img/x.gif title='Hace 24 horas como máximo' alt='Hace 24 horas como máximo' />";
+            echo "<img class='online online2' src=img/x.gif title='Estuvo en línea hace menos de 24 horas' alt='Estuvo en línea hace menos de 24 horas' />";
             }elseif ((time()-259200) < $member['timestamp'] && (time()-86400) > $member['timestamp']){ // 1-3 Days
-            echo "<img class='online online3' src=img/x.gif title='Hace 3 días como máximo' alt='Hace 3 días como máximo' />";
+            echo "<img class='online online3' src=img/x.gif title='Estuvo en línea hace menos de 3 días' alt='Estuvo en línea hace menos de 3 días' />";
         }elseif ((time()-604800) < $member['timestamp'] && (time()-259200) > $member['timestamp']){ // 3-7 Days
-            echo "<img class='online online4' src=img/x.gif title='Hace 7 días como máximo' alt='Hace 7 días como máximo' />";
+            echo "<img class='online online4' src=img/x.gif title='Estuvo en línea hace menos de 7 días' alt='Estuvo en línea hace menos de 7 días' />";
         }else{
              echo "<img class='online online5' src=img/x.gif title='Inactivo' alt='Inactivo' />";
         }
