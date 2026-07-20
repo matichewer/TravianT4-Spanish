@@ -178,14 +178,23 @@ div.village2 #cultureProgress:after {
 
 div.village2 .cultureProgressHeader,
 div.village2 .cultureProgressInfo {
-	overflow: hidden;
 	line-height: 17px;
 }
 
 div.village2 .cultureProgressHeader {
+	overflow: visible;
 	padding: 0 7px 5px;
 	border-bottom: 1px solid rgba(104, 71, 25, 0.35);
 	text-align: center;
+}
+
+div.village2 .cultureProgressInfo {
+	overflow: hidden;
+}
+
+div.village2 .cultureProgressTitleWrap {
+	display: inline-block;
+	position: relative;
 }
 
 div.village2 .cultureProgressTitle {
@@ -199,6 +208,75 @@ div.village2 .cultureProgressTitle {
 	font-size: 12px;
 	font-weight: bold;
 	text-shadow: 0 1px #fff3c9;
+	cursor: help;
+	border-bottom: 1px dotted rgba(75, 49, 15, 0.65);
+}
+
+div.village2 .cultureProgressTooltip {
+	box-sizing: border-box;
+	visibility: hidden;
+	position: absolute;
+	left: 50%;
+	bottom: calc(100% + 10px);
+	z-index: 200;
+	width: 310px;
+	padding: 10px 12px;
+	border: 1px solid #5d421a;
+	border-radius: 5px;
+	background: #fff8df;
+	box-shadow: 0 3px 9px rgba(43, 29, 11, 0.45);
+	color: #3c2a14;
+	font-size: 11px;
+	font-weight: normal;
+	line-height: 15px;
+	opacity: 0;
+	text-align: left;
+	text-shadow: none;
+	white-space: normal;
+	transform: translateX(-50%) translateY(3px);
+	transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+
+div.village2 .cultureProgressTooltip:after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	bottom: -7px;
+	width: 0;
+	height: 0;
+	margin-left: -7px;
+	border-top: 7px solid #5d421a;
+	border-right: 7px solid transparent;
+	border-left: 7px solid transparent;
+}
+
+div.village2 .cultureProgressTitleWrap:hover .cultureProgressTooltip {
+	visibility: visible;
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+}
+
+div.village2 .cultureProgressTooltip strong,
+div.village2 .cultureProgressTooltipLine,
+div.village2 .cultureProgressTooltipFoot {
+	display: block;
+}
+
+div.village2 .cultureProgressTooltip strong {
+	margin-bottom: 6px;
+	color: #568b0b;
+	font-size: 12px;
+}
+
+div.village2 .cultureProgressTooltipLine {
+	margin-bottom: 5px;
+}
+
+div.village2 .cultureProgressTooltipFoot {
+	margin-top: 7px;
+	padding-top: 7px;
+	border-top: 1px dotted #bba36e;
+	color: #69502c;
 }
 
 div.village2 .cultureProgressVillages,

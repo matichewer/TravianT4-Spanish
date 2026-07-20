@@ -189,7 +189,16 @@ $cultureReadyClass = ($cultureStatus['availableVillageSlots'] > 0) ? ' culturePr
 ?>
 	<div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass; ?>">
 		<div class="cultureProgressHeader">
-			<span class="cultureProgressTitle">Puntos de cultura</span>
+			<span class="cultureProgressTitleWrap">
+				<span class="cultureProgressTitle" aria-describedby="cultureProgressTooltip">Puntos de cultura</span>
+				<span id="cultureProgressTooltip" class="cultureProgressTooltip" role="tooltip">
+					<strong>Cómo funcionan los puntos de cultura</strong>
+					<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel completado aumenta la producción de PC. La producción de todas tus aldeas se suma y se acredita una vez cada 24 horas.</span>
+					<span class="cultureProgressTooltipLine"><b>Ayuntamiento:</b> una celebración pequeña entrega 500 PC y una grande 2000 PC cuando finaliza.</span>
+					<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden inmediatamente tantos PC como tu producción diaria total.</span>
+					<span class="cultureProgressTooltipFoot">Los PC pertenecen a toda la cuenta, permiten fundar o conquistar más aldeas y no se gastan al utilizarlos. El desglose por aldea está en Estadísticas → Puntos de cultura.</span>
+				</span>
+			</span>
 			<span class="cultureProgressVillages">Aldeas: <strong><?php echo $cultureStatus['ownedVillages']; ?> de <?php echo $cultureStatus['cultureCapacity']; ?></strong> posibles por cultura<?php
 			if($cultureStatus['availableVillageSlots'] > 0) {
 				$availableLabel = ($cultureStatus['availableVillageSlots'] == 1) ? '1 disponible' : $cultureStatus['availableVillageSlots'].' disponibles';

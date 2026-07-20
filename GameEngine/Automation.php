@@ -618,7 +618,9 @@ class Automation {
         global $database;
         $ourFileHandle = @fopen("GameEngine/Prevention/culturepoints.txt", 'w');
         @fclose($ourFileHandle);
-        $time = time() - 43200;
+        // The village value is labelled and calculated as culture points per day,
+        // so it must be credited once every 24 hours.
+        $time = time() - 86400;
         $array = array();
         $q = "SELECT id, lastupdate FROM ".TB_PREFIX."users where lastupdate < $time";
         $array = $database->query_return($q);
