@@ -45,7 +45,9 @@ if($_GET['action']=='FinishBuilding'){
 
     $goldlog = mysql_query("SELECT * FROM ".TB_PREFIX."gold_fin_log") or die(mysql_error());
 
-if($session->gold >= 2) {
+if($buildnum == 0 && $resnum == 0) {
+	$done1 = "No tienes ninguna construcción ni investigación en curso.";
+} else if($session->gold >= 2) {
 
 		if($session->access!=BANNED){
 		$ww = 1;
@@ -229,7 +231,7 @@ echo "    <br>Te quedan <b>".$holdtotday1. "</b> días hasta las   ".date('H:i',
 
                 </span>			</td>
 			<td class="dur"><?php if(PLUS_PRODUCTION >= 86400){
-			echo ''.(PLUS_PRODUCTION/86400).' Days';
+			echo ''.(PLUS_PRODUCTION/86400).' Días';
 			} else if(PLUS_PRODUCTION < 86400){
 			echo ''.(PLUS_PRODUCTION/3600).' horas';
 			} ?></td>
@@ -278,7 +280,7 @@ echo "<br> Te quedan <b>".$holdtotday2. "</b> días hasta las ".date('H:i',$gold
 
                 </span>			</td>
 			<td class="dur"><?php if(PLUS_PRODUCTION >= 86400){
-			echo ''.(PLUS_PRODUCTION/86400).' Days';
+			echo ''.(PLUS_PRODUCTION/86400).' Días';
 			} else if(PLUS_PRODUCTION < 86400){
 			echo ''.(PLUS_PRODUCTION/3600).' horas';
 			} ?></td>
@@ -327,7 +329,7 @@ echo " <br> Te quedan <b>".$holdtotday3. "</b> días hasta las ".date('H:i',$gol
 
                 </span>			</td>
 			<td class="dur"><?php if(PLUS_PRODUCTION >= 86400){
-			echo ''.(PLUS_PRODUCTION/86400).' Days';
+			echo ''.(PLUS_PRODUCTION/86400).' Días';
 			} else if(PLUS_PRODUCTION < 86400){
 			echo ''.(PLUS_PRODUCTION/3600).' horas';
 			} ?></td>
@@ -372,7 +374,7 @@ echo "<br> Te quedan <b>".$holdtotday4. "</b> días hasta las ".date('H:i',$gold
 ?>
 		</td>
 			<td class="dur"><?php if(PLUS_PRODUCTION >= 86400){
-			echo ''.(PLUS_PRODUCTION/86400).' Days';
+			echo ''.(PLUS_PRODUCTION/86400).' Días';
 			} else if(PLUS_PRODUCTION < 86400){
 			echo ''.(PLUS_PRODUCTION/3600).' horas';
 			} ?></td>
