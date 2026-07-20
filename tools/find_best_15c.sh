@@ -38,4 +38,4 @@ cd "$project_dir"
     printf 'SET @x = %d;\nSET @y = %d;\n' "$x" "$y"
     sed '/^SET @x = /d; /^SET @y = /d' "$script_dir/find_best_15c.sql"
 } | docker compose exec -T db \
-    mariadb -utravian -p"$db_password" travian_t4
+    mariadb --table -utravian -p"$db_password" travian_t4
