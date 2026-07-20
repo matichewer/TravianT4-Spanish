@@ -131,6 +131,11 @@ define("AUTH_EMAIL",$auth_email);
 define("PLUS_TIME",$result['plus_time']);
 //+25% production lenght
 define("PLUS_PRODUCTION",$result['plus_prodtime']);
+// ***** Buy Gold with PayPal
+// Shows the PayPal gold purchase store in the Plus section.
+// Leave disabled on private servers with no real payment processor configured.
+if($result['paypal_gold']==1){ $paypal_gold = true; }else{ $paypal_gold = false; }
+define("PAYPAL_GOLD",$paypal_gold);
 // ***** Great Workshop
 define("GREAT_WKS",false);
 // ***** Tourn threshold

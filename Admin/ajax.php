@@ -14,6 +14,12 @@ if($funct->CheckLogin()){
 			$q = "UPDATE " . TB_PREFIX . "config set $box = '".$_POST['status']."'";
 			mysql_query($q);
 		}
+
+		if($_GET['cmd']=='PaypalGold'){
+			$status = ($_POST['status'] === '1') ? '1' : '0';
+			$q = "UPDATE " . TB_PREFIX . "config SET paypal_gold = '" . $status . "'";
+			mysql_query($q);
+		}
 	}
 }else{
 	echo '<h2>Error: You are not Admin!</h2>';

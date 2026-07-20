@@ -53,8 +53,9 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%config` (
   `home2` int(1) NOT NULL,
   `home3` int(1) NOT NULL,
   `admin_email` varchar(45) NOT NULL,
-  `server_url` varchar(60) NOT NULL
-  
+  `server_url` varchar(60) NOT NULL,
+  `paypal_gold` int(1) NOT NULL DEFAULT '0'
+
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --

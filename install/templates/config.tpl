@@ -311,6 +311,12 @@ echo "<div class=\"headline\"><span class=\"f10 c5\">Error creating constant.php
                         <option value="1">Enable</option></select></td>
             </tr>
             <tr class="hover">
+                <td><div title="Shows a PayPal gold purchase store in the Plus section. Leave disabled on private servers with no real payment processor configured.">Buy Gold with PayPal:</div></td>
+                <td><select name="paypal_gold" dir="ltr" class="text">
+                        <option value="0" selected="selected">Disable</option>
+                        <option value="1">Enable</option></select></td>
+            </tr>
+            <tr class="hover">
                 <td>Limit Mailbox:</td>
                 <td><select name="limit_mailbox" dir="ltr" class="text">
                         <option value="false" selected="selected">Disable</option>

@@ -129,11 +129,42 @@ if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br />
 		<option value="true" <?php echo $sts; ?>>Enabled</option>
 		<option value="false" <?php echo $sts2; ?>>Disabled</option>
         </select>
-        </td> 
-       
+        </td>
 
-    </tr>    
-	
+
+    </tr>
+
+	<tr>
+
+		<td><div title="Muestra la tienda de compra de oro con PayPal en la sección Plus. Dejar deshabilitado en servidores privados sin procesador de pagos real configurado.">Buy Gold with PayPal</div></td>
+
+		<td>
+		<?php if(PAYPAL_GOLD == true){
+				$sts = "selected=\"selected\"";
+				} else { $sts = ""; }
+				if(PAYPAL_GOLD == false){
+				$sts2 = "selected=\"selected\"";
+				} else { $sts2 = ""; }
+				?>
+		<select name="paypal_gold" class="text" onchange="
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', 'ajax.php?cmd=PaypalGold', true);
+			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			xhr.onload = function() {
+				var msg = document.getElementById('paypal_gold_saved');
+				msg.style.display = 'inline';
+				setTimeout(function(){ msg.style.display = 'none'; }, 1500);
+			};
+			xhr.send('status=' + this.value);
+		">
+		<option value="1" <?php echo $sts; ?>>Enabled</option>
+		<option value="0" <?php echo $sts2; ?>>Disabled</option>
+		</select>
+		<span id="paypal_gold_saved" style="display:none; color:Green;">Guardado</span>
+		</td>
+
+    </tr>
+
 	<tr>
 
         <td>Demolish - Level required</td>
