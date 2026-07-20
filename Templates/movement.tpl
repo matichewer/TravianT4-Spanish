@@ -155,8 +155,8 @@ $aantal2 = $moveAdventure;
 			foreach($aantal2 as $receive) {
 				$action = 'att4';
 				$aclass = 'a4';
-				$title = 'Adventure';
-				$short = 'Adventure';
+				$title = SIDEINFO_ADVENTURES;
+				$short = SIDEINFO_ADVENTURES;
 			}
 			
 		echo '
