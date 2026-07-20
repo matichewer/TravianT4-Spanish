@@ -1,6 +1,7 @@
 -- Coordenadas de la aldea desde la que se quiere buscar.
-SET @x = 0;
-SET @y = 0;
+-- El wrapper find_best_15c.sh las inicializa; estos son los valores por defecto.
+SET @x = COALESCE(@x, 0);
+SET @y = COALESCE(@y, 0);
 
 -- Este servidor usa coordenadas de -100 a 100 (201 casillas por eje).
 SET @world_max = 100;
