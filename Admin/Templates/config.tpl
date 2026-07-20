@@ -56,7 +56,7 @@ if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br />
     </tr> 
 	<tr>
 		<td>Village Expanding Speed</td>
-        <td><?php if(CP == 0){ echo "Fast"; } else if(CP == 1){ echo "Slow"; } ?></td> 
+        <td><?php if(CP == 0){ echo "Fast"; } else if(CP == 1){ echo "Slow"; } else if(CP == 2){ echo "Normal"; } ?></td>
     </tr>   
     <tr>
 		<td>Beginners Protection</td>
