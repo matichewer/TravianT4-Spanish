@@ -91,7 +91,7 @@ define("CROP","Grano");
 define("LEVEL","Nivel");
 define("CROP_COM",CROP." consumido");
 define("PER_HR","por hora");
-define("PROD_HEADER","Producci&oacute;n");
+define("PROD_HEADER","Producci&oacute;n por hora");
 define("MULTI_V_HEADER","Aldeas");
 define("ANNOUNCEMENT","Anuncio");
 define("GO2MY_VILLAGE","Ir a mi aldea");
