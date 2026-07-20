@@ -362,7 +362,7 @@ echo "<div class=\"headline\"><span class=\"f10 c5\">Error creating constant.php
             <tr class="hover">
                 <td>Error Reporting:</td>
                 <td><select name="error" dir="ltr" class="text">
-                        <option value="error_reporting (E_ALL ^ E_NOTICE);" selected="selected">Yes</option>
+                        <option value="error_reporting(E_ALL &amp; ~E_NOTICE &amp; ~E_DEPRECATED);" selected="selected">Yes</option>
                         <option value="error_reporting (0); ">No</option></select></td>
             </tr>
 
