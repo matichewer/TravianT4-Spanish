@@ -60,7 +60,7 @@ define("ALLI_OWNER","Por favor escoja un l&iacute;der de alianza antes de borrar
 define("SIT_ERROR","Cuidador ya configurado");
 define("USR_NT_FOUND","Nombre no existente.");
 define("LOGIN_PW_ERROR","La contrase&ntilde;a es incorrecta.");
-define("WEL_TOPIC","Concejos &uacute;tiles e informaci&oacute;n ");
+define("WEL_TOPIC","Consejos &uacute;tiles e informaci&oacute;n");
 define("ATAG_EMPTY","Etiqueta vac&iacute;a");
 define("ANAME_EMPTY","Nombre vac&iacute;o");
 define("ATAG_EXIST","Etiqueta en uso");

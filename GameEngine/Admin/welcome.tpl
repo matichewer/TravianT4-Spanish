@@ -1,6 +1,6 @@
-Hello %USER%,
+Hola %USER%,
 
-Thank you for registering on our server.
-Since the %START% at %TIME% Romans, Gauls and Teutons attack each other on this game world. Right now, %PLAYERS% players in %ALLI% Alliances are fighting for supremacy.
+Gracias por registrarte en nuestro servidor.
+Desde el %START% a las %TIME%, romanos, galos y germanos se enfrentan en este mundo. En este momento, %PLAYERS% jugadores distribuidos en %ALLI% alianzas luchan por la supremacía.
 
-Regards, %SERVER_NAME%
+Saludos, %SERVER_NAME%
