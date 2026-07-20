@@ -35,14 +35,16 @@ class Process {
         global $database;
         $myFile = "installconfig/constant.php";
         $fh = fopen($myFile, 'w') or die("<br/><br/><br/>Can't open or create file: install\installconfig\constant.php");
-        // DB_TYPE 1 is MySQLi; the mysql_* template only works on PHP 5 and is
-        // kept for legacy installs.
-        switch(DB_TYPE) {
-			case 1:
-			$text = file_get_contents("data/constant_format_mysqli.tpl");
+        // DB_TYPE no existe todavia: installconfig/connection.php se genera mas
+        // abajo, en esta misma pasada. El tipo sale del formulario, y ante la
+        // duda se usa MySQLi, porque el template mysql_* solo corre en PHP 5.
+        $dbType = isset($_POST['connectt']) ? (int)$_POST['connectt'] : 1;
+        switch($dbType) {
+			case 0:
+			$text = file_get_contents("data/constant_format.tpl");
 			break;
 			default:
-			$text = file_get_contents("data/constant_format.tpl");
+			$text = file_get_contents("data/constant_format_mysqli.tpl");
 			break;
 		}
         $text = preg_replace("'%TRADERCAP%'", $_POST['tradercap'], $text);
