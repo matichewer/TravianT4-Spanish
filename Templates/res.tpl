@@ -44,8 +44,7 @@ $ironFillTime = $formatStorageFillTime($village->maxstore, $village->airon, $vil
 $cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $village->getProd("crop"));
 ?>
 <ul id="res">
-		<li class="r1" title="<div style=color:#FFF><b><?php echo WOOD; ?></b></div>Producción por hora: <?php echo $village->getProd("wood"); ?>
-				<br><?php echo $woodFillTime; ?>">
+		<li class="r1" title="<div style=color:#FFF><b><?php echo WOOD; ?></b></div><?php echo $woodFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo WOOD; ?>"/> 
 
@@ -56,8 +55,7 @@ $cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $vill
 	    </p>
         </li> 
         
-		<li class="r2" title="<div style=color:#FFF><b><?php echo CLAY; ?></b></div>Producción por hora: <?php echo $village->getProd("clay"); ?>
-				<br><?php echo $clayFillTime; ?>">
+		<li class="r2" title="<div style=color:#FFF><b><?php echo CLAY; ?></b></div><?php echo $clayFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CLAY; ?>"/> 
 			<span id="l2" class="value "><?php echo round($village->aclay)."/".$village->maxstore; ?></span> 
@@ -67,8 +65,7 @@ $cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $vill
 		</p> 
 
         	</li> 
-		<li class="r3" title="<div style=color:#FFF><b><?php echo IRON; ?></b></div>Producción por hora: <?php echo $village->getProd("iron"); ?>
-				<br><?php echo $ironFillTime; ?>">
+		<li class="r3" title="<div style=color:#FFF><b><?php echo IRON; ?></b></div><?php echo $ironFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo IRON; ?>"/> 
 			<span id="l3" class="value "><?php echo round($village->airon)."/".$village->maxstore; ?></span>
@@ -78,8 +75,7 @@ $cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $vill
 		</p> 
 
         	</li> 
-		<li class="r4" title="<div style=color:#FFF><b><?php echo CROP; ?></b></div>Producción por hora: <?php echo $village->getProd("crop"); ?>
-				<br><?php echo $cropFillTime; ?>">
+		<li class="r4" title="<div style=color:#FFF><b><?php echo CROP; ?></b></div><?php echo $cropFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CROP; ?>"/> 
 			<span id="l4" class="value "><?php if(($village->acrop)<0){echo "0";}else{echo round($village->acrop);}echo "/".$village->maxcrop; ?></span>
