@@ -175,7 +175,7 @@ break;
     }elseif($tribe==3) {
     	$tribename = "Galo";
     }elseif($tribe==5) {
-    	$tribename = "Natar";
+    	$tribename = "Natares";
         }
 
     $odata = $database->getOMInfo($maparray[$index]['id']);

@@ -43,7 +43,7 @@ foreach($varray as $vil) {
                 echo "Naturaleza";
                 
                 }else if($displayarray['tribe'] == 5) {
-                echo "Natar";
+                echo "Natares";
                 }				?></td>
 	</tr>
 	<tr>

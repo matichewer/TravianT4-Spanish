@@ -9,7 +9,7 @@ $start=41;
             <?php
             if($targettribe=='5'){
             echo '<a href="spieler.php?uid='.$database->getUserField($dataarray[30],"id",0).'">';
-            echo "Natar";
+            echo "Natares";
             echo '</a> aldea <a href="karte.php?d='.$dataarray[31].'&amp;c='.$generator->getMapCheck($dataarray[31]).'">
             '.stripslashes($dataarray[32]).'</a>';
             } else {

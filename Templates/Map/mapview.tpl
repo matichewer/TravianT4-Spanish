@@ -191,7 +191,7 @@ break;
     }elseif($tribe==3) {
     	$tribename = "Galo";
     }elseif($tribe==5) {
-    	$tribename = "Natar";
+    	$tribename = "Natares";
         }
     if($maparray[$index]['fieldtype'] > 0){
     $odata = $database->getOMInfo($maparray[$index]['id']);

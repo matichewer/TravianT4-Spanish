@@ -102,7 +102,7 @@ $end = ($tribe*10);
                         <?php } else { ?>
                         <a href="spieler.php?uid=<?php echo $process['2']; ?>">
                         <?php if($process['2'] == 2){
-                        	echo "Natar";
+                        	echo "Natares";
                             	} else {
                        				echo $database->getUserField($process['2'],'username',0);
                         		} ?>
