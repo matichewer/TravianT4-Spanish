@@ -134,20 +134,43 @@ details.buildingLevelHelp summary:focus {
 /* Culture capacity indicator below the clickable village map. */
 div.village2 #cultureProgress {
 	box-sizing: border-box;
-	width: 470px;
+	position: relative;
+	width: 490px;
 	margin: 2px auto 10px;
-	padding: 8px 11px 9px;
-	border: 1px solid #b7b7b7;
-	border-radius: 5px;
-	background: #f5f5f5;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
-	color: #333;
+	padding: 9px 13px 10px;
+	border: 2px solid #684719;
+	border-radius: 3px 3px 6px 6px;
+	background-color: #ead69d;
+	background-image: linear-gradient(to bottom, #f8edc9, #ead69d);
+	box-shadow: inset 0 0 0 1px rgba(255, 248, 214, 0.8), inset 0 -7px 14px rgba(104, 71, 25, 0.12), 0 2px 3px rgba(52, 35, 13, 0.35);
+	color: #3c2a14;
 	font-size: 11px;
 }
 
 div.village2 #cultureProgress.cultureProgressReady {
-	border-color: #88a92d;
-	background: #f2f7e7;
+	border-color: #5f4a19;
+}
+
+div.village2 #cultureProgress:before,
+div.village2 #cultureProgress:after {
+	content: "";
+	position: absolute;
+	top: 8px;
+	width: 7px;
+	height: 7px;
+	border: 1px solid #604417;
+	border-radius: 50%;
+	background-color: #a9853d;
+	background-image: radial-gradient(circle at 35% 30%, #f1d788, #8a6426 70%);
+	box-shadow: 0 1px 1px rgba(55, 35, 10, 0.45);
+}
+
+div.village2 #cultureProgress:before {
+	left: 7px;
+}
+
+div.village2 #cultureProgress:after {
+	right: 7px;
 }
 
 div.village2 .cultureProgressHeader,
@@ -156,11 +179,21 @@ div.village2 .cultureProgressInfo {
 	line-height: 17px;
 }
 
+div.village2 .cultureProgressHeader {
+	padding: 0 7px 5px;
+	border-bottom: 1px solid rgba(104, 71, 25, 0.35);
+}
+
 div.village2 .cultureProgressTitle {
 	float: left;
-	color: #568b0b;
+	padding-left: 20px;
+	background-image: url("../gpack/travian_Travian_4.0_41/img/layout/icons/villageStatistics.gif");
+	background-position: left center;
+	background-repeat: no-repeat;
+	color: #4b310f;
 	font-size: 12px;
 	font-weight: bold;
+	text-shadow: 0 1px #fff3c9;
 }
 
 div.village2 .cultureProgressVillages,
@@ -170,40 +203,44 @@ div.village2 .cultureProgressInfo strong {
 }
 
 div.village2 .cultureProgressVillages em {
-	color: #568b0b;
+	color: #4f7500;
 	font-style: normal;
 	font-weight: bold;
 }
 
 div.village2 .cultureProgressInfo {
 	clear: both;
-	padding-top: 2px;
-	color: #666;
+	padding: 4px 7px 0;
+	color: #674d28;
 }
 
 div.village2 .cultureProgressInfo strong {
-	color: #333;
+	color: #38250f;
 }
 
 div.village2 .cultureProgressBar {
 	clear: both;
 	height: 8px;
 	margin-top: 4px;
+	padding: 1px;
 	overflow: hidden;
-	border: 1px solid #9d9d9d;
-	border-radius: 4px;
-	background: #ddd;
-	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+	border: 1px solid #705020;
+	border-radius: 3px;
+	background: #c8ad72;
+	box-shadow: inset 0 1px 2px rgba(73, 48, 14, 0.42);
 }
 
 div.village2 .cultureProgressBarFill {
 	height: 8px;
-	background-color: #8ebd20;
-	background-image: linear-gradient(to bottom, #b8dc4a, #75a708);
+	border-radius: 2px;
+	background-color: #7da100;
+	background-image: linear-gradient(to bottom, #b8da3f, #739b00);
+	box-shadow: inset 0 1px rgba(237, 255, 172, 0.65);
 }
 
 div.village2 .cultureProgressUnavailable {
 	clear: both;
-	padding-top: 3px;
-	color: #b01818;
+	padding: 4px 7px 0;
+	color: #a11818;
+	font-weight: bold;
 }
