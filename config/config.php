@@ -26,7 +26,7 @@ define("SALES_ID","westehran");
 //////////////////////////////////
 // (E_ALL ^ E_NOTICE) = enabled
 // (0) = disabled
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED);
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
 //////////////////////////////////
 // *****  SERVER SETTINGS  *****//
@@ -37,7 +37,7 @@ define("SERVER_NAME",$result['server_name']);
 
 // ***** Started
 // Defines when has server started.
-define("COMMENCE","1784332061");
+define("COMMENCE","1784584558");
 
 // ***** Language
 // Choose your server language.
@@ -89,7 +89,7 @@ define("TRAPPER_CAPACITY","1");
 // ***** Village Expand
 // 1 = slow village expanding - more Cultural Points needed for every new village
 // 0 = fast village expanding - less Cultural Points needed for every new village
-define("CP", 1);
+define("CP", 2);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to
@@ -218,11 +218,11 @@ define("LIMIT_MAILBOX",false);
 define("MAX_MAIL","30");
 
 // ***** Include administrator in statistics/rank
-define("INCLUDE_ADMIN", true);
+define("INCLUDE_ADMIN", false);
 
 // ***** Server Start Date / Time
-define("START_DATE", "07/17/2026");
-define("START_TIME", "00:00");
+define("START_DATE", "07/20/2026");
+define("START_TIME", "18:43");
 
 // ***** Register Open/Close
 define("REG_OPEN", true);
@@ -246,15 +246,15 @@ define("LIMIT_TROOPS",false);
 define("ADMIN_EMAIL", $result['admin_email']);
 
 // ***** Admin Name
-define("ADMIN_NAME", "admin");
+define("ADMIN_NAME", "chewer");
 
 
 
 //////////////////////////////////////////
 //   ****  DO NOT EDIT SETTINGS  ****   //
 //////////////////////////////////////////
-define("TRACK_USR","");
-define("USER_TIMEOUT","10"); 
+define("TRACK_USR",true);
+define("USER_TIMEOUT",10);
 define("ALLOW_BURST",false);
 define("BASIC_MAX",1);
 define("INNER_MAX",1);
