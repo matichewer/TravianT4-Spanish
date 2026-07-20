@@ -418,13 +418,13 @@
         		return mysql_query($q, $this->connection);
         	}
 
-        	function addVillage($wid, $uid, $username, $capital) {
-        		$total = count($this->getVillagesID($uid));
-				if($total >= 1) {
-					$vname = $username . "\'s village " . ($total + 1);
-				} else {
-					$vname = $username . "\'s village";
-				}
+		function addVillage($wid, $uid, $username, $capital) {
+			$total = count($this->getVillagesID($uid));
+			if($total >= 1) {
+				$vname = "Aldea de " . $username . " " . ($total + 1);
+			} else {
+				$vname = "Aldea de " . $username;
+			}
 
         		$time = time();
         		$q = "INSERT into " . TB_PREFIX . "vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values
