@@ -5,10 +5,47 @@ if($heroData['dead']==0 && $heroData['wref']==$village->wid){
 $totalproduction += $heroData['r4']*10*SPEED*$heroData['product'];
 $totalproduction += $heroData['r0']*3*SPEED*$heroData['product'];
 }
+
+$formatStorageFillTime = function ($capacity, $currentAmount, $production) {
+	if ($currentAmount >= $capacity) {
+		return 'Ya está lleno';
+	}
+
+	if ($production <= 0) {
+		return 'No se llenará con la producción actual';
+	}
+
+	$minutes = (int) round(($capacity - $currentAmount) * 60 / $production);
+	if ($minutes < 1) {
+		return 'Lleno en menos de 1 min';
+	}
+
+	$days = intdiv($minutes, 1440);
+	$hours = intdiv($minutes % 1440, 60);
+	$remainingMinutes = $minutes % 60;
+	$parts = array();
+
+	if ($days > 0) {
+		$parts[] = $days . ($days === 1 ? ' día' : ' días');
+	}
+	if ($hours > 0) {
+		$parts[] = $hours . ' h';
+	}
+	if ($remainingMinutes > 0) {
+		$parts[] = $remainingMinutes . ' min';
+	}
+
+	return 'Lleno en ' . implode(' ', $parts);
+};
+
+$woodFillTime = $formatStorageFillTime($village->maxstore, $village->awood, $village->getProd("wood"));
+$clayFillTime = $formatStorageFillTime($village->maxstore, $village->aclay, $village->getProd("clay"));
+$ironFillTime = $formatStorageFillTime($village->maxstore, $village->airon, $village->getProd("iron"));
+$cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $village->getProd("crop"));
 ?>
 <ul id="res">
 		<li class="r1" title="<div style=color:#FFF><b><?php echo WOOD; ?></b></div>Producción: <?php echo $village->getProd("wood"); ?>
-				<br>Lleno en <?php echo round(($village->maxstore-$village->awood)*60/$village->getProd("wood")); ?> minutos">
+				<br><?php echo $woodFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo WOOD; ?>"/> 
 
@@ -20,7 +57,7 @@ $totalproduction += $heroData['r0']*3*SPEED*$heroData['product'];
         </li> 
         
 		<li class="r2" title="<div style=color:#FFF><b><?php echo CLAY; ?></b></div>Producción: <?php echo $village->getProd("clay"); ?>
-				<br>Lleno en <?php echo round(($village->maxstore-$village->aclay)*60/$village->getProd("clay")); ?> minutos">
+				<br><?php echo $clayFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CLAY; ?>"/> 
 			<span id="l2" class="value "><?php echo round($village->aclay)."/".$village->maxstore; ?></span> 
@@ -31,7 +68,7 @@ $totalproduction += $heroData['r0']*3*SPEED*$heroData['product'];
 
         	</li> 
 		<li class="r3" title="<div style=color:#FFF><b><?php echo IRON; ?></b></div>Producción: <?php echo $village->getProd("iron"); ?>
-				<br>Lleno en <?php echo round(($village->maxstore-$village->airon)*60/$village->getProd("iron")); ?> minutos">
+				<br><?php echo $ironFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo IRON; ?>"/> 
 			<span id="l3" class="value "><?php echo round($village->airon)."/".$village->maxstore; ?></span>
@@ -42,7 +79,7 @@ $totalproduction += $heroData['r0']*3*SPEED*$heroData['product'];
 
         	</li> 
 		<li class="r4" title="<div style=color:#FFF><b><?php echo CROP; ?></b></div>Producción: <?php echo $village->getProd("crop"); ?>
-				<br>Lleno en <?php echo round(($village->maxcrop-$village->acrop)*60/$village->getProd("crop")); ?> minutos">
+				<br><?php echo $cropFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CROP; ?>"/> 
 			<span id="l4" class="value "><?php if(($village->acrop)<0){echo "0";}else{echo round($village->acrop);}echo "/".$village->maxcrop; ?></span>
