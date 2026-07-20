@@ -550,6 +550,16 @@ class Building {
 		}
 	}
 	
+	public function badgeUpgradeState($id,$tid) {
+		if(!$tid) {
+			return "";
+		}
+		if($this->isMax($tid,$id)) {
+			return "maxLevel";
+		}
+		return ($this->checkResource($tid,$id) == 4) ? "canUpgrade" : "";
+	}
+
 	public function isMax($id,$field,$loop=0) {
 		$name = "bid".$id;
 		global $$name,$village;

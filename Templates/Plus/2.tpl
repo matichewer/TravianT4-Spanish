@@ -274,3 +274,52 @@ El mercader NPC intercambiará la cantidad de recursos que desees en una aldea p
 </tr>
 	</tbody>
 </table>
+<h4 class="round spacer">Club de <font color="#71D000">Oro</font></h4>
+<table id="goldclub_features" class="features transparent" cellpadding="1" cellspacing="1">
+	<tbody>
+
+<tr>
+	<th colspan="2">Lista de granjas</th>
+</tr>
+
+<tr>
+	<td colspan="2" class="text">Te permite guardar tus objetivos de saqueo habituales y lanzar ataques contra varios de ellos a la vez con un solo clic, en lugar de armar cada ataque a mano desde el punto de reunión. La lista en sí es gratuita, pero solo se puede usar activando el Club de Oro.</td>
+</tr>
+<tr>
+	<td colspan="2" class="empty"></td>
+</tr>
+
+<tr>
+	<th colspan="2">Envíos múltiples en el mercado</th>
+</tr>
+
+<tr>
+	<td colspan="2" class="text">Al ofrecer o buscar recursos en el mercado, podés repetir el mismo envío hasta 3 veces con un solo clic (x1, x2 o x3) en lugar de tener que reenviar el mercader manualmente cada vez.</td>
+</tr>
+<tr>
+	<td colspan="2" class="empty"></td>
+</tr>
+
+<tr>
+	<th colspan="2">Envío directo entre tus propias aldeas</th>
+</tr>
+
+<tr>
+	<td colspan="2" class="text">Si tenés más de una aldea, podés mandar recursos de una a otra directamente desde el mercado con un solo clic, sin tener que calcular la ruta ni el mercader a mano.</td>
+</tr>
+<tr>
+	<td colspan="2" class="empty"></td>
+</tr>
+
+<tr>
+	<th colspan="2">Herramientas extra en el mapa</th>
+</tr>
+
+<tr>
+	<td colspan="2" class="text">En la vista de mapa reducido aparece una barra de herramientas adicional, con accesos como el buscador de cereal, para ubicar oasis y aldeas más rápido.</td>
+</tr>
+<tr>
+	<td colspan="2" class="empty"></td>
+</tr>
+	</tbody>
+</table>
