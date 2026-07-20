@@ -73,7 +73,7 @@ for($i=1;$i<=18;$i++) {
     }
     if($village->resarray['f'.$i] != 0) {
     $badgeState = $building->badgeUpgradeState($i, $village->resarray['f'.$i.'t']);
-    $badgeColor = ($badgeState == 'canUpgrade') ? '#8BC34A' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
+    $badgeColor = ($badgeState == 'canUpgrade') ? '#AED581' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
     echo "<div class=level style=\"".$style." ".$cstyle."\"><div class=labelLayer style=\"background-color: ".$badgeColor."; border-radius: 50%; height: 18px; width: 18px; position: relative; top: 4px; left: 4px; line-height: 17px; font-size: 11px; text-align: center; font-family: Verdana;\">".$village->resarray['f'.$i]."</div></div> ";
     } else {
     echo "<div class=level style=\"".$style." ".$cstyle."\"><div class=labelLayer style=\"background-color: white; border-radius: 50%; height: 18px; width: 18px; position: relative; top: 4px; left: 4px; line-height: 17px; font-size: 11px; text-align: center;\"></div></div> ";

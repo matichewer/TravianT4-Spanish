@@ -140,18 +140,18 @@ $showBuildingLevels = !isset($_COOKIE['t4level']) || $_COOKIE['t4level'] !== '0'
 for($i=1;$i<=20;$i++) {
 if ($village->resarray['f'.($i+18)] != 0) {
 $badgeState = $building->badgeUpgradeState($i+18, $village->resarray['f'.($i+18).'t']);
-$badgeColor = ($badgeState == 'canUpgrade') ? '#8BC34A' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
+$badgeColor = ($badgeState == 'canUpgrade') ? '#AED581' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
 echo "<div class=\"l$i\"><div style=\"background-color: ".$badgeColor." !important; background-image:none; border:none; border-radius: 50%; height: 18px; width: 18px; position: relative; top: 3px; left: 3px; line-height: 17px; font-size: 11px; text-align: center; font-family: Verdana;\">".$village->resarray['f'.($i+18)]."</div></div>";
 }
 }
 if($village->resarray['f39'] != 0) {
 $badgeState = $building->badgeUpgradeState(39, $village->resarray['f39t']);
-$badgeColor = ($badgeState == 'canUpgrade') ? '#8BC34A' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
+$badgeColor = ($badgeState == 'canUpgrade') ? '#AED581' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
 echo "<div class=\"l39\"><div style=\"background-color: ".$badgeColor." !important; background-image:none; border:none; border-radius: 50%; height: 18px; width: 18px; position: relative; top: 3px; left: 3px; line-height: 17px; font-size: 11px; text-align: center; font-family: Verdana;\">".$village->resarray['f39']."</div></div>";
 }
 if($village->resarray['f40'] != 0) {
 $badgeState = $building->badgeUpgradeState(40, $village->resarray['f40t']);
-$badgeColor = ($badgeState == 'canUpgrade') ? '#8BC34A' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
+$badgeColor = ($badgeState == 'canUpgrade') ? '#AED581' : (($badgeState == 'maxLevel') ? '#FFD54F' : 'white');
 echo "<div class=\"aid40\"><div style=\"background-color: ".$badgeColor." !important; background-image:none; border:none; border-radius: 50%; height: 18px; width: 18px; position: relative; top: 3px; left: 3px; line-height: 17px; font-size: 11px; text-align: center; font-family: Verdana;\">".$village->resarray['f40']."</div></div>";
 
 }
