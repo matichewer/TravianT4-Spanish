@@ -35,12 +35,14 @@ class Process {
         global $database;
         $myFile = "installconfig/constant.php";
         $fh = fopen($myFile, 'w') or die("<br/><br/><br/>Can't open or create file: install\installconfig\constant.php");
+        // DB_TYPE 1 is MySQLi; the mysql_* template only works on PHP 5 and is
+        // kept for legacy installs.
         switch(DB_TYPE) {
 			case 1:
-			$text = file_get_contents("data/constant_format.tpl");
+			$text = file_get_contents("data/constant_format_mysqli.tpl");
 			break;
 			default:
-			$text = file_get_contents("data/constant_format_mysqli.tpl");
+			$text = file_get_contents("data/constant_format.tpl");
 			break;
 		}
         $text = preg_replace("'%TRADERCAP%'", $_POST['tradercap'], $text);
