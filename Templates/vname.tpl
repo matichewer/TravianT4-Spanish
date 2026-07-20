@@ -14,3 +14,4 @@ if($village->loyalty<='20'){ $style="low"; }
 
 	</div>
 </div>
+<?php include("Templates/culture_progress.tpl"); ?>

@@ -131,14 +131,14 @@ details.buildingLevelHelp summary:focus {
 	}
 }
 
-/* Culture capacity indicator below the clickable village map. */
-div.village2 #cultureProgress {
+/* Culture capacity indicator in the persistent village sidebar. */
+#cultureProgress {
 	box-sizing: border-box;
 	position: absolute;
-	top: 310px;
-	left: -161px;
+	top: 400px;
+	left: 8px;
 	z-index: 90;
-	width: 205px;
+	width: 180px;
 	margin: 0;
 	padding: 9px 11px 10px;
 	border: 2px solid #684719;
@@ -150,17 +150,17 @@ div.village2 #cultureProgress {
 	font-size: 11px;
 }
 
-div.village2 #cultureProgress.cultureProgressReady {
+#cultureProgress.cultureProgressReady {
 	border-color: #5f4a19;
 }
 
 /* Lift the whole stacking context while its temporary help is active. */
-div.village2 #cultureProgress:hover {
+#cultureProgress:hover {
 	z-index: 2000;
 }
 
-div.village2 #cultureProgress:before,
-div.village2 #cultureProgress:after {
+#cultureProgress:before,
+#cultureProgress:after {
 	content: "";
 	position: absolute;
 	top: 8px;
@@ -173,35 +173,35 @@ div.village2 #cultureProgress:after {
 	box-shadow: 0 1px 1px rgba(55, 35, 10, 0.45);
 }
 
-div.village2 #cultureProgress:before {
+#cultureProgress:before {
 	left: 7px;
 }
 
-div.village2 #cultureProgress:after {
+#cultureProgress:after {
 	right: 7px;
 }
 
-div.village2 .cultureProgressHeader,
-div.village2 .cultureProgressInfo {
+.cultureProgressHeader,
+.cultureProgressInfo {
 	line-height: 17px;
 }
 
-div.village2 .cultureProgressHeader {
+.cultureProgressHeader {
 	overflow: visible;
 	padding: 0 7px 5px;
 	border-bottom: 1px solid rgba(104, 71, 25, 0.35);
 	text-align: center;
 }
 
-div.village2 .cultureProgressInfo {
+.cultureProgressInfo {
 	overflow: hidden;
 }
 
-div.village2 .cultureProgressTitleWrap {
+.cultureProgressTitleWrap {
 	display: inline-block;
 }
 
-div.village2 .cultureProgressTitle {
+.cultureProgressTitle {
 	display: inline-block;
 	float: none;
 	padding-left: 20px;
@@ -216,7 +216,7 @@ div.village2 .cultureProgressTitle {
 	border-bottom: 1px dotted rgba(75, 49, 15, 0.65);
 }
 
-div.village2 .cultureProgressTooltip {
+.cultureProgressTooltip {
 	box-sizing: border-box;
 	visibility: hidden;
 	position: absolute;
@@ -241,7 +241,7 @@ div.village2 .cultureProgressTooltip {
 	transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
 }
 
-div.village2 .cultureProgressTooltip:after {
+.cultureProgressTooltip:after {
 	content: "";
 	position: absolute;
 	left: -7px;
@@ -253,42 +253,42 @@ div.village2 .cultureProgressTooltip:after {
 	border-bottom: 7px solid transparent;
 }
 
-div.village2 .cultureProgressTitleWrap:hover .cultureProgressTooltip {
+.cultureProgressTitleWrap:hover .cultureProgressTooltip {
 	visibility: visible;
 	opacity: 1;
 	transform: translateX(0);
 }
 
-div.village2 .cultureProgressTooltip strong,
-div.village2 .cultureProgressTooltipLine,
-div.village2 .cultureProgressTooltipFoot {
+.cultureProgressTooltip strong,
+.cultureProgressTooltipLine,
+.cultureProgressTooltipFoot {
 	display: block;
 }
 
-div.village2 .cultureProgressTooltip strong {
+.cultureProgressTooltip strong {
 	margin-bottom: 6px;
 	color: #568b0b;
 	font-size: 12px;
 }
 
-div.village2 .cultureProgressTooltipLine {
+.cultureProgressTooltipLine {
 	margin-bottom: 5px;
 }
 
-div.village2 .cultureProgressTooltipFoot {
+.cultureProgressTooltipFoot {
 	margin-top: 7px;
 	padding-top: 7px;
 	border-top: 1px dotted #bba36e;
 	color: #69502c;
 }
 
-div.village2 .cultureProgressVillages,
-div.village2 .cultureProgressInfo strong {
+.cultureProgressVillages,
+.cultureProgressInfo strong {
 	float: right;
 	white-space: nowrap;
 }
 
-div.village2 #cultureProgress .cultureProgressVillages {
+#cultureProgress .cultureProgressVillages {
 	display: block;
 	float: none;
 	margin-top: 2px;
@@ -297,30 +297,30 @@ div.village2 #cultureProgress .cultureProgressVillages {
 	line-height: 14px;
 }
 
-div.village2 .cultureProgressVillages em {
+.cultureProgressVillages em {
 	color: #4f7500;
 	font-style: normal;
 	font-weight: bold;
 }
 
-div.village2 .cultureProgressInfo {
+.cultureProgressInfo {
 	clear: both;
 	padding: 4px 7px 0;
 	color: #674d28;
 	text-align: center;
 }
 
-div.village2 .cultureProgressInfo strong {
+.cultureProgressInfo strong {
 	display: block;
 	float: none;
 	color: #38250f;
 }
 
-div.village2 .cultureProgressInfo span {
+.cultureProgressInfo span {
 	display: block;
 }
 
-div.village2 .cultureProgressBar {
+.cultureProgressBar {
 	clear: both;
 	height: 8px;
 	margin-top: 4px;
@@ -332,7 +332,7 @@ div.village2 .cultureProgressBar {
 	box-shadow: inset 0 1px 2px rgba(73, 48, 14, 0.42);
 }
 
-div.village2 .cultureProgressBarFill {
+.cultureProgressBarFill {
 	height: 8px;
 	border-radius: 2px;
 	background-color: #7da100;
@@ -340,14 +340,9 @@ div.village2 .cultureProgressBarFill {
 	box-shadow: inset 0 1px rgba(237, 255, 172, 0.65);
 }
 
-div.village2 .cultureProgressUnavailable {
+.cultureProgressUnavailable {
 	clear: both;
 	padding: 4px 7px 0;
 	color: #a11818;
 	font-weight: bold;
-}
-
-/* Reserve room for the absolutely positioned sign before the footer. */
-body.village2 #mid {
-	min-height: 730px;
 }
