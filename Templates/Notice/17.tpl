@@ -74,24 +74,32 @@ $end = ($targettribe*10);
     }
         echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(51)."\" alt=\"".$technology->getUnitName(51)."\" /></td>";
     echo "</tr></tbody><tbody class=\"units\"><tr><th>".REPORT_TROOPS."</th>";
-    for($i=4;$i<=14;$i++) {
-    	if($i == 14){ $last = ' last'; }else{ $last = ''; }
+    for($i=4;$i<=13;$i++) {
         if($dataarray[$i] == 0) {
-            echo "<td class=\"unit none".$last."\">0</td>";
+            echo "<td class=\"unit none\">0</td>";
         } else {
-            echo "<td class=\"unit".$last."\">".$dataarray[$i]."</td>";
+            echo "<td class=\"unit\">".$dataarray[$i]."</td>";
         }
+    }
+    if($dataarray[24] == 0) {
+        echo "<td class=\"unit none last\">0</td>";
+    } else {
+        echo "<td class=\"unit last\">".$dataarray[24]."</td>";
     }
     echo "</tr></tbody>";
     
     echo "<tbody class=\"units last\"><th>".REPORT_CASUALTIES."</th>";
-    for($i=15;$i<=25;$i++) {
-    	if($i == 25){ $last = ' last'; }else{ $last = ''; }
+    for($i=14;$i<=23;$i++) {
         if($dataarray[$i] == 0) {
-            echo "<td class=\"unit none".$last."\">0</td>";
+            echo "<td class=\"unit none\">0</td>";
         } else {
-            echo "<td class=\"unit".$last."\">".$dataarray[$i]."</td>";
+            echo "<td class=\"unit\">".$dataarray[$i]."</td>";
         }
+    }
+    if($dataarray[25] == 0) {
+        echo "<td class=\"unit none last\">0</td>";
+    } else {
+        echo "<td class=\"unit last\">".$dataarray[25]."</td>";
     }
     echo "</tr></tbody>";
 ?>
