@@ -18,9 +18,9 @@ ob_start();
 		</div>
 		<div class="clear"></div>
 		<?php if($hero['itempower']==0){ ?>
-  <div class="attribute power tooltip" title="La fuerza de lucha se combina con la defensa y el ataque de tu héroe. Cuanto más alta sea la fuerza de lucha, mejor en batalla.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $hero['power']; ?> del héroe</font>">
+  <div class="attribute power tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $hero['power']; ?> del héroe</font>">
 			<?php }else{ ?>
-  <div class="attribute power tooltip" title="La fuerza de lucha se combina con la defensa y el ataque de tu héroe. Cuanto más alta sea la fuerza de lucha, mejor en batalla.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo 100+$tp*$hero['power']; ?> del héroe + <?php echo $hero['itempower']; ?> de bonificación por objetos</font>">
+  <div class="attribute power tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo 100+$tp*$hero['power']; ?> del héroe + <?php echo $hero['itempower']; ?> de bonificación por objetos</font>">
 			<?php } ?>
 			<div class="element attribName">Fuerza de lucha</div>
 			<div class="element current power"><?php echo 100+$tp*$hero['power']+$hero['itempower']; ?></div>

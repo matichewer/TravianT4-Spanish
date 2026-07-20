@@ -54,30 +54,48 @@ if ($session->access != ADMIN) die("Hacking attemp!");
         } else {
             $allyweek='1';
         }
-/**
- * @todo Find (or create) proper templates for this
- */
-//include ("Templates/head.tpl");
-//include ("Templates/body.tpl");
+include "Templates/html.tpl";
 ?>
-<div id="content"  class="login">
-<h1><br />Top 10 Medals</h1><br />
-Las medallas ahora se reparten automáticamente todos los lunes.<br />
-Próxima semana a repartir: <b><?php echo $week; ?></b> (jugadores) / <b><?php echo $allyweek; ?></b> (alianzas).
-</div>
-        <div id="side_info" class="outgame"></div>
-        <div class="clear"></div>
-    </div>
-    <div class="footer-stopper outgame"></div>
-    <div class="clear"></div>
-	<?php 
-        /**
-         * @todo This will need a proper menu, we can't use Templates/footer.tpl
-         * Temporary link back to admin.php
-         */
-        //include("Templates/footer.tpl");
-        echo '<a href="/admin.php">Back To Admin Page</a>';
-    ?>
-    <div id="ce"></div>
+<body class="v35 webkit chrome statistics">
+	<div id="wrapper">
+		<img id="staticElements" src="img/x.gif" alt="" />
+		<div id="logoutContainer">
+			<a id="logout" href="logout.php" title="<?php echo LOGOUT; ?>">&nbsp;</a>
+		</div>
+		<div class="bodyWrapper">
+			<img style="filter:chroma();" src="img/x.gif" id="msfilter" alt="" />
+			<div id="header">
+				<div id="mtop">
+					<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="<?php echo SERVER_NAME ?>"></a>
+					<?php include("Templates/navigation.tpl"); ?>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<div id="mid">
+				<div class="clear"></div>
+				<div id="contentOuterContainer">
+					<div class="contentTitle">&nbsp;</div>
+					<div class="contentContainer">
+						<div id="content" class="statistics">
+							<h1 class="titleInHeader">Top 10 Medals</h1>
+							Las medallas ahora se reparten automáticamente todos los lunes.<br />
+							Próxima semana a repartir: <b><?php echo $week; ?></b> (jugadores) / <b><?php echo $allyweek; ?></b> (alianzas).
+							<div class="clear"></div>
+						</div>
+						<div class="contentFooter">&nbsp;</div>
+					</div>
+					<?php
+					include("Templates/sideinfo.tpl");
+					include("Templates/footer.tpl");
+					include("Templates/header.tpl");
+					include("Templates/res.tpl");
+					include("Templates/vname.tpl");
+					include("Templates/quest.tpl");
+					?>
+				</div>
+			</div>
+		</div>
+		<div id="ce"></div>
+	</div>
 </body>
 </html>
