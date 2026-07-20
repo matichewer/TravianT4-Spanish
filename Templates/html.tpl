@@ -11,7 +11,7 @@
 		<meta name="content-language" content="ir" />
 		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd423" rel="stylesheet" type="text/css" />
         <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />										
-		<link href="img/travian_basics.css?v=7" rel="stylesheet" type="text/css" />
+		<link href="img/travian_basics.css?v=8" rel="stylesheet" type="text/css" />
 		<script src="jquery-1.10.1.min.js" type="text/javascript"></script>
 		<script src="sandwich.js" type="text/javascript"></script>
 		<script src="unx.js" type="text/javascript"></script>
