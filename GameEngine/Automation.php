@@ -2622,10 +2622,9 @@ class Automation {
                         $info_spy = "".$spy_pic.",
 <tbody><tr><td class=\"empty\" colspan=\"12\"></td></tr></tbody>
 <tbody class=\"goods\">
-	<tr><th>Resources</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"Wood\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"Clay\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"Iron\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"Crop\">".round($totcrop)."</div></div></td></tr></tbody>
-	<tr><th>Resources</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"Lumber\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"Clay\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"Iron\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"Crop\">".round($totcrop)."</div></div></td></tr></tbody>
+	<tr><th>".REPORT_RESOURCES."</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"".LUMBER."\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\">".round($totcrop)."</div></div></td></tr></tbody>
 
-<tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Cranny\">".$cranny."</div></div></td></tr></tbody>";
+<tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Escondite\">".$cranny."</div></div></td></tr></tbody>";
 
                     } else if($data['spy'] == 2) {
                         if($isoasis == 0) {

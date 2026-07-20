@@ -186,7 +186,7 @@ if (!$faild && $dataarray[$trapstart+11]!='' and $dataarray[$trapstart+11]!=''){
     <td colspan="11">
     <div class="res">
     <div class="rArea">
-    <img class="r1" src="img/x.gif" title="<?php echo LUMBER; ?>"><?php echo $dataarray[25]; ?></div>
+    <img class="r1" src="img/x.gif" title="<?php echo WOOD; ?>"><?php echo $dataarray[25]; ?></div>
     <div class="rArea">
     <img class="r2" src="img/x.gif" title="<?php echo CLAY; ?>"><?php echo $dataarray[26]; ?></div>
     <div class="rArea">
