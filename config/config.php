@@ -136,6 +136,11 @@ define("PLUS_PRODUCTION",$result['plus_prodtime']);
 // Leave disabled on private servers with no real payment processor configured.
 if($result['paypal_gold']==1){ $paypal_gold = true; }else{ $paypal_gold = false; }
 define("PAYPAL_GOLD",$paypal_gold);
+// ***** Weekly medals
+// How many places of each weekly ranking get a medal (1 = only the winner).
+// Useful on small private servers where handing out top10 medals is meaningless.
+define("MEDAL_TOP", isset($result['medal_top']) ? max(1, min(10, (int)$result['medal_top'])) : 10);
+define("MEDAL_ALLY_TOP", isset($result['medal_ally_top']) ? max(1, min(10, (int)$result['medal_ally_top'])) : 10);
 // ***** Great Workshop
 define("GREAT_WKS",false);
 // ***** Tourn threshold

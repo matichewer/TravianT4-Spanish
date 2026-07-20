@@ -71,6 +71,56 @@ if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br />
 		<td><?php if(QUEST == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(QUEST == false) { echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
 	<tr>
+		<td><div title="Muestra la tienda de compra de oro con PayPal en la sección Plus. Dejar deshabilitado en servidores privados sin procesador de pagos real configurado.">Buy Gold with PayPal</div></td>
+		<td>
+		<select name="paypal_gold" class="text" onchange="
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', 'ajax.php?cmd=PaypalGold', true);
+			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			xhr.onload = function() {
+				var msg = document.getElementById('paypal_gold_saved');
+				msg.style.display = 'inline';
+				setTimeout(function(){ msg.style.display = 'none'; }, 1500);
+			};
+			xhr.send('status=' + this.value);
+		">
+		<option value="1" <?php if(PAYPAL_GOLD == true) echo 'selected="selected"'; ?>>Enabled</option>
+		<option value="0" <?php if(PAYPAL_GOLD == false) echo 'selected="selected"'; ?>>Disabled</option>
+		</select>
+		<span id="paypal_gold_saved" style="display:none; color:Green;">Guardado</span>
+		</td>
+    </tr>
+<?php
+$medalRows = array(
+	'medal_top' => array('Medallas semanales - jugadores (top)', 'Cuantos puestos de cada ranking semanal de jugadores reciben medalla. En un servidor chico usa 1 para premiar solo al ganador.', MEDAL_TOP, 'player'),
+	'medal_ally_top' => array('Medallas semanales - alianzas (top)', 'Cuantos puestos de cada ranking semanal de alianzas reciben medalla.', MEDAL_ALLY_TOP, 'ally'),
+);
+foreach($medalRows as $name => $medalRow) {
+	list($label, $title, $current, $scope) = $medalRow;
+?>
+	<tr>
+		<td><div title="<?php echo $title; ?>"><?php echo $label; ?></div></td>
+		<td>
+		<select name="<?php echo $name; ?>" class="text" onchange="
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', 'ajax.php?cmd=MedalTop', true);
+			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			xhr.onload = function() {
+				var msg = document.getElementById('<?php echo $name; ?>_saved');
+				msg.style.display = 'inline';
+				setTimeout(function(){ msg.style.display = 'none'; }, 1500);
+			};
+			xhr.send('scope=<?php echo $scope; ?>&status=' + this.value);
+		">
+		<?php for($n = 1; $n <= 10; $n++) { ?>
+			<option value="<?php echo $n; ?>" <?php if($current == $n) echo 'selected="selected"'; ?>><?php echo $n == 1 ? '1 - solo el ganador' : $n; ?></option>
+		<?php } ?>
+		</select>
+		<span id="<?php echo $name; ?>_saved" style="display:none; color:Green;">Guardado</span>
+		</td>
+    </tr>
+<?php } ?>
+	<tr>
         <td>Demolish - Level required</td>
         <td><?php echo DEMOLISH_LEVEL_REQ; ?></td>
     </tr>  

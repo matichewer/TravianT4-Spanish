@@ -317,6 +317,24 @@ echo "<div class=\"headline\"><span class=\"f10 c5\">Error creating constant.php
                         <option value="1">Enable</option></select></td>
             </tr>
             <tr class="hover">
+                <td><div title="How many places of each weekly player ranking receive a medal. On a small server pick 1 so only the winner is awarded.">Weekly medals - players (top):</div></td>
+                <td><select name="medal_top" dir="ltr" class="text">
+                        <option value="1">1 - only the winner</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10" selected="selected">10 - Default</option></select></td>
+            </tr>
+            <tr class="hover">
+                <td><div title="How many places of each weekly alliance ranking receive a medal.">Weekly medals - alliances (top):</div></td>
+                <td><select name="medal_ally_top" dir="ltr" class="text">
+                        <option value="1">1 - only the winner</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10" selected="selected">10 - Default</option></select></td>
+            </tr>
+            <tr class="hover">
                 <td>Limit Mailbox:</td>
                 <td><select name="limit_mailbox" dir="ltr" class="text">
                         <option value="false" selected="selected">Disable</option>

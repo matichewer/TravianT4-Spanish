@@ -20,6 +20,13 @@ if($funct->CheckLogin()){
 			$q = "UPDATE " . TB_PREFIX . "config SET paypal_gold = '" . $status . "'";
 			mysql_query($q);
 		}
+
+		if($_GET['cmd']=='MedalTop'){
+			$col = ($_POST['scope'] === 'ally') ? 'medal_ally_top' : 'medal_top';
+			$value = max(1, min(10, (int)$_POST['status']));
+			$q = "UPDATE " . TB_PREFIX . "config SET $col = '" . $value . "'";
+			mysql_query($q);
+		}
 	}
 }else{
 	echo '<h2>Error: You are not Admin!</h2>';
