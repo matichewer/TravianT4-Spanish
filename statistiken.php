@@ -47,7 +47,7 @@ include "Templates/html.tpl";
 					});
 				</script>
 
-<h1 class="titleInHeader">Estadísticas<?php if($session->access == ADMIN) { echo " (<a href=\"medals.php\">Actualizar Top 10</a>)"; } ?></h1>
+<h1 class="titleInHeader">Estadísticas<?php if($session->access == ADMIN) { echo " (<a href=\"medals.php\">Estado Top 10</a>)"; } ?></h1>
 <div class="contentNavi subNavi">
 				<div title="" <?php if(!isset($_GET['tid']) || (isset($_GET['tid']) && ($_GET['tid'] == 1 || $_GET['tid'] == 31 || $_GET['tid'] == 32 || $_GET['tid'] == 7))) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>> 
 					<div class="background-start">&nbsp;</div> 

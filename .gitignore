@@ -2,3 +2,5 @@ config/installed
 config/connection.php
 .claude/
 .env
+GameEngine/Prevention/*.txt
+!GameEngine/Prevention/empty.txt

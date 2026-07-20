@@ -54,13 +54,6 @@ if ($session->access != ADMIN) die("Hacking attemp!");
         } else {
             $allyweek='1';
         }
-	
-	//we mogen de lintjes weggeven
-	if(isset($_GET['giveout'])){
-
-	$automation->giveOutMedals();
-
-	}
 /**
  * @todo Find (or create) proper templates for this
  */
@@ -68,38 +61,10 @@ if ($session->access != ADMIN) die("Hacking attemp!");
 //include ("Templates/body.tpl");
 ?>
 <div id="content"  class="login">
-<?php
-if(isset($_GET['giveout'])){?>
 <h1><br />Top 10 Medals</h1><br />
-Done:<br />
--Top 10 Attacker<br />
--Top 10 Defender<br />
--Top 10 Robbers<br />
--Top 10 Alliance Attacker<br />
--Top 10 Alliance Defencer<br />
--Top 10 Alliance Robbers<br />
--Top 10 Alliance Climbers(Rank)<br />
--Top 10 Pop Climbers<br />
--Top 10 Rank Climbers<br />
--Bonus: Attacker AND Defender<br />
--Bonus: 3/5/10 times in a row top 3 Pop Climbers<br />
--Bonus: 3/5/10 times in a row top 3 Rank Climbers<br />
--Bonus: 3/5/10 times top 3 Attack<br />
--Bonus: 3/5/10 times top 3 Defence<br />
--Bonus: 3/5/10 times top 3 Robber<br />
-
--Bonus: 3/5/10 times in a row top 10 Attack<br />
--Bonus: 3/5/10 times in a row top 10 Defence<br />
--Bonus: 3/5/10 times in a row top 10 Pop Climbers<br />
--Bonus: 3/5/10 times in a row top 10 Rank Climbers<br />
--Bonus: 3/5/10 times in a row top 10 Robber<br />
-
-
-
-<?php
-} else{ ?><h1><br />Top 10 Medals</h1><br />
-Click <a href="?giveout">here</a>, to give the medals away for <b>week <?php echo $week; ?></b>!<br />WARNING: Loading next page can take some time!
-<?php } ?></div>
+Las medallas ahora se reparten automáticamente todos los lunes.<br />
+Próxima semana a repartir: <b><?php echo $week; ?></b> (jugadores) / <b><?php echo $allyweek; ?></b> (alianzas).
+</div>
         <div id="side_info" class="outgame"></div>
         <div class="clear"></div>
     </div>
