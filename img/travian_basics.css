@@ -37,6 +37,21 @@ div.village1 .level.hasConstruction {
 	filter: grayscale(0.65);
 }
 
+/* The construction marker remains useful even when city level badges are hidden. */
+div.village2 #levels:not(.on) div.hasConstruction {
+	visibility: visible;
+	border-color: transparent;
+	background: none;
+}
+
+div.village2 #levels:not(.on) div.hasConstruction > div {
+	visibility: hidden;
+}
+
+div.village2 #levels:not(.on) div.hasConstruction > .constructionMarker {
+	visibility: visible;
+}
+
 /* Keep unread reports visible at a glance in every report list. */
 div.reports table#overview tbody tr.reportUnread td {
 	background-color: #fce6c4;
