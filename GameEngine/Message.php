@@ -294,15 +294,31 @@
 
 			private function getMessages() {
 				global $database, $session;
-				$this->inbox = $database->getMessage($session->uid, 1);
-				$this->sent = $database->getMessage($session->uid, 2);
-				$this->inbox1 = $database->getMessage($session->uid, 9);
-				$this->sent1 = $database->getMessage($session->uid, 10);
+				$this->inbox = $this->localizeMessageSubjects($database->getMessage($session->uid, 1));
+				$this->sent = $this->localizeMessageSubjects($database->getMessage($session->uid, 2));
+				$this->inbox1 = $this->localizeMessageSubjects($database->getMessage($session->uid, 9));
+				$this->sent1 = $this->localizeMessageSubjects($database->getMessage($session->uid, 10));
 				if($session->plus) {
-					$this->archived = $database->getMessage($session->uid, 6);
-					$this->archived1 = $database->getMessage($session->uid, 11);
+					$this->archived = $this->localizeMessageSubjects($database->getMessage($session->uid, 6));
+					$this->archived1 = $this->localizeMessageSubjects($database->getMessage($session->uid, 11));
 				}
 				$this->totalMessage = count($this->inbox) + count($this->sent);
+			}
+
+			private function localizeMessageSubjects($messages) {
+				if(!is_array($messages)) {
+					return $messages;
+				}
+
+				$noSubject = defined('MESSAGE_NO_SUBJECT') ? MESSAGE_NO_SUBJECT : 'No subject';
+				foreach($messages as &$message) {
+					if(isset($message['topic']) && $message['topic'] === 'No subject') {
+						$message['topic'] = $noSubject;
+					}
+				}
+				unset($message);
+
+				return $messages;
 			}
             
 			private function sendAMessage($topic,$text) {
@@ -315,8 +331,8 @@
 				$topic = $this->wordCensor($topic);
 				$text = $this->wordCensor($text);
 				}
-				if($topic == "") {
-				$topic = "No subject";
+				if(trim($topic) == "") {
+				$topic = defined('MESSAGE_NO_SUBJECT') ? MESSAGE_NO_SUBJECT : 'No subject';
 				}
 				if(!preg_match('/\[message\]/',$text) && !preg_match('/\[\/message\]/',$text)){
 				$text = "[message]".$text."[/message]";
@@ -390,8 +406,8 @@
 					$topic = $this->wordCensor($topic);
 					$text = $this->wordCensor($text);
 				}
-				if($topic == "") {
-					$topic = "No subject";
+				if(trim($topic) == "") {
+					$topic = defined('MESSAGE_NO_SUBJECT') ? MESSAGE_NO_SUBJECT : 'No subject';
 				}
 				if(!preg_match('/\[message\]/',$text) && !preg_match('/\[\/message\]/',$text)){
 				$text = "[message]".$text."[/message]";

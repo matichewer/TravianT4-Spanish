@@ -9,7 +9,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: no eres administrador.");
 $id = $_SESSION['id'];
 
 $inputValue = $_GET['g'];
@@ -24,10 +24,10 @@ if ($inputValue == '' || !is_numeric($inputValue)) {
 	<table id="member" style="width:300px;">
 		<thead>
 			<tr>
-				<th colspan="2">Give Everyone Free gold</th>
+				<th colspan="2">Dar oro gratis a todos</th>
 			</tr>
 			<tr>
-				<td>Amount</td>
+				<td>Cantidad</td>
 				<td></td>
 			</tr>
 		</thead>
@@ -35,20 +35,20 @@ if ($inputValue == '' || !is_numeric($inputValue)) {
 			<tr>
 				<td>
 					<center>
-						<b>How much gold?</b>
+						<b>¿Cuánto oro?</b>
 					</center>
 				</td>
 				<td>
 					<center>
 						<input class="give_gold" name="gold" value="<?php echo $inputValue; ?>" maxlength="4">&nbsp;
-						<img src="../img/admin/gold.gif" class="gold" alt="Gold" name="gold" title="Gold"/>
+						<img src="../img/admin/gold.gif" class="gold" alt="Oro" name="gold" title="Oro"/>
 					</center>
 				</td>
 			</tr>
 			<tr>
 				<td colspan="2">
 					<center>
-						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Give Players Free Gold">
+						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Dar oro gratis a los jugadores">
 					</center>
 				</td>
 			</tr>
@@ -59,6 +59,6 @@ if ($inputValue == '' || !is_numeric($inputValue)) {
 <?php
     if(isset($_GET['g']))
 	{
-		echo '<br /><br /><font color="Red"><b>Gold Added</font></b>';
+		echo '<br /><br /><font color="Red"><b>Oro añadido</font></b>';
 	}
 ?>

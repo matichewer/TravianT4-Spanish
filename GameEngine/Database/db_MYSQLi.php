@@ -212,9 +212,9 @@
         		return $dbarray['timestamp'];
         	}
 
-        	function modifyGold($userid, $amt, $mode) {
-        		if(!$mode) {
-        			$q = "UPDATE " . TB_PREFIX . "users set gold = gold - $amt where id = $userid";
+			function modifyGold($userid, $amt, $mode) {
+				if(!$mode) {
+					$q = "UPDATE " . TB_PREFIX . "users set gold = gold - $amt where id = $userid";
         		} else {
         			$q = "UPDATE " . TB_PREFIX . "users set gold = gold + $amt where id = $userid";
         		}
@@ -1324,6 +1324,60 @@
 				$time = time();
 				$q = "INSERT INTO " . TB_PREFIX . "mdata values (0,$client,$owner,'$topic',\"$message\",0,0,$send,$time,0,0,$alliance,$player,$coor,$report)";
 				return mysqli_query($this->connection,$q);
+			}
+
+			function exchangeGoldForSilver($userid, $gold) {
+				$userid = (int)$userid;
+				$gold = (int)$gold;
+				if($userid <= 0 || $gold <= 0 || $gold > 42949672) {
+					return false;
+				}
+
+				$silver = $gold * 100;
+				$q = "UPDATE " . TB_PREFIX . "users SET gold = gold - $gold, silver = silver + $silver WHERE id = $userid AND gold >= $gold AND silver <= " . (4294967295 - $silver);
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function exchangeSilverForGold($userid, $silver) {
+				$userid = (int)$userid;
+				$silver = (int)$silver;
+				if($userid <= 0 || $silver < 200 || $silver % 200 !== 0) {
+					return false;
+				}
+
+				$gold = (int)($silver / 200);
+				$q = "UPDATE " . TB_PREFIX . "users SET silver = silver - $silver, gold = gold + $gold WHERE id = $userid AND silver >= $silver AND gold <= " . (4294967295 - $gold);
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function claimQuestGold($userid, $currentQuest, $nextQuest, $gold) {
+				$userid = (int)$userid;
+				$currentQuest = (int)$currentQuest;
+				$nextQuest = (int)$nextQuest;
+				$gold = (int)$gold;
+				if($userid <= 0 || $gold <= 0) {
+					return false;
+				}
+
+				$q = "UPDATE " . TB_PREFIX . "users SET quest = $nextQuest, gold = gold + $gold WHERE id = $userid AND quest = $currentQuest AND gold <= " . (4294967295 - $gold);
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function claimFollowupQuestGold($userid, $currentFquest, $nextFquest, $gold) {
+				$userid = (int)$userid;
+				$gold = (int)$gold;
+				if($userid <= 0 || $gold <= 0 || !preg_match('/^[01](,[01]){10}$/', $currentFquest) || !preg_match('/^[01](,[01]){10}$/', $nextFquest)) {
+					return false;
+				}
+
+				$currentFquest = mysqli_real_escape_string($this->connection, $currentFquest);
+				$nextFquest = mysqli_real_escape_string($this->connection, $nextFquest);
+				$q = "UPDATE " . TB_PREFIX . "users SET fquest = '$nextFquest', gold = gold + $gold WHERE id = $userid AND quest = 24 AND fquest = '$currentFquest' AND gold <= " . (4294967295 - $gold);
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
         	function setArchived($id) {

@@ -12,7 +12,7 @@
 <table id="member" cellpadding="1" cellspacing="1" >
 	<thead>
 		<tr>
-			<th colspan="2">Server Maintenence</th>
+			<th colspan="2">Mantenimiento del servidor</th>
 		</tr> 
 		<tr>
 			<td class="on">Description</td>
@@ -21,17 +21,17 @@
 	</thead>
 	<tbody> 
 		<tr>
-			<td class="hab">Close Server for Maintenece, This will ban all players (Access 2) till you can fix bugs, or a crap version of a ceasefire lol</td>
+			<td class="hab">Cerrar el servidor por mantenimiento. Se sancionará temporalmente a todos los jugadores (acceso 2) hasta que vuelva a abrirse.</td>
 			<td class="hab"><center><a href="admin.php?p=maintenenceBan"><img src="../img/admin/b/ok1.gif"></a></center></td>
 		</tr>
 		<tr>
-			<td class="hab">Bring Server Back for Maintenece, This will unban all players (By Banning Reason)</td>
+			<td class="hab">Volver a abrir el servidor y quitar las sanciones de mantenimiento.</td>
 			<td class="hab"><center><a href="admin.php?p=maintenenceUnban"><img src="../img/admin/b/ok1.gif"></a></center></td>
 		</tr>
 		<tr>
 			<form action="../GameEngine/Admin/Mods/mainteneceCleanBanData.php" method="POST">
 			<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
-			<td class="hab">Clean Banlist Data (TRUNCATE)</td>
+			<td class="hab">Vaciar los datos de la lista de sanciones</td>
 			<td class="hab"><center><input type="image" src="../img/admin/b/ok1.gif" value="submit"></center></td>
 			</form>
 		</tr>

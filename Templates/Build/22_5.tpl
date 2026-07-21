@@ -23,20 +23,20 @@ for($i=42;$i<=49;$i++) {
                    if(${'r'.$i}['wood'] > $village->maxstore || ${'r'.$i}['clay'] > $village->maxstore || ${'r'.$i}['iron'] > $village->maxstore) {
                     echo "<br><span class=\"none\"></span></div></td>";
                     echo "<td class=\"none\">
-					<div class=\"none\">Fejleszd<br>a raktárat</div>
+					<div class=\"none\">Mejora<br>el almacén</div>
 				</td></tr>";
                 }
                 else if(${'r'.$i}['crop'] > $village->maxcrop) {
                     echo "<br><span class=\"none\">Mejora el granero</span></div></td>";
                     echo "<td class=\"none\">
-					<div class=\"none\">Fejleszd<br>a magtárat</div>
+					<div class=\"none\">Mejora<br>el granero</div>
 				</td></tr>";
                 }
                    else if(${'r'.$i}['wood'] > $village->awood || ${'r'.$i}['clay'] > $village->aclay || ${'r'.$i}['iron'] > $village->airon || ${'r'.$i}['crop'] > $village->acrop) {
                    	$time = $technology->calculateAvaliable($i);
                     echo "<br><span class=\"none\">Recursos suficientes ".$time[0]." -> ".$time[1]."</span></div></td>";
                     echo "<td class=\"none\">
-					<div class=\"none\">Túl kevés<br>nyersanyag</div>
+					<div class=\"none\">Recursos<br>insuficientes</div>
 				</td></tr>";
                 }
                 else if ( count($acares) > 0 ) {
@@ -47,7 +47,7 @@ for($i=42;$i<=49;$i++) {
                 else {
                      echo "</td>";
                     echo "<td class=\"act\">
-					<a class=\"research\" href=\"build.php?id=$id&amp;a=$i&amp;c=".$session->mchecker."\">Fejlesztés</a></td></tr>";
+					<a class=\"research\" href=\"build.php?id=$id&amp;a=$i&amp;c=".$session->mchecker."\">Investigar</a></td></tr>";
                 }
                 $success += 1;
     }
@@ -114,8 +114,8 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 
 				$(\"researchFutureLink\").set(\"text\",
 					this.hasClass(\"hide\")
-					?	\"Továbbiak\"
-					:	\"Elrejtés\"
+					?	\"Mostrar más\"
+					:	\"Ocultar\"
 				);
 
 				return false;
@@ -126,7 +126,7 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 }
 //$acares = $technology->grabAcademyRes();
 if(count($acares) > 0) {
-	echo "<table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\"><thead><tr><td>Fejlesztés</td><td>Időtartam</td><td>Finaliza</td></tr>
+	echo "<table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\"><thead><tr><td>Mejora</td><td>Duración</td><td>Finaliza</td></tr>
 	</thead><tbody>";
 			$timer = 1;
 	foreach($acares as $aca) {

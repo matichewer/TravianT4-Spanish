@@ -13,7 +13,7 @@
 <font size="3">
 	<b>
 		<center>
-			WELCOME TO 
+			BIENVENIDO AL
 				<?php 
 				if($_SESSION['access'] == MULTIHUNTER)
 				{
@@ -23,7 +23,7 @@
 				{ 
 					echo 'ADMINISTRATOR'; 
 				} ?> 
-			CONTROL PANEL
+			PANEL DE CONTROL
 		</center>
 	</b>
 </font>
@@ -31,7 +31,7 @@
 	
 <br /><br /><br /><br />
 
-	Hello <b><?php echo $_SESSION['username']; ?></b>, You are logged in as: 
+	Hola <b><?php echo $_SESSION['username']; ?></b>, has iniciado sesión como:
 	<b><?php if($_SESSION['access'] == MULTIHUNTER) { echo '<font color="Blue">Multihunter</font>'; } else if($_SESSION['access'] == ADMIN){ echo '<font color="Red">Administrator</font>'; } ?></b>
 	<br /><br /><br />
 	

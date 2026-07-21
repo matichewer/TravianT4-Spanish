@@ -1,28 +1,33 @@
 <?php
-if($_POST){
-$gold = $_POST['gold'];
-$silver = $_POST['silver'];
-$uid = $session->uid;
-	if($gold==0 || $silver>=200 || $session->silver==$silver){
-		$silvers = "- ".$silver."";
-		$golds = "+ ".$silver/200;
-	}elseif($gold>=1 || $silver==0 || $session->gold==$gold){
-		$silvers = "+ ".$gold*100;
-		$golds = "- ".$gold;
+if($_SERVER['REQUEST_METHOD'] === 'POST') {
+	$goldInput = isset($_POST['gold']) ? trim((string)$_POST['gold']) : '';
+	$silverInput = isset($_POST['silver']) ? trim((string)$_POST['silver']) : '';
+	$exchangeCompleted = false;
+
+	if($goldInput !== '' && $silverInput === '' && ctype_digit($goldInput)) {
+		$gold = (int)$goldInput;
+		$exchangeCompleted = $database->exchangeGoldForSilver($session->uid, $gold);
+	} elseif($silverInput !== '' && $goldInput === '' && ctype_digit($silverInput)) {
+		$silver = (int)$silverInput;
+		$exchangeCompleted = $database->exchangeSilverForGold($session->uid, $silver);
 	}
-	if($session->gold<$gold || $session->silver<$silver){
-		mysql_query("UPDATE " . TB_PREFIX ."users SET gold = ".$gold.", silver = ".$silver." WHERE id = '".$uid."'");
-	}else{
-		mysql_query("UPDATE ".TB_PREFIX."users SET gold = gold ".$golds." WHERE id = '".$uid."'");
-		mysql_query("UPDATE ".TB_PREFIX."users SET silver = silver ".$silvers." WHERE id = '".$uid."'");
+
+	if(!$exchangeCompleted) {
+		$_SESSION['exchange_error'] = 'La cantidad no es válida o no tienes saldo suficiente.';
 	}
+
     header("Location: plus.php?id=6");
+	exit;
 }
+
+$exchangeError = isset($_SESSION['exchange_error']) ? $_SESSION['exchange_error'] : '';
+unset($_SESSION['exchange_error']);
 ?>
 
 <div id="silverExchange">
 
 	<h3>Casa de cambio</h3>
+	<?php if($exchangeError !== '') { ?><p class="error"><?php echo htmlspecialchars($exchangeError, ENT_QUOTES, 'UTF-8'); ?></p><?php } ?>
 	<p>Ingresa la cantidad de oro o plata que quieres intercambiar.</p>
 
 	<h4>Tasas de cambio</h4>

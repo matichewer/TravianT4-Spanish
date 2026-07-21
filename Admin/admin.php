@@ -34,7 +34,7 @@ class timeFormatGenerator
 		{
 			$time = "0".$time;
 		}
-		return $days ." day ".$hr."h ".$min."m ".$time."s";
+		return $days ." d ".$hr." h ".$min." min ".$time." s";
 	}
 };
 $timeformat = new timeFormatGenerator;
@@ -43,7 +43,7 @@ $timeformat = new timeFormatGenerator;
 <html>
 	<head>
 		<link REL="shortcut icon" HREF="favicon.ico"/>
-		<title>Admin Panel</title>    
+		<title>Panel de administración</title>
 		<link rel=stylesheet type="text/css" href="../img/admin/admin.css">
 		<link rel=stylesheet type="text/css" href="../img/admin/acp.css">
 		<link rel=stylesheet type="text/css" href="../img/img.css">
@@ -58,9 +58,9 @@ $timeformat = new timeFormatGenerator;
 			function inaktiv() {event.srcElement.className='fl2'; }
 
 			function del(e,id){
-			if(e == 'did'){ var conf = confirm('Dou you really want delete village id '+id+'?'); } 
-			if(e == 'unban'){ var conf = confirm('Dou you really want unban player '+id+'?'); } 
-			if(e == 'stopDel'){ var conf = confirm('Dou you really want stop deleting user '+id+'?'); } 
+			if(e == 'did'){ var conf = confirm('¿Realmente quieres eliminar la aldea con ID '+id+'?'); }
+			if(e == 'unban'){ var conf = confirm('¿Realmente quieres quitar la sanción al jugador '+id+'?'); }
+			if(e == 'stopDel'){ var conf = confirm('¿Realmente quieres detener la eliminación del usuario '+id+'?'); }
 			if(conf){return true;}else{return false;}
 			}
 		</script>
@@ -90,65 +90,65 @@ $timeformat = new timeFormatGenerator;
 											<?php 
 											if($_SESSION['access'] == ADMIN)
 											{ ?>
-												<a href="<?php echo HOMEPAGE; ?>">Server Homepage</a>
-												<a href="admin.php">Control Panel Home</a>
+								<a href="<?php echo HOMEPAGE; ?>">Página principal del servidor</a>
+								<a href="admin.php">Inicio del panel</a>
 												<br />
-												<a href="?action=logout">Logout</a>
+								<a href="?action=logout">Cerrar sesión</a>
 												<br />
-												<a href="#"><b>Maintenence</b></a>
-												<a href="?p=maintenence">Server Maintenence</a>
-												<a href="?p=delmedal">Delete Player Medals</a>
-												<a href="?p=delallymedal">Delete Ally Medals</a>
+								<a href="#"><b>Mantenimiento</b></a>
+								<a href="?p=maintenence">Mantenimiento del servidor</a>
+								<a href="?p=delmedal">Eliminar medallas de jugadores</a>
+								<a href="?p=delallymedal">Eliminar medallas de alianzas</a>
 												<br />
-												<a href="#"><b>Server Info</b></a>
-												<a href="?p=server_info">Server Info</a>
-												<a href="?p=online">Online Users</a>
-												<a href="?p=notregistered">Players Not Activated</a>
+								<a href="#"><b>Información del servidor</b></a>
+								<a href="?p=server_info">Información del servidor</a>
+								<a href="?p=online">Usuarios conectados</a>
+								<a href="?p=notregistered">Jugadores sin activar</a>
 												<br />
-												<a href="?p=search"><b>Search</b></a>
+								<a href="?p=search"><b>Buscar</b></a>
 												<br />
-												<a href="?p=message">Search Messages</a>
-												<a href="?p=message">Search Battle Reports</a>
+								<a href="?p=message">Buscar mensajes</a>
+								<a href="?p=message">Buscar informes de batalla</a>
 												<br />
-												<a href="#"><b>Ban</b></a>
-												<a href="?p=ban">Ban Players</a>
-												<a href="?p=ban">Unban Players</a>
+								<a href="#"><b>Sanciones</b></a>
+								<a href="?p=ban">Sancionar jugadores</a>
+								<a href="?p=ban">Quitar sanciones</a>
 												<br /><br />
-												<a href="#"><b>Gold</b></a>
-												<a href="?p=gold">Give All Free Gold</a>
-												<a href="?p=maintenenceResetGold">Reset Gold</a>
+								<a href="#"><b>Oro</b></a>
+								<a href="?p=gold">Dar oro gratis a todos</a>
+								<a href="?p=maintenenceResetGold">Restablecer oro</a>
 												<br />
 												<a href="#"><b>Plus</b></a>
-												<a href="?p=givePlus">Give All Plus</a>
-												<a href="?p=maintenenceResetPlus">Reset Plus</a>
+								<a href="?p=givePlus">Dar Plus a todos</a>
+								<a href="?p=maintenenceResetPlus">Restablecer Plus</a>
 												<br />
-												<a href="#"><b>Res Bonus</b></a>
-												<a href="?p=givePlusRes">Give All Res Bonus</a>
-												<a href="?p=maintenenceResetPlusBonus">Reset Res Bonus</a>
+								<a href="#"><b>Bonificación de recursos</b></a>
+								<a href="?p=givePlusRes">Dar bonificación a todos</a>
+								<a href="?p=maintenenceResetPlusBonus">Restablecer bonificaciones</a>
 												<br />
-												<a href="?p=natarnature"><b>Natars & Nature</b></a>
-												<a href="?p=oasis">Populate Oases</b>
-												<a href="?p=npctribecreatenatar">Create Natar Account</b>
-												<a href="?p=addArtefacts">Add Artefacts</a>
-												<a href="?p=addWW">Add WW Villages</a>
+								<a href="?p=natarnature"><b>Natares y naturaleza</b></a>
+								<a href="?p=oasis">Poblar oasis</b>
+								<a href="?p=npctribecreatenatar">Crear cuenta natar</b>
+								<a href="?p=addArtefacts">Añadir artefactos</a>
+								<a href="?p=addWW">Añadir aldeas Maravilla</a>
 												<br />
 												<a href="#"><b>Admin:</b></a>
-												<a href="?p=admin_log"><font color="Red"><b>Admin Log</font></b></a>
-												<a href="?p=config">Server Settings</a>
+								<a href="?p=admin_log"><font color="Red"><b>Registro administrativo</font></b></a>
+								<a href="?p=config">Configuración del servidor</a>
 												<?php 
 											} 
 											else if($_SESSION['access'] == MULTIHUNTER)
 											{ ?>
-												<a href="admin.php">MCP Home</a> 
-												<a href="<?php echo HOMEPAGE; ?>">Homepage</a>
+								<a href="admin.php">Inicio del panel</a>
+								<a href="<?php echo HOMEPAGE; ?>">Página principal</a>
 												<a href="#"></a><a href="#"></a>
-												<a href="?p=server_info">Server Info</a>
-												<a href="?p=online">Online users</a>    
-												<a href="?p=search">Search</a>
-												<a href="?p=message">Msg/Rep</a>
-												<a href="?p=ban">Ban</a>
+								<a href="?p=server_info">Información del servidor</a>
+								<a href="?p=online">Usuarios conectados</a>
+								<a href="?p=search">Buscar</a>
+								<a href="?p=message">Mensajes/Informes</a>
+								<a href="?p=ban">Sanciones</a>
 												<a href="#"></a><a href="#"></a><a href="#"></a>
-												<a href="?action=logout">Logout</a><?php
+								<a href="?action=logout">Cerrar sesión</a><?php
 											} 
 										}
 									?>
@@ -210,4 +210,3 @@ $timeformat = new timeFormatGenerator;
 		</div>
 	</body>
 </html>
-

@@ -34,9 +34,9 @@ $result = $admin->search_village($_POST['s']);
 	<thead>
 		<tr>
 			<td style="background-color: #F3F3F3;">ID</th>
-			<td style="background-color: #F3F3F3;">Village Name</th>
-			<td style="background-color: #F3F3F3;">Village Owner</th>         
-			<td style="background-color: #F3F3F3;">Population</th>
+			<td style="background-color: #F3F3F3;">Nombre de la aldea</th>
+			<td style="background-color: #F3F3F3;">Propietario</th>
+			<td style="background-color: #F3F3F3;">Población</th>
 			<td style="background-color: #F3F3F3;"></th>
 		</tr>
 	</thead>
@@ -69,7 +69,7 @@ $result = $admin->search_village($_POST['s']);
 					<tr>
 						<td colspan="5" style="background-image: url(../../gpack/travian_default/img/f/c4.gif);">
 							<center>
-								<font color="red">'.count($result).'</font> Villages Found "<font color="red">'.$_POST['s'].'</font>"
+								<font color="red">'.count($result).'</font> aldeas encontradas para "<font color="red">'.$_POST['s'].'</font>"
 							</center>
 						</td>
 					</tr>';
@@ -85,7 +85,7 @@ $result = $admin->search_village($_POST['s']);
 					<tr>
 						<td colspan="5" style="background-image: url(../../gpack/travian_default/img/f/c4.gif);">
 							<center>
-								<font color="#9F9F90">No Villages Called</font> <font color="red">'.$_POST['s'].'</font>
+								<font color="#9F9F90">No hay aldeas llamadas</font> <font color="red">'.$_POST['s'].'</font>
 							</center>
 						</td>
 					</tr>';

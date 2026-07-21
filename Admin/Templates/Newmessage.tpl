@@ -37,7 +37,7 @@ if(isset($id))
 		}
 	</style>
 	
-	<h4>Compose New Message to <a href="admin.php?p=player&uid=<?php echo $user['id'] ?>"><?php echo $user['username']; ?></a></h4>
+	<h4>Escribir un mensaje para <a href="admin.php?p=player&uid=<?php echo $user['id'] ?>"><?php echo $user['username']; ?></a></h4>
 	
 	<form method="post" action="../Admin/Mods/sendMessage.php" accept-charset="UTF-8" name="msg">
 	<div id="content" class="messages">
@@ -57,7 +57,7 @@ if(isset($id))
 			<div class="clear"></div>				
 			<div class="line"></div>
 			<div class="message" style="margin-top: 10px;">
-				<textarea id="message" name="message" style="background-image: url('../gpack/travian_default/img/msg/underline.gif'); background-repeat: repeat; font-size: 12px; border: medium none; height: 258px; line-height: 16px; width: 412px; font-family: Verdana,Arial,Helvetica,sans-serif;">Message Here</textarea>
+				<textarea id="message" name="message" style="background-image: url('../gpack/travian_default/img/msg/underline.gif'); background-repeat: repeat; font-size: 12px; border: medium none; height: 258px; line-height: 16px; width: 412px; font-family: Verdana,Arial,Helvetica,sans-serif;">Escribe el mensaje aquí</textarea>
 			</div>
 			<p class="btn">
 				<input type="image" value="submit" name="s1" id="btn_send" class="dynamic_img clicked" src="../img/admin/x.gif" alt="send" tabindex="4;">
@@ -69,7 +69,7 @@ if(isset($id))
 	<?php
 	if(isset($_GET['msg']))
 	{
-		echo "<font color=\"blue\">Message Sent</font>";
+		echo "<font color=\"blue\">Mensaje enviado</font>";
 	}
 	else
 	{
@@ -78,5 +78,5 @@ if(isset($id))
 }
 else
 {
-	echo "<br /><br />Not found. <a href=\"javascript: history.go(-1)\"> Go Back</a>";
+	echo "<br /><br />No encontrado. <a href=\"javascript: history.go(-1)\">Volver</a>";
 }?>

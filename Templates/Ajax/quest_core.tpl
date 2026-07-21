@@ -19,12 +19,12 @@ if (isset($qact)){
 	break;
 
 	case 'skip':
-	$database->updateUserField($_SESSION['username'],'quest','23',0);
-	$_SESSION['qst']= 23;
-	$gold=$database->getUserField($_SESSION['username'],'gold','username');
-	$gold+=25;
-	$database->updateUserField($_SESSION['username'],'gold',$gold,0);
-	$skiped=true;
+	if($database->claimQuestGold($session->uid, 0, 23, 25)) {
+		$_SESSION['qst']= 23;
+		$skiped=true;
+	} else {
+		$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+	}
 	break;
 
 	case '2':
@@ -80,13 +80,11 @@ if (isset($qact)){
 	break;
 
 	case '8':
-	$database->updateUserField($_SESSION['username'],'quest','8',0);
-	$_SESSION['qst']= 8;
-
-	//Give Reward
-	$gold=$database->getUserField($_SESSION['username'],'gold','username');
-	$gold+=20;
-	$database->updateUserField($_SESSION['username'],'gold',$gold,0);
+	if($database->claimQuestGold($session->uid, 7, 8, 20)) {
+		$_SESSION['qst']= 8;
+	} else {
+		$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+	}
 	break;
 
 	case '9':
@@ -258,15 +256,24 @@ if (isset($qact)){
 	break;
 
 	case '25':
-	$dataarray[0] = 1;
-	$database->updateUserField($_SESSION['username'],'fquest',''.$dataarray[0].','.$dataarray[1].','.$dataarray[2].','.$dataarray[3].','.$dataarray[4].','.$dataarray[5].','.$dataarray[6].','.$dataarray[7].','.$dataarray[8].','.$dataarray[9].','.$dataarray[10].'',0);
+	$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+	$currentFquest = implode(',', $dataarray);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$allResourceFieldsAtLevelTwo = true;
+	for($field = 1; $field <= 18; $field++) {
+		if((int)$resourceLevels['f'.$field] < 2) {
+			$allResourceFieldsAtLevelTwo = false;
+			break;
+		}
+	}
 
-	$_SESSION['qst']= 24;
-
-	//Give Reward
-	$gold=$database->getUserField($_SESSION['username'],'gold','username');
-	$gold+=15;
-	$database->updateUserField($_SESSION['username'],'gold',$gold,0);
+	if($_SESSION['qst'] === 24 && (int)$dataarray[0] === 0 && $allResourceFieldsAtLevelTwo) {
+		$dataarray[0] = 1;
+		$nextFquest = implode(',', $dataarray);
+		if(!$database->claimFollowupQuestGold($session->uid, $currentFquest, $nextFquest, 15)) {
+			$dataarray = explode(',', $database->getUserField($session->uid, 'fquest', 0));
+		}
+	}
 	break;
 
     case '26':

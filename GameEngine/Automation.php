@@ -2606,15 +2606,15 @@ class Automation {
                                     if($o_conqured == '0' or $o_conqured != $data['from']) {
                                         mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `lastupdated`='".time()."' WHERE `wref`='".$data['to']."' ");
                                         mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
-                                        $info_chief = "".$hero_pic.", Your hero has conquered this oasis.";
+                                        $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
                                     } elseif($o_conqured == $data['from']) {
-                                        $info_chief = "".$hero_pic.", Your hero has already conquered this oasis.";
+                                        $info_chief = "".$hero_pic.", tu héroe ya había conquistado este oasis.";
                                     }
                                 } else {
-                                    $info_chief = "".$hero_pic.", You need hero mansion level ".$needed_hero_mansion_level." to conquer this oasis.";
+                                    $info_chief = "".$hero_pic.", necesitas una Mansión del Héroe de nivel ".$needed_hero_mansion_level." para conquistar este oasis.";
                                 }
                             } else {
-                                $info_chief = "".$hero_pic.", Your hero has already conquered 3 oasis.";
+                                $info_chief = "".$hero_pic.", tu héroe ya conquistó 3 oasis.";
                             }
                         }
                     } else {
@@ -2622,7 +2622,7 @@ class Automation {
                         if($artifact['vref'] == $data['to']) {
                             if($database->canClaimArtifact($artifact['vref'], $artifact['size'])) {
                                 $database->claimArtefact($data['to'], $data['to'], $database->getVillageField($data['from'], "owner"));
-                                $info_chief = "".$hero_pic.", Your hero is carrying home a artefact.";
+                                $info_chief = "".$hero_pic.", tu héroe lleva un artefacto de regreso a la aldea.";
                             } else {
                                 $info_chief = "";
                             }

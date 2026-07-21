@@ -15,7 +15,7 @@
 <table id="member">
   <thead>
     <tr>
-        <th>Villages</th>
+        <th>Aldeas</th>
     </tr>
   </thead> 
 
@@ -23,7 +23,7 @@
 <table id="profile">    
     <tr>
         <td>Name</td>
-        <td>Population</td>
+        <td>Población</td>
         <td>Coordinates</td>
 		<td></td>
     </tr>

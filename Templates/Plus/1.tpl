@@ -42,7 +42,7 @@ function loadProductGroup(group_id) {
 	<td>
     Paquete A
     <br /><br />
-<img src="http://content.tg-payment.com/content/img/products/Travian_paket_a.jpg" style="width:"alt="Package A" />
+<img src="http://content.tg-payment.com/content/img/products/Travian_paket_a.jpg" style="width:"alt="Paquete A" />
     <br />
     250&nbsp;Gold
 	<br />
@@ -63,7 +63,7 @@ function loadProductGroup(group_id) {
     <td>
     Paquete B
     <br /><br />
-<img src="http://content.tg-payment.com/content/img/products/Travian_paket_b.jpg" style="width:"alt="Package B" />
+<img src="http://content.tg-payment.com/content/img/products/Travian_paket_b.jpg" style="width:"alt="Paquete B" />
     <br />
     600&nbsp;Gold
 	<br />
@@ -83,7 +83,7 @@ function loadProductGroup(group_id) {
     </td><td>
     Paquete C
     <br /><br />
-<img src="http://content.tg-payment.com/content/img/products/Travian_paket_c.jpg" style="width:"alt="Package C" />
+<img src="http://content.tg-payment.com/content/img/products/Travian_paket_c.jpg" style="width:"alt="Paquete C" />
     <br />
     2000&nbsp;Gold
 	<br />
@@ -107,7 +107,7 @@ function loadProductGroup(group_id) {
 	<td>
     Paquete de oro
     <br /><br />
-<img src="http://content.tg-payment.com/content/img/products/Travian_paket_d.jpg" style="width:"alt="Package D" />
+<img src="http://content.tg-payment.com/content/img/products/Travian_paket_d.jpg" style="width:"alt="Paquete D" />
     <br />
     25000&nbsp;Gold
 	<br />
@@ -127,7 +127,7 @@ function loadProductGroup(group_id) {
     </td><td>
     Oferta de oro
     <br /><br />
-<img src="http://content.tg-payment.com/content/img/products/Travian_paket_e.jpg" style="width:"alt="Package E" />
+<img src="http://content.tg-payment.com/content/img/products/Travian_paket_e.jpg" style="width:"alt="Paquete E" />
     <br />
     100000&nbsp;Gold
 	<br />

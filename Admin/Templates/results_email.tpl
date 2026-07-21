@@ -40,7 +40,7 @@ echo '
 else{  
 echo '
     <tr>
-        <td colspan="4">No results</td>  
+        <td colspan="4">Sin resultados</td>
     </tr>  
 ';
 }

@@ -1,7 +1,7 @@
 <table id="member">
 	<thead>
 		<tr>
-			<th colspan="10">Troops in village</th>
+			<th colspan="10">Tropas en la aldea</th>
 				<?php
 					## Roman
 					if($units['u1'] == 0){$u1 = '<font color="gray">'.$units['u1'].'';}
@@ -270,7 +270,7 @@
 	<?php
 		if($_SESSION['access'] == ADMIN)
 		{
-			echo '<a href="admin.php?p=addTroops&did='.$_GET['did'].'">Edit Troops</a>'; 
+			echo '<a href="admin.php?p=addTroops&did='.$_GET['did'].'">Editar tropas</a>';
 		} 
 
 	?>

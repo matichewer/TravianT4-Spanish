@@ -9,7 +9,7 @@
 
 		<div class="clear"></div>
 
-  <div class="attribute power tooltip" title="Támadó erő||A hős támadási ereje a védelmi erejének és a támadó erejének kombinációja. Minnél több ez az erő annál kevesebb sérülést kap a kalandnál a hős.<br><font color='#5dcbfb'>Fuerza de ataque: <?php echo $hero_info['attack']; ?></font>">
+  <div class="attribute power tooltip" title="Fuerza de ataque||La fuerza de ataque del héroe combina su capacidad ofensiva y defensiva. Cuanto mayor sea, menos daño sufrirá durante una aventura.<br><font color='#5dcbfb'>Fuerza de ataque: <?php echo $hero_info['attack']; ?></font>">
 			<div class="element attribName">Fuerza de ataque</div>
 			<div class="element current power"><?php echo $hero_info['attack']; ?></div>
 			<div class="element progress">

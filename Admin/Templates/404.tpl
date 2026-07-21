@@ -11,9 +11,9 @@
 ?>
 <div style="margin-top: 50px;">
 	<center>
-		<h1>404 - File not found</h1>
-		<img src="../../gpack/travian_default/img/misc/404.gif" title="Not Found" alt="Not Found"><br />
-		<p>We looked 404 times already but can't find anything, Not even an X marking the spot.</p>
-		<p>This system is not complete yet. So the page probably does not exist.</p><br>
+		<h1>404 - Archivo no encontrado</h1>
+		<img src="../../gpack/travian_default/img/misc/404.gif" title="No encontrado" alt="No encontrado"><br />
+		<p>Buscamos 404 veces, pero no encontramos nada.</p>
+		<p>Esta sección todavía no está completa o la página no existe.</p><br>
 	</center>
 </div>

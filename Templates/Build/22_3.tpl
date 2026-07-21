@@ -58,12 +58,12 @@ echo "<div class=\"clear\">&nbsp;</div></div></div>";
                 }
                 else if ( count($acares) > 0 ) {
                 echo "<br><div class=\"contractLink\"><span class=\"none\">
-                    Fejlesztés folyamatban</span></div></div></div></div>
+                    Investigación en curso</span></div></div></div></div>
                     <div class=\"clear\">&nbsp;</div>
                     </div></div>";
                 }
                 else {
-                echo "<div class=\"contractLink\"><button type=\"button\" value=\"Fejlesztés\" class=\"build\" onclick=\"window.location.href = 'build.php?id=$id&amp;a=$i&amp;c=".$session->mchecker."'; return false;\">
+                echo "<div class=\"contractLink\"><button type=\"button\" value=\"Investigar\" class=\"build\" onclick=\"window.location.href = 'build.php?id=$id&amp;a=$i&amp;c=".$session->mchecker."'; return false;\">
 <div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
 <div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div>
 </div><div class=\"button-contents\">Investigar</div></div></button></div>
@@ -133,7 +133,7 @@ echo "<div class=\"buildActionOverview trainUnits\"><td colspan=\"2\"><div class
 
                 $("researchFutureLink").set("text",
                     this.hasClass("hide")
-                    ?   "Továbbiak"
+                    ?   "Mostrar más"
                     :   "Ocultar"
                 );
 

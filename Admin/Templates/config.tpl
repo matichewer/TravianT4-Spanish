@@ -10,17 +10,17 @@
 #################################################################################
 ?>
 <?php
-if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><b><font color='Red'><center>Access Denied: You are not admin</b></font></center>");
+if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><b><font color='Red'><center>Acceso denegado: no eres administrador.</b></font></center>");
 ?>
 
 <style>
 	.del {width:12px; height:12px; background-image: url(img/admin/icon/del.gif);} 
 </style>  
-<h2><center>Made by Dzoki</center></h2>
+<h2><center>Creado por Dzoki</center></h2>
 <table id="member">
 	<thead>
 		<tr>
-		<th>~ Server Settings ~</th>
+		<th>~ Configuración del servidor ~</th>
 		</tr>
 	</thead> 
 </table>
@@ -28,50 +28,50 @@ if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br />
 <table id="profile">    
     <tr>
         <td class="b">Variable</td>
-        <td class="b">Value</td> 
+        <td class="b">Valor</td>
     </tr> 
     <tr>
-        <td>Server Name</td>
+        <td>Nombre del servidor</td>
         <td><?php echo SERVER_NAME;?></td>    
     </tr> 
 	<tr>
-        <td>Server Started</td>
+        <td>Inicio del servidor</td>
         <td><?php echo date("d.m.y H:i",COMMENCE);?></td>   
 	</tr>  
     <tr>
-        <td>Language</td>
-        <td><?php if(LANG == 'en') { echo "English"; } else if(LANG == 'de') { echo "Deutsch"; } else if(LANG == 'es') { echo "Spanish"; } ?></td>  
+        <td>Idioma</td>
+        <td><?php if(LANG == 'en') { echo "Inglés"; } else if(LANG == 'de') { echo "Alemán"; } else if(LANG == 'es') { echo "Español"; } ?></td>
     </tr>  
     <tr>  
-        <td>Server Speed</td>
+        <td>Velocidad del servidor</td>
         <td><?php echo ''.SPEED.'x';?></td>    
     </tr>  
     <tr>
-        <td>Map Size</td>
+        <td>Tamaño del mapa</td>
         <td><?php echo WORLD_MAX;?>x<?php echo WORLD_MAX;?></td>    
     </tr>  
 	<tr>
-        <td>Troop Speed</td>
+        <td>Velocidad de tropas</td>
         <td><?php echo INCREASE_SPEED;?>x</td>    
     </tr> 
 	<tr>
-		<td>Village Expanding Speed</td>
-        <td><?php if(CP == 0){ echo "Fast"; } else if(CP == 1){ echo "Slow"; } else if(CP == 2){ echo "Normal"; } ?></td>
+		<td>Velocidad de expansión de aldeas</td>
+        <td><?php if(CP == 0){ echo "Rápida"; } else if(CP == 1){ echo "Lenta"; } else if(CP == 2){ echo "Normal"; } ?></td>
     </tr>   
     <tr>
-		<td>Beginners Protection</td>
-		<td><?php echo (PROTECTION/3600);?> hour/s</td> 
+		<td>Protección de principiantes</td>
+		<td><?php echo (PROTECTION/3600);?> hora(s)</td>
     </tr>    	
 	<tr>
-        <td>Activation Mail</td>
-        <td><?php if(AUTH_EMAIL == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(AUTH_EMAIL == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
+        <td>Correo de activación</td>
+        <td><?php if(AUTH_EMAIL == true) { echo "<b><font color='Green'>Activado</font></b>"; } else if(AUTH_EMAIL == false){ echo "<b><font color='Red'>Desactivado</font></b>"; } ?></td>
     </tr> 
 	<tr>
-		<td>Quest</td>
-		<td><?php if(QUEST == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(QUEST == false) { echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
+		<td>Misiones</td>
+		<td><?php if(QUEST == true) { echo "<b><font color='Green'>Activadas</font></b>"; } else if(QUEST == false) { echo "<b><font color='Red'>Desactivadas</font></b>"; } ?></td>
     </tr>    
 	<tr>
-		<td><div title="Muestra la tienda de compra de oro con PayPal en la sección Plus. Dejar deshabilitado en servidores privados sin procesador de pagos real configurado.">Buy Gold with PayPal</div></td>
+		<td><div title="Muestra la tienda de compra de oro con PayPal en la sección Plus. Dejar deshabilitado en servidores privados sin procesador de pagos real configurado.">Comprar oro con PayPal</div></td>
 		<td>
 		<select name="paypal_gold" class="text" onchange="
 			var xhr = new XMLHttpRequest();
@@ -84,8 +84,8 @@ if ($_SESSON['access'] == MULTIHUNTER) die("<br /><br /><br /><br /><br /><br />
 			};
 			xhr.send('status=' + this.value);
 		">
-		<option value="1" <?php if(PAYPAL_GOLD == true) echo 'selected="selected"'; ?>>Enabled</option>
-		<option value="0" <?php if(PAYPAL_GOLD == false) echo 'selected="selected"'; ?>>Disabled</option>
+		<option value="1" <?php if(PAYPAL_GOLD == true) echo 'selected="selected"'; ?>>Activado</option>
+		<option value="0" <?php if(PAYPAL_GOLD == false) echo 'selected="selected"'; ?>>Desactivado</option>
 		</select>
 		<span id="paypal_gold_saved" style="display:none; color:Green;">Guardado</span>
 		</td>
@@ -121,27 +121,27 @@ foreach($medalRows as $name => $medalRow) {
     </tr>
 <?php } ?>
 	<tr>
-        <td>Demolish - Level required</td>
+        <td>Demolición - Nivel requerido</td>
         <td><?php echo DEMOLISH_LEVEL_REQ; ?></td>
     </tr>  
 	<tr>
-        <td>World Wonder - Statistics</td>
-        <td><?php if(WW == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(WW == false) { echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
+        <td>Maravilla del Mundo - Estadísticas</td>
+        <td><?php if(WW == true) { echo "<b><font color='Green'>Activadas</font></b>"; } else if(WW == false) { echo "<b><font color='Red'>Desactivadas</font></b>"; } ?></td>
     </tr>  
 	<tr>
-        <td><b><font color='#71D000'>P</font><font color='#FF6F0F'>l</font><font color='#71D000'>u</font><font color='#FF6F0F'>s</font></b> account duration</td>
-        <td><?php if(PLUS_TIME >= 86400){ echo ''.(PLUS_TIME/86400).' Days'; } else if(PLUS_TIME < 86400){ echo ''.(PLUS_TIME/3600).' Hours'; } ?></td> 
+        <td>Duración de la cuenta <b><font color='#71D000'>P</font><font color='#FF6F0F'>l</font><font color='#71D000'>u</font><font color='#FF6F0F'>s</font></b></td>
+        <td><?php if(PLUS_TIME >= 86400){ echo ''.(PLUS_TIME/86400).' días'; } else if(PLUS_TIME < 86400){ echo ''.(PLUS_TIME/3600).' horas'; } ?></td>
     </tr>  
 	<tr>
-        <td>+25% production duration</td>
-        <td><?php if(PLUS_PRODUCTION >= 86400){ echo ''.(PLUS_PRODUCTION/86400).' Days'; } else if(PLUS_PRODUCTION < 86400){ echo ''.(PLUS_PRODUCTION/3600).' Hours'; } ?></td> 
+        <td>Duración de producción +25%</td>
+        <td><?php if(PLUS_PRODUCTION >= 86400){ echo ''.(PLUS_PRODUCTION/86400).' días'; } else if(PLUS_PRODUCTION < 86400){ echo ''.(PLUS_PRODUCTION/3600).' horas'; } ?></td>
     </tr>  
 	</table>
 
 	<table id="member">
 		<thead>
 			<tr>
-				<th>~ Log Settings ~</th>
+				<th>~ Configuración de registros ~</th>
 			</tr>
 		</thead>
 	</table>  
@@ -188,7 +188,7 @@ foreach($medalRows as $name => $medalRow) {
 <table id="member">
 	<thead>
 		<tr>
-			<th>~ Newsbox Settings ~</th>
+			<th>~ Configuración de noticias ~</th>
 		</tr>
 	</thead>
 </table>  
@@ -227,7 +227,7 @@ foreach($medalRows as $name => $medalRow) {
 <table id="member">
 	<thead>
 		<tr>
-			<th>~ SQL Settings ~</th>
+			<th>~ Configuración SQL ~</th>
 		</tr>
 	</thead>
 </table>
@@ -266,7 +266,7 @@ foreach($medalRows as $name => $medalRow) {
 <table id="member">
   <thead>
 		<tr>
-			<th>~ Extra Settings ~</th>
+			<th>~ Configuración adicional ~</th>
 		</tr>
 	</thead>
 </table>
@@ -293,7 +293,7 @@ foreach($medalRows as $name => $medalRow) {
 <table id="member">
 	<thead>
 		<tr>
-			<th>~ Admin Information ~</th>
+			<th>~ Información del administrador ~</th>
 		</tr>
 	</thead>
 </table>

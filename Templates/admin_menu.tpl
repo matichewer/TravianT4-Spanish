@@ -50,7 +50,7 @@ include_once ("GameEngine/Ranking.php");
                 <a href="?p=gold">Give gold</a>
                 <a href="?p=config">Server config</a>
                 <a href="massmessage.php">Mass message</a>
-                <a href="sysmsg.php">System message</a>
+                <a href="sysmsg.php">Mensaje del sistema</a>
                 <a href="medal.php">Update top 10</a>
                 <a href="?p=other">Other</a>
             </p>

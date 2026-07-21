@@ -18,17 +18,16 @@ $username = $_SESSION['username'];
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Payment Unsuccess</title>
+<title>Pago no realizado</title>
 </head>
 <body>
 
 <div style="text-align:center; padding:8px;">
-Payment Unsuccessfull
+No se pudo realizar el pago
 </div>
 <script>setTimeout('location.href="../dorf1.php"', 3000)</script>
 
 </body>
 </html>
 <?php ob_end_flush(); ?>
-
 

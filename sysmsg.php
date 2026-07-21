@@ -19,7 +19,7 @@ mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS);
 
 mysql_select_db(SQL_DB);
 
-if (mysql_num_rows(mysql_query("SELECT id FROM ".TB_PREFIX."users WHERE access = 9 AND id = ".$session->uid)) != '1') die("Hacking attempt!");
+if (mysql_num_rows(mysql_query("SELECT id FROM ".TB_PREFIX."users WHERE access = 9 AND id = ".$session->uid)) != '1') die("Intento de acceso no autorizado.");
 
 
 
@@ -40,7 +40,7 @@ if(isset($_GET['del'])){
 }
 
 
-if (@$_POST['submit'] == "Send")
+if (@$_POST['submit'] == "Enviar")
 
 {
 
@@ -62,7 +62,7 @@ if (@isset($_POST['confirm']))
 
 	if ($_POST['confirm'] == 'No' ) $Interupt = true;
 
-	if ($_POST['confirm'] == 'Yes'){
+	if ($_POST['confirm'] == 'Sí'){
 
 
 
@@ -72,7 +72,7 @@ if (@isset($_POST['confirm']))
 
 		$myFile = "Templates/text.tpl";
 
-		$fh = fopen($myFile, 'w') or die("<br/><br/><br/>Can't open file: templates/text.tpl");
+		$fh = fopen($myFile, 'w') or die("<br/><br/><br/>No se pudo abrir el archivo Templates/text.tpl");
 
 		$text = file_get_contents("Templates/text_format.tpl");
 
@@ -96,7 +96,7 @@ if (@isset($_POST['confirm']))
 
 		$done = true;
 
-		} else { die("<br/><br/><br/>wrong"); }
+		} else { die("<br/><br/><br/>No se encontró la plantilla del mensaje."); }
 
 }}
 
@@ -176,7 +176,7 @@ if (@isset($_POST['confirm']))
 
 			    <tr>	
 
-			      <td class="rbg" style="font-size: 10pt; text-align:center;">System Message</td>    
+			      <td class="rbg" style="font-size: 10pt; text-align:center;">Mensaje del sistema</td>
 
 			    </tr>
 
@@ -190,7 +190,7 @@ if (@isset($_POST['confirm']))
 
 			    <tr>	
 
-			      <td style="text-align:center;">All fields required</td>    
+			      <td style="text-align:center;">Todos los campos son obligatorios</td>
 
 			    </tr>
 
@@ -198,7 +198,7 @@ if (@isset($_POST['confirm']))
 
 			      <td style="text-align:center;">
 
-			        <input type="submit" value="Send" name="submit" />    </td>
+			        <input type="submit" value="Enviar" name="submit" />    </td>
 
 			    </tr>
 
@@ -208,7 +208,7 @@ if (@isset($_POST['confirm']))
 
 			</form>
 
-<a href="sysmsg.php?del">Delete old System Message</a>
+<a href="sysmsg.php?del">Eliminar el mensaje anterior del sistema</a>
 
 <?php }elseif (@$NextStep){?>
 
@@ -220,17 +220,17 @@ if (@isset($_POST['confirm']))
 
 			    <tr>	
 
-			      <td class="rbg" colspan="2">Confirmation</td>    
+			      <td class="rbg" colspan="2">Confirmación</td>
 
 			    </tr>
 
 			    <tr>	
 
-			      <td style="text-align: left; width: 200px;">Do you really want to send System Message?</td>
+			      <td style="text-align: left; width: 200px;">¿Realmente quieres enviar el mensaje del sistema?</td>
 
 			      <td style="text-align: left;">
 
-			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="Yes">
+			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="Sí">
 
 			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="No"></td>    
 
@@ -242,7 +242,7 @@ if (@isset($_POST['confirm']))
 
 </form>
 
-Example: (BBCode doesn't work over here!)
+Ejemplo: (el BBCode no se aplica en esta vista previa)
 
 <?php
 
@@ -272,9 +272,9 @@ echo ($txt);
 
 <?php }elseif (@$done){?>
 
-System Message was sent
+El mensaje del sistema fue enviado.
 
-<?php }else{die("Something is wrong");}?>
+<?php }else{die("Ocurrió un error.");}?>
 
 </div>
 
@@ -305,4 +305,3 @@ System Message was sent
 </html>
 
 <?php mysql_close(); ?>
-

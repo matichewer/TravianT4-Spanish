@@ -19,7 +19,7 @@
  * If user is not administrator, access is denied!
  */
         if($session->access < ADMIN)
-        	die("Access Denied: You are not Admin!");
+		die("Acceso denegado: no eres administrador.");
 
 /**
  * SMALL ARTEFACTS
@@ -61,7 +61,7 @@
         $desc = 'El plano de construcción permite levantar una Maravilla del Mundo en una aldea natar. Un plano basta para mejorarla hasta el nivel 50; a partir de ese nivel, tu alianza necesita un segundo plano.';
 
 
-        $vname = 'WW BuildingPlan';
+        $vname = 'Plano de la Maravilla del Mundo';
         $effect = '';
         for($i > 1; $i < 10; $i++) {
 		Artefact($uid, 1, 1, 'Plano de construcción de la Maravilla del Mundo', '' . $vname . '', '' . $desc . '', '' . $effect . '', 'type1.gif');

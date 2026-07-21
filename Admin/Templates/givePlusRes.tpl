@@ -9,7 +9,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: no eres administrador.");
 $id = $_SESSION['id']; ?>
 
 <form action="../GameEngine/Admin/Mods/givePlusRes.php" method="POST">
@@ -17,11 +17,11 @@ $id = $_SESSION['id']; ?>
 	<table id="member" style="width:300px;">
 		<thead>
 			<tr>
-				<th colspan="2">Give Everyone Free Res Bonus</th>
+				<th colspan="2">Dar bonificación de recursos a todos</th>
 			</tr>
 			<tr>
 				<td class="hab">Resource Bonus</td>
-				<td>Duration</td>
+				<td>Duración</td>
 			</tr>
 		</thead>
 		<tbody>
@@ -79,7 +79,7 @@ $id = $_SESSION['id']; ?>
 			<tr>
 				<td colspan="2">
 					<center>
-						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Give Players Free Gold">
+						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Dar bonificación de recursos">
 					</center>
 				</td>
 			</tr>
@@ -90,6 +90,6 @@ $id = $_SESSION['id']; ?>
 <?php
     if(isset($_GET['g']))
 	{
-		echo '<br /><br /><font color="Red"><b>Resource Bonuses Given</font></b>';
+		echo '<br /><br /><font color="Red"><b>Bonificaciones de recursos entregadas</font></b>';
 	}
 ?>

@@ -20,7 +20,7 @@ mysql_query("UPDATE ".TB_PREFIX."research set timestamp = '1' where vref = '".$v
 
 $done1 = "&nbsp;&nbsp; Todas las órdenes de construcción e investigación de esta aldea han sido completadas";
     mysql_query("UPDATE ".TB_PREFIX."users set gold = ".($session->gold-2)." where `username`='".$session->username."'") or die(mysql_error());
-    mysql_query("INSERT INTO ".TB_PREFIX."gold_fin_log VALUES ('".(mysql_num_rows($goldlog)+1)."', '".$village->wid."', 'Finish construction and research with gold')") or die(mysql_error());
+    mysql_query("INSERT INTO ".TB_PREFIX."gold_fin_log VALUES ('".(mysql_num_rows($goldlog)+1)."', '".$village->wid."', 'Finalización de construcción e investigación con oro')") or die(mysql_error());
 
 } else {
 $done1 = "&nbsp;&nbsp; No se completó nada";

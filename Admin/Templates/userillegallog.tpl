@@ -7,7 +7,7 @@ if(isset($id))
 	<table cellpadding="1" cellspacing="1" id="member">
 		<thead>
 			<tr>
-				<th colspan="10"><a href="admin.php?p=player&uid=<?php echo $player['id']; ?>"><?php echo $player['username']; ?></a>'s Illegals Log</th>
+				<th colspan="10">Registro de acciones ilegales de <a href="admin.php?p=player&uid=<?php echo $player['id']; ?>"><?php echo $player['username']; ?></a></th>
 			</tr>
 			<tr>
 				<td>Offence</td>

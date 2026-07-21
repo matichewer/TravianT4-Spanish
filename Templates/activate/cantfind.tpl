@@ -1,6 +1,6 @@
 <?php
 unset($_SESSION['aerror']);
 ?>
-Rosz jelszót adtál meg.
+Ingresaste una contraseña incorrecta.
 <br>
-Vagy a regisztrációdat már előzőleg törölték
+También es posible que el registro ya haya sido eliminado.

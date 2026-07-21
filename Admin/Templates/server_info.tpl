@@ -20,7 +20,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
     <table id="profile">
         <thead>
 			<tr>
-				<th colspan="2">Player Information</th>
+				<th colspan="2">Información de jugadores</th>
 			</tr>
          </thead>
          <tbody>
@@ -33,7 +33,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 				<td><?php $result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."active"); $num_rows = mysql_num_rows($result); echo $num_rows; ?></td>
 			</tr>
 			<tr>
-				<td>Players online</td>
+				<td>Jugadores conectados</td>
 				<td><?php $t =time();
 				$result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE ".$t." - timestamp < 300") or die(mysql_error());;
 				$num_rows = mysql_num_rows($result);
@@ -41,7 +41,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 				</td>
 			</tr>
 			<tr>
-				<td>Players Banned</td>
+				<td>Jugadores sancionados</td>
 				<td><?php
 				$result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE access = 0");
 				$num_rows = mysql_num_rows($result);
@@ -49,7 +49,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 				</td>
 			</tr>
 			<tr>
-				<td>Villages settled</td>
+				<td>Aldeas fundadas</td>
 				<td><?php
 				$result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."vdata");
 				$num_rows = mysql_num_rows($result);
@@ -63,7 +63,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
     
 	<table id="profile">
         <thead>
-			<tr><th colspan="3">Player Information</th></tr>
+			<tr><th colspan="3">Información de jugadores</th></tr>
 			<td class="b">Tribe</td>
 			<td class="b">Registered</td>
 			<td class="b">Percent</td>
@@ -92,7 +92,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 	<table id="profile">
         <thead>
          <tr>
-			<th colspan="3">Server Information</th>
+			<th colspan="3">Información del servidor</th>
 		</tr>
 			<td class="b"></td>
 			<td class="b">Total</td>
@@ -100,7 +100,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 		</thead>
 		<tbody>
 			<tr>
-				<td><img src="../gpack/travian_default/img/a/gold.gif" alt="Gold" title="Gold"> Gold</td>
+				<td><img src="../gpack/travian_default/img/a/gold.gif" alt="Oro" title="Oro"> Oro</td>
 				<td><?php $gold = mysql_query("SELECT SUM(gold) AS sumofgold FROM ".TB_PREFIX."users"); $getgold=mysql_fetch_assoc($gold); echo $getgold['sumofgold']; ?></td>
 				<td><?php $gold = mysql_query("SELECT SUM(gold) AS sumofgold FROM ".TB_PREFIX."users"); $getgold=mysql_fetch_assoc($gold); echo round($getgold['sumofgold'] / $users);?></td>
 			</tr>
@@ -110,7 +110,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 	<table id="member">
 		<thead>
 			<tr>
-				<th colspan="10">Troops on the Server</th>
+				<th colspan="10">Tropas en el servidor</th>
 			</tr>
 			<?php
 				for($i=1; $i<11; $i++)

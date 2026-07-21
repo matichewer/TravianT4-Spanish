@@ -9,7 +9,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: no eres administrador.");
 $id = $_SESSION['id']; ?>
 
 <form action="../GameEngine/Admin/Mods/givePlus.php" method="POST">
@@ -17,7 +17,7 @@ $id = $_SESSION['id']; ?>
 	<table id="member" style="width:300px;">
 		<thead>
 			<tr>
-				<th colspan="2">Give Everyone Free Plus</th>
+				<th colspan="2">Dar Plus gratis a todos</th>
 			</tr>
 			<tr>
 				<td></td>
@@ -40,7 +40,7 @@ $id = $_SESSION['id']; ?>
 			<tr>
 				<td colspan="2">
 					<center>
-						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Give Players Free Gold">
+						<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Dar Plus gratis a los jugadores">
 					</center>
 				</td>
 			</tr>
@@ -51,6 +51,6 @@ $id = $_SESSION['id']; ?>
 <?php
     if(isset($_GET['g']))
 	{
-		echo '<br /><br /><font color="Red"><b>Plus Given</font></b>';
+		echo '<br /><br /><font color="Red"><b>Plus entregado</font></b>';
 	}
 ?>

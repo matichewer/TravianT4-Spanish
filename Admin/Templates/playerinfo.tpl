@@ -1,7 +1,7 @@
 <table id="profile" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="2">Player <a href="admin.php?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></th>
+					<th colspan="2">Jugador <a href="admin.php?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></th>
 				</tr>                                       
 				<tr>
 					<td>Details</td>
@@ -16,7 +16,7 @@
 					<td class="details">
 						<table cellpadding="0" cellspacing="0">
 							<tr>
-								<th>Rank</th>
+								<th>Rango</th>
 								<td>????<?php /* echo $ranking->searchRank($user['id'], "rank");*/ ?></td>
 							</tr>
 							<tr>
@@ -47,7 +47,7 @@
 								</td>
 							</tr>
 							<tr>	
-								<th>Alliance</th>
+								<th>Alianza</th>
 								<td>
 									<?php
 										if($user['alliance'] == 0)
@@ -62,11 +62,11 @@
 								</td>
 							</tr>
 							<tr>
-								<th>Villages</th>
+								<th>Aldeas</th>
 								<td><?php echo count($varray);?></td>
 							</tr>
 							<tr>
-								<th>Population</th>
+								<th>Población</th>
 								<td><?php echo $totalpop;?> <a href="?action=recountPopUsr&uid=<?php echo $user['id'];?>"><?php echo $refreshicon; ?></a></td>
 							</tr>
 							<tr>
@@ -80,7 +80,7 @@
 										}
 										else
 										{
-											echo "<font color=\"red\">Not Available</font>";
+											echo "<font color=\"red\">No disponible</font>";
 										}
 									?>
 								</td>
@@ -96,14 +96,14 @@
 										}
 										else
 										{
-											echo "<font color=\"red\">Not Available</font>";
+											echo "<font color=\"red\">No disponible</font>";
 										}
 									?>
 								</td>
 							</tr>
 							
 							<tr>
-								<th>Username</th>
+								<th>Nombre de usuario</th>
 								<td>
 									<form action="../GameEngine/Admin/Mods/editUsername.php" method="POST">
 										<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
@@ -121,9 +121,9 @@
 							</tr>
 							
 							<tr>
-								<th>Password</th>
+								<th>Contraseña</th>
 								<td>
-									Change <a href="admin.php?p=editPassword&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Change Password"></a>
+									Cambiar <a href="admin.php?p=editPassword&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Cambiar contraseña"></a>
 								</td>
 							</tr>
 							
@@ -193,7 +193,7 @@
 									echo '
 									<tr>
 										<td colspan="2">
-											<a href="?p=editUser&uid='.$user['id'].'"><font color="blue">&raquo;</font> Edit User</a>
+											<a href="?p=editUser&uid='.$user['id'].'"><font color="blue">&raquo;</font> Editar usuario</a>
 										</td>
 									</tr>';
 								} 
@@ -206,7 +206,7 @@
 									echo '
 									<tr>
 										<td colspan="2">
-											<a class="rn3" href="?p=deletion&uid='.$user['id'].'"><font color="red">&raquo;</font> Delete User</a>
+											<a class="rn3" href="?p=deletion&uid='.$user['id'].'"><font color="red">&raquo;</font> Eliminar usuario</a>
 										</td>
 									</tr>';
 								} 
@@ -217,35 +217,35 @@
 							?>
 							
 							<tr>
-								<td colspan="2"><a href="?p=ban&uid=<?php echo $user['id']; ?>">&raquo; Ban User</a></td>
+								<td colspan="2"><a href="?p=ban&uid=<?php echo $user['id']; ?>">&raquo; Sancionar usuario</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=Newmessage&uid=<?php echo $user['id']; ?>">&raquo; Send Message</a></td>
+								<td colspan="2"><a href="?p=Newmessage&uid=<?php echo $user['id']; ?>">&raquo; Enviar mensaje</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=editPlus&uid=<?php echo $user['id']; ?>">&raquo; Edit Plus & Bonus</a></td>
+								<td colspan="2"><a href="?p=editPlus&uid=<?php echo $user['id']; ?>">&raquo; Editar Plus y bonificaciones</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=editSitter&uid=<?php echo $user['id']; ?>">&raquo; Edit Sitters</a></td>
+								<td colspan="2"><a href="?p=editSitter&uid=<?php echo $user['id']; ?>">&raquo; Editar representantes</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=editWeek&uid=<?php echo $user['id']; ?>">&raquo; Edit Overall Off & Def</a></td>
+								<td colspan="2"><a href="?p=editWeek&uid=<?php echo $user['id']; ?>">&raquo; Editar ataque y defensa semanales</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=editOverall&uid=<?php echo $user['id']; ?>">&raquo; Edit Weekly Off, Def, Raid</a></td>
+								<td colspan="2"><a href="?p=editOverall&uid=<?php echo $user['id']; ?>">&raquo; Editar ataque, defensa y saqueo totales</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=userlogin&uid=<?php echo $user['id']; ?>">&raquo; User Login Log</a></td>
+								<td colspan="2"><a href="?p=userlogin&uid=<?php echo $user['id']; ?>">&raquo; Registro de accesos</a></td>
 							</tr>
 							
 							<tr>
-								<td colspan="2"><a href="?p=userillegallog&uid=<?php echo $user['id']; ?>">&raquo; User Illegal Log</a></td>
+								<td colspan="2"><a href="?p=userillegallog&uid=<?php echo $user['id']; ?>">&raquo; Registro de acciones ilegales</a></td>
 							</tr>
 
 							<tr>

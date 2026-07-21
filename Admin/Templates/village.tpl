@@ -68,12 +68,12 @@ if(isset($id))
 		<table id="profile" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="3">Village Information</th>
+					<th colspan="3">Información de la aldea</th>
 				</tr>                                       
 			</thead>
 			<tbody>
 				<tr>
-					<td>Village owner:</td>
+					<td>Propietario:</td>
 					<td><a href="admin.php?p=player&uid=<?php echo $village['owner']; ?>"><?php echo $user['username']; ?></a></td>
 					<td>
 						<?php
@@ -91,7 +91,7 @@ if(isset($id))
 						?>
 					</td>
 				<tr>
-					<td>Village name:</td>
+					<td>Nombre de la aldea:</td>
 					<form action="../GameEngine/Admin/mods/renameVillage.php" method="POST" accept-charset="UTF-8">
 						<input type="hidden" name="did" value="<?php echo $_GET['did']; ?>">
 						<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
@@ -101,7 +101,7 @@ if(isset($id))
 					</form>
 				</tr>
 				<tr>
-					<td>Population <a href="admin.php?action=recountPop&did=<?php echo $_GET['did']; ?>"><?php echo $refreshicon; ?></a></td>
+					<td>Población <a href="admin.php?action=recountPop&did=<?php echo $_GET['did']; ?>"><?php echo $refreshicon; ?></a></td>
 					<td colspan="2"><?php echo $village['pop'];?></td>
 				</tr>
 				<tr>
@@ -109,7 +109,7 @@ if(isset($id))
 					<td colspan="2"><a href="<?php echo HOMEPAGE ?>karte.php?d=<?php echo $village['wref']; ?>&c=<?php echo $generator->getMapCheck($village['wref']); ?>" target="blank">(<?php echo $coor['x']; ?>|<?php echo $coor['y']; ?>)</a></td>
 				</tr>
 				<tr>
-					<td>Village ID</td>
+					<td>ID de la aldea</td>
 					<td colspan="2"><?php echo $village['wref'];?></td>
 				</tr>
 				<tr>
@@ -137,7 +137,7 @@ if(isset($id))
 		<table id="member">
 			<thead>
 				<tr>
-					<th colspan="8">Resources</th>
+					<th colspan="8">Recursos</th>
 				</tr>
 				<tr>
 					<td>Resource</td>
@@ -152,7 +152,7 @@ if(isset($id))
 					?>
 					<td colspan="2">Warehouse <input type="image" src="<?php echo $refreshiconfrm; ?>" value="submit"></form></td>
 					<td>Production</td>
-					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Edit Resources and Capacity"></a></td>
+					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
 			</thead>
 			<tbody>
@@ -161,27 +161,27 @@ if(isset($id))
 					<td><center><?php echo floor($village['wood']); ?></center></td>
 					<td rowspan="3"><center><?php echo $village['maxstore'];?></center></td>
 					<td><center>???</td>
-					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Edit Resources and Capacity"></a></td>
+					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
 				</tr>
 				<tr>
 					<td><img class="r2" src="../img/x.gif"> Clay</td>
 					<td><center><?php echo floor($village['clay']); ?></center></td>
 					<td><center>???</center></td>
-					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Edit Resources and Capacity"></a></td>
+					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
 				<tr>
 					<td><img class="r3" src="../img/x.gif"> Iron</td>
 					<td><center><?php echo floor($village['iron']); ?></center></td>
 					<td><center>???</center></td>
-					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Edit Resources and Capacity"></a></td>
+					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
 				<tr>
 					<td><img class="r4" src="../img/x.gif"> Crop</td>
 					<td><center><?php echo floor($village['crop']); ?></center></td>
 					<td><center><?php echo $village['maxcrop'];?></center></td>
 					<td><center>???</center></td>
-					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Edit Resources and Capacity"></a></td>
+					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
 			</tbody>
 		</table>
@@ -190,10 +190,10 @@ if(isset($id))
 		<table id="member">
 			<thead>
 				<tr>
-					<th colspan="5">Village Expansion</th>
+					<th colspan="5">Expansión de la aldea</th>
 				</tr>
 				<tr>
-					<td class="hab">Village</td>
+					<td class="hab">Aldea</td>
 					<td class="hab">Inhabitants</td>
 					<td class="hab">CP Production</td>
 				</tr>
@@ -240,7 +240,7 @@ if(isset($id))
 					<td class="hab">Name</td>
 					<td class="hab">Coordinates</td>  
 					<td class="hab">Loyalty</td>
-					<td class="hab">Resources</td>
+					<td class="hab">Recursos</td>
 				</tr>                                     
 			</thead>
 			<tbody>
@@ -327,7 +327,7 @@ if(isset($id))
 		?>
 		
 
-		<a href="admin.php?p=editVillage&did=<?php echo $_GET['did']; ?>" title="Edit Village">
+		<a href="admin.php?p=editVillage&did=<?php echo $_GET['did']; ?>" title="Editar aldea">
 		<div id="content" class="village1" style="min-height: 264px;">
 			<div id="village_map" class="f<?php echo $database->getVillageType($village['wref']); ?>" style="float: left;">
 				<?php
@@ -420,7 +420,7 @@ if(isset($id))
 <!--<table id="member" cellpadding="1" cellspacing="1" >
     <thead>
 		<tr>
-			<th colspan="4">Resources</th>
+			<th colspan="4">Recursos</th>
 		</tr> 
 
 		<tr>
@@ -467,8 +467,8 @@ if(isset($id))
 			<td class="on">ID</td>
 			<td class="on">GID</td>
 			<td class="hab">Name</td>
-			<td class="on">Level</td>
-			<td class="on">Edit</td>
+			<td class="on">Nivel</td>
+			<td class="on">Editar</td>
 		</tr>
 	</thead>
 	<tbody> 
@@ -489,7 +489,7 @@ if(isset($id))
 				<td class="on">'.$fdata['f'.$i.'t'].'</td>
 				<td class="hab">'.$bu.'</td>   
 				<td class="on">'.$fdata['f'.$i].'</td>
-				<td class="on"><a href="admin.php?p=editVillage&did='.$_GET['did'].'"><img src="../img/admin/edit.gif" title="Edit Building & Level"></a></td>
+				<td class="on"><a href="admin.php?p=editVillage&did='.$_GET['did'].'"><img src="../img/admin/edit.gif" title="Editar edificio y nivel"></a></td>
 			</tr>';
     }
     ?>
@@ -498,7 +498,7 @@ if(isset($id))
 
 <br /><br />
 
-	<a href="admin.php?p=villagelog&did=<?php echo $_GET['did']; ?>">Village Build Log</a>
+	<a href="admin.php?p=villagelog&did=<?php echo $_GET['did']; ?>">Registro de construcción de la aldea</a>
 	<br />
 </div>
 <?php

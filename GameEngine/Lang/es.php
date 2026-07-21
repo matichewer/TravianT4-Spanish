@@ -119,12 +119,12 @@ define("Q1_REWARD","Finalizaci&oacute;n inmediata del le&ntilde;ador.");
 
 define("Q2","Misi&oacute;n 2: Cereal");
 define("Q2_DESC","Ahora sus s&uacute;bditos estan hambrientos por haber trabajado todo el d&iacute;a. Extienda sus granjas para mejorar sus reservas. Regrese cuando la granja est&eacute; realizada.");
-define("Q2_ORDER","Order:<\/p>mejorar una granja.");
+define("Q2_ORDER","Orden:<\/p>Mejorar una granja.");
 define("Q2_RESP","Muy bien. Ahora sus s&uacute;bditos tiene suficiente comida...");
 
 define("Q3","Misi&oacute;n 3: El Nombre de tu aldea");
 define("Q3_DESC","Creativo como eres le puedes dar el nombre a tu aldea. Haz click en <b>perfil</b> en el lado izquierdo del men&uacute; y selecciona <b>cambiar perfil</b>");
-define("Q3_ORDER","Order:<\/p>Change your village's name to something nice.");
+define("Q3_ORDER","Orden:<\/p>Cambia el nombre de tu aldea por uno bonito.");
 define("Q3_RESP","Wow, un buen nombre para su pueblo. Podr&iacute;a haber nombrado el mio igual...");
 
 define("Q4","Misi&oacute;n 4: Otros jugadores.");
@@ -291,6 +291,7 @@ define("SERVER_TIME","Hora del servidor:");
 //MASSMESSAGE.php
 define("MASS","Contenido del mensaje");
 define("MASS_SUBJECT","Asunto:");
+define("MESSAGE_NO_SUBJECT","Sin asunto");
 define("MASS_COLOR","Color del Mensaje:");
 define("MASS_REQUIRED","Todos los campos son requeridos");
 define("MASS_UNITS","Imagenes (unidades):");

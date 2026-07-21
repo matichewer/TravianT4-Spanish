@@ -35,14 +35,14 @@ include "Templates/html.tpl";
 if(isset($_POST['result'])) {
     $target = isset($_POST['target'])? $_POST['target'] : array();
     $tribe = isset($_POST['mytribe'])? $_POST['mytribe'] : $session->tribe;
-    echo '<h4 class="round">Harctípus ';
-    echo $form->getValue('ktyp') == 0? "Normál" : "Rablótámadás";
+    echo '<h4 class="round">Tipo de combate: ';
+    echo $form->getValue('ktyp') == 0? "Ataque normal" : "Atraco";
     echo "</h4>";
     include("Templates/Simulator/res_a".$tribe.".tpl");
     foreach($target as $tar) {
         include("Templates/Simulator/res_d".$tar.".tpl");
     }
-    echo '<h4 class="round">Raid konfiguráció</h4>';
+    echo '<h4 class="round">Configuración del ataque</h4>';
     if (isset($_POST['result'][3])&&isset($_POST['result'][4])){
         if ($_POST['result'][4]>$_POST['result'][3]){
             echo "";
@@ -53,7 +53,7 @@ if(isset($_POST['result'])) {
             //$Katalife=round($_POST['result'][4]-($_POST['result'][4]*$_POST['result'][1]));
             //$totallvl = round($form->getValue('kata')-($form->getValue('kata') * $demolish));
             $totallvl = round(sqrt(pow(($form->getValue('kata')+0.5),2)-($_POST['result'][4]*8)));
-            echo "<p>Építése <b>".$form->getValue('kata')."</b> Level <b>".$totallvl."</b> Sérült.</p>";
+            echo "<p>El edificio de nivel <b>".$form->getValue('kata')."</b> quedó reducido al nivel <b>".$totallvl."</b>.</p>";
         }
     }
 }
@@ -121,7 +121,7 @@ if(count($target) > 0) {
 	</table>
 
 
-<p class="btn"><button type="submit" value="Támadás szimulálása" name="s1" id="btn_ok"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo WARSIM_SIMULATE; ?></div></div></button></p>
+<p class="btn"><button type="submit" value="Simular ataque" name="s1" id="btn_ok"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo WARSIM_SIMULATE; ?></div></div></button></p>
 </form>
 </div>
 <div class="clear">&nbsp;</div>

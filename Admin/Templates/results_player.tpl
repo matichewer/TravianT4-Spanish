@@ -23,8 +23,8 @@ $result = $admin->search_player($_POST['s']);
 <table id="profile">    
     <tr>
         <td class="b">UID</td>
-        <td class="b">Player</td>
-        <td class="b">Villages</td>
+        <td class="b">Jugador</td>
+        <td class="b">Aldeas</td>
         <td class="b">Pop</td>
     </tr>
 <?php      
@@ -47,7 +47,7 @@ echo '
 else{  
 echo '
     <tr>
-        <td colspan="4">No results</td>  
+        <td colspan="4">Sin resultados</td>
     </tr>  
 ';
 }

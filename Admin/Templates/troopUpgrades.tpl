@@ -42,4 +42,4 @@
 		</tr>
 	</tfoot>
 </table>
-<a href="#">Edit Troop Upgrades</a>
+<a href="#">Editar mejoras de tropas</a>

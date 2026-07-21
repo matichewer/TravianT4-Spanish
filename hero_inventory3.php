@@ -50,10 +50,10 @@ $start = $generator->pageLoadTimeStart();
 <script type="text/javascript">
 Travian.Translation.add(
 {
-	'allgemein.anleitung':	'Instructions',
-	'allgemein.cancel':	'Cancellation',
-	'allgemein.ok':	'Confirmation',
-	'cropfinder.keine_ergebnisse': 'Could not find anything matching your search'
+	'allgemein.anleitung':	'Instrucciones',
+	'allgemein.cancel':	'Cancelar',
+	'allgemein.ok':	'Confirmar',
+	'cropfinder.keine_ergebnisse': 'No se encontró nada que coincida con tu búsqueda'
 });
 Travian.applicationId = 'T4.0 Game';
 Travian.Game.version = '4.0';
@@ -185,8 +185,8 @@ include("Templates/hero.tpl");
 		</div>
 	</div>
 	<div class="heroHidden">
-		<input type="checkbox" class="check" name="hideShow" id="heroHideShow" checked="checked" disabled> If it is selected, which is the defending champion of the village
-Will not (will escape).
+		<input type="checkbox" class="check" name="hideShow" id="heroHideShow" checked="checked" disabled> Si está seleccionado, el héroe defenderá la aldea.
+No defenderá la aldea (intentará escapar).
 	</div>
 </div>
 <div id="hero_inventory">
@@ -246,20 +246,20 @@ Will not (will escape).
 					amount:	1,
                     instant: true,
                     isUsableIfDead: true,
-					attributes: ["\u0633\u0631\u0639\u062a \u0642\u0647\u0631\u0645\u0627\u0646 \u0631\u0627 28 \u062e\u0627\u0646\u0647 \u062f\u0631 \u0633\u0627\u0639\u062a \u0627\u0641\u0632\u0627\u06cc\u0634 \u062e\u0648\u0627\u0647\u062f \u062f\u0627\u062f."]
+					attributes: ["Aumenta la velocidad del héroe a 28 casillas por hora."]
 				}
 			],
 			text:
 			{
-				notMoveableText: '<span class="itemNotMoveable">Your hero is dead or not in the village, because they may not be able to use this material.</span>',
-				notMoveableTextDead: '<span class="itemNotMoveable">This material may not be able to shift. First, your Hero \ r \ n Make sure the.</span>',
-				moveDialogDescription:	'The number of items that can be moved: {inputField}',
-				useDialogDescription:	'The number of items that can be used: {inputField}',
-                useOneDialogTitle:	'Do you really want to eat this item',
-				moveDialogTitle: 'Shift',
-				useDialogTitle: 'Use',
-				buttonOk: 'Confirmation',
-				buttonCancel: 'Cancellation'
+				notMoveableText: '<span class="itemNotMoveable">Tu héroe está muerto o no se encuentra en la aldea, por lo que no puede usar este objeto.</span>',
+				notMoveableTextDead: '<span class="itemNotMoveable">Este objeto no se puede mover. Primero asegúrate de que tu héroe esté en la aldea.</span>',
+				moveDialogDescription:	'Cantidad de objetos que se moverán: {inputField}',
+				useDialogDescription:	'Cantidad de objetos que se usarán: {inputField}',
+				useOneDialogTitle:	'¿Realmente quieres usar este objeto?',
+				moveDialogTitle: 'Mover',
+				useDialogTitle: 'Usar',
+				buttonOk: 'Confirmar',
+				buttonCancel: 'Cancelar'
 			},
 			elementHeroBody: $$('div#hero_body img')[0],
 			heroBodyHash: '7e690da68a067eb445691ae4fac0014a',
@@ -307,4 +307,3 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-

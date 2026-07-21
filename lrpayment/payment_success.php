@@ -19,7 +19,7 @@ $orderid = $_REQUEST["order_id"];
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Payment Success</title>
+<title>Pago realizado</title>
 </head>
 <body>
 	<?
@@ -36,7 +36,7 @@ $orderid = $_REQUEST["order_id"];
 				
 				?>
 				<div style="text-align:center; padding:8px;">
-				Payment Successfull
+				Pago realizado correctamente
 				</div>
 				<script>setTimeout('location.href="../dorf1.php"', 3000)</script>
 				<?
@@ -64,5 +64,4 @@ $orderid = $_REQUEST["order_id"];
 </body>
 </html>
 <?php ob_end_flush(); ?>
-
 

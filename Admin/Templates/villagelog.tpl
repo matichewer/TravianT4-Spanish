@@ -8,7 +8,7 @@ if(isset($id))
 	<table id="profile">
 		<thead>
 		<tr>
-				<th colspan="3" class="on"><a href="#"><?php echo $village['name']; ?></a>'s Build Log</th>
+				<th colspan="3" class="on">Registro de construcción de <a href="#"><?php echo $village['name']; ?></a></th>
 			</tr>
 			<tr>
 				<td class="on">#</td>

@@ -14,13 +14,13 @@ include_once("GameEngine/Account.php");
 $max_per_pass = 1000;
 mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS);
 mysql_select_db(SQL_DB);
-if (mysql_num_rows(mysql_query("SELECT id FROM ".TB_PREFIX."users WHERE access = 9 AND id = ".$session->uid)) != '1') die("Hacking attemp!");
+if (mysql_num_rows(mysql_query("SELECT id FROM ".TB_PREFIX."users WHERE access = 9 AND id = ".$session->uid)) != '1') die("Intento de acceso no autorizado.");
 
-if (@$_POST['submit'] == "Send")
+if (@$_POST['submit'] == "Enviar")
 {
 	unset ($_SESSION['m_message']); unset ($_SESSION['m_subject']); unset ($_SESSION['m_color']);
-	if (!$_POST['message']){die("You have to enter message");}
-	if (!$_POST['subject']){die("You have to enter subject");}
+	if (!$_POST['message']){die("Debes escribir un mensaje.");}
+	if (!$_POST['subject']){die("Debes escribir un asunto.");}
 	if (!$_POST['color']){$_SESSION['m_color'] = "black";}
 	$_SESSION['m_subject'] = $_POST['subject'];
 	if (!$_SESSION['m_color']){$_SESSION['m_color'] = $_POST['color'];}
@@ -31,7 +31,7 @@ if (@$_POST['submit'] == "Send")
 
 if (@isset($_POST['confirm']))
 {
-	if ($_POST['confirm'] == 'Yes') $NextStep2 = true;
+	if ($_POST['confirm'] == 'Sí') $NextStep2 = true;
 	if ($_POST['confirm'] == 'No' ) $Interupt = true;
 }
 
@@ -39,7 +39,7 @@ $max_per_pass = 1000;
 
 if (isset($_GET['send']) && isset($_GET['from']))
 {
-	$_SESSION['m_message'] = preg_replace("/\[img\]([a-z0-9\_\.\:\/\-]*)\[\/img\]/i","<img src='$1' alt='Corrupted image'/>",  $_SESSION['m_message']);
+	$_SESSION['m_message'] = preg_replace("/\[img\]([a-z0-9\_\.\:\/\-]*)\[\/img\]/i","<img src='$1' alt='Imagen dañada'/>",  $_SESSION['m_message']);
 	$_SESSION['m_message'] = preg_replace("/\[url\]([a-z0-9\_\.\:\/\-]*)\[\/url\]/i", "<a href='$1'>$1</a>",  $_SESSION['m_message']);
 	$_SESSION['m_message'] = preg_replace("/\[url\=([a-z0-9\_\.\:\/\-]*)\]([a-z0-9\_\.\:\/\-]*)\[\/url\]/i", "<a href='$1'>$2</a>",  $_SESSION['m_message']);
 	$_SESSION['m_message'] = preg_replace("/\*u([0-9]*)(left|right)\*/i", "<img src='img/u2/u$1.gif' style='float:$2;' alt='unit$1' />",  $_SESSION['m_message']);
@@ -221,7 +221,7 @@ function toggleDisplay(e){
 			    </tr>
 			    <tr>	
 			      <td colspan="2"  style="text-align:center;">
-			        <input type="submit" value="Send" name="submit" />    </td>
+			        <input type="submit" value="Enviar" name="submit" />    </td>
 			    </tr>
 			  </tbody>
 			</table> 
@@ -271,7 +271,7 @@ function toggleDisplay(e){
 			    <tr>	
 			      <td style="text-align: left; width: 200px;"><?php echo MASS_REALLY; ?></td>
 			      <td style="text-align: left;">
-			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="Yes">
+			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="Sí">
 			        <input type="submit" style="width: 240px;" class="fm" name="confirm" value="No"></td>    
 			    </tr>
 			  </tbody>
@@ -285,7 +285,7 @@ function toggleDisplay(e){
 
 <?php }elseif (@$done){?>
 <?php echo MASS_SENT; ?>
-<?php }else{die("Something is wrong");}?>
+<?php }else{die("Ocurrió un error.");}?>
 </div>
 <div id="side_info" class="outgame">
 </div>

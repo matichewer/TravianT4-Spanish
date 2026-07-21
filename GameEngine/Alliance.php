@@ -405,7 +405,7 @@
                         $newleader = $allmembers[1]; 
                         $q = "UPDATE " . TB_PREFIX . "alidata set leader = ".$newleader['id']." where id = ".$session->alliance."";
                         $database->query($q);
-                        $database->updateAlliPermissions($newleader['id'], $session->alliance, 'Interim Leader', 1,1,1,1,1,1,1,1);
+                        $database->updateAlliPermissions($newleader['id'], $session->alliance, 'Líder interino', 1,1,1,1,1,1,1,1);
                         
                         $database->updateUserField($session->uid, 'alliance', 0, 1);
                         $database->deleteAlliPermissions($session->uid);

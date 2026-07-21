@@ -14,10 +14,10 @@ class Logging {
 	public function addIllegal($uid,$ref,$type) {
 		global $database;
 		if(LOG_ILLEGAL) {
-			$log = "Attempted to ";
+			$log = "Intentó ";
 			switch($type) {
 				case 1:
-				$log .= "access village $ref";
+					$log .= "acceder a la aldea $ref";
 				break;
 			}
 			$q = "Insert into ".TB_PREFIX."illegal_log values (0,$uid,'$log')";
@@ -37,12 +37,12 @@ class Logging {
 		global $database;
 		if(LOG_BUILD) {
 			if($type) {
-				$log = "Start Construction of ";
+				$log = "Inicio de construcción de ";
 			}
 			else {
-				$log = "Start Upgrade of ";
+				$log = "Inicio de mejora de ";
 			}
-			$log .= $building." at level ".$level;
+			$log .= $building." en el nivel ".$level;
 			$q = "Insert into ".TB_PREFIX."build_log values (0,$wid,'$log')";
 			$database->query($q);
 		}
@@ -51,7 +51,7 @@ class Logging {
 	public function addTechLog($wid,$tech,$level) {
 		global $database;
 		if(LOG_TECH) {
-			$log = "Upgrading of tech ".$tech." to level ".$level;
+			$log = "Mejora de tecnología ".$tech." al nivel ".$level;
 			$q = "Insert into ".TB_PREFIX."tech_log values (0,$wid,'$log')";
 			$database->query($q);
 		}
@@ -60,7 +60,7 @@ class Logging {
 	public function goldFinLog($wid) {
 		global $database;
 		if(LOG_GOLD_FIN) {
-			$log = "Finish construction and research with gold";
+			$log = "Finalización de construcción e investigación con oro";
 			$q = "Insert into ".TB_PREFIX."gold_fin_log values (0,$wid,'$log')";
 			$database->query($q);
 		}
@@ -74,10 +74,10 @@ class Logging {
 		global $database;
 		if(LOG_MARKET) {
 			if($type == 1) {
-				$log = "Sent ".$data[0].",".$data[1].",".$data[2].",".$data[3]." to village ".$data[4];
+				$log = "Envío de ".$data[0].",".$data[1].",".$data[2].",".$data[3]." a la aldea ".$data[4];
 			}
 			else if($type == 2) {
-				$log = "Traded resource between ".$wid." and ".$data[0]." market ref is ".$data[1];
+				$log = "Intercambio de recursos entre ".$wid." y ".$data[0]."; referencia del mercado: ".$data[1];
 			}
 			$q = "Insert into ".TB_PREFIX."market_log values (0,$wid,'$log')";
 			$database->query($q);
@@ -87,7 +87,7 @@ class Logging {
 	public function VillageDestroyCatalog($wid) {
 		global $database;
 		if(LOG_GOLD_FIN) {
-			$log = "Village destroyed";
+			$log = "Aldea destruida";
 			$q = "Insert into ".TB_PREFIX."destroy_log values (0,$wid,'$log')";
 			$database->query($q);
 		}

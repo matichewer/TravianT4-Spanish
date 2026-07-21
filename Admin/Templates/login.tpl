@@ -22,18 +22,18 @@
 		<table width="75%" cellspacing="1" cellpadding="0" id="profile">
 			<thead>
 				<tr>
-					<th colspan="2">Server Admin Login</th>
+					<th colspan="2">Acceso al panel de administración</th>
 				</td>
 			</thead>
 			<tbody>
 				<tr>
-					<td>Username</td>
+					<td>Nombre de usuario</td>
 					<td>
 						<input class="fm fm110" type="text" name="name" value="<?php echo $_SESSION['username']?>" maxlength="15">
 					</td>
 				</tr>
 				<tr>
-					<td>Password:</td>
+					<td>Contraseña:</td>
 					<td>
 						<input class="fm fm110" type="password" name="pw" value="" maxlength="20">
 					</td>
