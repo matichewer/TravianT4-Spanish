@@ -266,6 +266,7 @@ define("OWN_ATTACKING_TROOPS","Tropas atacando");
 define("ATTACK","Ataque");
 define("OWN_REINFORCING_TROOPS","Refuerzos despachados");
 define("TROOPS_DORF","Tropas:");
+define("NO_TROOPS","Ninguna");
 
 
 //LOGIN.php
