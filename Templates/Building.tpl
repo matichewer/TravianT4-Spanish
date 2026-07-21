@@ -20,7 +20,11 @@
 		</div>
 			<?php
             }
-            ?></th>
+            ?>
+		<div class="buildingNotifications">
+			<a class="arrow buildingNotificationToggle" href="#" role="button" aria-pressed="false" title="Recibir un aviso del navegador cuando termine una construcción">Activar avisos</a>
+		</div>
+		</th>
 		</tr></thead>
 		<tbody>
         <?php 

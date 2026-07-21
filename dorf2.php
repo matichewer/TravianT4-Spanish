@@ -51,6 +51,7 @@ include("Templates/dorf2.tpl");
 if($building->NewBuilding) {
 	include("Templates/Building.tpl");
 }
+include("Templates/build_notifications.tpl");
 ?>
 </div>
 <div class="clear"></div>

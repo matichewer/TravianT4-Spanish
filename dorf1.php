@@ -53,6 +53,7 @@ $timer = 1;
 if($building->NewBuilding) {
 	include("Templates/Building.tpl");
 }
+include("Templates/build_notifications.tpl");
 ?>
 
 <div id="map_details">
@@ -89,5 +90,4 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-
 
