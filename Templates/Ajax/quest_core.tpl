@@ -47,7 +47,7 @@ if (isset($qact)){
 	$_SESSION['qst']= 4;
 
 	//Give Reward
-	$database->modifyResource($session->villages[0],130,160,130,100,1);
+	$database->modifyResource($session->villages[0],30,60,30,20,1);
 	break;
 
 	case '5':
@@ -91,7 +91,7 @@ if (isset($qact)){
 	$database->updateUserField($_SESSION['username'],'quest','9',0);
 	$_SESSION['qst']= 9;
 	//Give Reward
-	$database->modifyUnit($session->villages[0],100,120,40,40,1);
+	$database->modifyResource($session->villages[0],100,120,40,40,1);
 	break;
 
 	case 'coor':
@@ -187,14 +187,14 @@ if (isset($qact)){
 	case '20':
 	$database->updateUserField($_SESSION['username'],'quest','20',0);
 	$_SESSION['qst']= 20;
+
+	//Give Reward
+	$database->modifyResource($session->villages[0],300,320,360,570,1);
 	break;
 
 	case '21':
 	$database->updateUserField($_SESSION['username'],'quest','21',0);
 	$_SESSION['qst']= 21;
-
-    //Give Reward
-    $database->modifyResource($session->villages[0],80,90,60,40,1);
 	break;
 
 	case '22':
@@ -202,7 +202,7 @@ if (isset($qact)){
 	$_SESSION['qst']= 22;
 
 	//Give Reward
-	$database->modifyResource($session->villages[0],70,120,90,50,1);
+	$database->modifyResource($session->villages[0],80,90,60,40,1);
 	break;
 
     case '23':
@@ -210,7 +210,7 @@ if (isset($qact)){
     $_SESSION['qst']= 23;
 
     //Give Reward
-    $database->modifyResource($session->villages[0],1200,200,200,450,1);
+	$database->modifyResource($session->villages[0],70,120,90,50,1);
     break;
 
     case '24':
@@ -218,7 +218,13 @@ if (isset($qact)){
     $_SESSION['qst']= 24;
 
     //Give Reward
-    $database->modifyResource($session->villages[0],80,90,60,40,1);
+	if((int)$uArray['quest_choose'] === 1) {
+		// Military path: wall reward.
+		$database->modifyResource($session->villages[0],200,120,180,80,1);
+	} else {
+		// Economy path (and skipped tutorial): marketplace reward.
+		$database->modifyResource($session->villages[0],1200,200,200,450,1);
+	}
     break;
 
 	case '225':
@@ -282,8 +288,12 @@ if (isset($qact)){
 
 	$_SESSION['qst']= 24;
 
-	//Give Reward
-	$database->modifyResource($session->villages[0],140,200,180,200,1);
+	//Give the reward shown for the complementary branch quest.
+	if((int)$uArray['quest_choose'] === 2) {
+		$database->modifyResource($session->villages[0],70,100,90,100,1);
+	} else {
+		$database->modifyResource($session->villages[0],140,200,180,200,1);
+	}
 	break;
 
     case '27':
@@ -661,7 +671,7 @@ if ($wall==0){?>
 
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 20: Construye tu <?php echo $unarray[$session->userinfo['tribe']];?><\/h4><div class=\"spoken\">&rdquo;Ahora que has entrenado algunos soldados, también deberías construir tu <?php echo $unarray[$session->userinfo['tribe']];?>. Aumenta la defensa base y tus soldados recibirán una bonificación defensiva.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Construye tu <?php echo $unarray[$session->userinfo['tribe']];?>.<\/div><span id=\"qst_accpt\"><\/span><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"wall<?php echo $session->userinfo['tribe'];?>\"><\/div>\n\t\t","number":"-23","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
-{"markup":"\n\t\<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 20: Construye tu <?php echo $unarray[$session->userinfo['tribe']];?><\/h4><div class=\"spoken\">&rdquo;¡Eso es lo que digo! Tu <?php echo $unarray[$session->userinfo['tribe']];?> es muy útil. Aumenta la defensa de las tropas en la aldea.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\"><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/>Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">200<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">120<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">180<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">80<\/span><\/div><div class=\"clear\"><\/div><br><span id=\"qst_accpt\"><a class=\"arrow\" href=\"javascript: qst_next('','24');\">Continuar con la siguiente tarea.<\/a><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"wall<?php echo $session->userinfo['tribe'];?>\"><\/div>\n\t\t","number":23,"reward":{"wood":80,"clay":90,"iron":60,"crop":40},"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>g","msrc":"<?php echo $messagelol; ?>","altstep":0}
+{"markup":"\n\t\<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 20: Construye tu <?php echo $unarray[$session->userinfo['tribe']];?><\/h4><div class=\"spoken\">&rdquo;¡Eso es lo que digo! Tu <?php echo $unarray[$session->userinfo['tribe']];?> es muy útil. Aumenta la defensa de las tropas en la aldea.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\"><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/>Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">200<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">120<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">180<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">80<\/span><\/div><div class=\"clear\"><\/div><br><span id=\"qst_accpt\"><a class=\"arrow\" href=\"javascript: qst_next('','24');\">Continuar con la siguiente tarea.<\/a><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"wall<?php echo $session->userinfo['tribe'];?>\"><\/div>\n\t\t","number":23,"reward":{"wood":200,"clay":120,"iron":180,"crop":80},"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>g","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php } ?>
 
 <?php } elseif($_SESSION['qst']==21){
