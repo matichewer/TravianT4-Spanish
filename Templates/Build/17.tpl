@@ -214,7 +214,7 @@ $coor['x'] = "";
 $coor['y'] = "";
 }
 ?>			<div class="coordinatesInput">
-				<<div class="xCoord">
+				<div class="xCoord">
 					<label for="xCoordInput">X:</label>
                     <input class="text coordinates x " type="text" name="x" value="<?php echo $coor['x']; ?>" maxlength="4" tabindex="7">
 				</div>
