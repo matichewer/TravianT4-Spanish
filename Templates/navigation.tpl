@@ -33,12 +33,13 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
     	if($unmsg > 1000) { $unmsg = "+1000"; }
 		
 		$unnotice = $database->getUnreadNoticeCount($session->uid);
+		$hasUnreadNotices = (int)$unnotice > 0;
     	if($unnotice > 1000) { $unnotice = "+1000"; }
 	?>
 	<li id="n5" class="reports"> 
-		<a class="<?php echo $activeNavigation == 'reports' ? 'active' : ''; ?>" href="berichte.php" accesskey="5" title="<?php echo HEADER_NOTICES; ?><?php if($message->nunread){ echo' ('.$unnotice.')'; } ?>"></a>
+		<a class="<?php echo $activeNavigation == 'reports' ? 'active' : ''; ?>" href="berichte.php" accesskey="5" title="<?php echo HEADER_NOTICES; ?><?php if($hasUnreadNotices){ echo' ('.$unnotice.')'; } ?>"></a>
 		<?php
-		if($message->nunread){
+		if($hasUnreadNotices){
 			echo "<div class=\"ltr bubble\" title=\"".$unnotice." ".HEADER_NOTICES_NEW."\" style=\"display:block\">
 					<div class=\"bubble-background-l\"></div>
 					<div class=\"bubble-background-r\"></div>

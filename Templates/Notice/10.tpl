@@ -92,7 +92,7 @@ if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
 		<tr>
 			<td colspan="2" class="troopHeadline">
 				<a href="karte.php?d=<?php echo $dataarray[0]."&c=".$generator->getMapCheck($dataarray[0]); ?>"><?php echo $SenderData['name']; ?></a>
-				<?php echo $sentResourcesToLabel; ?>
+				<span style="font-weight: normal;"><?php echo $sentResourcesToLabel; ?></span>
 				<a href="karte.php?d=<?php echo $dataarray[1]."&c=".$generator->getMapCheck($dataarray[1]); ?>"><?php echo $ReceiveData['name']; ?></a></td>
 		</tr>
 	</thead>
