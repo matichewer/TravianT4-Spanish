@@ -1,10 +1,13 @@
 ﻿<?php
-if(isset($_GET['u'])) {
-$u = $_GET['u'];
-}
-else {
-$u=0;
-}
+if(isset($_GET['s']) && (!ctype_digit((string)$_GET['s']) || !in_array((int)$_GET['s'],array(1,2,3,4),true))) unset($_GET['s']);
+if(isset($_GET['b']) && (!ctype_digit((string)$_GET['b']) || !in_array((int)$_GET['b'],array(1,2,3,4),true))) unset($_GET['b']);
+if(isset($_GET['v']) && $_GET['v'] !== '1:1') unset($_GET['v']);
+$u = (isset($_GET['u']) && ctype_digit((string)$_GET['u']))? (int)$_GET['u'] : 0;
+$pageSize = 40;
+$filterQuery = '';
+if(isset($_GET['s']) && in_array((int)$_GET['s'],array(1,2,3,4),true)) $filterQuery .= '&s='.(int)$_GET['s'];
+if(isset($_GET['b']) && in_array((int)$_GET['b'],array(1,2,3,4),true)) $filterQuery .= '&b='.(int)$_GET['b'];
+if(isset($_GET['v']) && $_GET['v'] === '1:1') $filterQuery .= '&v=1:1';
 ?>
 <h1 class="titleInHeader">Mercado <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid17">
@@ -116,18 +119,12 @@ if($session->plus) {
 <tbody>
 <?php
 if(count($market->onsale) > 0) {
-for($i=0+$u;$i<=40+$u;$i++) {
+for($i=$u;$i<$u+$pageSize;$i++) {
 if(isset($market->onsale[$i])) {
 echo "<tr><td class=\"val\">";
-$reqMerc = 1;
-if($market->onsale[$i]['wamt'] > $market->maxcarry) {
-			$reqMerc = round($market->onsale[$i]['wamt']/$market->maxcarry);
-			if($market->onsale[$i]['wamt'] > $market->maxcarry*$reqMerc) {
-				$reqMerc += 1;
-			}
-		}
-        
-        $sss = ($market->onsale[$i]['wamt']/$market->onsale[$i]['gamt']);
+$reqMerc = (int)ceil($market->onsale[$i]['wamt']/$market->maxcarry);
+
+	        $sss = ($market->onsale[$i]['gamt'] > 0)? ($market->onsale[$i]['wamt']/$market->onsale[$i]['gamt']) : 0;
         $ratio = round($sss, 1);
         if($ratio <= 1){
         	$class = 'green';
@@ -161,10 +158,10 @@ switch($market->onsale[$i]['gtype']) {
     
     echo "<td class=\"dur\">".$generator->getTimeFormat($market->onsale[$i]['duration'])."</td>";
     
-    if(($market->onsale[$i]['wtype'] == 1 && $village->awood <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 2 && $village->aclay <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 3 && $village->airon <= $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 4 && $village->acrop <= $market->onsale[$i]['wamt'])) {
+    if(($market->onsale[$i]['wtype'] == 1 && $village->awood < $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 2 && $village->aclay < $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 3 && $village->airon < $market->onsale[$i]['wamt']) ||($market->onsale[$i]['wtype'] == 4 && $village->acrop < $market->onsale[$i]['wamt'])) {
     echo "<td class=\"act none\">Materiales insuficientes.</td></tr>";
     }
-    else if($market->merchantAvail() == 0 && $reqMerc <= $market->merchantAvail()) {
+    else if($reqMerc > $market->merchantAvail()) {
     echo "<td class=\"act none\">Mercaderes insuficientes</td></tr>";
     }
     else {
@@ -186,23 +183,11 @@ echo "<tr><td class=\"none\" colspan=\"6\"><center>No hay ofertas actualmente</c
 <tr><td colspan="5"><p>
 <span class="none">
 <?php
-if(!isset($_GET['u']) && count($market->onsale) < 40) {
-    echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <span class=\"none\"><b>&raquo;</b></span>";
-    }
-    else if (!isset($_GET['u']) && count($market->onsale) > 40) {
-    echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
-    }
-    else if(isset($_GET['u']) && count($market->onsale) > $_GET['u']) {
-    	if(count($market->onsale) > ($_GET['u']+40) && $_GET['u']-40 < count($market->onsale) && $_GET['u'] != 0) {
-         echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&laquo;</a> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
-         }
-         else if(count($market->onsale) > $_GET['u']+40) {
-         	echo "<span class=\"none\"><b>&laquo;</b></span> Páginas <a href=\"build.php?id=$id&t=1&u=".($_GET['u']+40)."\">&raquo;</a>";
-         }
-        else {
-        echo "<a href=\"build.php?id=$id&t=1&u=".($_GET['u']-40)."\">&laquo;</a> Páginas <span class=\"none\"><b>&raquo;</b></span>";
-        }
-    }
+$previous = max(0,$u-$pageSize);
+$next = $u+$pageSize;
+echo ($u > 0)? "<a href=\"build.php?id=$id&t=1&u=$previous$filterQuery\">&laquo;</a>" : "<span class=\"none\"><b>&laquo;</b></span>";
+echo " Páginas ";
+echo ($next < count($market->onsale))? "<a href=\"build.php?id=$id&t=1&u=$next$filterQuery\">&raquo;</a>" : "<span class=\"none\"><b>&raquo;</b></span>";
 ?>
 </td></tr> 
 </div> 

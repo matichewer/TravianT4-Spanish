@@ -1194,6 +1194,20 @@
         		return mysqli_query($this->connection,$q);
         	}
 
+            function deductResourcesIfAvailable($vid, $wood, $clay, $iron, $crop) {
+                $vid = (int) $vid;
+                $wood = (int) $wood;
+                $clay = (int) $clay;
+                $iron = (int) $iron;
+                $crop = (int) $crop;
+                if($wood < 0 || $clay < 0 || $iron < 0 || $crop < 0) {
+                    return false;
+                }
+                $q = "UPDATE " . TB_PREFIX . "vdata SET wood = wood - $wood, clay = clay - $clay, iron = iron - $iron, crop = crop - $crop WHERE wref = $vid AND wood >= $wood AND clay >= $clay AND iron >= $iron AND crop >= $crop";
+                $result = mysqli_query($this->connection,$q);
+                return $result && mysqli_affected_rows($this->connection) === 1;
+            }
+
         	function modifyOasisResource($vid, $wood, $clay, $iron, $crop, $mode) {
         		if(!$mode) {
         			$q = "UPDATE " . TB_PREFIX . "odata set wood = wood - $wood, clay = clay - $clay, iron = iron - $iron, crop = crop - $crop where wref = $vid";
@@ -1915,9 +1929,33 @@
         	References: id
         	***************************/
         	function setMarketAcc($id) {
+                $id = (int) $id;
         		$q = "UPDATE " . TB_PREFIX . "market set accept = 1 where id = $id";
         		return mysqli_query($this->connection,$q);
         	}
+
+            function claimMarketOffer($id, $buyerVid, $buyerAlliance) {
+                $id = (int) $id;
+                $buyerVid = (int) $buyerVid;
+                $buyerAlliance = (int) $buyerAlliance;
+                $q = "UPDATE " . TB_PREFIX . "market SET accept = 1 WHERE id = $id AND accept = 0 AND vref != $buyerVid AND (alliance = 0 OR alliance = $buyerAlliance)";
+                $result = mysqli_query($this->connection,$q);
+                return $result && mysqli_affected_rows($this->connection) === 1;
+            }
+
+            function claimOwnedMarketOffer($id, $vref) {
+                $id = (int) $id;
+                $vref = (int) $vref;
+                $q = "UPDATE " . TB_PREFIX . "market SET accept = 1 WHERE id = $id AND vref = $vref AND accept = 0";
+                $result = mysqli_query($this->connection,$q);
+                return $result && mysqli_affected_rows($this->connection) === 1;
+            }
+
+            function releaseMarketOffer($id) {
+                $id = (int) $id;
+                $q = "UPDATE " . TB_PREFIX . "market SET accept = 0 WHERE id = $id AND accept = 1";
+                return mysqli_query($this->connection,$q);
+            }
 
         	/***************************
         	Function to send resource to other village
@@ -1926,6 +1964,11 @@
         	References: Wood/ID, Clay, Iron, Crop, Mode
         	***************************/
         	function sendResource($ref, $clay, $iron, $crop, $merchant, $mode) {
+                $ref = (int) $ref;
+                $clay = (int) $clay;
+                $iron = (int) $iron;
+                $crop = (int) $crop;
+                $merchant = (int) $merchant;
         		if(!$mode) {
         			$q = "INSERT INTO " . TB_PREFIX . "send values (0,$ref,$clay,$iron,$crop,$merchant)";
         			mysqli_query($this->connection,$q);
@@ -1943,6 +1986,9 @@
         	***************************/
 
         	function getResourcesBack($vref, $gtype, $gamt) {
+                $vref = (int) $vref;
+                $gtype = (int) $gtype;
+                $gamt = (int) $gamt;
         		//Xtype (1) = wood, (2) = clay, (3) = iron, (4) = crop
         		if($gtype == 1) {
         			$q = "UPDATE " . TB_PREFIX . "vdata SET `wood` = `wood` + '$gamt' WHERE wref = $vref";
@@ -1969,6 +2015,10 @@
         	***************************/
 
         	function getMarketField($vref, $field) {
+                $vref = (int) $vref;
+                if(!in_array($field, array('gtype', 'gamt', 'wtype', 'wamt', 'merchant'), true)) {
+                    return false;
+                }
         		$q = "SELECT $field FROM " . TB_PREFIX . "market where vref = '$vref'";
         		$result = mysqli_query($this->connection,$q) or die(mysqli_error());
         		$dbarray = mysqli_fetch_array($result);
@@ -1976,9 +2026,9 @@
         	}
 
         	function removeAcceptedOffer($id) {
+                $id = (int) $id;
         		$q = "DELETE FROM " . TB_PREFIX . "market where id = $id";
-        		$result = mysqli_query($this->connection,$q);
-        		return mysqli_fetch_assoc($result);
+                return mysqli_query($this->connection,$q);
         	}
 
         	/***************************
@@ -1988,6 +2038,14 @@
         	References: Village, Give, Amt, Want, Amt, Time, Alliance, Mode
         	***************************/
         	function addMarket($vid, $gtype, $gamt, $wtype, $wamt, $time, $alliance, $merchant, $mode) {
+                $vid = (int) $vid;
+                $gtype = (int) $gtype;
+                $gamt = (int) $gamt;
+                $wtype = (int) $wtype;
+                $wamt = (int) $wamt;
+                $time = (int) $time;
+                $alliance = (int) $alliance;
+                $merchant = (int) $merchant;
         		if(!$mode) {
         			$q = "INSERT INTO " . TB_PREFIX . "market values (0,$vid,$gtype,$gamt,$wtype,$wamt,0,$time,$alliance,$merchant)";
         			mysqli_query($this->connection,$q);
@@ -2003,11 +2061,13 @@
         	References: Village, Mode
         	***************************/
         	function getMarket($vid, $mode) {
+                $vid = (int) $vid;
         		$alliance = $this->getUserField($this->getVillageField($vid, "owner"), "alliance", 0);
+                $alliance = (int) $alliance;
         		if(!$mode) {
         			$q = "SELECT * FROM " . TB_PREFIX . "market where vref = $vid and accept = 0 ORDER BY id DESC";
         		} else {
-        			$q = "SELECT * FROM " . TB_PREFIX . "market where vref != $vid and alliance = $alliance or vref != $vid and alliance = 0 and accept = 0 ORDER BY id DESC";
+                    $q = "SELECT * FROM " . TB_PREFIX . "market WHERE vref != $vid AND accept = 0 AND (alliance = 0 OR alliance = $alliance) ORDER BY id DESC";
         		}
         		$result = mysqli_query($this->connection,$q);
         		return $this->mysqli_fetch_all($result);
@@ -2018,6 +2078,7 @@
         	References: ID
         	***************************/
         	function getMarketInfo($id) {
+                $id = (int) $id;
         		$q = "SELECT * FROM " . TB_PREFIX . "market where id = $id";
         		$result = mysqli_query($this->connection,$q);
         		return mysqli_fetch_assoc($result);
@@ -2163,6 +2224,12 @@
 
 			function addMovement($type, $from, $to, $ref, $data, $endtime, $send = 1, $wood = 0, $clay = 0, $iron = 0, $crop = 0, $ref2 = 0) {
 				$q = "INSERT INTO " . TB_PREFIX . "movement values (0,$type,$from,$to,$ref,$ref2,'$data',$endtime,0,$send,$wood,$clay,$iron,$crop)";
+				return mysqli_query($this->connection,$q);
+			}
+
+			function removeMarketMovementBySend($ref) {
+				$ref = (int) $ref;
+				$q = "DELETE FROM " . TB_PREFIX . "movement WHERE sort_type = 0 AND ref = $ref AND proc = 0";
 				return mysqli_query($this->connection,$q);
 			}
 

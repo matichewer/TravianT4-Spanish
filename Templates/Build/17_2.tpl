@@ -19,6 +19,7 @@ include("17_menu.tpl");
 			<input type="hidden" name="id" value="<?php echo $id; ?>"> 
 			<input type="hidden" name="ft" value="mk2"> 
 			<input type="hidden" name="t" value="<?php echo $_GET['t']; ?>"> 
+			<input type="hidden" name="a" value="<?php echo $session->mchecker; ?>">
  
 <table id="sell" cellpadding="1" cellspacing="1"> 
 <tr> 
@@ -73,7 +74,7 @@ Ofrezco</th>
 	<tbody>
 <?php foreach($market->onmarket as $offer) { ?>
     <tr>
-			<td class="abo"><a href="build.php?id=<?php echo $id; ?>&t=<?php echo $_GET['t']; ?>&a=5&del=<?php echo $offer['id']; ?>"><img class="del" src="img/x.gif" alt="Cancelar"></a></td>
+			<td class="abo"><a href="build.php?id=<?php echo $id; ?>&t=<?php echo $_GET['t']; ?>&a=<?php echo $session->mchecker; ?>&del=<?php echo $offer['id']; ?>"><img class="del" src="img/x.gif" alt="Cancelar"></a></td>
 			<td class="val">
 <?php
 	switch($offer['gtype']) {
@@ -84,7 +85,7 @@ Ofrezco</th>
 	}
 	echo $offer['gamt'];
     
-    $sss = ($offer['wamt']/$offer['gamt']);
+	$sss = ($offer['gamt'] > 0)? ($offer['wamt']/$offer['gamt']) : 0;
         $ratio = round($sss, 1);
         if($ratio <= 1){
         	$class = 'red';
