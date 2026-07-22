@@ -15,7 +15,9 @@ class multiSort {
 	{
 		for($i = 1; $i < func_num_args(); $i += 3)
 		{
-			$key = func_get_arg($i);
+			// Legacy callers wrap keys in quotes because this method originally
+			// generated the comparator with create_function().
+			$key = trim(func_get_arg($i), "'\"");
 		   
 			$order = true;
 			if($i + 1 < func_num_args())
@@ -25,7 +27,7 @@ class multiSort {
 			if($i + 2 < func_num_args())
 				$type = func_get_arg($i + 2);
 
-			function inner_compare($a, $b) {
+			$inner_compare = function($a, $b) use ($key, $order, $type) {
 				switch($type)
 				{
 					case 1: // Case insensitive natural.
@@ -45,8 +47,8 @@ class multiSort {
 						break;
 				}
 				return $order ? $result : 0 - $result;
-			}
-			usort($array, 'inner_compare');
+			};
+			usort($array, $inner_compare);
 			
 		}
 		return $array;
