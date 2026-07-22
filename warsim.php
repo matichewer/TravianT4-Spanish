@@ -36,7 +36,9 @@ if(isset($_POST['result'])) {
     $target = isset($_POST['target'])? $_POST['target'] : array();
     $tribe = isset($_POST['mytribe'])? $_POST['mytribe'] : $session->tribe;
     echo '<h4 class="round">Tipo de combate: ';
-    echo $form->getValue('ktyp') == 0? "Ataque normal" : "Atraco";
+    echo !empty($_POST['result']['scouting'])
+        ? "Exploración"
+        : ($form->getValue('ktyp') == 0 ? "Ataque normal" : "Saqueo");
     echo "</h4>";
     include("Templates/Simulator/res_a".$tribe.".tpl");
     foreach($target as $tar) {
@@ -52,10 +54,24 @@ if(isset($_POST['result'])) {
             echo "<p>Las catapultas supervivientes no alcanzaron a reducir el nivel del edificio.</p>";
         }
     }
+    if(isset($_POST['result']['wall_level_after'])) {
+        $defenderTribe = (int)$target[0];
+        $wallNames = array(1 => WARSIM_WALL1, 2 => WARSIM_WALL2, 3 => WARSIM_WALL3);
+		$wallArticles = array(1 => 'La', 2 => 'El', 3 => 'La');
+        $wallLevel = (int)$form->getValue('wall'.$defenderTribe);
+        $remainingWallLevel = (int)$_POST['result']['wall_level_after'];
+        if($remainingWallLevel < $wallLevel) {
+			echo "<p>".$wallArticles[$defenderTribe]." ".$wallNames[$defenderTribe]." bajó del nivel <b>".$wallLevel."</b> al nivel <b>".$remainingWallLevel."</b>.</p>";
+        } else {
+			echo "<p>Los arietes supervivientes no alcanzaron a reducir el nivel de ".$wallArticles[$defenderTribe]." ".strtolower($wallNames[$defenderTribe]).".</p>";
+        }
+    }
 }
 $target = isset($_POST['target'])? $_POST['target'] : array();
 $tribe = isset($_POST['mytribe'])? $_POST['mytribe'] : $session->tribe;
 if(count($target) > 0) {
+	echo '<input type="hidden" name="displayed_attacker" value="'.(int)$tribe.'">';
+	echo '<input type="hidden" name="displayed_targets" value="'.implode(',', array_map('intval', $target)).'">';
     include("Templates/Simulator/att_".$tribe.".tpl");
 	echo '<div id="defender"><div class="fighterType"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">'.WARSIM_DEFENDER.'</div></div></div><div class="clear"></div>';
 
@@ -94,7 +110,8 @@ if(count($target) > 0) {
 						<label><input class="check" type="checkbox" name="a2_v1" value="1" <?php if(in_array(1,$target)) { echo "checked"; } echo "> ".TRIBE1;?> </label><br>
 						<label><input class="check" type="checkbox" name="a2_v2" value="1" <?php if(in_array(2,$target)) { echo "checked"; } echo "> ".TRIBE2;?> </label><br>
 						<label><input class="check" type="checkbox" name="a2_v3" value="1" <?php if(in_array(3,$target)) { echo "checked"; } echo "> ".TRIBE3;?> </label><br>
-						<label><input class="check" type="checkbox" name="a2_v4" value="1" <?php if(in_array(4,$target)) { echo "checked"; } echo "> ".TRIBE4;?> </label>
+						<label><input class="check" type="checkbox" name="a2_v4" value="1" <?php if(in_array(4,$target)) { echo "checked"; } echo "> ".TRIBE4;?> </label><br>
+						<small>La primera tribu marcada en esta lista define la aldea y sus defensas.</small>
 					</div>
 				</td>
 
@@ -120,6 +137,26 @@ if(count($target) > 0) {
 (function() {
 	var targetRow = document.getElementById('warsimCatapultTarget');
 	var attackTypes = document.getElementsByName('ktyp');
+	var sideSelectors = document.querySelectorAll('input[name="a1_v"], input[name^="a2_v"]');
+	var displayedAttacker = document.getElementsByName('displayed_attacker');
+	var simulatorForm = sideSelectors.length ? sideSelectors[0].form : null;
+	function reloadCombatants() {
+		if(!simulatorForm) {
+			return;
+		}
+		var fields = simulatorForm.elements;
+		for(var i = 0; i < fields.length; i++) {
+			if(/^(a1|a2|f1|f2)_\d+$/.test(fields[i].name)) {
+				fields[i].value = '';
+			}
+		}
+		simulatorForm.submit();
+	}
+	if(displayedAttacker.length) {
+		for(var selectorIndex = 0; selectorIndex < sideSelectors.length; selectorIndex++) {
+			sideSelectors[selectorIndex].onchange = reloadCombatants;
+		}
+	}
 	if(!targetRow || !attackTypes.length) {
 		return;
 	}

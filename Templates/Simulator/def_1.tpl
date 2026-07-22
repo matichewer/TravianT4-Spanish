@@ -24,7 +24,7 @@ echo "
             <input class=\"text\" type=\"text\" name=\"a2_".$i."\" value=\"".$form->getValue('a2_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
         </td>
         <td class=\"research\">
-            <input class=\"text\" type=\"text\" name=\"f2_".$i."\" value=\"".$form->getValue('f2_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">
+            ".((($i - 1) % 10) + 1 <= 8 ? "<input class=\"text\" type=\"text\" name=\"f2_".$i."\" value=\"".$form->getValue('f2_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">" : "")."
         </td>
 	</tr>
 ";

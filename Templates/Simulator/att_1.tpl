@@ -30,7 +30,7 @@ echo "
             <input class=\"text\" type=\"text\" name=\"a1_".$i."\" value=\"".$form->getValue('a1_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
         </td>
         <td class=\"research\">
-            <input class=\"text\" type=\"text\" name=\"f1_".$i."\" value=\"".$form->getValue('f1_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">
+            ".($i <= 8 ? "<input class=\"text\" type=\"text\" name=\"f1_".$i."\" value=\"".$form->getValue('f1_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">" : "")."
         </td>
 	</tr>
 ";

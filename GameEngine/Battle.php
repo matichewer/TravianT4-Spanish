@@ -12,6 +12,7 @@ class Battle {
 		if($attackerTribe < 1 || $attackerTribe > 3) {
 			return;
 		}
+		$_POST['mytribe'] = $attackerTribe;
 
 		$target = array();
 		for($tribe = 1; $tribe <= 4; $tribe++) {
@@ -19,11 +20,18 @@ class Battle {
 				$target[] = $tribe;
 			}
 		}
+		$_POST['target'] = $target;
 		if(empty($target)) {
 			return;
 		}
 
 		$defenderTribe = $target[0];
+		$configurationChanged = isset($post['displayed_attacker'])
+			&& (
+				(int)$post['displayed_attacker'] !== $attackerTribe
+				|| !isset($post['displayed_targets'])
+				|| $post['displayed_targets'] !== implode(',', $target)
+			);
 		$values = $post;
 		$values['a1_v'] = $attackerTribe;
 		$values['tribe'] = $defenderTribe;
@@ -31,18 +39,19 @@ class Battle {
 
 		$attackerTotal = 0;
 		for($i = 1; $i <= 10; $i++) {
-			$values['a1_'.$i] = $this->simulationNumber(isset($post['a1_'.$i]) ? $post['a1_'.$i] : 0, 0, 999999, true);
-			$values['f1_'.$i] = $this->simulationNumber(isset($post['f1_'.$i]) ? $post['f1_'.$i] : 0, 0, 20, true);
+			$values['a1_'.$i] = $this->simulationNumber(!$configurationChanged && isset($post['a1_'.$i]) ? $post['a1_'.$i] : 0, 0, 999999, true);
+			$values['f1_'.$i] = $this->simulationNumber(!$configurationChanged && $i <= 8 && isset($post['f1_'.$i]) ? $post['f1_'.$i] : 0, 0, 20, true);
 			$attackerTotal += $values['a1_'.$i];
 		}
 
 		for($unit = 1; $unit <= 40; $unit++) {
 			$unitTribe = (int)floor(($unit - 1) / 10) + 1;
+			$unitPosition = (($unit - 1) % 10) + 1;
 			$isSelected = in_array($unitTribe, $target, true);
-			$values['a2_'.$unit] = $isSelected
+			$values['a2_'.$unit] = $isSelected && !$configurationChanged
 				? $this->simulationNumber(isset($post['a2_'.$unit]) ? $post['a2_'.$unit] : 0, 0, 999999, true)
 				: 0;
-			$values['f2_'.$unit] = $isSelected && $unitTribe !== 4
+			$values['f2_'.$unit] = $isSelected && $unitTribe !== 4 && $unitPosition <= 8 && !$configurationChanged
 				? $this->simulationNumber(isset($post['f2_'.$unit]) ? $post['f2_'.$unit] : 0, 0, 20, true)
 				: 0;
 		}
@@ -52,32 +61,30 @@ class Battle {
 			$defaultAttackerPopulation = max(1, (int)$village->pop);
 		}
 		$values['ew1'] = $this->simulationNumber(
-			isset($post['ew1']) && $post['ew1'] !== '' ? $post['ew1'] : $defaultAttackerPopulation,
+			!$configurationChanged && isset($post['ew1']) && $post['ew1'] !== '' ? $post['ew1'] : $defaultAttackerPopulation,
 			1,
 			99999,
 			true
 		);
 		$values['ew2'] = $defenderTribe === 4
 			? 100
-			: $this->simulationNumber(isset($post['ew2']) ? $post['ew2'] : 1, 1, 99999, true);
-		$values['h_off_bonus'] = $this->simulationNumber(isset($post['h_off_bonus']) ? $post['h_off_bonus'] : 0, 0, 20, false);
+			: $this->simulationNumber(!$configurationChanged && isset($post['ew2']) ? $post['ew2'] : 1, 1, 99999, true);
+		$values['h_off_bonus'] = $this->simulationNumber(!$configurationChanged && isset($post['h_off_bonus']) ? $post['h_off_bonus'] : 0, 0, 20, false);
 		$values['kata'] = $defenderTribe === 4
 			? 0
-			: $this->simulationNumber(isset($post['kata']) ? $post['kata'] : 0, 0, 20, true);
+			: $this->simulationNumber(!$configurationChanged && isset($post['kata']) ? $post['kata'] : 0, 0, 20, true);
 		$values['stonemason'] = $defenderTribe === 4
 			? 0
-			: $this->simulationNumber(isset($post['stonemason']) ? $post['stonemason'] : 0, 0, 20, true);
+			: $this->simulationNumber(!$configurationChanged && isset($post['stonemason']) ? $post['stonemason'] : 0, 0, 20, true);
 		$values['palast'] = $defenderTribe === 4
 			? 0
-			: $this->simulationNumber(isset($post['palast']) ? $post['palast'] : 0, 0, 20, true);
+			: $this->simulationNumber(!$configurationChanged && isset($post['palast']) ? $post['palast'] : 0, 0, 20, true);
 		for($tribe = 1; $tribe <= 4; $tribe++) {
 			$values['wall'.$tribe] = $tribe === $defenderTribe && $defenderTribe !== 4
-				? $this->simulationNumber(isset($post['wall'.$tribe]) ? $post['wall'.$tribe] : 0, 0, 20, true)
+				? $this->simulationNumber(!$configurationChanged && isset($post['wall'.$tribe]) ? $post['wall'.$tribe] : 0, 0, 20, true)
 				: 0;
 		}
 
-		$_POST['mytribe'] = $attackerTribe;
-		$_POST['target'] = $target;
 		$form->valuearray = $values;
 
 		if($attackerTotal > 0) {
@@ -165,7 +172,7 @@ class Battle {
 
 		if($onlyScouts) {
 			if($attackScout <= 0) {
-				return array(1 => 1.0, 2 => 0.0, 'Attack_points' => 0, 'Defend_points' => $defenseScout, 'Winner' => 'defender');
+				return array(1 => 1.0, 2 => 0.0, 'Attack_points' => 0, 'Defend_points' => $defenseScout, 'Winner' => 'defender', 'scouting' => true);
 			}
 			$attackerLosses = $defenseScout >= $attackScout ? 1.0 : pow($defenseScout / $attackScout, 1.5);
 			return array(
@@ -173,7 +180,8 @@ class Battle {
 				2 => 0.0,
 				'Attack_points' => $attackScout,
 				'Defend_points' => $defenseScout,
-				'Winner' => $attackScout > $defenseScout ? 'attacker' : 'defender'
+				'Winner' => $attackScout > $defenseScout ? 'attacker' : 'defender',
+				'scouting' => true
 			);
 		}
 
@@ -200,7 +208,10 @@ class Battle {
 
 		$moralBonus = 1.0;
 		if((int)$post['ew1'] > (int)$post['ew2']) {
-			$moralBonus = min(1.5, pow((int)$post['ew1'] / max(1, (int)$post['ew2']), 0.2));
+			$moralExponent = $attackPoints < $defensePoints
+				? 0.2 * ($attackPoints / max($defensePoints, 0.000001))
+				: 0.2;
+			$moralBonus = min(1.5, pow((int)$post['ew1'] / max(1, (int)$post['ew2']), $moralExponent));
 		}
 		$effectiveDefense = $defensePoints * $moralBonus;
 		$lossExponent = $involved >= 1000 ? max(1.0, 2 * (1.8592 - pow($involved, 0.015))) : 1.5;
@@ -251,6 +262,31 @@ class Battle {
 			$result[3] = $required;
 			$result[4] = $catapultsFiring;
 			$result['target_level_after'] = $remainingLevel;
+		}
+
+		$ramCount = (int)$post['a1_7'];
+		if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $wallLevel > 0 && $ramCount > 0 && $attackPoints > 0) {
+			$ramUpgrade = (int)$post['f1_7'];
+			$stonemasonLevel = (int)$post['stonemason'];
+			$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
+				? $bid34[$stonemasonLevel]['attri'] / 100
+				: 1.0;
+			$upgradeFactor = round(200 * pow(1.0205, $ramUpgrade)) / 200;
+			$battleRatio = pow($attackPoints / max($defensePoints, 0.000001), 1.5);
+			$firingFactor = $battleRatio >= 1 ? 1 - 0.5 / $battleRatio : 0.5 * $battleRatio;
+			$ramsFiring = $ramCount * (1 - $attackerLosses) * max(0, $firingFactor);
+			$required = (int)round(
+				$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
+				/ (8 * $upgradeFactor / $stonemasonFactor)
+				+ 0.5
+			);
+			$damage = $ramsFiring * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor);
+			$remainingLevel = $ramsFiring >= $required
+				? 0
+				: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
+			$result[7] = $required;
+			$result[8] = $ramsFiring;
+			$result['wall_level_after'] = $remainingLevel;
 		}
 
 		return $result;
