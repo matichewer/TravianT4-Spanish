@@ -211,6 +211,32 @@ if (strpos($source, '$database->modifyResource($session->villages[0]') !== false
     $errors[] = 'Quest rewards must not use an unconditional modifyResource() call.';
 }
 
+$refreshFiles = array(
+    'AJAX response' => dirname(__DIR__) . '/ajax.php',
+    'quest client' => dirname(__DIR__) . '/unx.js',
+    'quest template' => dirname(__DIR__) . '/Templates/quest.tpl',
+);
+$refreshSources = array();
+foreach ($refreshFiles as $name => $file) {
+    $refreshSources[$name] = file_get_contents($file);
+    if ($refreshSources[$name] === false) {
+        $errors[] = 'Could not read ' . $name . ' for reward refresh checks.';
+        $refreshSources[$name] = '';
+    }
+}
+
+$rewardRefreshChecks = array(
+    'Successful claims set the server signal' => array($source, '$questRewardClaimed = true;'),
+    'AJAX exposes the server signal' => array($refreshSources['AJAX response'], '"rewardClaimed":true'),
+    'The client reloads after a successful claim' => array($refreshSources['quest client'], 'window.location.reload();'),
+    'The task popup is reopened after reload' => array($refreshSources['quest template'], "window.sessionStorage.getItem('questRewardReopen')"),
+);
+foreach ($rewardRefreshChecks as $name => $check) {
+    if (strpos($check[0], $check[1]) === false) {
+        $errors[] = $name . ': missing ' . $check[1];
+    }
+}
+
 if (!empty($errors)) {
     foreach ($errors as $error) {
         fwrite(STDERR, $error . "\n");

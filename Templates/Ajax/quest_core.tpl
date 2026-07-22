@@ -15,6 +15,7 @@ $rSubmited = null;
 $lSubmited = null;
 $x = null;
 $y = null;
+$questRewardClaimed = false;
 
 if (!isset($_SESSION['quest_validated']) || !is_array($_SESSION['quest_validated'])) {
 	$_SESSION['quest_validated'] = array();
@@ -24,9 +25,10 @@ $syncQuest = function() use ($database, $session) {
 	$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
 };
 
-$claimMainQuestResources = function($currentQuest, $nextQuest, $requirementMet, $reward) use ($database, $session, $syncQuest) {
+$claimMainQuestResources = function($currentQuest, $nextQuest, $requirementMet, $reward) use ($database, $session, $syncQuest, &$questRewardClaimed) {
 	if($requirementMet && $database->claimQuestResources($session->uid, $session->villages[0], $currentQuest, $nextQuest, $reward[0], $reward[1], $reward[2], $reward[3])) {
 		$_SESSION['qst'] = $nextQuest;
+		$questRewardClaimed = true;
 		return true;
 	}
 
@@ -48,6 +50,7 @@ if (isset($qact)){
 	if($database->claimQuestGold($session->uid, 0, 23, 25)) {
 		$_SESSION['qst']= 23;
 		$skiped=true;
+		$questRewardClaimed = true;
 	} else {
 		$syncQuest();
 	}
@@ -65,6 +68,7 @@ if (isset($qact)){
 	}
 	if(($woodBuilt || $woodQueued) && $database->advanceQuest($session->uid, 1, 2)) {
 		$_SESSION['qst'] = 2;
+		$questRewardClaimed = true;
 		if($woodQueued) {
 			$database->FinishWoodcutter($session->villages[0]);
 		}
@@ -85,6 +89,7 @@ if (isset($qact)){
 	}
 	if(($cropBuilt || $cropQueued) && $database->claimQuestPlus($session->uid, 2, 3, 86400)) {
 		$_SESSION['qst'] = 3;
+		$questRewardClaimed = true;
 	} else {
 		$syncQuest();
 	}
@@ -108,6 +113,7 @@ if (isset($qact)){
 	}
 	if(($rallyPointBuilt || $rallyPointQueued) && $database->advanceQuest($session->uid, 4, 5)) {
 		$_SESSION['qst'] = 5;
+		$questRewardClaimed = true;
 		if($rallyPointQueued) {
 			$database->FinishRallyPoint($session->villages[0]);
 		}
@@ -138,6 +144,7 @@ if (isset($qact)){
 	case '8':
 	if(!$message->unread && $database->claimQuestGold($session->uid, 7, 8, 20)) {
 		$_SESSION['qst']= 8;
+		$questRewardClaimed = true;
 	} else {
 		$syncQuest();
 	}
@@ -364,6 +371,8 @@ if (isset($qact)){
 		$nextFquest = implode(',', $dataarray);
 		if(!$database->claimFollowupQuestGold($session->uid, $currentFquest, $nextFquest, 15)) {
 			$dataarray = explode(',', $database->getUserField($session->uid, 'fquest', 0));
+		} else {
+			$questRewardClaimed = true;
 		}
 	}
 	break;
@@ -447,6 +456,8 @@ if (isset($qact)){
 		$nextFquest = implode(',', $dataarray);
 		if(!$database->claimFollowupQuestResources($session->uid, $session->villages[0], $currentFquest, $nextFquest, $reward[0], $reward[1], $reward[2], $reward[3])) {
 			$dataarray = explode(',', $database->getUserField($session->uid, 'fquest', 0));
+		} else {
+			$questRewardClaimed = true;
 		}
 	}
 	break;

@@ -22,6 +22,16 @@ if ($displayarray['fquest'] != "1,1,1,1,1,1,1,1,1,1,1" && QUEST==true){
 			</script>						
 </div>
 <?php } ?>
+<script type="text/javascript">
+	try {
+		if (window.sessionStorage.getItem('questRewardReopen') === '1') {
+			window.sessionStorage.removeItem('questRewardReopen');
+			if (document.getElementById('qge')) {
+				window.addEvent('domready', function() { qst_handle(); });
+			}
+		}
+	} catch (e) {}
+</script>
 <script type="text/javascript"> 
 	Travian.Translation.add(
 	{

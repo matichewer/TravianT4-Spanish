@@ -14,7 +14,7 @@
 		<link href="img/travian_basics.css?v=19" rel="stylesheet" type="text/css" />
 		<script src="jquery-1.10.1.min.js" type="text/javascript"></script>
 		<script src="sandwich.js" type="text/javascript"></script>
-		<script src="unx.js" type="text/javascript"></script>
+		<script src="unx.js?v=2" type="text/javascript"></script>
 		<script src="crypt.js?<?php echo time(); ?>" type="text/javascript"></script>
 		<?php if(isset($session) && $session->logged_in) { ?>
 		<script src="build-notifications.js?v=1" type="text/javascript"></script>

@@ -19,7 +19,13 @@ if($_GET){
 				}else {
 					$qact3=null;
 				}
-				include("Templates/Ajax/quest_core.tpl");		
+				ob_start();
+				include("Templates/Ajax/quest_core.tpl");
+				$questResponse = ob_get_clean();
+				if (!empty($questRewardClaimed)) {
+					$questResponse = preg_replace('/}\s*$/', ',"rewardClaimed":true}', $questResponse, 1);
+				}
+				echo $questResponse;
 			break;
 		}
 	}
