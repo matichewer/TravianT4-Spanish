@@ -1591,10 +1591,12 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-        	function noticeViewed($id) {
-        		$q = "UPDATE " . TB_PREFIX . "ndata set viewed = 1 where id = $id";
-        		return mysqli_query($this->connection,$q);
-        	}
+		function noticeViewed($id, $uid = null) {
+			$id = (int)$id;
+			$uidCondition = ($uid === null) ? "" : " and uid = ".(int)$uid;
+			$q = "UPDATE " . TB_PREFIX . "ndata set viewed = 1 where id = $id$uidCondition";
+			return mysqli_query($this->connection,$q);
+		}
 
         	function addNotice($uid, $toWref, $ally, $type, $topic, $data, $time = 0) {
         		if($time == 0) {
