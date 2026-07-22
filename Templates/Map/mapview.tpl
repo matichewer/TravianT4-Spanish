@@ -313,19 +313,91 @@ break;
 #mapContainer.lowRes #mapData{cursor:grab;cursor:-webkit-grab;touch-action:none;user-select:none;-webkit-user-select:none;}
 #mapContainer.lowRes.dragPanning #mapData{cursor:grabbing;cursor:-webkit-grabbing;}
 #mapContainer.lowRes #mapData a,#mapContainer.lowRes #mapData img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
+body.map .dialog .dialog-contents .cancel{box-sizing:border-box;width:22px;height:22px;right:-10px;top:-10px;z-index:30;border:1px solid #777;border-radius:50%;background:#fff!important;color:#333;text-align:center;line-height:18px;}
+body.map .dialog .dialog-contents .cancel:before{content:'\00d7';font-family:Arial,sans-serif;font-size:22px;font-weight:normal;}
+body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:#000;}
+.dialog.mapTileDetailsDialog{color:#333;font-size:13px;}
+.dialog.mapTileDetailsDialog .dialog-container{background:#fff;border:1px solid #9a9a9a;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.45);}
+.dialog.mapTileDetailsDialog .dialog-tl,.dialog.mapTileDetailsDialog .dialog-tc,.dialog.mapTileDetailsDialog .dialog-tr,
+.dialog.mapTileDetailsDialog .dialog-ml,.dialog.mapTileDetailsDialog .dialog-mc,.dialog.mapTileDetailsDialog .dialog-mr,
+.dialog.mapTileDetailsDialog .dialog-bl,.dialog.mapTileDetailsDialog .dialog-bc,.dialog.mapTileDetailsDialog .dialog-br,
+.dialog.mapTileDetailsDialog .dialog-background-tl,.dialog.mapTileDetailsDialog .dialog-background-tc,.dialog.mapTileDetailsDialog .dialog-background-tr,
+.dialog.mapTileDetailsDialog .dialog-background-ml,.dialog.mapTileDetailsDialog .dialog-background-mc,.dialog.mapTileDetailsDialog .dialog-background-mr,
+.dialog.mapTileDetailsDialog .dialog-background-bl,.dialog.mapTileDetailsDialog .dialog-background-bc,.dialog.mapTileDetailsDialog .dialog-background-br{background-image:none!important;}
+.dialog.mapTileDetailsDialog .title,.dialog.mapTileDetailsDialog #tileDetails,.dialog.mapTileDetailsDialog #tileDetails h4{color:#333;}
+.dialog.mapTileDetailsDialog #tileDetails .detailImage .option{background:#f4f4f4;border-top:1px solid #ddd;}
+.dialog #tileDetails.oasis-1 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w2-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-2 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w3-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-3 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w4-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-4 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w6-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-5 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w8-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-6 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w7-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-7 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w10-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-8 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w12-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-9 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w11-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-10 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w10-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-11 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w14-rtl.jpg')!important;}
+.dialog #tileDetails.oasis-12 .detailImage{background-image:url('/gpack/travian_Travian_4.0_41/img/g/detail.popup/oasis/w15-rtl.jpg')!important;}
 </style>
 <script type="text/javascript">
-/* Click-and-drag panning: grab the map, release to re-center. Falls back to
-   the plain tile links when the pointer barely moves (a real click). */
+/* Click-and-drag panning plus in-place tile details for the small map. */
 (function(){
 	var TILE=60, THRESHOLD=6, WORLD=<?php echo (int)WORLD_MAX; ?>, PERIOD=2*WORLD+1;
 	var curX=<?php echo (int)$x; ?>, curY=<?php echo (int)$y; ?>;
+	var dialogOpen=false;
+	function bindMapLinks(content){
+		$(content).getElements('a[href^="karte.php"]').addEvent('click',function(event){
+			event.stop();
+			var url=new URI(this.href);
+			window.location.href='karte.php?x='+parseInt(url.getData('x'),10)+'&y='+parseInt(url.getData('y'),10);
+		});
+	}
+	function openTileDetails(event,link){
+		event.preventDefault();
+		event.stopPropagation();
+		if(dialogOpen) return false;
+		var url=new URI(link.href);
+		var x=parseInt(url.getData('x'),10), y=parseInt(url.getData('y'),10);
+		if(isNaN(x)||isNaN(y)) return false;
+		dialogOpen=true;
+		var popup=new Travian.Dialog({
+			buttonOk:false,
+			cssClass:'white mapTileDetailsDialog',
+			title:'Detalles de la casilla ('+x+'|'+y+')',
+			onClose:function(){ dialogOpen=false; }
+		}).setContent('<div class="loading"></div>').show();
+		var showError=function(){
+			popup.setContent('<p>No se pudo cargar la información de esta casilla.</p>');
+			return false;
+		};
+		new Request.HTML({
+			url:'position_details.php?popup=1&x='+encodeURIComponent(x)+'&y='+encodeURIComponent(y),
+			method:'get',
+			evalScripts:false,
+			onSuccess:function(tree,elements,responseHTML){
+				popup.setContent(responseHTML);
+				var popupTitle=$(popup.content).getElement('#tileDetailsPopupTitle');
+				if(popupTitle){ popup.setTitle(popupTitle.get('html')); popupTitle.destroy(); }
+				bindMapLinks(popup.content);
+			},
+			onFailure:showError,
+			onException:showError
+		}).send();
+		return false;
+	}
 	function ready(fn){ if(document.readyState!='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
 	ready(function(){
 		var container=document.getElementById('mapContainer');
 		var data=document.getElementById('mapData');
 		if(!container||!data) return;
 		var dragging=false, moved=false, sx=0, sy=0, dx=0, dy=0;
+		data.addEventListener('click',function(event){
+			var link=event.target;
+			while(link&&link!==data&&link.tagName!=='A'){ link=link.parentNode; }
+			if(link&&link.tagName==='A'&&link.href.indexOf('position_details.php')!==-1){
+				openTileDetails(event,link);
+			}
+		},true);
 		data.addEventListener('dragstart', function(e){ e.preventDefault(); });
 		data.addEventListener('pointerdown', function(e){
 			if(e.button!==0) return;               /* primary mouse button / touch / pen */
@@ -347,7 +419,7 @@ break;
 		document.addEventListener('pointerup', function(){
 			if(!dragging) return;
 			dragging=false;
-			if(!moved) return; /* a tap/click: let the tile <a href> do its thing */
+			if(!moved) return; /* a tap/click opens the tile dialog */
 			container.classList.remove('dragPanning');
 			/* swallow the click that fires right after a drag */
 			var kill=function(ev){ ev.preventDefault(); ev.stopPropagation(); document.removeEventListener('click',kill,true); };
