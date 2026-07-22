@@ -4,7 +4,8 @@ The village level badges currently encode upgrade availability in the center col
 
 ## What Changes
 
-- Move upgrade availability to the outer badge ring: turquoise blue for completed maximum level, green when the next level is affordable, and yellow when it is not.
+- Move upgrade availability to a high-contrast outer badge ring: turquoise blue for completed maximum level, saturated green when the next level is affordable, and saturated yellow when it is not.
+- Separate every ring from the village artwork with a shared near-black outline and a subtle dimensional shadow.
 - Keep the badge center white normally and turn it orange for every active or queued construction job.
 - Show the target level of a construction job inside its orange center, including level 1 for a new building.
 - Remove the active and queued hammer markers.

@@ -6,19 +6,18 @@
 /* Resource-field and building level badges share one visual state model. */
 div.village1 .levelBadge,
 div.village2 div#village_map div#levels .levelBadge {
-	border-color: #65560f;
-	background-image: linear-gradient(to top, #eee42b, #eee617 100%);
+	border-color: #20251e;
+	background-image: linear-gradient(to top, #e2b900, #fff02a 100%);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 div.village1 .levelBadge.levelBadgeCanUpgrade,
 div.village2 div#village_map div#levels .levelBadge.levelBadgeCanUpgrade {
-	border-color: #506d00;
-	background-image: linear-gradient(to top, #7da100, #c7e94f 100%);
+	background-image: linear-gradient(to top, #289600, #7de128 100%);
 }
 
 div.village1 .levelBadge.levelBadgeMaxLevel,
 div.village2 div#village_map div#levels .levelBadge.levelBadgeMaxLevel {
-	border-color: #336e71;
 	background-image: linear-gradient(to top, #1e92a1, #2c8c94 100%);
 }
 

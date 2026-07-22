@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Outer ring communicates upgrade availability
-The system SHALL render the level badge outer ring in turquoise blue for a completed maximum level, the existing green palette when the next level is affordable, and reference-matched yellow when the next level is not affordable.
+The system SHALL render the level badge outer ring in turquoise blue for a completed maximum level, saturated green when the next level is affordable, and saturated yellow when the next level is not affordable. Every state SHALL use a shared near-black outline and a subtle shadow that separates the badge from the village artwork.
 
 #### Scenario: Completed maximum level
 - **WHEN** a displayed resource field or building is at its completed maximum level
@@ -14,6 +14,10 @@ The system SHALL render the level badge outer ring in turquoise blue for a compl
 #### Scenario: Unaffordable next level
 - **WHEN** a displayed resource field or building is below maximum level and the next applicable upgrade is not affordable
 - **THEN** its level badge outer ring is yellow
+
+#### Scenario: Badge over varied village artwork
+- **WHEN** a level badge appears over a light field, dark building, or road
+- **THEN** its near-black outline and compact shadow keep the complete ring visibly separated from the background
 
 ### Requirement: Center communicates construction state
 The system SHALL render the level badge center in white when the field has no construction job and in orange when the field has any active or queued construction job.

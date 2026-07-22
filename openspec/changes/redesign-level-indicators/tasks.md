@@ -18,3 +18,9 @@
 - [x] 4.1 Run PHP syntax checks for all changed PHP/template files.
 - [x] 4.2 Verify representative state calculations and rendered badge markup for normal, maximum, active, queued, and multi-queued fields.
 - [x] 4.3 Check the final diff for malformed whitespace and unintended changes.
+
+## 5. Ring contrast refinement
+
+- [x] 5.1 Apply saturated green and yellow gradients, a shared near-black outline, and restrained outer and inset shadows without changing badge dimensions or centers.
+- [x] 5.2 Bump the stylesheet cache version and visually compare resource and city badge states.
+- [x] 5.3 Validate the updated OpenSpec change and check the final diff.

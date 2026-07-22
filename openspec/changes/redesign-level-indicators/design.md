@@ -38,13 +38,17 @@ This is preferred over retaining the active/queued distinction because the hamme
 
 The existing absolute wrapper positions and 26px content box plus 1px border will remain unchanged. Shared CSS in `img/travian_basics.css` will override the ring palette and fully define the 18px inner label, including resetting the legacy city selector's inherited margin and background.
 
-### Reference-derived palette
+### High-contrast ring treatment
 
-The maximum ring will use a turquoise gradient based on the screenshot's `#1E92A1` / `#2C8C94` range with a `#336E71` edge. The unavailable ring will use a lemon-yellow gradient based on `#EEE617` / `#EEE42B` with a `#65560F` edge. The existing green ring palette remains unchanged.
+Every outer ring will use the same near-black `#20251E` outline so its silhouette remains visible over light fields, dark roofs, and roads. A small dark drop shadow will separate the badge from the map, while a restrained inset highlight will preserve the rounded Travian treatment without changing its dimensions.
+
+The affordable ring will use a more saturated green gradient from `#289600` to `#7DE128`. The unavailable ring will use a more saturated yellow gradient from `#E2B900` to `#FFF02A`. The maximum ring keeps its existing turquoise gradient because it already has sufficient hue contrast; only its outline and shadow become consistent with the other states.
 
 ## Risks / Trade-offs
 
 - **The screenshot is compressed and anti-aliased, so no single source color can be recovered exactly.** → Use representative sampled colors and a subtle gradient matching the existing badge treatment.
+- **A pure black outline could make the badges look detached or sticker-like.** → Use the softer near-black `#20251E` and keep the outline at one pixel.
+- **A strong shadow could obscure map details.** → Limit it to a compact one-to-two-pixel shadow and use only a faint inset highlight.
 - **Legacy city CSS targets every descendant `div` under `#levels`.** → Use a more specific child selector to reset all inner-label geometry and presentation.
 - **A field can have multiple jobs but only one badge.** → Show the highest queued target level, which represents the field's eventual state.
 - **Removing the hammer removes the only construction marker visible while city levels are hidden.** → Honor the toggle consistently: hidden levels hide the entire badge, including construction state.
