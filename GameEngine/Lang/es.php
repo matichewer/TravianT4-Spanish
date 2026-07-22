@@ -156,13 +156,13 @@ define("U8","Catapulta de fuego");
 define("U9","Senador");
 define("U10","Colono");
 
-//TEUTON UNITS
+//GERMAN UNITS
 define("U11","Luchador de porra");
 define("U12","Lancero");
 define("U13","Hachero");
 define("U14","Emisario");
 define("U15","Paladín");
-define("U16","Jinete Teut&oacute;n");
+define("U16","Jinete Germano");
 define("U17","Ariete");
 define("U18","Catapulta");
 define("U19","Cabecilla");

@@ -39,7 +39,7 @@ $varmedal = $database->getProfileMedal($id);
             <tr><th>Tribe</th>
                 <td><select name="tribe">
 				<option value="1" <?php if($user['tribe'] == 1) { echo "selected='selected'"; } else { echo ''; } ?>>Roman</option>
-				<option value="2" <?php if($user['tribe'] == 2) { echo "selected='selected'"; } else { echo ''; } ?>>Teuton</option>
+				<option value="2" <?php if($user['tribe'] == 2) { echo "selected='selected'"; } else { echo ''; } ?>>German</option>
 				<option value="3" <?php if($user['tribe'] == 3) { echo "selected='selected'"; } else { echo ''; } ?>>Gaul</option>
 				</select></td>
             </tr>

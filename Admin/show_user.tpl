@@ -37,7 +37,7 @@ foreach($varray as $vil) {
                 echo "Roman";
                 }
                 else if($displayarray['tribe'] == 2) {
-                echo "Teutons";
+                echo "Germans";
                 }
                 else if($displayarray['tribe'] == 3) {
                 echo "Gauls";

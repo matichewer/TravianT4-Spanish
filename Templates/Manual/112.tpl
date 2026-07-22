@@ -1,4 +1,4 @@
-<h1><img class="unit u12" src="img/x.gif" alt="Lancero" title="Lancero" /> Lancero <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u12" src="img/x.gif" alt="Lancero" title="Lancero" /> Lancero <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u12" src="img/x.gif" alt="Lancero" title="Lancero" /><div id="t_desc">En el ejército teutón, la función del Lancero es la defensa. Es especialmente bueno contra la caballería gracias a la longitud de su arma.
+<img id="big_unit" class="big_u12" src="img/x.gif" alt="Lancero" title="Lancero" /><div id="t_desc">En el ejército germano, la función del Lancero es la defensa. Es especialmente bueno contra la caballería gracias a la longitud de su arma.
 <br /><br />
 Sin embargo, no lo uses como unidad de ataque porque su capacidad ofensiva es muy baja.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 1, <a href="manual.php?typ=4&amp;gid=19">Cuartel</a> Nivel 3</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=11" title="atrás" coords="0,0,45,18" shape="rect" alt="" />

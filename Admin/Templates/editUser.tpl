@@ -53,7 +53,7 @@ if(isset($id))
 							<td>
 								<select name="tribe" class="dropdown">
 									<option value="1" <?php if($user['tribe'] == 1) { echo "selected='selected'"; } else {} ?>>Roman</option>
-									<option value="2" <?php if($user['tribe'] == 2) { echo "selected='selected'"; } else {} ?>>Teuton</option>
+									<option value="2" <?php if($user['tribe'] == 2) { echo "selected='selected'"; } else {} ?>>German</option>
 									<option value="3" <?php if($user['tribe'] == 3) { echo "selected='selected'"; } else {} ?>>Gaul</option>
 									<option value="4" <?php if($user['tribe'] == 4) { echo "selected='selected'"; } else {} ?>>Nature</option>
 									<option value="5" <?php if($user['tribe'] == 5) { echo "selected='selected'"; } else {} ?>>Natars</option>

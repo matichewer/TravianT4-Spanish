@@ -1,4 +1,4 @@
-<h1><img class="unit u20" src="img/x.gif" alt="Colono" title="Colono" /> Colono <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u20" src="img/x.gif" alt="Colono" title="Colono" /> Colono <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>

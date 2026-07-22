@@ -6,7 +6,7 @@ $hero_levels=array(0,50,150,300,500,750,1050,1400,1800,2250,2750,3300,3900,4550,
 
 //	hero_t$tribe
 //	roman = hero_t1
-//	teuton = hero_t2
+//	german = hero_t2
 //	gaul = hero_t3
 //	all times on 1x basic and need to merge with server speed
 //	formull => ($time/SPEED*1.5);

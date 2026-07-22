@@ -22,7 +22,7 @@
 			{
 				$i++;
 				if($row['tribe'] == 1) {$tribe = "Roman"; }
-				elseif($row['tribe'] == 2) {$tribe = "Teuton"; }
+				elseif($row['tribe'] == 2) {$tribe = "German"; }
 				elseif($row['tribe'] == 3) {$tribe = "Gaul"; }
 				echo "
 				<tr>

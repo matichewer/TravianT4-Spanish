@@ -22,7 +22,7 @@ $displayarray = $database->getUserArray($arr['owner'],1);
 if($displayarray['tribe'] == 1) {
     $trip = "Romanos";
 }else if($displayarray['tribe'] == 2) {
-	$trip = "Teutones";
+	$trip = "Germanos";
 }else if($displayarray['tribe'] == 3) {
     $trip = "Galos";
 }
@@ -72,7 +72,7 @@ foreach($posts as $po) {
 	if($displayarray['tribe'] == 1) {
 		$trip = "Romano";
 	}else if($displayarray['tribe'] == 2) {
-		$trip = "Teutón";
+		$trip = "Germano";
 	}else if($displayarray['tribe'] == 3) {
 		$trip = "Galo";
 	}

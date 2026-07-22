@@ -302,13 +302,13 @@ define("U8","Feuerkatapult");
 define("U9","Senator");
 define("U10","Siedler");
 
-//TEUTON UNITS
+//GERMAN UNITS
 define("U11","Keulenschwinger");
 define("U12","Speerk&auml;mpfer");
 define("U13","Axtk&auml;mpfer");
 define("U14","Kundschafter");
 define("U15","Paladin");
-define("U16","Teutonen Reiter");
+define("U16","Germanenreiter");
 define("U17","Ramme");
 define("U18","Katapult");
 define("U19","Stammesf&uuml;hrer");
@@ -562,11 +562,11 @@ define("ITEM_56","Hammer des Paladins");
 define("ITEM_56_DESC","");
 define("ITEM_57","Schwerer Hammer des Paladins");
 define("ITEM_57_DESC","");
-define("ITEM_58","Kurzschwert des Teutonen Reiters");
+define("ITEM_58","Kurzschwert des Germanenreiters");
 define("ITEM_58_DESC","");
-define("ITEM_59","Schwert des Teutonen Reiters");
+define("ITEM_59","Schwert des Germanenreiters");
 define("ITEM_59_DESC","");
-define("ITEM_60","Langschwert des Teutonen Reiters");
+define("ITEM_60","Langschwert des Germanenreiters");
 define("ITEM_60_DESC","");
 define("ITEM_61","Kleine Karte");
 define("ITEM_61_DESC","");
@@ -822,7 +822,7 @@ define("MASS_SENT","Mass IGM was sent");
 //not finished yet
 	define("","");
 	
-	$lang['index2']['description'] = 'Master the art of ancient tactics as Roman, Gaul or Teuton!';
+	$lang['index2']['description'] = 'Master the art of ancient tactics as Roman, Gaul or German!';
 	$lang['index2']['shop title'] = SERVER_NAME.' shop';
 	$lang['index2']['shop'] = 'Zum Shop';
 	$lang['index2']['shop link'] = '#';

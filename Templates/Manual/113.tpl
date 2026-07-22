@@ -37,7 +37,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u13" src="img/x.gif" alt="Hachero" title="Hachero" /><div id="t_desc">Esta es la unidad de infantería más fuerte de los teutones. Es fuerte tanto en ataque como en defensa, pero es más lento y más caro que otras unidades.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 3, <a href="manual.php?typ=4&amp;gid=12">Herrería</a> Nivel 1</div><map id="nav" name="nav">
+<img id="big_unit" class="big_u13" src="img/x.gif" alt="Hachero" title="Hachero" /><div id="t_desc">Esta es la unidad de infantería más fuerte de los germanos. Es fuerte tanto en ataque como en defensa, pero es más lento y más caro que otras unidades.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 3, <a href="manual.php?typ=4&amp;gid=12">Herrería</a> Nivel 1</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=12" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?typ=1&amp;s=14" title="adelante" coords="71,0,116,18" shape="rect" alt="" />

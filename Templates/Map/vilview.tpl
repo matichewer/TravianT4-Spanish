@@ -350,7 +350,7 @@ else if ($basearray['occupied'] && !$basearray['oasistype']){
 		<tbody>
 			<tr class="first">
 				<th>Tribu</th>
-				<td><?php switch($uinfo['tribe']) { case 1: echo "Romano"; break; case 2: echo "Teutón"; break; case 3: echo "Galo"; break; case 5: echo "Natares"; break;} ?></td>
+				<td><?php switch($uinfo['tribe']) { case 1: echo "Romano"; break; case 2: echo "Germano"; break; case 3: echo "Galo"; break; case 5: echo "Natares"; break;} ?></td>
 			</tr>
 			<tr>
 				<th>Alianza</th>

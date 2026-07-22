@@ -24,7 +24,7 @@
 					else if($units['u9'] > 0){$u9 = '<font color="black">'.$units['u9'].'';}
 					if($units['u10'] == 0){$u10 = '<font color="gray">'.$units['u10'].'';}
 					else if($units['u10'] > 0){$u10 = '<font color="black">'.$units['u10'].'';}
-					## Teuton
+					## German
 					if($units['u11'] == 0){$u11 = '<font color="gray">'.$units['u11'].'';}
 					else if($units['u11'] > 0){$u11 = '<font color="black">'.$units['u11'].'';}
 					if($units['u12'] == 0){$u12 = '<font color="gray">'.$units['u12'].'';}
@@ -139,7 +139,7 @@
 								<td><center />'.$u10.'</td>
 							 </tr>';
 						}
-						// TEUTON UNITS
+						// GERMAN UNITS
 						else if($user['tribe'] == 2)
 						{
 							echo '

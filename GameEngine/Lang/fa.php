@@ -199,7 +199,7 @@ define("U8","منجنیق آتشین");
 define("U9","سناتور");
 define("U10","مهاجر");
 
-//TEUTON UNITS
+//GERMAN UNITS
 define("U11","گرزدار");
 define("U12","نیزه دار");
 define("U13","تبرزن");

@@ -47,7 +47,7 @@ echo $percents = intval ($percents);
 echo "%"; ?></td>
      </tr>
      <tr class="hover">
-      <td>Teutones</td>
+      <td>Germanos</td>
       <td><?php echo $tribes[1]; ?></td>
       <td><?php
 $percents = 100*($tribes[1] / $users);

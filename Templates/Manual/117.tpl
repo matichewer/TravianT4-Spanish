@@ -1,4 +1,4 @@
-<h1><img class="unit u17" src="img/x.gif" alt="Ariete" title="Ariete" /> Ariete <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u17" src="img/x.gif" alt="Ariete" title="Ariete" /> Ariete <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>

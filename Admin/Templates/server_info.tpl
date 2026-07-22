@@ -75,7 +75,7 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 				<td><?php $percents = 100*($tribes[0] / $users); echo $percents = intval ($percents); echo "%"; ?></td>
 			</tr>
 			<tr>
-				<td>Teutons</td>
+				<td>Germans</td>
 				<td><?php echo $tribes[1]; ?></td>
 				<td><?php $percents = 100*($tribes[1] / $users); echo $percents = intval ($percents); echo "%";?></td>
 			</tr>

@@ -1,4 +1,4 @@
-<h1><img class="unit u18" src="img/x.gif" alt="Catapulta" title="Catapulta" /> Catapulta <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u18" src="img/x.gif" alt="Catapulta" title="Catapulta" /> Catapulta <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>

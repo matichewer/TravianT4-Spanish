@@ -42,7 +42,7 @@ foreach($varray as $vil) {
 		if($active[$i]['tribe'] == 1){
 		$tribe = "Roman";
 		} else if($active[$i]['tribe'] == 2){
-		$tribe = "Teuton";
+		$tribe = "German";
 		} else if($active[$i]['tribe'] == 3){
 		$tribe = "Gaul";
 		}

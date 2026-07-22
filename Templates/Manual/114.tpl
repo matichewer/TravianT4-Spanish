@@ -1,4 +1,4 @@
-<h1><img class="unit u14" src="img/x.gif" alt="Emisario" title="Emisario" /> Emisario <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u14" src="img/x.gif" alt="Emisario" title="Emisario" /> Emisario <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u14" src="img/x.gif" alt="Emisario" title="Emisario" /><div id="t_desc">El Emisario se adelanta mucho a las tropas teutonas para hacerse una idea de la fuerza del enemigo y sus aldeas. Se mueve a pie, lo que lo hace más lento que sus equivalentes romanos o galos. Explora las unidades, recursos y fortificaciones enemigas.
+<img id="big_unit" class="big_u14" src="img/x.gif" alt="Emisario" title="Emisario" /><div id="t_desc">El Emisario se adelanta mucho a las tropas germanas para hacerse una idea de la fuerza del enemigo y sus aldeas. Se mueve a pie, lo que lo hace más lento que sus equivalentes romanos o galos. Explora las unidades, recursos y fortificaciones enemigas.
 <br /><br />
 Si no hay Emisarios, Batidores o Equites Legati enemigos en la aldea explorada, el espionaje pasa inadvertido.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 1, <a href="manual.php?typ=4&amp;gid=15">Edificio principal</a> Nivel 5</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=13" title="atrás" coords="0,0,45,18" shape="rect" alt="" />

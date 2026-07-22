@@ -472,18 +472,18 @@
             $item = "57";
 		}
         if($type==58){
-        	$name = "Espada corta del caballero teutón";
-        	$title = "+500 a la fuerza del héroe. Por cada caballero teutón: +9 ataque y +9 defensa";
+			$name = "Espada corta del caballero germano";
+			$title = "+500 a la fuerza del héroe. Por cada caballero germano: +9 ataque y +9 defensa";
             $item = "58";
             $effect = "500";
         }elseif($type==59){
-        	$name = "Espada del caballero teutón";
-        	$title = "+1000 a la fuerza del héroe. Por cada caballero teutón: +12 ataque y +12 defensa";
+			$name = "Espada del caballero germano";
+			$title = "+1000 a la fuerza del héroe. Por cada caballero germano: +12 ataque y +12 defensa";
             $item = "59";
             $effect = "1000";
         }elseif($type==60){
-        	$name = "Espada larga del caballero teutón";
-        	$title = "+1500 a la fuerza del héroe. Por cada caballero teutón: +15 ataque y +15 defensa";
+			$name = "Espada larga del caballero germano";
+			$title = "+1500 a la fuerza del héroe. Por cada caballero germano: +15 ataque y +15 defensa";
             $item = "60";
             $effect = "1500";
         }

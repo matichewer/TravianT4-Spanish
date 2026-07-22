@@ -16,7 +16,7 @@ if($user['tribe'] == 1)
 }
 else if($user['tribe'] == 2) 
 {
-	$tribename = "Teutons";
+	$tribename = "Germans";
 }
 else if($user['tribe'] == 3)
 {

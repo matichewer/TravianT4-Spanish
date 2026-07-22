@@ -53,7 +53,7 @@ error_reporting(0);
 				}
 				else if($active[$i]['tribe'] == 2)
 				{
-					$tribe = "Teuton";
+					$tribe = "German";
 					$img = "1";
 				}
 				else if($active[$i]['tribe'] == 3)

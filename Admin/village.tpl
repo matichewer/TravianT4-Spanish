@@ -649,7 +649,7 @@ $u50 = '<font color="black">'.$units['u50'].'';
         <td><center />'.$u10.'</td>
      </tr>';
 	}
-	// TEUTON UNITS
+	// GERMAN UNITS
 	else if($user['tribe'] == 2){
 	echo '
     </tr></thead><tbody> 
@@ -807,7 +807,7 @@ echo '
 		<td><center /><font color="#bcbdbc">?</font></td>
      </tr>';
 	}
-	// TEUTON UNITS
+	// GERMAN UNITS
 	else if($user['tribe'] == 2){
 	echo '
     </tr></thead><tbody> 

@@ -1,4 +1,4 @@
-<h1><img class="unit u16" src="img/x.gif" alt="Jinete Teutón" title="Jinete Teutón" /> Jinete Teutón <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u16" src="img/x.gif" alt="Jinete Germano" title="Jinete Germano" /> Jinete Germano <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u16" src="img/x.gif" alt="Jinete Teutón" title="Jinete Teutón" /><div id="t_desc">El Jinete Teutón es un guerrero formidable que siembra miedo y desesperación entre sus enemigos. En defensa destaca contra la caballería enemiga. Sin embargo, el costo de entrenarlo y alimentarlo es extraordinario.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 15, <a href="manual.php?typ=4&amp;gid=20">Establo</a> Nivel 10</div><map id="nav" name="nav">
+<img id="big_unit" class="big_u16" src="img/x.gif" alt="Jinete Germano" title="Jinete Germano" /><div id="t_desc">El Jinete Germano es un guerrero formidable que siembra miedo y desesperación entre sus enemigos. En defensa destaca contra la caballería enemiga. Sin embargo, el costo de entrenarlo y alimentarlo es extraordinario.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 15, <a href="manual.php?typ=4&amp;gid=20">Establo</a> Nivel 10</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=15" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?typ=1&amp;s=17" title="adelante" coords="71,0,116,18" shape="rect" alt="" />

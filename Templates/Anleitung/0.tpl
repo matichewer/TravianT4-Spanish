@@ -1,6 +1,6 @@
 <p>
 
-    Puedes elegir entre tres pueblos en Travian: Romanos, Galos y Teutones. Cada pueblo tiene ventajas y desventajas, y sus tropas también son muy diferentes. Es importante elegir el pueblo que se adapte mejor a ti.</p>
+    Puedes elegir entre tres pueblos en Travian: Romanos, Galos y Germanos. Cada pueblo tiene ventajas y desventajas, y sus tropas también son muy diferentes. Es importante elegir el pueblo que se adapte mejor a ti.</p>
 
 
 
@@ -794,19 +794,19 @@ Para los principiantes y los jugadores que no saben exactamente qué quieren jug
 
 
 
-<h2>Los Teutones</h2>
+<h2>Los Germanos</h2>
 
 <p>
 
-	<img align="left" src="img/un/h//germane.jpg" width="104" height="151" border="0" alt="Teutón">
+	<img align="left" src="img/un/h//germane.jpg" width="104" height="151" border="0" alt="Germano">
 
-Los Teutones son el pueblo más agresivo. Sus tropas son famosas y temidas por su furia y frenesí al atacar. Se mueven como una horda saqueadora, sin siquiera temerle a la muerte. 
+Los Germanos son el pueblo más agresivo. Sus tropas son famosas y temidas por su furia y frenesí al atacar. Se mueven como una horda saqueadora, sin siquiera temerle a la muerte.
 
 <br><br>
 
 Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que hace que sean débiles en velocidad y defensa.<br><br><br>
 
-¡Para jugadores agresivos y experimentados, los Teutones son una excelente elección!</p>
+¡Para jugadores agresivos y experimentados, los Germanos son una excelente elección!</p>
 
 
 
@@ -818,7 +818,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	<td colspan="10">
 
-	    <h3>Las tropas teutonas</h3>
+	    <h3>Las tropas germanas</h3>
 
 	</td>
 
@@ -1032,7 +1032,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</td>
 
-	<td class="text" width="135">Jinete Teutón</td>
+	<td class="text" width="135">Jinete Germano</td>
 
 	<td width="25">150</td>
 
@@ -1190,7 +1190,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</div> 
 	<div class="clear"></div> 
-</div> 
+</div>
  
 <div id="footer">
 
@@ -1203,5 +1203,5 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</div>
 
-</div> 
-</div> 
+</div>
+</div>

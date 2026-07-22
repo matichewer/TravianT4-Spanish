@@ -1,4 +1,4 @@
-<h1><img class="unit u19" src="img/x.gif" alt="Cabecilla" title="Cabecilla" /> Cabecilla <span class="tribe">(Teutones)</span></h1>
+<h1><img class="unit u19" src="img/x.gif" alt="Cabecilla" title="Cabecilla" /> Cabecilla <span class="tribe">(Germanos)</span></h1>
 
 <table id="troop_info" cellpadding="1" cellspacing="1">
 <thead><tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u19" src="img/x.gif" alt="Cabecilla" title="Cabecilla" /><div id="t_desc">Los teutones eligen a su Cabecilla de entre los suyos. Para ser elegido no basta con valentía y estrategia; también hay que ser un orador formidable, ya que el objetivo principal del Cabecilla es convencer a la población de aldeas extranjeras de unirse a su tribu.
+<img id="big_unit" class="big_u19" src="img/x.gif" alt="Cabecilla" title="Cabecilla" /><div id="t_desc">Los germanos eligen a su Cabecilla de entre los suyos. Para ser elegido no basta con valentía y estrategia; también hay que ser un orador formidable, ya que el objetivo principal del Cabecilla es convencer a la población de aldeas extranjeras de unirse a su tribu.
 <br /><br />
 Cuanto más habla el Cabecilla a la población de una aldea, más baja la lealtad de esa aldea hasta que finalmente se une a la tribu del Cabecilla.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=16">Plaza de reuniones</a> Nivel 5, <a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 20</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=18" title="atrás" coords="0,0,45,18" shape="rect" alt="" />

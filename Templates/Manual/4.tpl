@@ -8,7 +8,7 @@
 
 <ul>
 <li><a href="manual.php?typ=2&amp;s=1">Romanos</a></li>
-<li><a href="manual.php?typ=2&amp;s=2">Teutones</a></li>
+<li><a href="manual.php?typ=2&amp;s=2">Germanos</a></li>
 <li><a href="manual.php?typ=2&amp;s=3">Galos</a></li>
 </ul>
 

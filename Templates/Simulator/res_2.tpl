@@ -16,7 +16,7 @@
 								<img src="img/x.gif" class="unit u15" title="Paladín" alt="Paladín" />
 
 							</td><td>
-								<img src="img/x.gif" class="unit u16" title="Jinete Teutón" alt="Jinete Teutón" />
+								<img src="img/x.gif" class="unit u16" title="Jinete Germano" alt="Jinete Germano" />
 							</td><td>
 								<img src="img/x.gif" class="unit u17" title="Ariete" alt="Ariete" />
 							</td><td>

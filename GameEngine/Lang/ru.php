@@ -235,13 +235,13 @@ define("U8","Fire Catapult");
 define("U9","Senator");
 define("U10","Settler");
 
-//TEUTON UNITS
+//GERMAN UNITS
 define("U11","Clubswinger");
 define("U12","Spearman");
 define("U13","Axeman");
 define("U14","Scout");
 define("U15","Paladin");
-define("U16","Teutonic Knight");
+define("U16","German Knight");
 define("U17","Ram");
 define("U18","Catapult");
 define("U19","Chief");
@@ -336,7 +336,7 @@ define("NICKNAME","Nickname");
 define("EMAIL","Email");
 define("PASSWORD","Password");
 define("ROMANS","Romans");
-define("TEUTONS","Teutons");
+define("TEUTONS","Germans");
 define("GAULS","Gauls");
 define("NW","North West");
 define("NE","North East");
@@ -440,7 +440,7 @@ define("MASS_SENT","Mass IGM was sent");
 
 	define("","");
 
-	$lang['index2']['description'] = 'Master the art of ancient tactics as Roman, Gaul or Teuton!';
+	$lang['index2']['description'] = 'Master the art of ancient tactics as Roman, Gaul or German!';
 	$lang['index2']['shop title'] = SERVER_NAME.' shop';
 	$lang['index2']['shop'] = 'Go to shop';
 	$lang['index2']['shop link'] = '#';

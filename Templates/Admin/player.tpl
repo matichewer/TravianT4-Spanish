@@ -65,7 +65,7 @@ if($deletion){
                 echo "Roman";
                 }
                 else if($user['tribe'] == 2) {
-                echo "Teutons";
+                echo "Germans";
                 }
                 else if($user['tribe'] == 3) {
                 echo "Gauls";

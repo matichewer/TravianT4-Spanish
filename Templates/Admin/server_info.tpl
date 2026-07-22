@@ -109,7 +109,7 @@ $tribes = Array(mysql_num_rows($tribe1),mysql_num_rows($tribe2),mysql_num_rows($
 			</td>
 		</tr>
 		<tr>
-			<td>Teutons</td>
+			<td>Germans</td>
 			<td><?php echo $tribes[1]; ?></td>
 			<td>
                 <?php

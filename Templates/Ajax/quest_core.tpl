@@ -463,7 +463,7 @@ header("Content-Type: application/json;");
                 $tribes = "Romans";
                 }
                 else if($session->userinfo['tribe'] == 2) {
-                $tribes = "Teutons";
+                $tribes = "Germans";
                 }
                 else if($session->userinfo['tribe'] == 3) {
                 $tribes = "Gauls";

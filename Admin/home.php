@@ -221,7 +221,7 @@
                 <td><?php $percents = 100*($tribes[0] / $users); echo round($percents,1); ?>%</td>
             </tr>
             <tr>
-                <td>Teutons:</td>
+                <td>Germans:</td>
                 <td><?php echo $tribes[1]; ?></td>
                 <td><?php $percents = 100*($tribes[1] / $users); echo round($percents,1); ?>%</td>
             </tr>

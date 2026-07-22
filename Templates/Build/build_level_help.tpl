@@ -72,13 +72,13 @@ if ($buildingHelpType === 'rally-point') {
 } elseif ($buildingHelpType === 'academy') {
 	$buildingHelpTribe = isset($session->tribe) ? (int) $session->tribe : 1;
 	if ($buildingHelpTribe === 2) {
-		$buildingHelpTitle = 'Ventajas de la Academia (Teutones)';
+		$buildingHelpTitle = 'Ventajas de la Academia (Germanos)';
 		$buildingHelpItems = array(
 			1 => 'Permite investigar Lancero, Explorador y Paladín cuando también se cumplen los requisitos de sus otros edificios.',
 			3 => 'Permite investigar Hachero.',
 			10 => 'Permite investigar Ariete.',
-			15 => 'Permite investigar Caballero teutón y Catapulta.',
-			20 => 'Permite investigar Jefe teutón.'
+			15 => 'Permite investigar Caballero germano y Catapulta.',
+			20 => 'Permite investigar Jefe germano.'
 		);
 	} elseif ($buildingHelpTribe === 3) {
 		$buildingHelpTitle = 'Ventajas de la Academia (Galos)';
@@ -131,7 +131,7 @@ if ($buildingHelpType === 'rally-point') {
 } elseif ($buildingHelpType === 'brewery') {
 	$buildingHelpTitle = 'Ventajas de la Cervecería';
 	$buildingHelpItems = array(
-		1 => 'Está concebida para aumentar el ataque de las tropas teutonas de toda la cuenta, a cambio de reducir la persuasión de los jefes y obligar a las catapultas a disparar al azar.',
+		1 => 'Está concebida para aumentar el ataque de las tropas germanas de toda la cuenta, a cambio de reducir la persuasión de los jefes y obligar a las catapultas a disparar al azar.',
 		10 => 'Es el nivel máximo del edificio.'
 	);
 	$buildingHelpNote = 'Atención: en esta instalación los diez niveles tienen una bonificación configurada de 0% y el combate no aplica el efecto de la Cervecería. Hasta corregir esa mecánica, subirla solo aporta población y puntos de cultura.';

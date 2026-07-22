@@ -51,7 +51,7 @@
 
 <p class="question">¿Cómo puedo fundar o conquistar nuevas aldeas?</p>
 
-<p class="answer">Necesitas tres colonos para fundar una nueva aldea. Para conquistar una aldea necesitas un administrador (senador, jefe teutón o jefe galo) que se puede entrenar en tu palacio/residencia a partir del nivel 10. Además necesitas una cierta cantidad de <a href="anleitung.php?s=4">puntos de cultura</a>.</p>
+<p class="answer">Necesitas tres colonos para fundar una nueva aldea. Para conquistar una aldea necesitas un administrador (senador, jefe germano o jefe galo) que se puede entrenar en tu palacio/residencia a partir del nivel 10. Además necesitas una cierta cantidad de <a href="anleitung.php?s=4">puntos de cultura</a>.</p>
 
 
 

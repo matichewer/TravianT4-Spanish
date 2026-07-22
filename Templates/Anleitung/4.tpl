@@ -11,7 +11,7 @@
 
 <br><br>
 
-En cuanto el administrador de una ciudad (senador, jefe teutón, jefe galo) haya sido investigado en la academia, se lo puede entrenar en la residencia/palacio como a un colono. Sin embargo, no se pueden haber entrenado colonos previamente para poder entrenar a un administrador. Para conquistar una aldea, el administrador debe atacar la aldea deseada varias veces después de que la residencia/palacio enemigo haya sido demolido. Una vez que la lealtad de la aldea llegue a cero, la aldea pasará a ser propia. Una vez que esto suceda, se debería construir un palacio o una residencia para volver a aumentar la lealtad.</p>
+En cuanto el administrador de una ciudad (senador, jefe germano, jefe galo) haya sido investigado en la academia, se lo puede entrenar en la residencia/palacio como a un colono. Sin embargo, no se pueden haber entrenado colonos previamente para poder entrenar a un administrador. Para conquistar una aldea, el administrador debe atacar la aldea deseada varias veces después de que la residencia/palacio enemigo haya sido demolido. Una vez que la lealtad de la aldea llegue a cero, la aldea pasará a ser propia. Una vez que esto suceda, se debería construir un palacio o una residencia para volver a aumentar la lealtad.</p>
 
 
 

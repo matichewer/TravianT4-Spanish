@@ -161,7 +161,7 @@ El escondite se usa para ocultar parte de tus recursos cuando la aldea es atacad
 
 Galos: el escondite es el doble de grande.<br>
 
-Teutones: los escondites enemigos solo ocultan el 66% de la cantidad normal en la versión 2.5 y 3 de Travian, y el 80% de la cantidad normal en la versión 3.5.    <br>
+Germanos: los escondites enemigos solo ocultan el 66% de la cantidad normal en la versión 2.5 y 3 de Travian, y el 80% de la cantidad normal en la versión 3.5.    <br>
 
     <br>
 
@@ -297,7 +297,7 @@ Romanos: cada mercader puede transportar 500 recursos.<br>
 
 Velocidad: 16 casillas/hora.<br>
 
-Teutones: cada mercader puede transportar 1000 recursos.<br>
+Germanos: cada mercader puede transportar 1000 recursos.<br>
 
 Velocidad: 12 casillas/hora.<br>
 

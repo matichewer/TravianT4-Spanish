@@ -45,7 +45,7 @@ foreach($varray as $vil) {
                         </tr>
 						<tr align="right">
                             <th>Tribu</th>
-                            <td><?php if($user['tribe'] == 1) {echo "Romans";}else if($user['tribe'] == 2) {echo "Teutons";}else if($user['tribe'] == 3) {echo "Gauls";} ?></td>
+                            <td><?php if($user['tribe'] == 1) {echo "Romans";}else if($user['tribe'] == 2) {echo "Germans";}else if($user['tribe'] == 3) {echo "Gauls";} ?></td>
 			            </tr>
 			            <tr align="right">
                             <th>Alianza:</th>

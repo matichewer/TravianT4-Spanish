@@ -187,7 +187,7 @@ break;
     if($tribe==1) {
     	$tribename = "Romano";
     }elseif($tribe==2) {
-    	$tribename = "Teutón";
+		$tribename = "Germano";
     }elseif($tribe==3) {
     	$tribename = "Galo";
     }elseif($tribe==5) {
