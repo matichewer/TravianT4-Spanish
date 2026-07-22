@@ -2,7 +2,7 @@
 <table class="fill_in transparent" cellpadding="1" cellspacing="0">
 	<tbody>
 		<tr>
-			<th><?php echo TRIBE4; ?></th>
+			<th><?php echo TRIBE4; ?><br><small>Cantidad de animales</small></th>
 		</tr>
 		<tr>
 			<td class="details">
@@ -19,11 +19,9 @@ echo "
 		</td>
         <td class=\"desc\">".$technology->unarray[$u]."</td>
         <td class=\"value\">
-        	<input class=\"text\" type=\"text\" name=\"a2_".$i."\" value=\"".$form->getValue('a2_'.$i)."\" maxlength=\"6\">
+            <input class=\"text\" type=\"text\" name=\"a2_".$i."\" value=\"".$form->getValue('a2_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de animales\">
         </td>
-        <td class=\"research\">
-        	<input class=\"text\" type=\"text\" name=\"f2_".$i."\" value=\"".$form->getValue('f2_'.$i)."\" maxlength=\"2\">
-        </td>
+        <td class=\"research\"></td>
 	</tr>
 ";
 	$u++;

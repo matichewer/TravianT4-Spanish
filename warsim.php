@@ -43,17 +43,13 @@ if(isset($_POST['result'])) {
         include("Templates/Simulator/res_d".$tar.".tpl");
     }
     echo '<h4 class="round">Configuración del ataque</h4>';
-    if (isset($_POST['result'][3])&&isset($_POST['result'][4])){
-        if ($_POST['result'][4]>$_POST['result'][3]){
-            echo "";
-        }elseif ($_POST['result'][4]==0){
-            echo "";
-        }else{
-            $demolish=$_POST['result'][4]/$_POST['result'][3];
-            //$Katalife=round($_POST['result'][4]-($_POST['result'][4]*$_POST['result'][1]));
-            //$totallvl = round($form->getValue('kata')-($form->getValue('kata') * $demolish));
-            $totallvl = round(sqrt(pow(($form->getValue('kata')+0.5),2)-($_POST['result'][4]*8)));
-            echo "<p>El edificio de nivel <b>".$form->getValue('kata')."</b> quedó reducido al nivel <b>".$totallvl."</b>.</p>";
+    if(isset($_POST['result']['target_level_after'])) {
+        $targetLevel = (int)$form->getValue('kata');
+        $remainingLevel = (int)$_POST['result']['target_level_after'];
+        if($remainingLevel < $targetLevel) {
+            echo "<p>El edificio de nivel <b>".$targetLevel."</b> quedó reducido al nivel <b>".$remainingLevel."</b>.</p>";
+        } else {
+            echo "<p>Las catapultas supervivientes no alcanzaron a reducir el nivel del edificio.</p>";
         }
     }
 }
@@ -120,6 +116,27 @@ if(count($target) > 0) {
 		</tbody>
 	</table>
 
+<script type="text/javascript">
+(function() {
+	var targetRow = document.getElementById('warsimCatapultTarget');
+	var attackTypes = document.getElementsByName('ktyp');
+	if(!targetRow || !attackTypes.length) {
+		return;
+	}
+	function updateCatapultTarget() {
+		for(var i = 0; i < attackTypes.length; i++) {
+			if(attackTypes[i].checked) {
+				targetRow.style.display = attackTypes[i].value === '1' ? 'none' : '';
+				return;
+			}
+		}
+	}
+	for(var i = 0; i < attackTypes.length; i++) {
+		attackTypes[i].onclick = updateCatapultTarget;
+	}
+	updateCatapultTarget();
+})();
+</script>
 
 <p class="btn"><button type="submit" value="Simular ataque" name="s1" id="btn_ok"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo WARSIM_SIMULATE; ?></div></div></button></p>
 </form>

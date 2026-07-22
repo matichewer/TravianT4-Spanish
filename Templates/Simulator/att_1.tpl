@@ -8,7 +8,7 @@
 <table class="fill_in transparent" cellpadding="1" cellspacing="0">
 	<tbody>
 		<tr>
-			<th><?php echo TRIBE1; ?></th>
+			<th><?php echo TRIBE1; ?><br><small>Cantidad · Herrería</small></th>
 		</tr>
 		<tr>
 			<td class="details">
@@ -27,10 +27,10 @@ echo "
 		</td>
         <td class=\"desc\">".$technology->unarray[$u]."</td>
         <td class=\"value\">
-        	<input class=\"text\" type=\"text\" name=\"a1_".$i."\" value=\"".$form->getValue('a1_'.$i)."\" maxlength=\"6\">
+            <input class=\"text\" type=\"text\" name=\"a1_".$i."\" value=\"".$form->getValue('a1_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
         </td>
         <td class=\"research\">
-        	<input class=\"text\" type=\"text\" name=\"f1_".$i."\" value=\"".$form->getValue('f1_'.$i)."\" maxlength=\"2\">
+            <input class=\"text\" type=\"text\" name=\"f1_".$i."\" value=\"".$form->getValue('f1_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">
         </td>
 	</tr>
 ";
@@ -59,25 +59,27 @@ echo "
                     <img src="img/x.gif" class="unit uhab" title="<?php echo WARSIM_POP; ?>">
                 </td>
 	<td class="desc"><?php echo WARSIM_POP; ?></td>
-	<td class="value"><input class="text" type="text" name="ew1" value="<?php echo $form->getValue('ew1')==""? 1 : $form->getValue('ew1'); ?>" maxlength="5"></td>
+	<td class="value"><input class="text" type="text" name="ew1" value="<?php echo $form->getValue('ew1')==""? 1 : $form->getValue('ew1'); ?>" maxlength="5" inputmode="numeric" title="Población de la aldea desde la que sale el ataque"></td>
 	<td class="research">
             </td>
 </tr>
-<tr>
+<?php if((int)$target[0] !== 4) { ?>
+<tr id="warsimCatapultTarget">
 	<td class="ico">
                     <img src="img/x.gif" class="unit ucata" title="<?php echo WARSIM_KATA; ?>">
                 </td>
 	<td class="desc"><?php echo WARSIM_KATA; ?></td>
-	<td class="value"><input class="text" type="text" name="kata" value="<?php echo $form->getValue('kata')==""? 0 : $form->getValue('kata'); ?>" maxlength="2"></td>
+	<td class="value"><input class="text" type="text" name="kata" value="<?php echo $form->getValue('kata')==""? 0 : $form->getValue('kata'); ?>" maxlength="2" inputmode="numeric" title="Nivel actual del edificio que recibiría el impacto (0-20)"></td>
 	<td class="research">
             </td>
 </tr>
+<?php } ?>
 <tr>
 	<td class="ico">
                     <img src="img/x.gif" class="unit uhero" title="<?php echo WARSIM_HEROPOWER; ?>">
                 </td>
 	<td class="desc"><?php echo WARSIM_HEROPOWER; ?></td>
-	<td class="value"><input class="text" type="text" name="h_off_bonus" value="<?php echo $form->getValue('h_off_bonus')==""? 0 : $form->getValue('h_off_bonus'); ?>" maxlength="4"></td>
+	<td class="value"><input class="text" type="text" name="h_off_bonus" value="<?php echo $form->getValue('h_off_bonus')==""? 0 : $form->getValue('h_off_bonus'); ?>" maxlength="4" inputmode="decimal" title="Porcentaje de bonus ofensivo (0-20). Admite coma o punto decimal."></td>
 	<td class="research">
             </td>
 </tr>

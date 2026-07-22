@@ -2,7 +2,7 @@
 <table class="fill_in transparent" cellpadding="1" cellspacing="0">
 	<tbody>
 		<tr>
-			<th><?php echo TRIBE3; ?></th>
+			<th><?php echo TRIBE3; ?><br><small>Cantidad · Herrería</small></th>
 		</tr>
 		<tr>
 			<td class="details">
@@ -21,10 +21,10 @@ echo "
 		</td>
         <td class=\"desc\">".$technology->unarray[$u]."</td>
         <td class=\"value\">
-        	<input class=\"text\" type=\"text\" name=\"a2_".$i."\" value=\"".$form->getValue('a2_'.$i)."\" maxlength=\"6\">
+            <input class=\"text\" type=\"text\" name=\"a2_".$i."\" value=\"".$form->getValue('a2_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
         </td>
         <td class=\"research\">
-        	<input class=\"text\" type=\"text\" name=\"f2_".$i."\" value=\"".$form->getValue('f2_'.$i)."\" maxlength=\"2\">
+            <input class=\"text\" type=\"text\" name=\"f2_".$i."\" value=\"".$form->getValue('f2_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">
         </td>
 	</tr>
 ";
