@@ -13,6 +13,26 @@
 
 include("config/connection.php");
 include("config/config.php");
+
+$manualType = isset($_GET['typ']) && ctype_digit((string) $_GET['typ']) ? (int) $_GET['typ'] : null;
+$manualSection = isset($_GET['s']) && ctype_digit((string) $_GET['s']) ? (int) $_GET['s'] : 0;
+$manualGid = isset($_GET['gid']) && ctype_digit((string) $_GET['gid']) ? (int) $_GET['gid'] : null;
+$manualUnitId = $manualType === 1 ? ($manualGid !== null ? $manualGid : $manualSection) : null;
+$isUnitManual = $manualUnitId !== null && $manualUnitId > 0;
+$unitPortrait = null;
+if ($isUnitManual) {
+	$portraitCandidates = array(
+		"gpack/travian_Travian_4.0_41/img/u/big/u" . $manualUnitId . "-rtl.png",
+		"gpack/travian_Travian_4.0_41/img/u/big/u" . $manualUnitId . "-rtl.gif",
+		"gpack/travian_default/img/u2rtl/u" . $manualUnitId . ".gif"
+	);
+	foreach ($portraitCandidates as $portraitCandidate) {
+		if (is_file($portraitCandidate)) {
+			$unitPortrait = $portraitCandidate;
+			break;
+		}
+	}
+}
 ?>
 
 <html>
@@ -35,6 +55,7 @@ include("config/config.php");
 <!--    	<link href="<?php echo GP_LOCATE; ?>lang/en/lang.css" rel="stylesheet" type="text/css" />	-->
 
 	<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd423" rel="stylesheet" type="text/css" />
+	<link href="img/manual.css?v=1" rel="stylesheet" type="text/css" />
 
 	<style type="text/css">
 		img.building {
@@ -44,45 +65,85 @@ include("config/config.php");
 			background-color: white;
 			background-image: none;
 			min-width: 0;
-			padding: 6px;
+			padding: 0;
 		}
+		<?php if ($unitPortrait !== null) { ?>
+		body.unit-manual #big_unit {
+			background-image: url("<?php echo htmlspecialchars($unitPortrait, ENT_QUOTES, 'UTF-8'); ?>");
+		}
+		<?php } ?>
 	</style>
 
     </head>
-<!--    <body class="manual">-->
-    <body>
+    <body class="manual<?php echo $isUnitManual ? ' unit-manual' : ''; ?><?php echo $isUnitManual && $unitPortrait === null ? ' no-unit-portrait' : ''; ?>">
+	<main class="manual-content">
 <?php
 
-if (!ctype_digit($_GET['s'])) {
-	$_GET['s'] = "0";
-}
-if (!ctype_digit($_GET['typ'])) {
-	$_GET['typ'] = null;
-}
-if(!isset($_GET['typ']) && !isset($_GET['s'])) {
+if ($manualType === null && !isset($_GET['s'])) {
 	include("Templates/Manual/00.tpl");
 }
-else if (!isset($_GET['typ']) && $_GET['s'] == 1) {
+else if ($manualType === null && $manualSection === 1) {
 	include("Templates/Manual/00.tpl");
 }
-else if (!isset($_GET['typ']) && $_GET['s'] == 2) {
+else if ($manualType === null && $manualSection === 2) {
 	include("Templates/Manual/direct.tpl");
 }
-else if (isset($_GET['typ']) && $_GET['typ'] == 5 && $_GET['s'] == 3) {
+else if ($manualType === 5 && $manualSection === 3) {
 	include("Templates/Manual/medal.tpl");
 }
 else {
-	if(isset($_GET['gid'])) {
-		include("Templates/Manual/".$_GET['typ'].($_GET['gid']).".tpl");
+	if ($manualGid !== null) {
+		$template = "Templates/Manual/" . $manualType . $manualGid . ".tpl";
 	}
 	else {
-		if($_GET['typ'] == 4 && $_GET['s'] == 0) {
-			$_GET['s'] = 1;
+		if ($manualType === 4 && $manualSection === 0) {
+			$manualSection = 1;
 		}
-	include("Templates/Manual/".$_GET['typ'].$_GET['s'].".tpl");
+		$template = "Templates/Manual/" . $manualType . $manualSection . ".tpl";
+	}
+
+	if (is_file($template)) {
+		include($template);
 	}
 }
 ?>
+	</main>
+	<?php if ($isUnitManual) { ?>
+	<script type="text/javascript">
+	(function () {
+		var table = document.getElementById('troop_info');
+		if (!table) {
+			return;
+		}
+
+		var labels = {
+			att_all: 'Ataque',
+			def_i: 'Def. infantería',
+			def_c: 'Def. caballería',
+			r1: 'Madera',
+			r2: 'Barro',
+			r3: 'Hierro',
+			r4: 'Cereal'
+		};
+		var headers = table.getElementsByTagName('th');
+		for (var i = 0; i < headers.length; i++) {
+			var icon = headers[i].getElementsByTagName('img')[0];
+			if (!icon || !labels[icon.className]) {
+				continue;
+			}
+			var label = document.createElement('span');
+			label.className = 'stat-label';
+			label.appendChild(document.createTextNode(labels[icon.className]));
+			headers[i].appendChild(label);
+		}
+
+		var heading = document.createElement('h2');
+		heading.className = 'unit-stats-title';
+		heading.appendChild(document.createTextNode('Atributos y costo de entrenamiento'));
+		table.parentNode.insertBefore(heading, table);
+	}());
+	</script>
+	<?php } ?>
 </body>
 
 </html>

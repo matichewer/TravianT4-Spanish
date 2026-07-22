@@ -9299,9 +9299,11 @@ return new Class({
 					return this
 				},
 				iPopup:function(a,b){
-					('<iframe class="popup" frameborder="0" id="Frame" src="manual.php?typ='+b+"&amp;gid="+a+'" width="475" height="500" border="0" allowTransparency="true"></iframe>').dialog({
-					title:"{allgemein.anleitung}".translate(),
-					buttonOk:false
+					var c=parseInt(b,10)===1;
+					('<iframe class="popup" frameborder="0" id="Frame" src="manual.php?typ='+b+"&amp;gid="+a+'" width="'+(c?560:475)+'" height="'+(c?540:500)+'" border="0" allowTransparency="true"></iframe>').dialog({
+					title:c?"Información de la unidad":"Información del edificio",
+					buttonOk:false,
+					cssClass:"white manualInfo"
 					});
 					return false
 				},
