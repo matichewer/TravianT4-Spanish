@@ -93,6 +93,9 @@
 			if(isset($post['markread'])) {
 				$this->markNoticesRead($post);
 			}
+			if(isset($post['markunread'])) {
+				$this->markNoticesUnread($post);
+			}
         		if(isset($post['archive'])) {
         			$this->archiveNotice($post);
         		}
@@ -252,6 +255,20 @@
 				for($i = 1; $i <= 10; $i++) {
 					if(isset($post['n' . $i])) {
 						$database->noticeViewed($post['n' . $i], $session->uid);
+					}
+				}
+				if(isset($post['t'])) {
+					header("Location: berichte.php?t=".(int)$post['t']);
+				} else {
+					header("Location: berichte.php");
+				}
+			}
+
+			private function markNoticesUnread($post) {
+				global $database, $session;
+				for($i = 1; $i <= 10; $i++) {
+					if(isset($post['n' . $i])) {
+						$database->noticeUnviewed($post['n' . $i], $session->uid);
 					}
 				}
 				if(isset($post['t'])) {

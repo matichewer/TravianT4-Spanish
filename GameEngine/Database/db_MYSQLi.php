@@ -1598,6 +1598,13 @@
 			return mysqli_query($this->connection,$q);
 		}
 
+		function noticeUnviewed($id, $uid = null) {
+			$id = (int)$id;
+			$uidCondition = ($uid === null) ? "" : " and uid = ".(int)$uid;
+			$q = "UPDATE " . TB_PREFIX . "ndata set viewed = 0 where id = $id$uidCondition";
+			return mysqli_query($this->connection,$q);
+		}
+
         	function addNotice($uid, $toWref, $ally, $type, $topic, $data, $time = 0) {
         		if($time == 0) {
         			$time = time();
