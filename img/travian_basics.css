@@ -3,53 +3,48 @@
 /* ------------------- New CSS styles ------------------- */
 /* ------------------------------------------------------ */
 
-/* Identify the exact resource field or building that is currently upgrading. */
-div.village1 .level.hasConstruction {
-	z-index: 24;
-	pointer-events: none;
+/* Resource-field and building level badges share one visual state model. */
+div.village1 .levelBadge,
+div.village2 div#village_map div#levels .levelBadge {
+	border-color: #65560f;
+	background-image: linear-gradient(to top, #eee42b, #eee617 100%);
 }
 
-.constructionMarker {
-	position: absolute;
-	top: -8px;
-	right: -9px;
-	z-index: 3;
-	box-sizing: border-box;
-	width: 19px;
-	height: 19px;
-	border: 1px solid #76520d;
+div.village1 .levelBadge.levelBadgeCanUpgrade,
+div.village2 div#village_map div#levels .levelBadge.levelBadgeCanUpgrade {
+	border-color: #506d00;
+	background-image: linear-gradient(to top, #7da100, #c7e94f 100%);
+}
+
+div.village1 .levelBadge.levelBadgeMaxLevel,
+div.village2 div#village_map div#levels .levelBadge.levelBadgeMaxLevel {
+	border-color: #336e71;
+	background-image: linear-gradient(to top, #1e92a1, #2c8c94 100%);
+}
+
+div.village1 .levelBadge > .levelBadgeLabel,
+div.village2 div#village_map div#levels .levelBadge > .levelBadgeLabel {
+	position: relative;
+	top: 4px;
+	left: 4px;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	border: 0;
 	border-radius: 50%;
-	background: linear-gradient(to bottom, #ffe985, #e2a91b);
-	box-shadow: 0 1px 2px rgba(45, 30, 5, 0.65);
-	color: #3e2a08;
-	font-family: "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-	font-size: 12px;
+	background-color: #fff;
+	background-image: none;
+	color: #252525;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
 	font-weight: normal;
 	line-height: 17px;
 	text-align: center;
-	text-shadow: none;
-	pointer-events: none;
 }
 
-.constructionMarkerQueued {
-	border-color: #666;
-	background: linear-gradient(to bottom, #f1f1f1, #aaa);
-	filter: grayscale(0.65);
-}
-
-/* The construction marker remains useful even when city level badges are hidden. */
-div.village2 #levels:not(.on) div.hasConstruction {
-	visibility: visible;
-	border-color: transparent;
-	background: none;
-}
-
-div.village2 #levels:not(.on) div.hasConstruction > div {
-	visibility: hidden;
-}
-
-div.village2 #levels:not(.on) div.hasConstruction > .constructionMarker {
-	visibility: visible;
+div.village1 .levelBadge.levelBadgeBuilding > .levelBadgeLabel,
+div.village2 div#village_map div#levels .levelBadge.levelBadgeBuilding > .levelBadgeLabel {
+	background-color: #f88c1f;
 }
 
 /* Keep unread reports visible at a glance in every report list. */
