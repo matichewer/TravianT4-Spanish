@@ -11,11 +11,37 @@ else if(!$message->unread && $message->nunread) { $messagelol = "i3"; }
 else if($message->unread && $message->nunread) { $messagelol = "i1"; }
 else { $messagelol = "i4"; }
 
+$rSubmited = null;
+$lSubmited = null;
+$x = null;
+$y = null;
+
+if (!isset($_SESSION['quest_validated']) || !is_array($_SESSION['quest_validated'])) {
+	$_SESSION['quest_validated'] = array();
+}
+
+$syncQuest = function() use ($database, $session) {
+	$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+};
+
+$claimMainQuestResources = function($currentQuest, $nextQuest, $requirementMet, $reward) use ($database, $session, $syncQuest) {
+	if($requirementMet && $database->claimQuestResources($session->uid, $session->villages[0], $currentQuest, $nextQuest, $reward[0], $reward[1], $reward[2], $reward[3])) {
+		$_SESSION['qst'] = $nextQuest;
+		return true;
+	}
+
+	$syncQuest();
+	return false;
+};
+
 if (isset($qact)){
  switch($qact) {
 	case 'enter':
-	$database->updateUserField($_SESSION['username'],'quest','1',0);
-	$_SESSION['qst']= 1;
+	if($database->advanceQuest($session->uid, 0, 1)) {
+		$_SESSION['qst'] = 1;
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case 'skip':
@@ -23,207 +49,267 @@ if (isset($qact)){
 		$_SESSION['qst']= 23;
 		$skiped=true;
 	} else {
-		$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+		$syncQuest();
 	}
 	break;
 
 	case '2':
-	$database->updateUserField($_SESSION['username'],'quest','2',0);
-	$_SESSION['qst']= 2;
-
-	//Give Reward
-	$database->FinishWoodcutter($session->villages[0]);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$woodBuilt = (int)$resourceLevels['f1'] + (int)$resourceLevels['f3'] + (int)$resourceLevels['f14'] + (int)$resourceLevels['f17'] >= 1;
+	$woodQueued = false;
+	foreach($building->buildArray as $job) {
+		if((int)$job['type'] === 1) {
+			$woodQueued = true;
+			break;
+		}
+	}
+	if(($woodBuilt || $woodQueued) && $database->advanceQuest($session->uid, 1, 2)) {
+		$_SESSION['qst'] = 2;
+		if($woodQueued) {
+			$database->FinishWoodcutter($session->villages[0]);
+		}
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case '3':
-	$database->updateUserField($_SESSION['username'],'quest','3',0);
-	$_SESSION['qst']= 3;
-    $today = date("mdHi");
-	mysql_query("UPDATE ".TB_PREFIX."users set plus = ('".mktime(date("H"),date("i"), date("s"),date("m") , date("d"), date("Y"))."')+3600*24 where `id`='".$session->uid."'") or die(mysql_error());
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$cropBuilt = (int)$resourceLevels['f2'] + (int)$resourceLevels['f8'] + (int)$resourceLevels['f9'] + (int)$resourceLevels['f12'] + (int)$resourceLevels['f13'] + (int)$resourceLevels['f15'] >= 1;
+	$cropQueued = false;
+	foreach($building->buildArray as $job) {
+		if((int)$job['type'] === 4) {
+			$cropQueued = true;
+			break;
+		}
+	}
+	if(($cropBuilt || $cropQueued) && $database->claimQuestPlus($session->uid, 2, 3, 86400)) {
+		$_SESSION['qst'] = 3;
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case '4':
-	$database->updateUserField($_SESSION['username'],'quest','4',0);
-	$_SESSION['qst']= 4;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],30,60,30,20,1);
+	$defaultVillageName = 'Aldea de ' . $session->userinfo['username'];
+	$legacyDefaultVillageName = $session->userinfo['username'] . "'s village";
+	$villageRenamed = $village->vname !== $defaultVillageName && $village->vname !== $legacyDefaultVillageName;
+	$claimMainQuestResources(3, 4, $villageRenamed, array(30, 60, 30, 20));
 	break;
 
 	case '5':
-    $database->updateUserField($_SESSION['username'],'quest','5',0);
-	$_SESSION['qst']= 5;
-
-	$rSubmited=$qact2;
-    //Give Reward
-	$database->FinishRallyPoint($session->villages[0]);
+	$rallyPointBuilt = $building->getTypeLevel(16) >= 1;
+	$rallyPointQueued = false;
+	foreach($building->buildArray as $job) {
+		if((int)$job['type'] === 16) {
+			$rallyPointQueued = true;
+			break;
+		}
+	}
+	if(($rallyPointBuilt || $rallyPointQueued) && $database->advanceQuest($session->uid, 4, 5)) {
+		$_SESSION['qst'] = 5;
+		if($rallyPointQueued) {
+			$database->FinishRallyPoint($session->villages[0]);
+		}
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case '6':
-	$database->updateUserField($_SESSION['username'],'quest','6',0);
-	$_SESSION['qst']= 6;
-	//Give Reward
-	$database->modifyResource($session->villages[0],80,110,60,40,1);
-
+	$rankValidated = !empty($_SESSION['quest_validated'][5]);
+	if($claimMainQuestResources(5, 6, $rankValidated, array(80, 110, 60, 40))) {
+		unset($_SESSION['quest_validated'][5]);
+	}
 	break;
 
 	case '7':
-	$database->updateUserField($_SESSION['username'],'quest','7',0);
-	$_SESSION['qst']= 7;
-	$Subject="Mensaje del Taskmaster";
-	$Message="Te informamos que te espera una linda recompensa en el taskmaster.<br /><br />Aviso: este mensaje se generó automáticamente. No es necesario responder.";
-	$database->sendMessage($session->userinfo['id'],0,$Subject,$Message,0,0,0,0,0);
-	$RB=true;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],150,160,130,130,1);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$hasIron = (int)$resourceLevels['f4'] + (int)$resourceLevels['f7'] + (int)$resourceLevels['f10'] + (int)$resourceLevels['f11'] >= 1;
+	$hasClay = (int)$resourceLevels['f5'] + (int)$resourceLevels['f6'] + (int)$resourceLevels['f16'] + (int)$resourceLevels['f18'] >= 1;
+	if($claimMainQuestResources(6, 7, $hasIron && $hasClay, array(150, 160, 130, 130))) {
+		$Subject="Mensaje del Taskmaster";
+		$Message="Te informamos que te espera una linda recompensa en el taskmaster.<br /><br />Aviso: este mensaje se generó automáticamente. No es necesario responder.";
+		$database->sendMessage($session->userinfo['id'],0,$Subject,$Message,0,0,0,0,0);
+		$RB=true;
+	}
 	break;
 
 	case '8':
-	if($database->claimQuestGold($session->uid, 7, 8, 20)) {
+	if(!$message->unread && $database->claimQuestGold($session->uid, 7, 8, 20)) {
 		$_SESSION['qst']= 8;
 	} else {
-		$_SESSION['qst'] = (int)$database->getUserField($session->uid, 'quest', 0);
+		$syncQuest();
 	}
 	break;
 
 	case '9':
-	$database->updateUserField($_SESSION['username'],'quest','9',0);
-	$_SESSION['qst']= 9;
-	//Give Reward
-	$database->modifyResource($session->villages[0],100,120,40,40,1);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$fieldGroups = array(
+		array(1, 3, 14, 17),
+		array(5, 6, 16, 18),
+		array(4, 7, 10, 11),
+		array(2, 8, 9, 12, 13, 15),
+	);
+	$twoOfEach = true;
+	foreach($fieldGroups as $fields) {
+		$count = 0;
+		foreach($fields as $field) {
+			if((int)$resourceLevels['f'.$field] >= 1) {
+				$count++;
+			}
+		}
+		if($count < 2) {
+			$twoOfEach = false;
+			break;
+		}
+	}
+	$claimMainQuestResources(8, 9, $twoOfEach, array(100, 120, 40, 40));
 	break;
 
 	case 'coor':
 	$x=$qact2;
 	$y=$qact3;
+	if((int)$database->getUserField($session->uid, 'quest', 0) === 9 && is_numeric($x) && is_numeric($y)) {
+		$nearestVillage = $database->getFieldDistance($database->getVillageID($session->uid));
+		$nearestCoordinates = $database->getCoor($nearestVillage);
+		if((int)$x === (int)$nearestCoordinates['x'] && (int)$y === (int)$nearestCoordinates['y']) {
+			$_SESSION['quest_validated'][9] = true;
+		}
+	}
 	break;
 
 	case '10':
-	$database->updateUserField($_SESSION['username'],'quest','10',0);
-	$_SESSION['qst']= 10;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],60,30,40,90,1);
+	$coordinatesValidated = !empty($_SESSION['quest_validated'][9]);
+	if($claimMainQuestResources(9, 10, $coordinatesValidated, array(60, 30, 40, 90))) {
+		unset($_SESSION['quest_validated'][9]);
+	}
 	break;
 
 	case '11':
-	$database->updateUserField($_SESSION['username'],'quest','11',0);
-	$_SESSION['qst']= 11;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],75,120,30,50,1);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$allFieldsAtLevelOne = true;
+	for($field = 1; $field <= 18; $field++) {
+		if((int)$resourceLevels['f'.$field] < 1) {
+			$allFieldsAtLevelOne = false;
+			break;
+		}
+	}
+	$claimMainQuestResources(10, 11, $allFieldsAtLevelOne, array(75, 120, 30, 50));
 	break;
 
 	case '12':
-	$database->updateUserField($_SESSION['username'],'quest','12',0);
-	$_SESSION['qst']= 12;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],120,200,140,100,1);
+	$hasPeaceDove = strpos($uArray['desc1'], '[#0]') !== false || strpos($uArray['desc2'], '[#0]') !== false;
+	$claimMainQuestResources(11, 12, $hasPeaceDove, array(120, 200, 140, 100));
 	break;
 
 	case '13':
-	$database->updateUserField($_SESSION['username'],'quest','13',0);
-	$_SESSION['qst']= 13;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],150,180,30,130,1);
+	$claimMainQuestResources(12, 13, $building->getTypeLevel(23) >= 1, array(150, 180, 30, 130));
 	break;
 
     case '14':
-	$database->updateUserField($_SESSION['username'],'quest','14',0);
-	$_SESSION['qst']= 14;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],60,50,40,30,1);
+	$resourceLevels = $database->getResourceLevel($session->villages[0]);
+	$fieldGroups = array(
+		array(1, 3, 14, 17),
+		array(5, 6, 16, 18),
+		array(4, 7, 10, 11),
+		array(2, 8, 9, 12, 13, 15),
+	);
+	$oneOfEachAtLevelTwo = true;
+	foreach($fieldGroups as $fields) {
+		$found = false;
+		foreach($fields as $field) {
+			if((int)$resourceLevels['f'.$field] >= 2) {
+				$found = true;
+				break;
+			}
+		}
+		if(!$found) {
+			$oneOfEachAtLevelTwo = false;
+			break;
+		}
+	}
+	$claimMainQuestResources(13, 14, $oneOfEachAtLevelTwo, array(60, 50, 40, 30));
 	break;
 
 	case 'lumber':
 	$lSubmited=$qact2;
+	if((int)$database->getUserField($session->uid, 'quest', 0) === 14 && is_numeric($lSubmited) && (int)$lSubmited === 210) {
+		$_SESSION['quest_validated'][14] = true;
+	}
 	break;
 
 	case '15':
-	$database->updateUserField($_SESSION['username'],'quest','15',0);
-	$_SESSION['qst']= 15;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],50,30,60,20,1);
+	$lumberValidated = !empty($_SESSION['quest_validated'][14]);
+	if($claimMainQuestResources(14, 15, $lumberValidated, array(50, 30, 60, 20))) {
+		unset($_SESSION['quest_validated'][14]);
+	}
 	break;
 
 	case '16':
-	$database->updateUserField($_SESSION['username'],'quest','16',0);
-	$_SESSION['qst']= 16;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],75,75,40,40,1);
+	$claimMainQuestResources(15, 16, $building->getTypeLevel(15) >= 3, array(75, 75, 40, 40));
 	break;
 
     case 'rank':
 	$rSubmited=$qact2;
+	$currentQuest = (int)$database->getUserField($session->uid, 'quest', 0);
+	if(($currentQuest === 5 || $currentQuest === 16) && is_numeric($rSubmited)) {
+		$currentRank = (int)$ranking->getUserRank($session->userinfo['username']);
+		if((int)$rSubmited === $currentRank) {
+			$_SESSION['quest_validated'][$currentQuest] = true;
+		}
+	}
 	break;
 
 	case '17':
-	$database->updateUserField($_SESSION['username'],'quest','17',0);
-	$_SESSION['qst']= 17;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],100,90,100,60,1);
+	$rankValidated = !empty($_SESSION['quest_validated'][16]);
+	if($claimMainQuestResources(16, 17, $rankValidated, array(100, 90, 100, 60))) {
+		unset($_SESSION['quest_validated'][16]);
+	}
 	break;
 
 	case '18':
-	$database->updateUserField($_SESSION['username'],'quest','18',0);
-	$_SESSION['qst']= 18;
+	if($database->advanceQuest($session->uid, 17, 18, 1)) {
+		$_SESSION['qst'] = 18;
+		$uArray['quest_choose'] = 1;
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case '19':
-	$database->updateUserField($_SESSION['username'],'quest','19',0);
-	$_SESSION['qst']= 19;
-
-    //Give Reward
-	$database->modifyResource($session->villages[0],70,100,90,100,1);
+	$claimMainQuestResources(18, 19, $building->getTypeLevel(19) >= 1, array(70, 100, 90, 100));
 	break;
 
 	case '20':
-	$database->updateUserField($_SESSION['username'],'quest','20',0);
-	$_SESSION['qst']= 20;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],300,320,360,570,1);
+	$troopKeys = array(1 => 'u1', 2 => 'u11', 3 => 'u21');
+	$tribe = (int)$session->userinfo['tribe'];
+	$hasTwoTroops = isset($troopKeys[$tribe], $village->unitall[$troopKeys[$tribe]]) && (int)$village->unitall[$troopKeys[$tribe]] >= 2;
+	$claimMainQuestResources(19, 20, $hasTwoTroops, array(300, 320, 360, 570));
 	break;
 
 	case '21':
-	$database->updateUserField($_SESSION['username'],'quest','21',0);
-	$_SESSION['qst']= 21;
+	if($database->advanceQuest($session->uid, 17, 21, 2)) {
+		$_SESSION['qst'] = 21;
+		$uArray['quest_choose'] = 2;
+	} else {
+		$syncQuest();
+	}
 	break;
 
 	case '22':
-	$database->updateUserField($_SESSION['username'],'quest','22',0);
-	$_SESSION['qst']= 22;
-
-	//Give Reward
-	$database->modifyResource($session->villages[0],80,90,60,40,1);
+	$claimMainQuestResources(21, 22, $building->getTypeLevel(11) >= 1, array(80, 90, 60, 40));
 	break;
 
     case '23':
-    $database->updateUserField($_SESSION['username'],'quest','23',0);
-    $_SESSION['qst']= 23;
-
-    //Give Reward
-	$database->modifyResource($session->villages[0],70,120,90,50,1);
+	$claimMainQuestResources(22, 23, $building->getTypeLevel(10) >= 1, array(70, 120, 90, 50));
     break;
 
     case '24':
-    $database->updateUserField($_SESSION['username'],'quest','24',0);
-    $_SESSION['qst']= 24;
-
-    //Give Reward
 	if((int)$uArray['quest_choose'] === 1) {
-		// Military path: wall reward.
-		$database->modifyResource($session->villages[0],200,120,180,80,1);
+		$claimMainQuestResources(20, 24, (int)$village->resarray['f40'] >= 1, array(200, 120, 180, 80));
 	} else {
-		// Economy path (and skipped tutorial): marketplace reward.
-		$database->modifyResource($session->villages[0],1200,200,200,450,1);
+		$claimMainQuestResources(23, 24, $building->getTypeLevel(17) >= 1, array(1200, 200, 200, 450));
 	}
     break;
 
@@ -384,7 +470,7 @@ header("Content-Type: application/json;");
                 }
 	  ?>
 
-{"markup":"\n\t\t<div id=\"qstd\"><h1> <img class=\"point\" src=\"img\/x.gif\" alt=\"\" title=\"\"\/> ¡Bienvenido a <?php echo SERVER_NAME; ?>!<\/h1><br \/><i>&rdquo;Por lo que veo, te han nombrado senador de esta pequeña aldea. Seré tu consejero durante los primeros días y nunca me apartaré de tu lado (izquierdo).&rdquo;<\/i><br \/><br \/><span id=\"qst_accpt\"><a class=\"qle\" href=\"javascript: qst_next('','enter'); \">A la primera tarea.<\/a><a class=\"qri\" href=\"javascript: qst_fhandle();\">Mirar\u00a0alrededor\u00a0por\u00a0tu\u00a0cuenta.<\/a><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/><br \/><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"intro\"><\/div>\n\t\t","number":null,"reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>g","msrc":"<?php echo $messagelol; ?>","altstep":1}
+{"markup":"\n\t\t<div id=\"qstd\"><h1> <img class=\"point\" src=\"img\/x.gif\" alt=\"\" title=\"\"\/> ¡Bienvenido a <?php echo SERVER_NAME; ?>!<\/h1><br \/><i>&rdquo;Por lo que veo, te han nombrado senador de esta pequeña aldea. Seré tu consejero durante los primeros días y nunca me apartaré de tu lado (izquierdo).&rdquo;<\/i><br \/><br \/><span id=\"qst_accpt\"><a class=\"qle\" href=\"javascript: qst_next('','enter'); \">A la primera tarea.<\/a><a class=\"qri\" href=\"javascript: qst_next('','skip');\">Mirar\u00a0alrededor\u00a0por\u00a0tu\u00a0cuenta.<\/a><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/><br \/><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"intro\"><\/div>\n\t\t","number":null,"reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>g","msrc":"<?php echo $messagelol; ?>","altstep":1}
 
 <?php } elseif($_SESSION['qst']== 1){
 
@@ -455,7 +541,8 @@ if ($rallypoint == 0){
 $temp['uid']=$session->userinfo['id'];
 $displayarray = $database->getUserArray($temp['uid'],1);
 $rRes=$ranking->getUserRank($displayarray['username']);
-if ($rRes!=$rSubmited){?>
+$rankValidated = !empty($_SESSION['quest_validated'][5]);
+if (!$rankValidated && $rRes!=$rSubmited){?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 5: Otros jugadores<\/h4><div class=\"spoken\">&rdquo;En Travian, juegas con muchos otros jugadores. Haz clic en 'estadísticas' en el menú superior para consultar tu clasificación e introdúcela aquí.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Busca tu clasificación en las estadísticas e introdúcela aquí.<\/div><input id=\"qst_val\" class=\"text\" type=\"text\" name=\"qstin\" \/><button type=\"button\" value=\"Completar tarea\" /> <input onclick=\"qst_next('','rank',document.getElementById('qst_val').value)\" type=\"button\" value=\"completar tarea\"\/><\/button><span id=\"qst_accpt\"><\/span><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"rank1\"><\/div>\n\t\t","number":5,"reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
@@ -520,7 +607,8 @@ $getvID = $database->getVillageID($session->uid);
 $nvillage = $database->getFieldDistance($getvID);
 $ncoor = $database->getCoor($nvillage);
 $nvillagename = $database->getVillageField($nvillage,"name");
-if ($x!=$ncoor['x'] or $y!=$ncoor['y']){
+$coordinatesValidated = !empty($_SESSION['quest_validated'][9]);
+if (!$coordinatesValidated && ($x!=$ncoor['x'] or $y!=$ncoor['y'])){
 
 ?>
 
@@ -583,7 +671,8 @@ if ($ironL<1 || $clayL<1 || $woodL<1 || $cropL<1){?>
 <?php } elseif($_SESSION['qst']== 14){
 
 //Check player submited number Barracks cost lumber
-if ($lSubmited!=210){?>
+$lumberValidated = !empty($_SESSION['quest_validated'][14]);
+if (!$lumberValidated && $lSubmited!=210){?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 14: Instrucciones<\/h4><div class=\"spoken\">&rdquo;En las instrucciones del juego puedes encontrar breves textos informativos sobre diferentes edificios y tipos de unidades. Haz clic en el libro negro en la esquina inferior izquierda para averiguar cuánta madera se necesita para el cuartel.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Indica cuánta madera cuesta el cuartel.<\/div><input id=\"qst_val\" class=\"text\" type=\"text\" name=\"qstin\" onkeypress=\"if (event.keyCode==13) {qst_next('','lumber',document.getElementById('qst_val').value);}\"> <button type=\"button\" value=\"completar tarea\" onclick=\"qst_next('','lumber',document.getElementById('qst_val').value)\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"><\/div><\/div><\/div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"><\/div><\/div><\/div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"><\/div><\/div><\/div><\/div><div class=\"button-contents\">completar tarea<\/div><\/div><\/button><span id=\"qst_accpt\"><\/span><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"cost\"><\/div>\n\t\t","number":"-14","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 14: Instrucciones<\/h4><div class=\"spoken\">&rdquo;¡Exacto! El cuartel cuesta 210 de madera.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\"><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/>Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">50<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">30<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">60<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img/x.gif\" alt=\"Cereal\">20<\/span><\/div><div class=\"clear\"><\/div><br><span id=\"qst_accpt\"><a class=\"arrow\" href=\"javascript: qst_next('','15');\">Continuar con la siguiente tarea.<\/a><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"cost\"><\/div>\n\t\t","number":14,"reward":{"wood":50,"clay":30,"iron":60,"crop":20},"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
@@ -605,7 +694,8 @@ if ($mainbuilding<3){?>
 $temp['uid']=$session->userinfo['id'];
 $displayarray = $database->getUserArray($temp['uid'],1);
 $rRes=$ranking->getUserRank($displayarray['username']);
-if ($rRes!=$rSubmited){ ?>
+$rankValidated = !empty($_SESSION['quest_validated'][16]);
+if (!$rankValidated && $rRes!=$rSubmited){ ?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 16: ¡Avanzando!<\/h4><div class=\"spoken\">&rdquo;Consulta de nuevo tu clasificación en las estadísticas de jugadores y disfruta de tu progreso.&rdquo;</div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Busca tu clasificación en las estadísticas e introdúcela aquí.<\/div><input id=\"qst_val\" class=\"text\" type=\"text\" name=\"qstin\" onkeypress=\"if (event.keyCode==13) {qst_next('','rank',document.getElementById('qst_val').value);}\"> <button type=\"button\" value=\"completar tarea\" onclick=\"qst_next('','rank',document.getElementById('qst_val').value)\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"><\/div><\/div><\/div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"><\/div><\/div><\/div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"><\/div><\/div><\/div><\/div><div class=\"button-contents\">completar tarea<\/div><\/div><\/button><span id=\"qst_accpt\"><\/span><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"rank2\"><\/div>\n\t\t","number":"-16","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 16: ¡Avanzando!<\/h4><div class=\"spoken\">&rdquo;¡Bien hecho! Esa es tu clasificación actual.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\"><input type=\"hidden\" id=\"qst_val\" value=\"2\" \/>Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">100<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">90<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">100<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img/x.gif\" alt=\"Cereal\">60<\/span><\/div><div class=\"clear\"><\/div><br><span id=\"qst_accpt\"><a class=\"arrow\" href=\"javascript: qst_next('','17');\">Continuar con la siguiente tarea<\/a><\/span><\/div>\n\t\t<div id=\"qstbg\" class=\"rank2\"><\/div>\n\t\t","number":16,"reward":{"wood":100,"clay":90,"iron":100,"crop":60},"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
@@ -617,7 +707,6 @@ if ($rRes!=$rSubmited){ ?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Tarea 17: Armas o riquezas<\/h4><div class=\"spoken\">&rdquo;Ahora tienes que tomar una decisión: comerciar pacíficamente o convertirte en un temido guerrero. <br><br> Para el mercado necesitas un granero, para las tropas necesitas un cuartel.&rdquo;<\/div><input type=\"hidden\" id=\"qst_val\" value=\"\"><button type=\"button\" value=\"Economía\" class=\"qb1 granary_barracks\" onclick=\"javascript: qst_next('','21');\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"><\/div><\/div><\/div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"><\/div><\/div><\/div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"><\/div><\/div><\/div><\/div><div class=\"button-contents\">Economía<\/div><\/div><\/button><button type=\"button\" value=\"Ejército\" class=\"qb2 granary_barracks\" onclick=\"javascript: qst_next('','18');\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"><\/div><\/div><\/div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"><\/div><\/div><\/div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"><\/div><\/div><\/div><\/div><div class=\"button-contents\">Ejército<\/div><\/div><\/button><div class=\"clear\"><\/div><span id=\"qst_accpt\"><\/span><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"granary_barracks\"><\/div>\n\t\t","number":"-17","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 
 <?php } elseif($_SESSION['qst']== 18){
-$database->updateUserField($_SESSION['username'],'quest_choose','1',0);
 // Checking barracks builded or no
 $barrack = $building->getTypeLevel(19);
 if ($barrack==0){ ?>
@@ -653,7 +742,6 @@ if ($wall==0){?>
 <?php } ?>
 
 <?php } elseif($_SESSION['qst']==21){
-$database->updateUserField($_SESSION['username'],'quest_choose','2',0);
 // Checking granary builded or no
 $granary = $building->getTypeLevel(11);
 if ($granary ==0){ ?>

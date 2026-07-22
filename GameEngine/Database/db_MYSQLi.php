@@ -1366,6 +1366,60 @@
 				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
+			function advanceQuest($userid, $currentQuest, $nextQuest, $questChoose = null) {
+				$userid = (int)$userid;
+				$currentQuest = (int)$currentQuest;
+				$nextQuest = (int)$nextQuest;
+				if($userid <= 0 || $currentQuest < 0 || $nextQuest < 0) {
+					return false;
+				}
+
+				$choiceUpdate = '';
+				if($questChoose !== null) {
+					$questChoose = (int)$questChoose;
+					if($questChoose !== 1 && $questChoose !== 2) {
+						return false;
+					}
+					$choiceUpdate = ", quest_choose = $questChoose";
+				}
+
+				$q = "UPDATE " . TB_PREFIX . "users SET quest = $nextQuest$choiceUpdate WHERE id = $userid AND quest = $currentQuest";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function claimQuestPlus($userid, $currentQuest, $nextQuest, $seconds) {
+				$userid = (int)$userid;
+				$currentQuest = (int)$currentQuest;
+				$nextQuest = (int)$nextQuest;
+				$seconds = (int)$seconds;
+				if($userid <= 0 || $seconds <= 0) {
+					return false;
+				}
+
+				$q = "UPDATE " . TB_PREFIX . "users SET quest = $nextQuest, plus = GREATEST(plus, UNIX_TIMESTAMP()) + $seconds WHERE id = $userid AND quest = $currentQuest";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function claimQuestResources($userid, $vref, $currentQuest, $nextQuest, $wood, $clay, $iron, $crop) {
+				$userid = (int)$userid;
+				$vref = (int)$vref;
+				$currentQuest = (int)$currentQuest;
+				$nextQuest = (int)$nextQuest;
+				$wood = (int)$wood;
+				$clay = (int)$clay;
+				$iron = (int)$iron;
+				$crop = (int)$crop;
+				if($userid <= 0 || $vref <= 0 || min($wood, $clay, $iron, $crop) < 0) {
+					return false;
+				}
+
+				$q = "UPDATE " . TB_PREFIX . "users AS u INNER JOIN " . TB_PREFIX . "vdata AS v ON v.wref = $vref AND v.owner = u.id SET u.quest = $nextQuest, v.wood = v.wood + $wood, v.clay = v.clay + $clay, v.iron = v.iron + $iron, v.crop = v.crop + $crop WHERE u.id = $userid AND u.quest = $currentQuest";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_affected_rows($this->connection) === 2;
+			}
+
 			function claimFollowupQuestGold($userid, $currentFquest, $nextFquest, $gold) {
 				$userid = (int)$userid;
 				$gold = (int)$gold;
@@ -2331,13 +2385,13 @@
 				global $village, $building, $session, $technology;
 
 		if(!$mode) {
-			$barracks = array(1,2,3,11,12,13,14,21,22,31,32,33,34,35,36,37,38,39,40,41,42,43,44);
-			$greatbarracks = array(61,62,63,71,72,73,84,81,82,91,92,93,94,95,96,97,98,99,100,101,102,103,104);
-			$stables = array(4,5,6,15,16,23,24,25,26,45,46);
-			$greatstables = array(64,65,66,75,76,83,84,85,86,105,106);
-			$workshop = array(7,8,17,18,27,28,47,48);
-			$greatworkshop = array(67,68,77,78,87,88,107,108);
-			$residence = array(9,10,19,20,29,30,49,50);
+			$barracks = array(1,2,3,11,12,13,14,21,22,31,32,33,34,41,42,43,44);
+			$greatbarracks = array(61,62,63,71,72,73,74,81,82,91,92,93,94,101,102,103,104);
+			$stables = array(4,5,6,15,16,23,24,25,26,35,36,45,46);
+			$greatstables = array(64,65,66,75,76,83,84,85,86,95,96,105,106);
+			$workshop = array(7,8,17,18,27,28,37,38,47,48);
+			$greatworkshop = array(67,68,77,78,87,88,97,98,107,108);
+			$residence = array(9,10,19,20,29,30,39,40,49,50);
 			$trapper = array(99);
 
 			if(in_array($unit, $barracks)) {

@@ -76,6 +76,20 @@ for ($index = 0; $index < $caseCount; $index++) {
     }
 }
 
+preg_match_all(
+    '/\$claimMainQuestResources\(\d+,\s*(\d+),[^\n]*?array\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)\)/',
+    $source,
+    $mainRewardMatches,
+    PREG_SET_ORDER
+);
+foreach ($mainRewardMatches as $rewardMatch) {
+    $action = (int)$rewardMatch[1];
+    if (!isset($awardedRewards[$action])) {
+        $awardedRewards[$action] = array();
+    }
+    $awardedRewards[$action][] = array_map('intval', array_slice($rewardMatch, 2));
+}
+
 $followupSwitchStart = strpos($source, 'switch($questNumber)');
 $followupClaimStart = strpos($source, "if(\$_SESSION['qst'] === 24", $followupSwitchStart);
 if ($followupSwitchStart === false || $followupClaimStart === false) {
@@ -144,19 +158,25 @@ if ($displayedRewards !== $awardedRewards) {
 $specialRewardChecks = array(
     'Task 1 instant woodcutter' => array(
         'Leñador completado al instante.',
+        '$database->advanceQuest($session->uid, 1, 2)',
         '$database->FinishWoodcutter($session->villages[0]);',
     ),
     'Task 2 one day Plus' => array(
         '"reward":{"plus":1}',
-        '+3600*24',
+        '$database->claimQuestPlus($session->uid, 2, 3, 86400)',
     ),
     'Task 4 instant rally point' => array(
         'Plaza de reuniones completada al instante.',
+        '$database->advanceQuest($session->uid, 4, 5)',
         '$database->FinishRallyPoint($session->villages[0]);',
     ),
     'Task 7 gold' => array(
         '"reward":{"gold":20}',
         '$database->claimQuestGold($session->uid, 7, 8, 20)',
+    ),
+    'Tutorial skip gold' => array(
+        "qst_next('','skip')",
+        '$database->claimQuestGold($session->uid, 0, 23, 25)',
     ),
     'All fields level 2 gold' => array(
         '"reward":{"gold":15}',
@@ -172,6 +192,25 @@ foreach ($specialRewardChecks as $name => $needles) {
     }
 }
 
+$securityChecks = array(
+    'Main resource rewards are atomic' => '$database->claimQuestResources(',
+    'Follow-up resource rewards are atomic' => '$database->claimFollowupQuestResources(',
+    'Manual answer proofs are stored' => "\$_SESSION['quest_validated']",
+);
+foreach ($securityChecks as $name => $needle) {
+    if (strpos($source, $needle) === false) {
+        $errors[] = $name . ': missing ' . $needle;
+    }
+}
+
+if (preg_match("/updateUserField\([^\n]*'quest'/", $source)) {
+    $errors[] = 'Quest progression must use conditional claim methods, not updateUserField().';
+}
+
+if (strpos($source, '$database->modifyResource($session->villages[0]') !== false) {
+    $errors[] = 'Quest rewards must not use an unconditional modifyResource() call.';
+}
+
 if (!empty($errors)) {
     foreach ($errors as $error) {
         fwrite(STDERR, $error . "\n");
@@ -180,4 +219,4 @@ if (!empty($errors)) {
 }
 
 $resourceVariantCount = array_sum(array_map('count', $displayedRewards));
-echo 'Quest reward consistency: OK (' . $resourceVariantCount . " resource variants and 5 special rewards).\n";
+echo 'Quest reward consistency: OK (' . $resourceVariantCount . ' resource variants and ' . count($specialRewardChecks) . " special rewards).\n";
