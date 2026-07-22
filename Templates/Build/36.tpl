@@ -70,11 +70,11 @@ include("upgrade.tpl");
 			</div>
 
 			<div class="showCosts">
-			<span class="resources r1"><img class="r1" src="img/x.gif" alt="Madera">35</span>
-			<span class="resources r2"><img class="r2" src="img/x.gif" alt="Barro">30</span>
-			<span class="resources r3"><img class="r3" src="img/x.gif" alt="Hierro">10</span>
-			<span class="resources r4"><img class="r4" src="img/x.gif" alt="Cereal">20</span>
-			<span class="resources r5"><img class="r5" src="img/x.gif" alt="Consumo de cereal">0</span>
+			<span class="resources r1"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $u99['wood']; ?></span>
+			<span class="resources r2"><img class="r2" src="img/x.gif" alt="Barro"><?php echo $u99['clay']; ?></span>
+			<span class="resources r3"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo $u99['iron']; ?></span>
+			<span class="resources r4"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo $u99['crop']; ?></span>
+			<span class="resources r5"><img class="r5" src="img/x.gif" alt="Consumo de cereal"><?php echo $u99['pop']; ?></span>
 			<div class="clear"></div>
 			<span class="clocks"><img class="clock" src="img/x.gif" alt="Duración"><?php $dur=$generator->getTimeFormat(round(${'u99'}['time'] * ($bid19[$village->resarray['f'.$id]]['attri']*TRAPPER_CAPACITY / 100) / SPEED)); echo ($dur=="0:00:00")? "0:00:01":$dur; ?></span><div class="clear"></div></div>
 			<span class="value"></span> <input type="text" class="text" name="t99" value="0" maxlength="4"><span class="value">

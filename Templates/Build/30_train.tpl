@@ -1,6 +1,13 @@
 ﻿<?php 
 $success = 0;
-for($i=4;$i<=6;$i++) {
+$stableUnits = array(
+	1 => array(4,5,6),
+	2 => array(15,16),
+	3 => array(23,24,25,26),
+	4 => array(35,36),
+	5 => array(45,46)
+);
+foreach($stableUnits[$session->tribe] as $i) {
 	if($technology->getTech($i)) {
     echo "<div class=\"action first\">
                 	<div class=\"bigUnitSection\">

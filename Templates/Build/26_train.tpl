@@ -43,6 +43,7 @@ echo "<div class=\"action first\">
                         <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".${'u'.$i}['clay']."</span>
                         <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".${'u'.$i}['iron']."</span>
                         <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".${'u'.$i}['crop']."</span>
+                        <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Consumo de cereal\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
 echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid26[$village->resarray['f'.$id]]['attri'] / 100) / SPEED));

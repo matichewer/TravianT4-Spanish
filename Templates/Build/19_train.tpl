@@ -19,8 +19,6 @@
 						</div>
                         <div class=\"showCosts\">
                         <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".(${'u'.$i}['wood'])."</span>
-                        <span class=\"resources r1\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".(${'u'.$i}['wood'])."</span>
-
                         <span class=\"resources r2\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".(${'u'.$i}['clay'])."</span>
                         <span class=\"resources r3\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".(${'u'.$i}['iron'])."</span>
                         <span class=\"resources r4\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".(${'u'.$i}['crop'])."</span>
