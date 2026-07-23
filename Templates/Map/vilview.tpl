@@ -101,7 +101,7 @@ if($tileDetailsPopup) {
           } else if($data2['protect'] < time()) {
             echo $village->resarray['f39']? "<a class=\"a arrow\" href=\"a2b.php?z=".$d."\">Enviar tropas.</a>" : "<span class=\"a arrow disabled\" title=\"(construir plaza de reuniones)\">Enviar tropas.</span>"; 
           } else {
-            $protectionEnds = date('d.m.Y H:i', (int)$data2['protect']);
+            $protectionEnds = date('d/m/Y H:i', (int)$data2['protect']);
             echo "<span class=\"a arrow disabled\" title=\"Protección de principiante hasta el ".$protectionEnds."\">Enviar tropas.</span>";
           }
           ?>
