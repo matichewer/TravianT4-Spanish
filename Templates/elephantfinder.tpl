@@ -13,7 +13,7 @@ $query = mysql_query(
 	"SELECT w.id,w.x,w.y,u.u31,u.u32,u.u33,u.u34,u.u35,u.u36,u.u37,u.u38,u.u39,u.u40
 	 FROM " . TB_PREFIX . "wdata w
 	 INNER JOIN " . TB_PREFIX . "units u ON u.vref = w.id
-	 WHERE w.fieldtype = 0 AND w.oasistype > 0 AND u.u40 > 0"
+	 WHERE w.fieldtype = 0 AND w.oasistype > 0 AND w.occupied = 0 AND u.u40 > 0"
 );
 while($row = mysql_fetch_assoc($query)) {
 	$row['distance'] = getMapDistance((int)$currentCoords['x'], (int)$currentCoords['y'], (int)$row['x'], (int)$row['y']);
