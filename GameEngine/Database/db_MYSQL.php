@@ -3276,12 +3276,7 @@ break;
 							$UP36 = rand(5, 30);
 							$UP37 = rand(1, 30);
 							$UP39 = rand(0, 10);
-							$fil = rand(0,20);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "'";
         					$result = mysql_query($q, $this->connection);
@@ -3302,12 +3297,7 @@ break;
 							$UP32 = rand(5, 30);
 							$UP35 = rand(1, 25);
 							$UP38 = rand(0, 15);
-							$fil = rand(0,20);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "', u38 = u38 + '" . $UP38 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "'";
         					$result = mysql_query($q, $this->connection);
@@ -3328,12 +3318,7 @@ break;
 							$UP32 = rand(5, 30);
 							$UP34 = rand(1, 25);
 							$UP37 = rand(0, 15);
-							$fil = rand(0,20);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "', u37 = u37 + '" . $UP37 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "'";
         					$result = mysql_query($q, $this->connection);
@@ -3355,12 +3340,7 @@ break;
 							$UP33 = rand(5, 30);
 							$UP38 = rand(1, 25);
 							$UP39 = rand(0, 25);
-							$fil = rand(0,20);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u38 = u38 + '" . $UP38 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "'";
         					$result = mysql_query($q, $this->connection);
@@ -3390,12 +3370,7 @@ break;
 							$UP36 = rand(5, 30);
 							$UP37 = rand(1, 30);
 							$UP39 = rand(0, 10);
-							$fil = rand(0,10);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u35 <= ".$max." AND u36 <= ".$max." AND u37 <= ".$max."  AND u39 <= ".$max." AND u40 <= ".$max."";
         					$result = mysql_query($q, $this->connection);
@@ -3416,12 +3391,7 @@ break;
 							$UP32 = rand(5, 30);
 							$UP35 = rand(1, 25);
 							$UP38 = rand(0, 15);
-							$fil = rand(0,10);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "', u38 = u38 + '" . $UP38 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u35 <= ".$max." AND u38 <= ".$max." AND u40 <= ".$max."";
         					$result = mysql_query($q, $this->connection);
@@ -3442,12 +3412,7 @@ break;
 							$UP32 = rand(5, 30);
 							$UP34 = rand(1, 25);
 							$UP37 = rand(0, 15);
-							$fil = rand(0,10);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "', u37 = u37 + '" . $UP37 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u34 <= ".$max." AND u37 <= ".$max." AND u40 <= ".$max."";
         					$result = mysql_query($q, $this->connection);
@@ -3469,12 +3434,7 @@ break;
 							$UP33 = rand(5, 30);
 							$UP38 = rand(1, 25);
 							$UP39 = rand(0, 25);
-							$fil = rand(0,10);
-							if($fil == 1){
-								$UP40 = rand(0, 31);
-							}else{
-								$UP40 = 0;
-							}
+							$UP40 = rand(1, 31);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u38 = u38 + '" . $UP38 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u33 <= ".$max." AND u38 <= ".$max." AND u39 <= ".$max." AND u40 <= ".$max."";
         					$result = mysql_query($q, $this->connection);
