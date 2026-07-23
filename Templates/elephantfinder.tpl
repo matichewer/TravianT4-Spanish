@@ -10,7 +10,7 @@ function getMapDistance($fromX, $fromY, $toX, $toY) {
 
 $oases = array();
 $query = mysql_query(
-	"SELECT w.id,w.x,w.y,u.u31,u.u32,u.u33,u.u34,u.u35,u.u36,u.u37,u.u38,u.u39,u.u40
+	"SELECT w.id,w.x,w.y,w.occupied,u.u31,u.u32,u.u33,u.u34,u.u35,u.u36,u.u37,u.u38,u.u39,u.u40
 	 FROM " . TB_PREFIX . "wdata w
 	 INNER JOIN " . TB_PREFIX . "units u ON u.vref = w.id
 	 WHERE w.fieldtype = 0 AND w.oasistype > 0 AND u.u40 > 0"
@@ -76,6 +76,7 @@ $animalNames = array(
 					data-x="<?php echo (int)$oasis['x']; ?>"
 					data-y="<?php echo (int)$oasis['y']; ?>"
 				>(<?php echo (int)$oasis['x']; ?>|<?php echo (int)$oasis['y']; ?>)</a>
+				<?php if(!empty($oasis['occupied'])) { ?><span class="elephantFinderOccupied" title="Oasis conquistado por un jugador">(ocupado)</span><?php } ?>
 			</td>
 			<td class="typ">
 				<?php
@@ -104,6 +105,9 @@ $animalNames = array(
 .elephantFinderTable td.typ{white-space:normal;}
 .elephantFinderAnimal{display:inline-flex;align-items:center;margin-right:10px;white-space:nowrap;}
 .elephantFinderAnimalCount{margin-right:4px;font-weight:bold;}
+.elephantFinderOccupied{margin-left:4px;font-size:10px;color:#8a1f11;}
+
+.dialog.mapTileDetailsDialog .content{max-height:70vh;overflow-y:auto;overflow-x:hidden;}
 
 body.cropfinder .dialog .dialog-contents .cancel{box-sizing:border-box;width:22px;height:22px;right:-10px;top:-10px;z-index:30;border:1px solid #777;border-radius:50%;background:#fff!important;color:#333;text-align:center;line-height:18px;}
 body.cropfinder .dialog .dialog-contents .cancel:before{content:'\00d7';font-family:Arial,sans-serif;font-size:22px;font-weight:normal;}
@@ -135,6 +139,36 @@ body.cropfinder .dialog .dialog-contents .cancel:hover{background:#eee!important
 <script type="text/javascript">
 (function(){
 	var dialogOpen = false;
+	var openPopup = null;
+
+	// Travian.Dialog.update() centers the (position:fixed) wrapper using the height of
+	// document.body instead of the viewport. This page's table makes the body much taller
+	// than the window, so the dialog gets pushed down and its lower part -- the last troop
+	// rows, i.e. always the elephants -- ends up off-screen and unreachable. Re-center it
+	// against the viewport ourselves.
+	function fitToViewport(popup){
+		if(!popup || typeof window.getSize !== 'function' || typeof document.id !== 'function') {
+			return;
+		}
+		var wrapper = document.id(popup);
+		if(!wrapper) {
+			return;
+		}
+		var view = window.getSize();
+		var size = wrapper.getSize();
+		wrapper.setStyles({
+			top: Math.max(5, Math.round((view.y - size.y) / 2)),
+			left: Math.max(5, Math.round((view.x - size.x) / 2))
+		});
+	}
+
+	if(typeof window.addEvent === 'function') {
+		window.addEvent('resize', function(){
+			if(dialogOpen) {
+				fitToViewport(openPopup);
+			}
+		});
+	}
 
 	function bindMapLinks(content){
 		if(typeof $ === 'undefined' || !content) {
@@ -156,11 +190,14 @@ body.cropfinder .dialog .dialog-contents .cancel:hover{background:#eee!important
 			buttonOk:false,
 			cssClass:'white mapTileDetailsDialog',
 			title:'Detalles de la casilla (' + x + '|' + y + ')',
-			onClose:function(){ dialogOpen = false; }
+			onClose:function(){ dialogOpen = false; openPopup = null; }
 		}).setContent('<div class="loading"></div>').show();
+		openPopup = popup;
+		fitToViewport(popup);
 
 		var showError = function(){
 			popup.setContent('<p>No se pudo cargar la información de esta casilla.</p>');
+			fitToViewport(popup);
 			return false;
 		};
 
@@ -176,6 +213,7 @@ body.cropfinder .dialog .dialog-contents .cancel:hover{background:#eee!important
 					popupTitle.destroy();
 				}
 				bindMapLinks(popup.content);
+				fitToViewport(popup);
 			},
 			onFailure:showError,
 			onException:showError
