@@ -57,6 +57,7 @@ foreach ($yfull as $yy) {
     }
 }
 echo "<h1 dir=\"rtl\">Mapa</h1>";
+echo "<div class=\"mapElephantFinderButton\"><a href=\"elephantfinder.php\">Buscador de elefantes</a></div>";
 $row = 0;
 $coorindex = 0;
 ?>
@@ -316,6 +317,9 @@ break;
 body.map .dialog .dialog-contents .cancel{box-sizing:border-box;width:22px;height:22px;right:-10px;top:-10px;z-index:30;border:1px solid #777;border-radius:50%;background:#fff!important;color:#333;text-align:center;line-height:18px;}
 body.map .dialog .dialog-contents .cancel:before{content:'\00d7';font-family:Arial,sans-serif;font-size:22px;font-weight:normal;}
 body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:#000;}
+.mapElephantFinderButton{margin:8px 0 12px 0;}
+.mapElephantFinderButton a{display:inline-block;padding:6px 10px;background:#6b8e23;color:#fff;text-decoration:none;border-radius:4px;font-size:12px;font-weight:bold;border:1px solid #4d6619;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+.mapElephantFinderButton a:hover{background:#7ba428;}
 .dialog.mapTileDetailsDialog{color:#333;font-size:13px;}
 .dialog.mapTileDetailsDialog .dialog-container{background:#fff;border:1px solid #9a9a9a;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.45);}
 .dialog.mapTileDetailsDialog .dialog-tl,.dialog.mapTileDetailsDialog .dialog-tc,.dialog.mapTileDetailsDialog .dialog-tr,
