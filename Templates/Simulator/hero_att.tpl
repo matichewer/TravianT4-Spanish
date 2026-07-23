@@ -18,7 +18,7 @@
 	<td class="value">
 		<input class="text" type="text" name="h_att_power"
 			value="<?php echo $form->getValue('h_att_power') === '' ? 100 : $form->getValue('h_att_power'); ?>"
-			maxlength="5" inputmode="numeric" title="Fuerza de lucha total del héroe, incluidos los objetos (0-99999)" placeholder="Fuerza">
+			maxlength="5" inputmode="numeric" title="Autocompletada con la fuerza de tu héroe y la bonificación de sus objetos equipados. Podés editarla para probar otro valor." placeholder="Fuerza">
 	</td>
 	<td class="research"></td>
 </tr>

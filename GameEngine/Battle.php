@@ -2,7 +2,7 @@
 class Battle {
 	
 	public function procSim($post) {
-		global $form, $village;
+		global $database, $form, $session, $village;
 
 		if(!isset($post['a1_v'])) {
 			return;
@@ -37,6 +37,21 @@ class Battle {
 		$values['tribe'] = $defenderTribe;
 		$values['ktyp'] = isset($post['ktyp']) && (int)$post['ktyp'] === 1 ? 1 : 0;
 
+		$defaultHeroPower = 100;
+		$defaultHeroHealth = 100;
+		$defaultHeroOffBonus = 0;
+		if(isset($session->uid)) {
+			$userHero = $database->getHeroData((int)$session->uid);
+			if(is_array($userHero)) {
+				$powerPerPoint = isset($session->tribe) && (int)$session->tribe === 1 ? 100 : 80;
+				$defaultHeroPower = 100
+					+ $powerPerPoint * max(0, (int)$userHero['power'])
+					+ max(0, (int)$userHero['itempower']);
+				$defaultHeroHealth = max(1, min(100, (int)$userHero['health']));
+				$defaultHeroOffBonus = max(0, min(20, (float)$userHero['offBonus'] / 5));
+			}
+		}
+
 		$attackerTotal = 0;
 		for($i = 1; $i <= 10; $i++) {
 			$values['a1_'.$i] = $this->simulationNumber(!$configurationChanged && isset($post['a1_'.$i]) ? $post['a1_'.$i] : 0, 0, 999999, true);
@@ -45,13 +60,13 @@ class Battle {
 		}
 		$values['a1_hero'] = $this->simulationNumber(!$configurationChanged && isset($post['a1_hero']) ? $post['a1_hero'] : 0, 0, 1, true);
 		$values['h_att_power'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['h_att_power']) && $post['h_att_power'] !== '' ? $post['h_att_power'] : 100,
+			!$configurationChanged && isset($post['h_att_power']) && $post['h_att_power'] !== '' ? $post['h_att_power'] : $defaultHeroPower,
 			0,
 			99999,
 			true
 		);
 		$values['h_att_health'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['h_att_health']) && $post['h_att_health'] !== '' ? $post['h_att_health'] : 100,
+			!$configurationChanged && isset($post['h_att_health']) && $post['h_att_health'] !== '' ? $post['h_att_health'] : $defaultHeroHealth,
 			1,
 			100,
 			true
@@ -98,7 +113,12 @@ class Battle {
 		$values['ew2'] = $defenderTribe === 4
 			? 100
 			: $this->simulationNumber(!$configurationChanged && isset($post['ew2']) ? $post['ew2'] : 1, 1, 99999, true);
-		$values['h_off_bonus'] = $this->simulationNumber(!$configurationChanged && isset($post['h_off_bonus']) ? $post['h_off_bonus'] : 0, 0, 20, false);
+		$values['h_off_bonus'] = $this->simulationNumber(
+			!$configurationChanged && isset($post['h_off_bonus']) ? $post['h_off_bonus'] : $defaultHeroOffBonus,
+			0,
+			20,
+			false
+		);
 		$values['kata'] = $defenderTribe === 4
 			? 0
 			: $this->simulationNumber(!$configurationChanged && isset($post['kata']) ? $post['kata'] : 0, 0, 20, true);
