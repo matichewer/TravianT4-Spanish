@@ -83,9 +83,6 @@ Reply:
 <div class="clear"></div>
 <div class="line"></div>
 
-				<script>
-				var bbEditor = new BBEditor("message");
-			</script>
 	</form>
 <div class="hide" id="adressbook">
     <form method="post" name="abform" action="nachrichten.php" accept-charset="UTF-8">

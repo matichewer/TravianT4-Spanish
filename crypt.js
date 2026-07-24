@@ -7248,7 +7248,7 @@ Array.implement({
 					if(typeof a=="undefined"||a===null){
 						return null
 					}
-					return JSON.parse;
+					return JSON.parse(a);
 				})
 			}
 			$extend(Object,{
