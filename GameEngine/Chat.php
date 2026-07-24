@@ -384,10 +384,11 @@ if (!isset($SAJAX_INCLUDED)) {
 		$query = mysql_query("select * from ".TB_PREFIX."chat where alli='$alliance' order by id desc limit 0,13");
 		if($query) {
 			while ($r = mysql_fetch_array($query)) {
-				$dates = date("Y-m-d H:i", (int)$r['date']);
+				$datePart = date("Y-m-d", (int)$r['date']);
+				$timePart = date("H:i", (int)$r['date']);
 				$userId = (int)$r['id_user'];
 				$name = htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8');
-				$data .= "[{$dates}] <a href='spieler.php?uid={$userId}'>{$name}</a>: {$r['msg']}<br>";
+				$data .= "[<span class='chat-date'>{$datePart}</span><span class='chat-time'>{$timePart}</span>] <a href='spieler.php?uid={$userId}'>{$name}</a>: {$r['msg']}<br>";
 			}
 		}
 		return $data;

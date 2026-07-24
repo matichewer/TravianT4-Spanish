@@ -50,6 +50,11 @@ function send_data() {
 }
 window.addEvent('domready', start_it);
 </script>
+<style>
+	/* Chat timestamp styling */
+	.chat-date { color: #777777; margin-right: 6px; font-weight: 600; }
+	.chat-time { color: #1a73e8; font-weight: 600; }
+</style>
 <form name="form1" onSubmit="return send_data();">
 <div id="TitleName" class="chatHeader"><div style="text-align:center;">Chat de alianza</div></div>
 <div id="chatContainer" style="position: relative; height: 260px; overflow-x: hidden; overflow-y: auto; background-color: rgb(255, 255, 255); border: 1px solid rgb(192, 192, 192);">
