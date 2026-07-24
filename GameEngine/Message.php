@@ -82,7 +82,15 @@
 					$this->notice = $this->filter_by_value($database->getNotice3($session->uid), "ntype", $type);
 				}
 				if(isset($get['id'])) {
-					$this->readingNotice = $this->getReadNotice($get['id']);
+					$noticeId = (int)$get['id'];
+					$this->readingNotice = $this->getReadNotice($noticeId);
+
+					if(empty($this->readingNotice) && $session->alliance > 0) {
+						$sharedNotices = $database->getNotice4($noticeId);
+						if(isset($sharedNotices[0]) && (int)$sharedNotices[0]['ally'] === (int)$session->alliance) {
+							$this->readingNotice = $sharedNotices[0];
+						}
+					}
 				}
 			}
 

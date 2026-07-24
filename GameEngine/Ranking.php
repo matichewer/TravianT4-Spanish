@@ -554,7 +554,7 @@
 				
 				FROM " . TB_PREFIX . "users
 				WHERE " . TB_PREFIX . "users.tribe <= 3
-				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . " AND RR >= 0
+				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY RR DESC, userid ASC";
 					
 				$result = mysql_query($q);

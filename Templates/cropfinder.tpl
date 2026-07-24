@@ -53,6 +53,11 @@
    $type15 = mysql_query("SELECT id,x,y,occupied FROM ".TB_PREFIX."wdata WHERE fieldtype = 6 LIMIT 100");
    $type9 = mysql_query("SELECT id,x,y,occupied FROM ".TB_PREFIX."wdata WHERE fieldtype = 1 LIMIT 100");
    $type_both = mysql_query("SELECT id,x,y,occupied,fieldtype FROM ".TB_PREFIX."wdata WHERE fieldtype = 1 OR fieldtype = 6 LIMIT 100");
+   $cropOases = array();
+   $cropOasisResult = mysql_query("SELECT x,y,oasistype FROM ".TB_PREFIX."wdata WHERE oasistype IN (3,6,9,10,11,12)");
+   while($cropOasis = mysql_fetch_array($cropOasisResult)) {
+       $cropOases[] = $cropOasis;
+   }
 
    if(is_numeric($_GET['x']) AND is_numeric($_GET['y'])) {
        $coor['x'] = $_GET['x'];
@@ -71,6 +76,17 @@
 		$distanceY = min(abs($y2 - $y1), abs($max - abs($y2 - $y1)));
 		$dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
 		return round($dist, 1);
+	}
+
+	function getMaxCropOasisBonus($villageX, $villageY, $cropOases) {
+		$bonuses = array();
+		foreach($cropOases as $oasis) {
+			if(abs($oasis['x'] - $villageX) <= 3 && abs($oasis['y'] - $villageY) <= 3) {
+				$bonuses[] = $oasis['oasistype'] == 12 ? 50 : 25;
+			}
+		}
+		rsort($bonuses, SORT_NUMERIC);
+		return array_sum(array_slice($bonuses, 0, 3));
 	}
 
    if($_GET['s'] == 1) {
@@ -104,11 +120,10 @@ echo "<tr>";
 echo "<td class=\"dist\">".getDistance($coor['x'], $coor['y'], $row['x'], $row['y'])."</td>";
 echo "<td class=\"coords\"><a href=\"karte.php?x=".$row['x']."&y=".$row['y']."\">(".$row['x']."|".$row['y'].")</a></td>";
 echo "<td class=\"typ\">15 de cereal</td>";
+echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">".getMaxCropOasisBonus($row['x'], $row['y'], $cropOases)."%</font></b></td>";
 if($row['occupied'] == 0) {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">Oasis</font></b></td>";
 echo "<td class=\"owned\"><a href=\"karte.php?d=".$row['id']."\">----</a></td>";
 } else {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"red\">Ocupado</font></b></td>";
 echo "<td class=\"owned\"><a href=\"spieler.php?uid=".$database->getVillageField($row['id'], "owner")."\">".$database->getUserField($database->getVillageField($row['id'], "owner"), "username", 0)."</a></td>";
 
 }
@@ -154,11 +169,10 @@ echo "<tr>";
 echo "<td class=\"dist\">".getDistance($coor['x'], $coor['y'], $row['x'], $row['y'])."</td>";
 echo "<td class=\"coords\"><a href=\"karte.php?x=".$row['x']."&y=".$row['y']."\">(".$row['x']."|".$row['y'].")</a></td>";
 echo "<td class=\"typ\">9 de cereal</td>";
+echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">".getMaxCropOasisBonus($row['x'], $row['y'], $cropOases)."%</font></b></td>";
 if($row['occupied'] == 0) {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">Oasis</font></b></td>";
 echo "<td class=\"owned\"><a href=\"karte.php?d=".$row['id']."\">----</a></td>";
 } else {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"red\">Ocupado</font></b></td>";
 echo "<td class=\"owned\"><a href=\"spieler.php?uid=".$database->getVillageField($row['id'], "owner")."\">".$database->getUserField($database->getVillageField($row['id'], "owner"), "username", 0)."</a></td>";
 
 }
@@ -209,11 +223,10 @@ echo "<tr>";
 echo "<td class=\"dist\">".getDistance($coor['x'], $coor['y'], $row['x'], $row['y'])."</td>";
 echo "<td class=\"coords\"><a href=\"karte.php?x=".$row['x']."&y=".$row['y']."\">(".$row['x']."|".$row['y'].")</a></td>";
 echo "<td class=\"typ\">" . $field . "</td>";
+echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">".getMaxCropOasisBonus($row['x'], $row['y'], $cropOases)."%</font></b></td>";
 if($row['occupied'] == 0) {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"green\">Oasis</font></b></td>";
 echo "<td class=\"owned\"><a href=\"karte.php?d=".$row['id']."\">----</a></td>";
 } else {
-echo "<td class=\"oase\"><img src=\"img/x.gif\" class=\"r4\"> <b><font color=\"red\">Ocupado</font></b></td>";
 echo "<td class=\"owned\"><a href=\"spieler.php?uid=".$database->getVillageField($row['id'], "owner")."\">".$database->getUserField($database->getVillageField($row['id'], "owner"), "username", 0)."</a></td>";
 
 }

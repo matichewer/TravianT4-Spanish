@@ -2985,10 +2985,11 @@ class Automation {
                         }
                         $database->addMovement(6, $to['wref'], $from['wref'], $reference, $datar, $endtime);
                         //$database->updateVillage($to['wref']);
-                        $totalstolentaken = ($totalstolentaken - ($steal[0] + $steal[1] + $steal[2] + $steal[3]));
-                        $database->modifyPoints($from['owner'], 'RR', $steal[0] + $steal[1] + $steal[2] + $steal[3]);
-                        $database->modifyPoints($to['owner'], 'RR', $totalstolentaken);
-                        $database->modifyPointsAlly($targetally, 'RR', $totalstolentaken);
+                        $totalStolen = $steal[0] + $steal[1] + $steal[2] + $steal[3];
+                        $database->modifyPoints($from['owner'], 'RR', $totalStolen);
+                        $database->modifyPoints($to['owner'], 'RR', -$totalStolen);
+                        $database->modifyPointsAlly($ownally, 'RR', $totalStolen);
+                        $database->modifyPointsAlly($targetally, 'RR', -$totalStolen);
                     }
                 } else //else they die and don't return or report.
                 {
@@ -4941,7 +4942,7 @@ class Automation {
         }
 
         //Overvallers v/d Week
-        $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 AND RR >= 0 ORDER BY RR DESC Limit " . $top);
+        $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY RR DESC Limit " . $top);
         $i = 0;
         while($row = mysql_fetch_array($result)) {
             $i++;
@@ -5137,7 +5138,7 @@ class Automation {
         }
 
         //je staat voor 3e / 5e / 10e keer in de top 3 overvallers
-        $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 AND RR >= 0 ORDER BY RR DESC Limit " . $top);
+        $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY RR DESC Limit " . $top);
         while($row = mysql_fetch_array($result)) {
             $result1 = mysql_query("SELECT count(*) FROM ".TB_PREFIX."medal WHERE userid='" . $row['id'] . "' AND categorie = 4 AND plaats<=" . $streakA . "");
             $row1 = mysql_fetch_array($result1);
@@ -5157,7 +5158,7 @@ class Automation {
 
         if($streakSplit) {
             //je staat voor 3e / 5e / 10e keer in de top 10 overvallers
-            $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 AND RR >= 0 ORDER BY RR DESC Limit " . $top);
+            $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY RR DESC Limit " . $top);
             while($row = mysql_fetch_array($result)) {
                 $result1 = mysql_query("SELECT count(*) FROM ".TB_PREFIX."medal WHERE userid='" . $row['id'] . "' AND categorie = 4 AND plaats<=" . $streakB . "");
                 $row1 = mysql_fetch_array($result1);
@@ -5199,7 +5200,7 @@ class Automation {
             mysql_query("insert into " . TB_PREFIX . "allimedal(allyid, categorie, plaats, week, points, img) values('" . $row['id'] . "', '2', '" . ($i) . "', '" . $allyweek . "', '" . $row['dp'] . "', '" . $img . "')");
         }
 
-        $result = mysql_query("SELECT * FROM ".TB_PREFIX."alidata WHERE RR >= 0 ORDER BY RR DESC Limit " . $allyTop);
+        $result = mysql_query("SELECT * FROM ".TB_PREFIX."alidata ORDER BY RR DESC Limit " . $allyTop);
         $i = 0;
         while($row = mysql_fetch_array($result)) {
             $i++;

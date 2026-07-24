@@ -90,27 +90,16 @@ if(isset($_GET['n1'],$_GET['del']) && $_GET['del'] == 1) {
 	$database->delNotice($_GET['n1'], $session->uid);
 	header("Location: berichte.php");
 }
-if(isset($_GET['aid'])){
-	if($session->alliance==$_GET['aid']){
-		
-		if(isset($_GET['id'])) {
-			$type = $database->getNotice2($_GET['id'], 'ntype');
-			include("Templates/Notice/".$type.".tpl");
-		}
-	}
-}else{
-	
-	if(isset($_GET['t'])) {
-		include("Templates/Notice/t_".$_GET['t'].".tpl");
-	}
-	elseif(isset($_GET['id'])) {
-		if($database->getNotice2($_GET['id'], 'uid') == $session->uid){
+if(isset($_GET['t'])) {
+	include("Templates/Notice/t_".$_GET['t'].".tpl");
+}
+elseif(isset($_GET['id'])) {
+	if(!empty($message->readingNotice)) {
 		$type = ($message->readingNotice['ntype'] == 5)? $message->readingNotice['archive'] : $message->readingNotice['ntype'];
 		include("Templates/Notice/".$type.".tpl");
-		}
-	} else {
-		include("Templates/Notice/all.tpl");
-	}	
+	}
+} else {
+	include("Templates/Notice/all.tpl");
 }
 ?>
 

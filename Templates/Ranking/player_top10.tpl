@@ -189,8 +189,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." AND RR >= 0 ORDER BY RR DESC, id ASC Limit 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." AND RR >= 0 ORDER BY RR DESC, id ASC Limit 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 1");
 ?>
 <h4 class="round small spacer top top10_raiders">Top 10 saqueadores</h4>
 <table cellpadding="1" cellspacing="1" id="top10_raiders" class="top10 row_table_data">

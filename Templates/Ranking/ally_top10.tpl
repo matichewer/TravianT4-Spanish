@@ -189,8 +189,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."alidata WHERE RR >= 0 ORDER BY RR DESC, id ASC Limit 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."alidata WHERE id = '".$session->alliance."' AND RR >= 0 ORDER BY RR DESC, id ASC Limit 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."alidata ORDER BY RR DESC, id ASC Limit 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."alidata WHERE id = '".$session->alliance."' ORDER BY RR DESC, id ASC Limit 1");
 ?>
 <h4 class="round small spacer top10_raiders">Los mejores saqueadores</h4>
 
