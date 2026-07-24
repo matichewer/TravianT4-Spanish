@@ -221,7 +221,7 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-			function redistributeResourcesWithGold($userid, $vid, $wood, $clay, $iron, $crop, $goldCost, $expectedTotal) {
+			function redistributeResourcesWithGold($userid, $vid, $wood, $clay, $iron, $crop, $goldCost) {
 				$userid = (int) $userid;
 				$vid = (int) $vid;
 				$wood = (int) $wood;
@@ -229,13 +229,13 @@
 				$iron = (int) $iron;
 				$crop = (int) $crop;
 				$goldCost = (int) $goldCost;
-				$expectedTotal = (int) $expectedTotal;
-				if($userid <= 0 || $vid <= 0 || $goldCost <= 0 || $expectedTotal < 0
-					|| $wood < 0 || $clay < 0 || $iron < 0 || $crop < 0
-					|| $wood + $clay + $iron + $crop !== $expectedTotal) {
+				if($userid <= 0 || $vid <= 0 || $goldCost <= 0
+					|| $wood < 0 || $clay < 0 || $iron < 0 || $crop < 0) {
 					return false;
 				}
-				$q = "UPDATE " . TB_PREFIX . "vdata v INNER JOIN " . TB_PREFIX . "users u ON u.id = $userid AND v.owner = u.id SET v.wood = $wood, v.clay = $clay, v.iron = $iron, v.crop = $crop, u.gold = u.gold - $goldCost WHERE v.wref = $vid AND u.gold >= $goldCost AND FLOOR(v.wood + v.clay + v.iron + v.crop) = $expectedTotal";
+				// margen de 1 por el redondeo de las columnas float(12,2)
+				$total = $wood + $clay + $iron + $crop - 1;
+				$q = "UPDATE " . TB_PREFIX . "vdata v INNER JOIN " . TB_PREFIX . "users u ON u.id = $userid AND v.owner = u.id SET v.wood = $wood, v.clay = $clay, v.iron = $iron, v.crop = $crop, u.gold = u.gold - $goldCost WHERE v.wref = $vid AND u.gold >= $goldCost AND (v.wood + v.clay + v.iron + v.crop) >= $total";
 				$result = mysqli_query($this->connection,$q);
 				return $result && mysqli_affected_rows($this->connection) >= 1;
 			}

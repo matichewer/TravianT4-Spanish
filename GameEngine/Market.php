@@ -450,15 +450,17 @@ class Market {
      
 	    private function tradeResource($post) {
 	        global $session,$database,$village;
+	        $id = isset($post['id']) ? $post['id'] : 0;
 	        $values = isset($post['m2']) && is_array($post['m2']) ? array_values($post['m2']) : array();
 	        if(count($values) !== 4) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,3);
+	            $this->redirectToMarket($id,3);
 	        }
 	        foreach($values as $index => $value) {
-	            $values[$index] = $this->nonNegativeInteger($value);
-	            if($values[$index] === false) {
-	                $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,3);
+	            $value = (is_scalar($value) && (string)$value === '')? 0 : $this->nonNegativeInteger($value);
+	            if($value === false) {
+	                $this->redirectToMarket($id,3);
 	            }
+	            $values[$index] = $value;
 	        }
 
 	        $current = array(
@@ -467,17 +469,36 @@ class Market {
 	            (float)$database->getVillageField($village->wid,"iron"),
 	            (float)$database->getVillageField($village->wid,"crop")
 	        );
-	        $expectedTotal = (int)floor(array_sum($current));
-	        if(array_sum($values) !== $expectedTotal
-	            || $values[0] > (int)$village->maxstore || $values[1] > (int)$village->maxstore
-	            || $values[2] > (int)$village->maxstore || $values[3] > (int)$village->maxcrop) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,3);
+	        $available = (int)floor(array_sum($current));
+	        $limits = array((int)$village->maxstore,(int)$village->maxstore,(int)$village->maxstore,(int)$village->maxcrop);
+	        foreach($values as $index => $value) {
+	            if($value > $limits[$index]) {
+	                $this->redirectToMarket($id,3);
+	            }
+	        }
+	        // la aldea sigue produciendo entre que se dibuja el formulario y se envia,
+	        // por eso solo se exige no crear recursos de la nada
+	        if(array_sum($values) > $available) {
+	            $this->redirectToMarket($id,3);
+	        }
+	        $rest = $available - array_sum($values);
+	        foreach($values as $index => $value) {
+	            if($rest <= 0) {
+	                break;
+	            }
+	            $free = $limits[$index] - $value;
+	            if($free <= 0) {
+	                continue;
+	            }
+	            $add = min($free,$rest);
+	            $values[$index] = $value + $add;
+	            $rest -= $add;
 	        }
 
-	        if(!$database->redistributeResourcesWithGold($session->uid,$village->wid,$values[0],$values[1],$values[2],$values[3],3,$expectedTotal)) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,3);
+	        if(!$database->redistributeResourcesWithGold($session->uid,$village->wid,$values[0],$values[1],$values[2],$values[3],3)) {
+	            $this->redirectToMarket($id,3);
 	        }
-	        $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,3,"c");
+	        $this->redirectToMarket($id,3,"c");
 	    }
      
 }; 

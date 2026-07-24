@@ -157,7 +157,7 @@ function portionOut() {
  
 function testSum() {
 	if (document.getElementById("remain").innerHTML!=0) {
-		document.getElementById("submitText").innerHTML="<p id='submitText' style='display: block; '><button type='submit' value='Redistribuir recursos (1/2)' onclick='javascript:portionOut();'><div class='button-container'><div class='button-position'><div class='btl'><div class='btr'><div class='btc'></div></div></div><div class='bml'><div class='bmr'><div class='bmc'></div></div></div><div class='bbl'><div class='bbr'><div class='bbc'></div></div></div></div><div class='button-contents'>Redistribuir recursos (1/2)</div></div></button></p>";
+		document.getElementById("submitText").innerHTML="<button type='button' value='Redistribuir recursos (1/2)' onclick='portionOut(); return false;'><div class='button-container'><div class='button-position'><div class='btl'><div class='btr'><div class='btc'></div></div></div><div class='bml'><div class='bmr'><div class='bmc'></div></div></div><div class='bbl'><div class='bbr'><div class='bbc'></div></div></div></div><div class='button-contents'>Redistribuir recursos (1/2)</div></div></button>";
 		document.getElementById("submitText").style.display="block";
 		document.getElementById("submitButton").style.display="none";
 	} else {
@@ -252,8 +252,8 @@ function testSum() {
 		  </tbody> 
 		</table>
         <p id="submitButton" style="display: block; ">
-        <?php if($session->userinfo['gold'] > 3) { ?>
-        <button type="submit" value="Intercambiar recursos (2/2)" id="npc_market_button" onclick="$('npc_market_button').addClass('disabled').disabled = true;document.snd.submit();"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Intercambiar recursos (2/2)
+        <?php if($session->userinfo['gold'] >= 3) { ?>
+        <button type="submit" value="Intercambiar recursos (2/2)" id="npc_market_button" onclick="this.className+=' disabled';this.disabled=true;document.snd.submit();return false;"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Intercambiar recursos (2/2)
 </div></div></button><span class="npc_price"><b>3</b><img src="img/x.gif" class="gold" /> Oro</span></p>
 		<?php } else { echo"<a href=\"plus.php\"><span class=\"none\">Oro insuficiente</span></a>"; }?></p>
 		<p id="submitText"></p> 
