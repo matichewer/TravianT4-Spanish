@@ -26,7 +26,8 @@ class Battle {
 		}
 
 		$defenderTribe = $target[0];
-		if($defenderTribe === 4) {
+		$isRaid = isset($post['ktyp']) && (int)$post['ktyp'] === 1;
+		if($defenderTribe === 4 && !$isRaid) {
 			return;
 		}
 		$configurationChanged = isset($post['displayed_attacker'])
