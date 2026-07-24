@@ -94,9 +94,11 @@ $vdata = $database->getVillage($towref);
 
 		if (count($incoming_attacks) > 0) {
 			$inc_atts = count($incoming_attacks);
-				if($incoming_attacks[$i]['attack_type'] == 2) {
+			foreach($incoming_attacks as $incoming_attack) {
+				if($incoming_attack['attack_type'] == 1 || $incoming_attack['attack_type'] == 2) {
 					$inc_atts -= 1;
 				}
+			}
 			if($inc_atts > 0) {
                 echo '<img class="att2" src="img/x.gif" title="Ataque entrante" />';
 			}

@@ -58,10 +58,11 @@ if(isset($_SESSION['movement_cancel_status'])) {
 
 <?php
 $units_type = $database->getMovement("34",$village->wid,1);
-$units_incomming = count($units_type);
-for($i=0;$i<$units_incomming;$i++){
-	if($units_type[$i]['attack_type'] == 1 && $units_type[$i]['sort_type'] == 3)
-		$units_incomming -= 1;
+$units_incomming = 0;
+foreach($units_type as $incoming_unit) {
+	if($incoming_unit['sort_type'] != 3 || $incoming_unit['attack_type'] != 1) {
+		$units_incomming += 1;
+	}
 }
 if($units_incomming >= 1){
 echo "<h4 class=\"spacer\">Tropas entrantes (".$units_incomming.")</h4>";

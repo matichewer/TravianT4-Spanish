@@ -23,12 +23,12 @@
 		if (count($incoming_attacks) > 0) {
 			$inc_atts = count($incoming_attacks);
 			for($i=0;$i<count($incoming_attacks);$i++){
-				if($incoming_attacks[$i]['attack_type'] == 2) {
+				if($incoming_attacks[$i]['attack_type'] == 1 || $incoming_attacks[$i]['attack_type'] == 2) {
 					$inc_atts -= 1;
 				}
 			}
 			if($inc_atts > 0) {
-				$att = '<a href="build.php?newdid='.$vid.'&id=39"><img class="att1" src="img/x.gif" title="'.count($incoming_attacks).' ataque(s) a la aldea" alt="'.count($incoming_attacks).' ataque(s) a la aldea"></a>';
+				$att = '<a href="build.php?newdid='.$vid.'&id=39"><img class="att1" src="img/x.gif" title="'.$inc_atts.' ataque(s) a la aldea" alt="'.$inc_atts.' ataque(s) a la aldea"></a>';
 			}
 
 		}
