@@ -2,11 +2,12 @@
 if($_GET){
 	$isBbPreview = (isset($_GET['f']) && $_GET['f'] === 'bb')
 		|| (isset($_GET['cmd']) && $_GET['cmd'] === 'bb');
+	$bbPreviewBufferLevel = ob_get_level();
 	if ($isBbPreview) {
 		include_once("GameEngine/Village.php");
 	}
 
-	$renderBbPreview = function() {
+	$renderBbPreview = function() use ($bbPreviewBufferLevel) {
 		global $database, $generator;
 
 		$input = isset($_POST['text']) ? $_POST['text'] : '';
@@ -57,6 +58,9 @@ if($_GET){
 
 		if (!empty($_POST['nl2br'])) {
 			$text = nl2br($text);
+		}
+		while (ob_get_level() > $bbPreviewBufferLevel) {
+			ob_end_clean();
 		}
 
 		header("Content-Type: application/json; charset=UTF-8");
