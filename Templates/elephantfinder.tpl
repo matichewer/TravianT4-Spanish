@@ -107,13 +107,8 @@ $animalNames = array(
 .elephantFinderAnimalCount{margin-right:4px;font-weight:bold;}
 .elephantFinderOccupied{margin-left:4px;font-size:10px;color:#8a1f11;}
 
-/* compact.css deja `div#map_details{position:absolute;left:360px;top:68px}` y la regla
-   `#tileDetails div#map_details` sólo pisa float/width, no el position. Al estar fuera de
-   flujo, la columna derecha no aporta altura a #tileDetails, y el `overflow:hidden` del
-   diálogo la recorta a la altura de la imagen: se pierden las últimas filas de tropas
-   (siempre los elefantes, que son u40). La devolvemos al flujo normal. */
-.dialog.mapTileDetailsDialog #tileDetails div#map_details{position:static;float:right;width:217px;}
-.dialog.mapTileDetailsDialog #tileDetails{overflow:hidden;}
+/* El recorte de la columna derecha del popup se arregla en img/travian_basics.css
+   (regla .dialog #tileDetails div#map_details), porque afecta también a karte.php. */
 .dialog.mapTileDetailsDialog .content{max-height:70vh;overflow-y:auto;overflow-x:hidden;}
 
 body.cropfinder .dialog .dialog-contents .cancel{box-sizing:border-box;width:22px;height:22px;right:-10px;top:-10px;z-index:30;border:1px solid #777;border-radius:50%;background:#fff!important;color:#333;text-align:center;line-height:18px;}

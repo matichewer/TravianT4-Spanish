@@ -485,3 +485,15 @@ div.village2 div.buildingList div.buildingNotifications {
 	font-size: 12px;
 	margin-left: 8px;
 }
+
+/* Popup de detalles de casilla (position_details.php?popup=1).
+   compact.css define `div#map_details{position:absolute;left:360px;top:68px}` y la regla
+   `#tileDetails div#map_details` sólo pisa float/width, no el position. Al quedar fuera de
+   flujo, la columna derecha no aporta altura a #tileDetails y el `overflow:hidden` del
+   diálogo la recorta a la altura de la imagen, comiéndose las últimas filas de tropas
+   (siempre los elefantes, que son u40) y la sección de informes. */
+.dialog #tileDetails div#map_details {
+	position: static;
+	float: right;
+	width: 217px;
+}
