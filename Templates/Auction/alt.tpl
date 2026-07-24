@@ -541,7 +541,7 @@
         
 	}elseif($btype==6){
     	if($type==103){
-        	$name = "Castrado";
+        	$name = "Pura sangre";
 			$title = "La velocidad del héroe es 14";
             $item = "103";
             $effect = "14";
