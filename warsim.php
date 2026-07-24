@@ -114,7 +114,6 @@ if(count($target) > 0) {
 						<label><input class="check" type="checkbox" name="a2_v1" value="1" <?php if(in_array(1,$target)) { echo "checked"; } echo "> ".TRIBE1;?> </label><br>
 						<label><input class="check" type="checkbox" name="a2_v2" value="1" <?php if(in_array(2,$target)) { echo "checked"; } echo "> ".TRIBE2;?> </label><br>
 						<label><input class="check" type="checkbox" name="a2_v3" value="1" <?php if(in_array(3,$target)) { echo "checked"; } echo "> ".TRIBE3;?> </label><br>
-						<label><input class="check" type="checkbox" name="a2_v4" value="1" <?php if(in_array(4,$target)) { echo "checked"; } echo "> ".TRIBE4;?> </label><br>
 						<small>La primera tribu marcada en esta lista define la aldea y sus defensas.</small>
 					</div>
 				</td>

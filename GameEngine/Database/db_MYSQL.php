@@ -3622,6 +3622,19 @@ break;
         		return mysql_query($q, $this->connection);
         	}
 
+			function acquireAuctionLock($timeout = 3) {
+				$timeout = max(0, min(10, (int) $timeout));
+				$lockName = "travian_auction_" . sha1(SQL_DB . ":" . TB_PREFIX);
+				$result = mysql_query("SELECT GET_LOCK('$lockName', $timeout) AS acquired", $this->connection);
+				$row = $result ? mysql_fetch_assoc($result) : false;
+				return $row && (int) $row['acquired'] === 1;
+			}
+
+			function releaseAuctionLock() {
+				$lockName = "travian_auction_" . sha1(SQL_DB . ":" . TB_PREFIX);
+				return mysql_query("SELECT RELEASE_LOCK('$lockName')", $this->connection);
+			}
+
 			function setNewSilver($id, $newsilver) {
 				$q = "UPDATE " . TB_PREFIX . "auction set newsilver = $newsilver where id = $id";
         		return mysql_query($q, $this->connection);
@@ -3639,22 +3652,49 @@ break;
         		return mysql_fetch_array($result);
         	}
 
-			function delAuction($id) {
-				$aucData = $this->getAuctionData($id);
-				$btype = $aucData['btype'];
-				if($btype>=7 && $btype!=12 && $btype!=13){
-				    if($this->checkHeroItem($aucData['owner'], $btype)) {
-                        $this->editHeroNum($this->getHeroItemID($aucData['owner'], $btype), $aucData['num'], 1);
-                    } else {
-                        $this->addHeroItem($aucData['owner'], $aucData['btype'], $aucData['type'], $aucData['num']);
-                    }
-				}else{
-                    $this->addHeroItem($aucData['owner'], $aucData['btype'], $aucData['type'], $aucData['num']);
-                }
-				$q = "DELETE FROM " . TB_PREFIX . "auction where id = $id and finish = 0";
+			function delAuction($id, $owner) {
+				$id = (int) $id;
+				$owner = (int) $owner;
+				if($id <= 0 || $owner <= 0 || !$this->acquireAuctionLock()) {
+					return false;
+				}
 
-        		return mysql_query($q, $this->connection);
-        	}
+				$now = time();
+				$q = "SELECT * FROM " . TB_PREFIX . "auction WHERE id = $id AND owner = $owner AND finish = 0 AND bids = 0 AND time > $now LIMIT 1";
+				$result = mysql_query($q, $this->connection);
+				$aucData = $result ? mysql_fetch_assoc($result) : false;
+				if(!$aucData) {
+					$this->releaseAuctionLock();
+					return false;
+				}
+
+				$q = "UPDATE " . TB_PREFIX . "auction SET finish = 2 WHERE id = $id AND owner = $owner AND finish = 0 AND bids = 0 AND time > $now";
+				$claimed = mysql_query($q, $this->connection);
+				if(!$claimed || mysql_affected_rows($this->connection) !== 1) {
+					$this->releaseAuctionLock();
+					return false;
+				}
+
+				$btype = (int) $aucData['btype'];
+				if($btype >= 7 && $btype != 12 && $btype != 13) {
+					if($this->checkHeroItem($owner, $btype)) {
+						$restored = $this->editHeroNum($this->getHeroItemID($owner, $btype), (int) $aucData['num'], 1);
+					} else {
+						$restored = $this->addHeroItem($owner, $btype, (int) $aucData['type'], (int) $aucData['num']);
+					}
+				} else {
+					$restored = $this->addHeroItem($owner, $btype, (int) $aucData['type'], (int) $aucData['num']);
+				}
+
+				if(!$restored) {
+					mysql_query("UPDATE " . TB_PREFIX . "auction SET finish = 0 WHERE id = $id AND finish = 2", $this->connection);
+					$this->releaseAuctionLock();
+					return false;
+				}
+				$deleted = mysql_query("DELETE FROM " . TB_PREFIX . "auction WHERE id = $id AND owner = $owner AND finish = 2", $this->connection);
+				$this->releaseAuctionLock();
+				return $deleted;
+			}
 
 			function getAuctionUser($uid) {
         		$q = "SELECT * FROM " . TB_PREFIX . "auction where owner = $uid";
@@ -3682,7 +3722,7 @@ break;
 					$silver = 100;
                     $q = "DELETE FROM ".TB_PREFIX."heroitems where id = ".$itemid;
                     mysql_query($q, $this->connection);
-					$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$time', 0)";
+					$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$silver', '$time', 0)";
 					//$this->editProcItem($itemid, 1);
 				}
 

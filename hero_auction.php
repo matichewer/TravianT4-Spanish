@@ -63,10 +63,17 @@ mysql_query("DELETE FROM ".TB_PREFIX."auction WHERE silver < 1 and owner = '".$s
 					});
 				</script>
 
-<?php		
+<?php
+$bidError = '';
+if(isset($_SESSION['auctionBidMessage'])) {
+	$bidError = $_SESSION['auctionBidMessage'];
+	unset($_SESSION['auctionBidMessage']);
+}
 
-if($_GET['action']=='sell' && $_GET['abort']){
-	$database->delAuction($_GET['abort']);
+if(isset($_GET['action'], $_GET['abort']) && $_GET['action'] == 'sell') {
+	if(!$database->delAuction((int) $_GET['abort'], (int) $session->uid)) {
+		$bidError = "No se pudo cancelar la subasta. Sólo puedes cancelar una venta propia, vigente y sin ofertas.";
+	}
 }
 $sql = mysql_query("SELECT * FROM ".TB_PREFIX."auction WHERE finish = 0 and owner = '".$session->uid."'");
 $query = mysql_num_rows($sql);
@@ -77,50 +84,50 @@ if($_GET['action']=='sell' && $_POST['a']=='e45'){
 	}
 }
 
-if(isset($_POST['a']) && $_POST['action']=='buy' || isset($_POST['a']) && $_POST['action']=='bids'){
-$bidError = '';
-$getBidData = $database->getBidData($_POST['a']);
-$total_silver = $_POST['silver'] + $session->silver;
-	if($_POST['maxBid'] <= $_POST['silver']){
-		$bidError .= "Oferta demasiado baja. Debes ofrecer al menos ".($_POST['silver']+1)." de plata.";
-	}elseif($_POST['maxBid'] > $session->silver || ($_POST['uid'] == $session->uid && $_POST['maxBid'] > $total_silver)){
-		$bidError .= "No tienes suficiente plata para esta oferta.";
-	}else{
-		if($database->checkBid($_POST['a'], $_POST['maxBid'])){
-			
-			if($getBidData['uid']==0){
-				$database->addBid($_POST['a'], $session->uid, $_POST['maxBid']);
-				$database->setSilver($session->uid,$_POST['maxBid'],0);
-				$database->setNewSilver($_POST['a'],$_POST['maxBid']);
-				
-			}elseif($getBidData['uid']==$session->uid){
-				$maxBid = $_POST['maxBid'] - $getBidData['newsilver'];
-				$database->setSilver($session->uid,$maxBid,0);
-				$database->setNewSilver($_POST['a'],$_POST['maxBid']);
-			}else{
-				$database->setSilver($getBidData['uid'],$getBidData['newsilver'],1);
-				$database->setSilver($session->uid,$_POST['maxBid'],0);
-				$database->addBid($_POST['a'], $session->uid, $_POST['maxBid']);
-				$database->setNewSilver($_POST['a'],$_POST['maxBid']);
-			}
-			if(isset($_POST['page'])){ $page = "&page=".$_POST['page']; }else{ $page = ""; }
-			if($_POST['action']=='bids'){ $ssss = 'bids'; } elseif($_POST['action']=='buy'){ $ssss = 'buy'; }
-			header("Location: ?action=".$ssss."".$page."&a=".$_POST['a']);	
-		}else{
-			if($getBidData['uid']==$session->uid){
-				$maxBid = $getBidData['newsilver'] - $_POST['maxBid'];
-				$database->setSilver($session->uid,$maxBid,1);
-				$database->setNewSilver($_POST['a'],$_POST['maxBid']);
-			}else{
-				$database->editBid($_POST['a'], $_POST['maxBid']);
-				$bidError .= "Tu oferta es menor que la del otro jugador.";
-			}
-			if(isset($_POST['page'])){ $page = "&page=".$_POST['page']; }else{ $page = ""; }
-			if($_POST['action']=='bids'){ $ssss = 'bids'; } elseif($_POST['action']=='buy'){ $ssss = 'buy'; }
-			header("Location: ?action=".$ssss."".$page."&a=".$_POST['a']);	
-		}
+if(isset($_POST['a'], $_POST['action']) && in_array($_POST['action'], array('buy', 'bids'), true)) {
+	$auctionId = (int) $_POST['a'];
+	$maxBid = isset($_POST['maxBid']) ? (int) $_POST['maxBid'] : 0;
+	$bidResult = $database->placeAuctionBid($auctionId, (int) $session->uid, $maxBid);
+	switch($bidResult['status']) {
+		case 'winning':
+			$message = "Tu oferta fue registrada. Por ahora eres el mejor postor.";
+			break;
+		case 'outbid':
+			$message = "Tu oferta fue superada por la oferta máxima de otro jugador.";
+			break;
+		case 'too_low':
+			$message = "Oferta demasiado baja. Debes ofrecer al menos ".(int) $bidResult['minimum']." de plata.";
+			break;
+		case 'insufficient':
+			$message = "No tienes suficiente plata para esta oferta.";
+			break;
+		case 'own':
+			$message = "No puedes ofertar por tu propia subasta.";
+			break;
+		case 'closed':
+		case 'missing':
+			$message = "La subasta ya finalizó o dejó de estar disponible.";
+			break;
+		case 'busy':
+			$message = "La subasta está procesando otra oferta. Inténtalo nuevamente.";
+			break;
+		default:
+			$message = "No se pudo registrar la oferta.";
 	}
-	
+
+	$_SESSION['auctionBidMessage'] = $message;
+	$params = array('action' => $_POST['action']);
+	if(isset($_POST['page']) && (int) $_POST['page'] > 0) {
+		$params['page'] = (int) $_POST['page'];
+	}
+	if(isset($_POST['filter']) && (int) $_POST['filter'] > 0) {
+		$params['filter'] = (int) $_POST['filter'];
+	}
+	if(in_array($bidResult['status'], array('winning', 'outbid', 'too_low', 'insufficient'), true)) {
+		$params['a'] = $auctionId;
+	}
+	header("Location: hero_auction.php?".http_build_query($params));
+	exit;
 }
 
 include("Templates/Auction/menu.tpl");
@@ -156,5 +163,4 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-
 

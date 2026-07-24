@@ -26,6 +26,9 @@ class Battle {
 		}
 
 		$defenderTribe = $target[0];
+		if($defenderTribe === 4) {
+			return;
+		}
 		$configurationChanged = isset($post['displayed_attacker'])
 			&& (
 				(int)$post['displayed_attacker'] !== $attackerTribe

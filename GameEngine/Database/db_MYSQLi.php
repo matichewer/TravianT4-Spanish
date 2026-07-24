@@ -3617,6 +3617,19 @@ break;
         		return mysqli_query($this->connection,$q);
         	}
 
+			function acquireAuctionLock($timeout = 3) {
+				$timeout = max(0, min(10, (int) $timeout));
+				$lockName = "travian_auction_" . sha1(SQL_DB . ":" . TB_PREFIX);
+				$result = mysqli_query($this->connection, "SELECT GET_LOCK('$lockName', $timeout) AS acquired");
+				$row = $result ? mysqli_fetch_assoc($result) : false;
+				return $row && (int) $row['acquired'] === 1;
+			}
+
+			function releaseAuctionLock() {
+				$lockName = "travian_auction_" . sha1(SQL_DB . ":" . TB_PREFIX);
+				return mysqli_query($this->connection, "SELECT RELEASE_LOCK('$lockName')");
+			}
+
 			function setNewSilver($id, $newsilver) {
 				$q = "UPDATE " . TB_PREFIX . "auction set newsilver = $newsilver where id = $id";
         		return mysqli_query($this->connection,$q);
@@ -3634,22 +3647,49 @@ break;
         		return mysqli_fetch_array($result);
         	}
 
-			function delAuction($id) {
-				$aucData = $this->getAuctionData($id);
-				$btype = $aucData['btype'];
-				if($btype>=7 && $btype!=12 && $btype!=13){
-				    if($this->checkHeroItem($aucData['owner'], $btype)) {
-                        $this->editHeroNum($this->getHeroItemID($aucData['owner'], $btype), $aucData['num'], 1);
-                    } else {
-                        $this->addHeroItem($aucData['owner'], $aucData['btype'], $aucData['type'], $aucData['num']);
-                    }
-				}else{
-                    $this->addHeroItem($aucData['owner'], $aucData['btype'], $aucData['type'], $aucData['num']);
-                }
-				$q = "DELETE FROM " . TB_PREFIX . "auction where id = $id and finish = 0";
+			function delAuction($id, $owner) {
+				$id = (int) $id;
+				$owner = (int) $owner;
+				if($id <= 0 || $owner <= 0 || !$this->acquireAuctionLock()) {
+					return false;
+				}
 
-        		return mysqli_query($this->connection,$q);
-        	}
+				try {
+					$now = time();
+					$q = "SELECT * FROM " . TB_PREFIX . "auction WHERE id = $id AND owner = $owner AND finish = 0 AND bids = 0 AND time > $now LIMIT 1";
+					$result = mysqli_query($this->connection, $q);
+					$aucData = $result ? mysqli_fetch_assoc($result) : false;
+					if(!$aucData) {
+						return false;
+					}
+
+					$q = "UPDATE " . TB_PREFIX . "auction SET finish = 2 WHERE id = $id AND owner = $owner AND finish = 0 AND bids = 0 AND time > $now";
+					$claimed = mysqli_query($this->connection, $q);
+					if(!$claimed || mysqli_affected_rows($this->connection) !== 1) {
+						return false;
+					}
+
+					$btype = (int) $aucData['btype'];
+					if($btype >= 7 && $btype != 12 && $btype != 13) {
+						if($this->checkHeroItem($owner, $btype)) {
+							$restored = $this->editHeroNum($this->getHeroItemID($owner, $btype), (int) $aucData['num'], 1);
+						} else {
+							$restored = $this->addHeroItem($owner, $btype, (int) $aucData['type'], (int) $aucData['num']);
+						}
+					} else {
+						$restored = $this->addHeroItem($owner, $btype, (int) $aucData['type'], (int) $aucData['num']);
+					}
+
+					if(!$restored) {
+						mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "auction SET finish = 0 WHERE id = $id AND finish = 2");
+						return false;
+					}
+
+					return mysqli_query($this->connection, "DELETE FROM " . TB_PREFIX . "auction WHERE id = $id AND owner = $owner AND finish = 2");
+				} finally {
+					$this->releaseAuctionLock();
+				}
+			}
 
 			function getAuctionUser($uid) {
         		$q = "SELECT * FROM " . TB_PREFIX . "auction where owner = $uid";
@@ -3677,12 +3717,115 @@ break;
 					$silver = 100;
                     $q = "DELETE FROM ".TB_PREFIX."heroitems where id = ".$itemid;
                     mysqli_query($this->connection, $q);
-					$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$time', 0)";
+					$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$silver', '$time', 0)";
 					//$this->editProcItem($itemid, 1);
 				}
 
         		return mysqli_query($this->connection,$q);
         	}
+
+			function placeAuctionBid($id, $bidder, $maxBid) {
+				$id = (int) $id;
+				$bidder = (int) $bidder;
+				$maxBid = (int) $maxBid;
+				if($id <= 0 || $bidder <= 0 || $maxBid <= 0 || $maxBid > 2147483647) {
+					return array('status' => 'invalid');
+				}
+				if(!$this->acquireAuctionLock()) {
+					return array('status' => 'busy');
+				}
+
+				try {
+					$result = mysqli_query($this->connection, "SELECT * FROM " . TB_PREFIX . "auction WHERE id = $id LIMIT 1");
+					$auction = $result ? mysqli_fetch_assoc($result) : false;
+					if(!$auction) {
+						return array('status' => 'missing');
+					}
+					if((int) $auction['finish'] !== 0 || (int) $auction['time'] <= time()) {
+						return array('status' => 'closed');
+					}
+					if((int) $auction['owner'] === $bidder) {
+						return array('status' => 'own');
+					}
+
+					$currentPrice = (int) $auction['silver'];
+					$currentWinner = (int) $auction['uid'];
+					$currentMaximum = max((int) $auction['newsilver'], $currentPrice);
+					if($maxBid < $currentPrice || ($currentWinner !== $bidder && $maxBid === $currentPrice)) {
+						return array('status' => 'too_low', 'minimum' => $currentPrice + 1);
+					}
+
+					$userResult = mysqli_query($this->connection, "SELECT silver FROM " . TB_PREFIX . "users WHERE id = $bidder LIMIT 1");
+					$user = $userResult ? mysqli_fetch_assoc($userResult) : false;
+					if(!$user) {
+						return array('status' => 'invalid');
+					}
+
+					if($currentWinner === $bidder) {
+						$available = (int) $user['silver'] + $currentMaximum;
+						if($maxBid > $available) {
+							return array('status' => 'insufficient');
+						}
+						$difference = $maxBid - $currentMaximum;
+						if($difference > 0) {
+							$moneyChanged = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver - $difference WHERE id = $bidder AND silver >= $difference");
+						} elseif($difference < 0) {
+							$refund = abs($difference);
+							$moneyChanged = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver + $refund WHERE id = $bidder");
+						} else {
+							$moneyChanged = true;
+						}
+						if(!$moneyChanged || ($difference > 0 && mysqli_affected_rows($this->connection) !== 1)) {
+							return array('status' => 'insufficient');
+						}
+
+						$updated = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "auction SET newsilver = $maxBid WHERE id = $id AND finish = 0");
+						if(!$updated) {
+							if($difference > 0) {
+								mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver + $difference WHERE id = $bidder");
+							} elseif($difference < 0) {
+								$refund = abs($difference);
+								mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver - $refund WHERE id = $bidder");
+							}
+							return array('status' => 'error');
+						}
+						return array('status' => 'winning', 'price' => $currentPrice);
+					}
+
+					if($maxBid > (int) $user['silver']) {
+						return array('status' => 'insufficient');
+					}
+
+					if($currentWinner === 0 || $maxBid > $currentMaximum) {
+						$charged = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver - $maxBid WHERE id = $bidder AND silver >= $maxBid");
+						if(!$charged || mysqli_affected_rows($this->connection) !== 1) {
+							return array('status' => 'insufficient');
+						}
+						if($currentWinner > 0) {
+							mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver + $currentMaximum WHERE id = $currentWinner");
+						}
+
+						$newPrice = min($maxBid, $currentMaximum + 1);
+						$updated = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "auction SET uid = $bidder, silver = $newPrice, newsilver = $maxBid, bids = bids + 1 WHERE id = $id AND finish = 0");
+						if(!$updated) {
+							mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver + $maxBid WHERE id = $bidder");
+							if($currentWinner > 0) {
+								mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET silver = silver - $currentMaximum WHERE id = $currentWinner");
+							}
+							return array('status' => 'error');
+						}
+						return array('status' => 'winning', 'price' => $newPrice);
+					}
+
+					$newPrice = min($currentMaximum, max($currentPrice, $maxBid + 1));
+					$updated = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "auction SET silver = $newPrice, bids = bids + 1 WHERE id = $id AND finish = 0");
+					return $updated
+						? array('status' => 'outbid', 'price' => $newPrice)
+						: array('status' => 'error');
+				} finally {
+					$this->releaseAuctionLock();
+				}
+			}
 
 			function addBid($id, $uid, $newsilver) {
         		$q = "UPDATE " . TB_PREFIX . "auction set uid = $uid, silver = newsilver + 1, newsilver = $newsilver, bids = bids + 1 where id = $id";

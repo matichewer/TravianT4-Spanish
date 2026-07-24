@@ -4305,33 +4305,34 @@ class Automation {
     }
 
     private function auctionComplete() {
-        if(file_exists("GameEngine/Prevention/auction.txt")) {
-            unlink("GameEngine/Prevention/auction.txt");
-        }
         global $database;
+        if(!$database->acquireAuctionLock(0)) {
+            return;
+        }
+
+        $preventionFile = "GameEngine/Prevention/auction.txt";
+        touch($preventionFile);
         $time = time();
-        $ourFileHandle = fopen("GameEngine/Prevention/auction.txt", 'w');
-        fclose($ourFileHandle);
-        $q = "SELECT * FROM ".TB_PREFIX."auction where finish = 0 and time < $time";
-        $dataarray = $database->query_return($q);
-        foreach ($dataarray as $data) {
-            $ownerID = $data['owner'];
-            $biderID = $data['uid'];
-            $silver = $data['silver'];
-            $newsilver = $data['newsilver'];
-            $btype = $data['btype'];
-            if($data['finish'] != 1) {
+        try {
+            $q = "SELECT * FROM ".TB_PREFIX."auction where finish = 0 and time <= $time";
+            $dataarray = $database->query_return($q);
+            foreach ($dataarray as $data) {
+                $ownerID = (int) $data['owner'];
+                $biderID = (int) $data['uid'];
+                $silver = (int) $data['silver'];
+                $newsilver = (int) $data['newsilver'];
+                $btype = (int) $data['btype'];
+
                 // uid arranca en 0 y solo cambia cuando alguien puja. Sin ofertas
-                // el item vuelve al vendedor: al publicarlo se borro de su
-                // inventario, asi que entregarselo al usuario 0 lo haria
-                // desaparecer, y pagarle al vendedor creaba plata de la nada.
-                $noBids = ((int)$biderID === 0);
+                // el item vuelve al vendedor; con ofertas, uid siempre es quien
+                // tiene la oferta maxima vigente al momento del cierre.
+                $noBids = ($biderID === 0);
                 $receiverID = $noBids ? $ownerID : $biderID;
 				if($btype == 7 || $btype == 8 || $btype == 9) {
 					$id = $database->getHeroItemID($receiverID, $btype);
 					if($id != 0) {
 						$database->editHeroNum2($id, $data['num'], 1);
-					} else {
+                    } else {
 						$database->addHeroItem($receiverID, $btype, 0, $data['num']);
 					}
 				}
@@ -4346,16 +4347,15 @@ class Automation {
                     $database->addHeroItem($receiverID, $data['btype'], $data['type'], $data['num']);
                 }
                 if(!$noBids) {
-                    $silver2 = $newsilver - $silver;
+                    $silver2 = max(0, $newsilver - $silver);
                     $database->setSilver($ownerID, $silver, 1);
                     $database->setSilver($biderID, $silver2, 1);
                 }
+                $q = "UPDATE ".TB_PREFIX."auction set finish=1 where id = ".(int) $data['id']." and finish=0";
+                $database->query($q);
             }
-            $q = "UPDATE ".TB_PREFIX."auction set finish=1 where id = ".$data['id'];
-            $database->query($q);
-        }
-        if(file_exists("GameEngine/Prevention/auction.txt")) {
-            unlink("GameEngine/Prevention/auction.txt");
+        } finally {
+            $database->releaseAuctionLock();
         }
     }
 
