@@ -217,7 +217,7 @@ include "Templates/Auction/alt.tpl";
         if(isset($_GET['filter'])){
         	$fURL = "&filter=".$_GET['filter'];
         }
-    	if($session->uid == $uid){ $bidd = "change"; }else{ $bidd = "bid"; }
+    	if($session->uid == $uid){ $bidd = "Cambiar"; }else{ $bidd = "Ofertar"; }
 
     	$outputList .= "<td class=\"bid".$sStyle."\"><a class=\"bidButton openedClosedSwitch switch".$switchStyle."\" href=\"?action=buy".$pURL."".$fURL."&a=".$id."\">".$bidd."</a></td>";
     }else{
