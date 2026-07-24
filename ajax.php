@@ -1,5 +1,41 @@
 <?php
 if($_GET){
+	$renderBbPreview = function() {
+		include_once("GameEngine/Village.php");
+
+		$input = isset($_POST['text']) ? $_POST['text'] : '';
+		$alliance = 0;
+		$player = 0;
+		$report = 0;
+		$coor = 0;
+
+		if (preg_match_all('/\[alliance([0-9]+)\]/i', $input, $matches) && !empty($matches[1])) {
+			$alliance = (int) max($matches[1]);
+		}
+		if (preg_match_all('/\[player([0-9]+)\]/i', $input, $matches) && !empty($matches[1])) {
+			$player = (int) max($matches[1]);
+		}
+		if (preg_match_all('/\[report([0-9]+)\]/i', $input, $matches) && !empty($matches[1])) {
+			$report = (int) max($matches[1]);
+		}
+		if (preg_match_all('/\[coor([0-9]+)\]/i', $input, $matches) && !empty($matches[1])) {
+			$coor = (int) max($matches[1]);
+		}
+
+		include("GameEngine/BBCode.php");
+		$text = $bbcoded;
+
+		if (!empty($_POST['nl2br'])) {
+			$text = nl2br($text);
+		}
+
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode(array(
+			'error' => false,
+			'text' => $text
+		));
+		exit;
+	};
 	
 	if (isset($_GET['f'])) {
 		switch($_GET['f']) {
@@ -27,10 +63,16 @@ if($_GET){
 				}
 				echo $questResponse;
 			break;
+			case 'bb':
+				$renderBbPreview();
+			break;
 		}
 	}
 	if (isset($_GET['cmd'])) {
 		switch($_GET['cmd']) {
+			case 'bb':
+				$renderBbPreview();
+			break;
 			
 			case 'changeVillageName':
 				include_once ("GameEngine/Database.php");
