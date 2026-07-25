@@ -1,5 +1,66 @@
 <?php
 class Battle {
+
+	public function getOasisSimulationInput($oasisId) {
+		global $database, $session, $village;
+
+		$oasisId = (int)$oasisId;
+		if($oasisId <= 0) {
+			return false;
+		}
+
+		$oasis = $database->getOMInfo($oasisId);
+		if(
+			!is_array($oasis)
+			|| !isset($oasis['oasistype'], $oasis['fieldtype'], $oasis['occupied'])
+			|| (int)$oasis['oasistype'] <= 0
+			|| (int)$oasis['fieldtype'] !== 0
+			|| (int)$oasis['occupied'] !== 0
+		) {
+			return false;
+		}
+
+		$attackerTribe = isset($session->tribe) ? (int)$session->tribe : 0;
+		$villageId = isset($village->wid) ? (int)$village->wid : 0;
+		if($attackerTribe < 1 || $attackerTribe > 3 || $villageId <= 0) {
+			return false;
+		}
+
+		$attackerUnits = $database->getUnit($villageId);
+		$defenderUnits = $database->getUnit($oasisId);
+		if(!is_array($attackerUnits) || !is_array($defenderUnits)) {
+			return false;
+		}
+
+		$input = array(
+			'a1_v' => $attackerTribe,
+			'a2_v4' => 1,
+			'ktyp' => 1
+		);
+		$attackerStart = ($attackerTribe - 1) * 10 + 1;
+		for($position = 1; $position <= 10; $position++) {
+			$unitField = 'u'.($attackerStart + $position - 1);
+			$input['a1_'.$position] = isset($attackerUnits[$unitField])
+				? max(0, (int)$attackerUnits[$unitField])
+				: 0;
+		}
+
+		$userHero = isset($session->uid) ? $database->getHeroData((int)$session->uid) : false;
+		$input['a1_hero'] = (
+			!empty($attackerUnits['hero'])
+			&& is_array($userHero)
+			&& isset($userHero['dead'])
+			&& (int)$userHero['dead'] === 0
+		) ? 1 : 0;
+
+		for($unit = 31; $unit <= 40; $unit++) {
+			$input['a2_'.$unit] = isset($defenderUnits['u'.$unit])
+				? max(0, (int)$defenderUnits['u'.$unit])
+				: 0;
+		}
+
+		return $input;
+	}
 	
 	public function procSim($post) {
 		global $database, $form, $session, $village;
@@ -32,12 +93,12 @@ class Battle {
 			$form->addError('target', 'Los oasis solo pueden ser saqueados, no atacados normalmente.');
 			return;
 		}
-		$configurationChanged = $defenderTribe === 4 || (isset($post['displayed_attacker'])
+		$configurationChanged = isset($post['displayed_attacker'])
 			&& (
 				(int)$post['displayed_attacker'] !== $attackerTribe
 				|| !isset($post['displayed_targets'])
 				|| $post['displayed_targets'] !== implode(',', $target)
-			));
+			);
 		$values = $post;
 		$values['a1_v'] = $attackerTribe;
 		$values['tribe'] = $defenderTribe;

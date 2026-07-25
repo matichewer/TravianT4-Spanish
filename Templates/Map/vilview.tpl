@@ -86,7 +86,12 @@ if($tileDetailsPopup) {
 		"$test"
 			?>
 	</div>
-    <?php } 
+    <?php if(!$basearray['fieldtype'] && $basearray['oasistype']) { ?>
+    <div class="option">
+        <a class="a arrow" href="warsim.php?oasis=<?php echo (int)$d; ?>">Simular ataque</a>
+    </div>
+    <?php } ?>
+    <?php }
         else if ($basearray['occupied']==1 && $basearray['oasistype']==0 && $basearray['wref'] != $_SESSION['wid']) {
     ?>
     <div class="option">
