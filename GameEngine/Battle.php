@@ -45,13 +45,7 @@ class Battle {
 				: 0;
 		}
 
-		$userHero = isset($session->uid) ? $database->getHeroData((int)$session->uid) : false;
-		$input['a1_hero'] = (
-			!empty($attackerUnits['hero'])
-			&& is_array($userHero)
-			&& isset($userHero['dead'])
-			&& (int)$userHero['dead'] === 0
-		) ? 1 : 0;
+		$input['a1_hero'] = 1;
 
 		for($unit = 31; $unit <= 40; $unit++) {
 			$input['a2_'.$unit] = isset($defenderUnits['u'.$unit])

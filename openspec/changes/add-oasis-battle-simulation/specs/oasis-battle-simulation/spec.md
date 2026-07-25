@@ -12,15 +12,15 @@ The system SHALL show a “Simular ataque” action for an unoccupied oasis and 
 - **THEN** the system does not show the oasis simulation action
 
 ### Requirement: Attacking army is prefilled from the selected village
-The system SHALL prefill all own troops currently available in the selected village, mapped to the player's tribe, and SHALL include the hero by default only when the living hero is currently present in that village.
+The system SHALL prefill all own troops currently available in the selected village, mapped to the player's tribe, and SHALL always include the hero by default regardless of the real hero's health, movement, or location.
 
-#### Scenario: Village has troops and an available hero
-- **WHEN** the player opens an oasis simulation while the selected village contains own troops and its living hero
+#### Scenario: Open the prefilled attacker
+- **WHEN** the player opens an oasis simulation
 - **THEN** the simulator shows every available troop quantity and one attacking hero
 
-#### Scenario: Hero is unavailable
+#### Scenario: Real hero is unavailable
 - **WHEN** the hero is dead, away, or stationed in another village
-- **THEN** the simulator does not include the hero
+- **THEN** the simulator still includes one attacking hero by default
 
 ### Requirement: Defending animals are prefilled from the oasis
 The system SHALL prefill the Nature defender with the current quantities of all animal types stored at the selected oasis.

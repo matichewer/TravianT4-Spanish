@@ -98,7 +98,7 @@ $input = $battle->getOasisSimulationInput(900);
 oasisSimulationAssert(is_array($input), 'acepta un oasis desocupado');
 oasisSimulationAssert($input['a1_v'] === 2 && $input['a2_v4'] === 1 && $input['ktyp'] === 1, 'configura Germanos contra Naturaleza como saqueo');
 oasisSimulationAssert($input['a1_1'] === 12 && $input['a1_2'] === 7 && $input['a1_10'] === 3, 'mapea todas las tropas de la aldea seleccionada');
-oasisSimulationAssert($input['a1_hero'] === 1, 'incluye al héroe vivo presente en la aldea');
+oasisSimulationAssert($input['a1_hero'] === 1, 'incluye al héroe por defecto');
 oasisSimulationAssert($input['a2_31'] === 3 && $input['a2_33'] === 4 && $input['a2_40'] === 2, 'mapea los animales actuales del oasis');
 
 $database->unitReads = array();
@@ -109,11 +109,11 @@ oasisSimulationAssert(count($database->unitReads) === 0, 'no lee unidades de obj
 
 $database->units[100]['hero'] = 0;
 $withoutHero = $battle->getOasisSimulationInput(900);
-oasisSimulationAssert($withoutHero['a1_hero'] === 0, 'excluye al héroe que no está en la aldea');
+oasisSimulationAssert($withoutHero['a1_hero'] === 1, 'incluye al héroe aunque no esté en la aldea');
 $database->units[100]['hero'] = 1;
 $database->hero['dead'] = 1;
 $deadHero = $battle->getOasisSimulationInput(900);
-oasisSimulationAssert($deadHero['a1_hero'] === 0, 'excluye al héroe muerto');
+oasisSimulationAssert($deadHero['a1_hero'] === 1, 'incluye al héroe aunque esté muerto');
 $database->hero['dead'] = 0;
 
 $_POST = array();
