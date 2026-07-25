@@ -379,6 +379,29 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%auction` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `%prefix%auction_bids`
+--
+
+CREATE TABLE IF NOT EXISTS `%PREFIX%auction_bids` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `auction_id` int(11) unsigned NOT NULL,
+  `uid` int(11) unsigned NOT NULL,
+  `max_bid` int(11) unsigned NOT NULL,
+  `price_before` int(11) unsigned NOT NULL,
+  `price_after` int(11) unsigned NOT NULL,
+  `time` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `auction_id` (`auction_id`),
+  KEY `uid` (`uid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+--
+-- Dumping data for table `%prefix%auction_bids`
+--
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `%PREFIX%banlist`
 --
 

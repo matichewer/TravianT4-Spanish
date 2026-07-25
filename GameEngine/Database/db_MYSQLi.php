@@ -3789,6 +3789,7 @@ break;
 							}
 							return array('status' => 'error');
 						}
+						$this->recordAuctionBid($id, $bidder, $maxBid, $currentPrice, $currentPrice);
 						return array('status' => 'winning', 'price' => $currentPrice);
 					}
 
@@ -3814,17 +3815,31 @@ break;
 							}
 							return array('status' => 'error');
 						}
+						$this->recordAuctionBid($id, $bidder, $maxBid, $currentPrice, $newPrice);
 						return array('status' => 'winning', 'price' => $newPrice);
 					}
 
 					$newPrice = min($currentMaximum, max($currentPrice, $maxBid + 1));
 					$updated = mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "auction SET silver = $newPrice, bids = bids + 1 WHERE id = $id AND finish = 0");
-					return $updated
-						? array('status' => 'outbid', 'price' => $newPrice)
-						: array('status' => 'error');
+					if(!$updated) {
+						return array('status' => 'error');
+					}
+					$this->recordAuctionBid($id, $bidder, $maxBid, $currentPrice, $newPrice);
+					return array('status' => 'outbid', 'price' => $newPrice);
 				} finally {
 					$this->releaseAuctionLock();
 				}
+			}
+
+			private function recordAuctionBid($auctionId, $uid, $maxBid, $priceBefore, $priceAfter) {
+				$auctionId = (int) $auctionId;
+				$uid = (int) $uid;
+				$maxBid = (int) $maxBid;
+				$priceBefore = (int) $priceBefore;
+				$priceAfter = (int) $priceAfter;
+				$time = time();
+				$q = "INSERT INTO " . TB_PREFIX . "auction_bids (auction_id, uid, max_bid, price_before, price_after, time) VALUES ($auctionId, $uid, $maxBid, $priceBefore, $priceAfter, $time)";
+				return mysqli_query($this->connection, $q);
 			}
 
 			function addBid($id, $uid, $newsilver) {

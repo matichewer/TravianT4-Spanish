@@ -30,3 +30,18 @@ ALTER TABLE s1_config
 -- Conserva hasta 20 tokens de sesion independientes por cuenta.
 ALTER TABLE s1_users
   MODIFY COLUMN sessid varchar(2048) NOT NULL;
+
+-- 2026-07-25 - Mensaje informativo al finalizar una subasta
+-- Guarda cada oferta aceptada para poder avisar a todos los postores.
+CREATE TABLE IF NOT EXISTS s1_auction_bids (
+  id int(11) unsigned NOT NULL AUTO_INCREMENT,
+  auction_id int(11) unsigned NOT NULL,
+  uid int(11) unsigned NOT NULL,
+  max_bid int(11) unsigned NOT NULL,
+  price_before int(11) unsigned NOT NULL,
+  price_after int(11) unsigned NOT NULL,
+  time int(11) unsigned NOT NULL,
+  PRIMARY KEY (id),
+  KEY auction_id (auction_id),
+  KEY uid (uid)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

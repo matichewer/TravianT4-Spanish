@@ -1048,6 +1048,7 @@ class Automation {
             $scout = 0;
             $rom = $ger = $gal = $nat = $natar = 0;
             $info_ram = $info_cat = $info_chief = $info_spy = $info_trap = '';
+            $spyReinforcements = array();
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
             $herosend_att = (int)$data['t11'];
@@ -1119,6 +1120,10 @@ class Automation {
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
                     foreach ($enforcementarray as $enforce) {
+                        $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
+                        if($spyReinforcement !== null) {
+                            $spyReinforcements[] = $spyReinforcement;
+                        }
                         for ($i = 1; $i <= 50; $i++) {
                             $Defender['u'.$i] += $enforce['u'.$i];
                         }
@@ -1307,6 +1312,10 @@ class Automation {
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
                     foreach ($enforcementarray as $enforce) {
+                        $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
+                        if($spyReinforcement !== null) {
+                            $spyReinforcements[] = $spyReinforcement;
+                        }
                         for ($i = 1; $i <= 50; $i++) {
                             $Defender['u'.$i] += $enforce['u'.$i];
                         }
@@ -2813,6 +2822,12 @@ class Automation {
                     }
 
                     $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.',0,0,0,0,0,'.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.','.$unitstraped_att;
+                    if(!empty($spyReinforcements)) {
+                        $spyReinforcementJson = json_encode($spyReinforcements);
+                        if($spyReinforcementJson !== false) {
+                            $data2 .= ',spyref:'.base64_encode($spyReinforcementJson);
+                        }
+                    }
                 } else {
                     $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.','.$unitstraped_att;
                 }
@@ -3087,6 +3102,56 @@ class Automation {
         if(file_exists("GameEngine/Prevention/sendunits.txt")) {
             unlink("GameEngine/Prevention/sendunits.txt");
         }
+    }
+
+    private function buildSpyReinforcementSnapshot($enforcement) {
+        global $database;
+
+        $from = (int)$enforcement['from'];
+        $owner = 0;
+        $tribe = 4;
+        if($from > 0) {
+            $owner = (int)$database->getVillageField($from, 'owner');
+            $tribe = (int)$database->getUserField($owner, 'tribe', 0);
+        }
+
+        if($tribe < 1 || $tribe > 5) {
+            for($candidateTribe = 1; $candidateTribe <= 5; $candidateTribe++) {
+                $candidateStart = ($candidateTribe - 1) * 10 + 1;
+                for($unit = $candidateStart; $unit < $candidateStart + 10; $unit++) {
+                    if(!empty($enforcement['u'.$unit])) {
+                        $tribe = $candidateTribe;
+                        break 2;
+                    }
+                }
+            }
+        }
+        if($tribe < 1 || $tribe > 5) {
+            return null;
+        }
+
+        $units = array();
+        $hasTroops = !empty($enforcement['hero']);
+        $start = ($tribe - 1) * 10 + 1;
+        for($unit = $start; $unit < $start + 10; $unit++) {
+            $amount = max(0, (int)$enforcement['u'.$unit]);
+            $units[] = $amount;
+            if($amount > 0) {
+                $hasTroops = true;
+            }
+        }
+        if(!$hasTroops) {
+            return null;
+        }
+
+        return array(
+            'from' => $from,
+            'owner' => $owner,
+            'tribe' => $tribe,
+            'units' => $units,
+            'hero' => max(0, (int)$enforcement['hero']),
+            'nature' => $from === 0
+        );
     }
 
     private function sendreinfunitsComplete() {
@@ -4353,10 +4418,108 @@ class Automation {
                 }
                 $q = "UPDATE ".TB_PREFIX."auction set finish=1 where id = ".(int) $data['id']." and finish=0";
                 $database->query($q);
+                if(!$noBids) {
+                    $this->sendAuctionResultMessages($data);
+                }
             }
         } finally {
             $database->releaseAuctionLock();
         }
+    }
+
+    private function sendAuctionResultMessages($auction) {
+        global $database;
+
+        $auctionID = (int) $auction['id'];
+        $ownerID = (int) $auction['owner'];
+        $winnerID = (int) $auction['uid'];
+        $participantRows = $database->query_return(
+            "SELECT ab.uid, u.username
+             FROM ".TB_PREFIX."auction_bids ab
+             INNER JOIN ".TB_PREFIX."users u ON u.id = ab.uid
+             WHERE ab.auction_id = $auctionID
+             GROUP BY ab.uid, u.username
+             ORDER BY MIN(ab.id)"
+        );
+
+        $bidderNames = array();
+        $recipientIDs = array($ownerID => true);
+        foreach($participantRows as $participant) {
+            $participantID = (int) $participant['uid'];
+            $bidderNames[$participantID] = (string) $participant['username'];
+            $recipientIDs[$participantID] = true;
+        }
+
+        // Una subasta que ya estaba activa al aplicar la migracion no tiene
+        // historial previo, pero al menos debe incluir al ganador vigente.
+        if(!isset($bidderNames[$winnerID])) {
+            $bidderNames[$winnerID] = (string) $database->getUserField($winnerID, 'username', 0);
+            $recipientIDs[$winnerID] = true;
+        }
+
+        $startingPrice = $this->getAuctionStartingPrice($auction);
+        $sellerName = (string) $database->getUserField($ownerID, 'username', 0);
+        $winnerName = (string) $database->getUserField($winnerID, 'username', 0);
+        $itemName = $this->getAuctionItemName($auction);
+        $quantity = max(1, (int) $auction['num']);
+
+        $safeBidderNames = array();
+        foreach($bidderNames as $bidderName) {
+            $safeBidderNames[] = htmlspecialchars($bidderName, ENT_QUOTES, 'UTF-8');
+        }
+
+        $message = "[message][b]La subasta ha finalizado[/b]\n\n"
+            . "[b]Vendedor:[/b] ".htmlspecialchars($sellerName, ENT_QUOTES, 'UTF-8')."\n"
+            . "[b]Objeto:[/b] ".$quantity." × ".htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8')."\n"
+            . "[b]Postores:[/b] ".implode(', ', $safeBidderNames)."\n"
+            . "[b]Ganador:[/b] ".htmlspecialchars($winnerName, ENT_QUOTES, 'UTF-8')."\n"
+            . "[b]Precio inicial:[/b] ".$startingPrice." de plata\n"
+            . "[b]Precio final:[/b] ".(int) $auction['silver']." de plata[/message]";
+
+        foreach(array_keys($recipientIDs) as $recipientID) {
+            $database->sendMessage(
+                (int) $recipientID,
+                4,
+                'Resultado de la subasta',
+                addslashes($message),
+                0,
+                0,
+                0,
+                0,
+                0
+            );
+        }
+    }
+
+    private function getAuctionStartingPrice($auction) {
+        global $database;
+
+        $auctionID = (int) $auction['id'];
+        $rows = $database->query_return(
+            "SELECT price_before
+             FROM ".TB_PREFIX."auction_bids
+             WHERE auction_id = $auctionID
+             ORDER BY id ASC
+             LIMIT 1"
+        );
+        if(isset($rows[0])) {
+            return (int) $rows[0]['price_before'];
+        }
+
+        $btype = (int) $auction['btype'];
+        if(in_array($btype, array(7, 8, 9, 10, 11, 13, 14), true)) {
+            return (int) $auction['num'];
+        }
+        return 100;
+    }
+
+    private function getAuctionItemName($auction) {
+        $btype = (int) $auction['btype'];
+        $type = (int) $auction['type'];
+        $name = "Objeto del héroe (tipo ".$btype.")";
+        $title = "";
+        include dirname(__DIR__)."/Templates/Auction/alt.tpl";
+        return trim($name);
     }
 
     private function addAdventures() {
