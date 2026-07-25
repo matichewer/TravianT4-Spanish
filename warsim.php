@@ -162,14 +162,21 @@ function validateSimulation() {
 	var sideSelectors = document.querySelectorAll('input[name="a1_v"], input[name^="a2_v"]');
 	var displayedAttacker = document.getElementsByName('displayed_attacker');
 	var simulatorForm = sideSelectors.length ? sideSelectors[0].form : null;
-	function reloadCombatants() {
+	function reloadCombatants(event) {
 		if(!simulatorForm) {
 			return;
 		}
+		var isDefenderChange = event && event.target && /^a2_v/.test(event.target.name);
 		var fields = simulatorForm.elements;
 		for(var i = 0; i < fields.length; i++) {
-			if(/^(a1|a2|f1|f2)_\d+$/.test(fields[i].name)) {
-				fields[i].value = '';
+			if(isDefenderChange) {
+				if(/^(a2|f2)_\d+$/.test(fields[i].name)) {
+					fields[i].value = '';
+				}
+			} else {
+				if(/^(a1|a2|f1|f2)_\d+$/.test(fields[i].name)) {
+					fields[i].value = '';
+				}
 			}
 		}
 		simulatorForm.submit();
