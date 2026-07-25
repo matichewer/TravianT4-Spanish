@@ -30,12 +30,12 @@ class Battle {
 		if($defenderTribe === 4 && !$isRaid) {
 			return;
 		}
-		$configurationChanged = isset($post['displayed_attacker'])
+		$configurationChanged = $defenderTribe === 4 || (isset($post['displayed_attacker'])
 			&& (
 				(int)$post['displayed_attacker'] !== $attackerTribe
 				|| !isset($post['displayed_targets'])
 				|| $post['displayed_targets'] !== implode(',', $target)
-			);
+			));
 		$values = $post;
 		$values['a1_v'] = $attackerTribe;
 		$values['tribe'] = $defenderTribe;
