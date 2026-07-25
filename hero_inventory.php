@@ -128,9 +128,15 @@ foreach($equipmentSlots as $slot => $expectedBtype){
 				? ((int)$data['btype']>=7 && (int)$data['btype']<=9)
 				: (int)$data['btype']===$expectedBtype);
 		if($isExpectedItem){
-			$itemClass = $slot==='bag' ? (int)$data['btype']+105 : (int)$data['type'];
+			$btype = (int)$data['btype'];
+			$type = (int)$data['type'];
+			include "Templates/Auction/alt.tpl";
+
+			$itemClass = $slot==='bag' ? $btype+105 : $type;
 			$amount = $slot==='bag' ? (int)$data['type'] : (int)$data['num'];
-			$item = '<div id="item_'.$itemId.'" class="item item_'.$itemClass.' onHero'.$disabledClass.'" style="position: relative; left: 0px; top: 0px;"><div class="amount">'.$amount.'</div></div>';
+			$tooltipAmount = $amount>1 ? '('.$amount.') ' : '';
+			$tooltip = htmlspecialchars($tooltipAmount.$name.'||'.$title, ENT_QUOTES, 'UTF-8');
+			$item = '<div id="item_'.$itemId.'" title="'.$tooltip.'" class="item item_'.$itemClass.' onHero'.$disabledClass.'" style="position: relative; left: 0px; top: 0px;"><div class="amount">'.$amount.'</div></div>';
 			$itemMarkup = $hero['dead']==1 ? $item : '<a href="?inventory&amp;'.$slot.'='.$itemId.'">'.$item.'</a>';
 		}
 	}
