@@ -64,15 +64,15 @@ class Battle {
 			$values['f1_'.$i] = $this->simulationNumber(!$configurationChanged && $i <= 8 && isset($post['f1_'.$i]) ? $post['f1_'.$i] : 0, 0, 20, true);
 			$attackerTotal += $values['a1_'.$i];
 		}
-		$values['a1_hero'] = $this->simulationNumber(!$configurationChanged && isset($post['a1_hero']) ? $post['a1_hero'] : 0, 0, 1, true);
+		$values['a1_hero'] = $this->simulationNumber(isset($post['a1_hero']) ? $post['a1_hero'] : 0, 0, 1, true);
 		$values['h_att_power'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['h_att_power']) && $post['h_att_power'] !== '' ? $post['h_att_power'] : $defaultHeroPower,
+			isset($post['h_att_power']) && $post['h_att_power'] !== '' ? $post['h_att_power'] : $defaultHeroPower,
 			0,
 			99999,
 			true
 		);
 		$values['h_att_health'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['h_att_health']) && $post['h_att_health'] !== '' ? $post['h_att_health'] : $defaultHeroHealth,
+			isset($post['h_att_health']) && $post['h_att_health'] !== '' ? $post['h_att_health'] : $defaultHeroHealth,
 			1,
 			100,
 			true
@@ -111,7 +111,7 @@ class Battle {
 			$defaultAttackerPopulation = max(1, (int)$village->pop);
 		}
 		$values['ew1'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['ew1']) && $post['ew1'] !== '' ? $post['ew1'] : $defaultAttackerPopulation,
+			isset($post['ew1']) && $post['ew1'] !== '' ? $post['ew1'] : $defaultAttackerPopulation,
 			1,
 			99999,
 			true
@@ -120,7 +120,7 @@ class Battle {
 			? 100
 			: $this->simulationNumber(!$configurationChanged && isset($post['ew2']) ? $post['ew2'] : 1, 1, 99999, true);
 		$values['h_off_bonus'] = $this->simulationNumber(
-			!$configurationChanged && isset($post['h_off_bonus']) ? $post['h_off_bonus'] : $defaultHeroOffBonus,
+			isset($post['h_off_bonus']) ? $post['h_off_bonus'] : $defaultHeroOffBonus,
 			0,
 			20,
 			false
