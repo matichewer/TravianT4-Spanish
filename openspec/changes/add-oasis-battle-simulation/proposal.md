@@ -7,6 +7,7 @@ Players can inspect the animals in an unoccupied oasis, but must manually copy b
 - Add a “Simular ataque” option to the detail view of unoccupied oases.
 - Open the combat simulator preconfigured as a raid against Nature.
 - Prefill the attacker with every troop currently available in the selected village.
+- Leave Roman Equites Legati, German Emissaries, and Gaul Pathfinders at zero instead of preloading scouting units.
 - Always include the hero by default, regardless of whether the real hero is dead, traveling, or stationed elsewhere.
 - Prefill the defender with the oasis's current animal counts.
 - Keep the prefilled values editable and avoid changing any real troops or oasis state.

@@ -22,7 +22,7 @@ The oasis detail view already loads the target tile, displays its Nature units, 
 
 1. The oasis detail action links to `warsim.php?oasis=<wref>`. On a GET without submitted form data, the simulator validates the world reference, builds its normal input array server-side, and passes it through the existing `Battle::procSim()` normalization and calculation path. A query parameter is preferable to a large client-generated POST because unit quantities remain authoritative and the URL contains no army data.
 
-2. A public Battle helper builds the initial scenario. It reads only the active village's own `units` row, maps its tribe-specific ten units to `a1_1` through `a1_10`, always includes one hypothetical attacking hero, and maps Nature units `u31` through `u40` to the matching defender fields. The hero is independent of the real hero's availability because the simulator does not send or reserve units.
+2. A public Battle helper builds the initial scenario. It reads only the active village's own `units` row, maps its tribe-specific ten units to `a1_1` through `a1_10`, omits the scouting unit IDs `4`, `14`, and `23`, always includes one hypothetical attacking hero, and maps Nature units `u31` through `u40` to the matching defender fields. Scouts are excluded because they have zero conventional attack and carrying capacity and can only distort the simulated battle size; their fields remain editable. The hero is independent of the real hero's availability because the simulator does not send or reserve units.
 
 3. The generated scenario selects Nature and raid mode, since the simulator intentionally rejects normal attacks against oases. All values remain editable after initialization.
 

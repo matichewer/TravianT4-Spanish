@@ -52,7 +52,7 @@ $database->units[100] = array(
 	'u11' => 12,
 	'u12' => 7,
 	'u13' => 0,
-	'u14' => 0,
+	'u14' => 9,
 	'u15' => 2,
 	'u16' => 0,
 	'u17' => 0,
@@ -98,8 +98,25 @@ $input = $battle->getOasisSimulationInput(900);
 oasisSimulationAssert(is_array($input), 'acepta un oasis desocupado');
 oasisSimulationAssert($input['a1_v'] === 2 && $input['a2_v4'] === 1 && $input['ktyp'] === 1, 'configura Germanos contra Naturaleza como saqueo');
 oasisSimulationAssert($input['a1_1'] === 12 && $input['a1_2'] === 7 && $input['a1_10'] === 3, 'mapea todas las tropas de la aldea seleccionada');
+oasisSimulationAssert($input['a1_4'] === 0, 'excluye a los Emisarios germanos');
 oasisSimulationAssert($input['a1_hero'] === 1, 'incluye al héroe por defecto');
 oasisSimulationAssert($input['a2_31'] === 3 && $input['a2_33'] === 4 && $input['a2_40'] === 2, 'mapea los animales actuales del oasis');
+
+$scoutCases = array(
+	1 => array('unit' => 4, 'position' => 4, 'name' => 'Equites Legati romanos'),
+	2 => array('unit' => 14, 'position' => 4, 'name' => 'Emisarios germanos'),
+	3 => array('unit' => 23, 'position' => 3, 'name' => 'Batidores galos')
+);
+foreach($scoutCases as $tribe => $case) {
+	$database->units[100]['u'.$case['unit']] = 15;
+	$session->tribe = $tribe;
+	$scoutInput = $battle->getOasisSimulationInput(900);
+	oasisSimulationAssert(
+		$scoutInput['a1_'.$case['position']] === 0,
+		'excluye a '.$case['name']
+	);
+}
+$session->tribe = 2;
 
 $database->unitReads = array();
 oasisSimulationAssert($battle->getOasisSimulationInput(901) === false, 'rechaza un oasis ocupado');

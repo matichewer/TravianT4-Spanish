@@ -12,11 +12,15 @@ The system SHALL show a “Simular ataque” action for an unoccupied oasis and 
 - **THEN** the system does not show the oasis simulation action
 
 ### Requirement: Attacking army is prefilled from the selected village
-The system SHALL prefill all own troops currently available in the selected village, mapped to the player's tribe, and SHALL always include the hero by default regardless of the real hero's health, movement, or location.
+The system SHALL prefill all own non-scouting troops currently available in the selected village, mapped to the player's tribe, SHALL leave the tribe's scouting unit at zero, and SHALL always include the hero by default regardless of the real hero's health, movement, or location.
 
 #### Scenario: Open the prefilled attacker
 - **WHEN** the player opens an oasis simulation
-- **THEN** the simulator shows every available troop quantity and one attacking hero
+- **THEN** the simulator shows every available non-scouting troop quantity, zero scouts, and one attacking hero
+
+#### Scenario: Scouting units are available
+- **WHEN** the selected village contains Roman Equites Legati, German Emissaries, or Gaul Pathfinders
+- **THEN** the corresponding attacker quantity remains zero in the prefilled simulation
 
 #### Scenario: Real hero is unavailable
 - **WHEN** the hero is dead, away, or stationed in another village

@@ -38,9 +38,11 @@ class Battle {
 			'ktyp' => 1
 		);
 		$attackerStart = ($attackerTribe - 1) * 10 + 1;
+		$scoutingUnits = array(4, 14, 23);
 		for($position = 1; $position <= 10; $position++) {
-			$unitField = 'u'.($attackerStart + $position - 1);
-			$input['a1_'.$position] = isset($attackerUnits[$unitField])
+			$unitId = $attackerStart + $position - 1;
+			$unitField = 'u'.$unitId;
+			$input['a1_'.$position] = !in_array($unitId, $scoutingUnits, true) && isset($attackerUnits[$unitField])
 				? max(0, (int)$attackerUnits[$unitField])
 				: 0;
 		}
