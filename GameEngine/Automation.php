@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/CombatRanking.php';
+
 class Automation {
 
     private $bountyresarray = array();
@@ -1120,9 +1122,11 @@ class Automation {
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
                     foreach ($enforcementarray as $enforce) {
-                        $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
-                        if($spyReinforcement !== null) {
-                            $spyReinforcements[] = $spyReinforcement;
+                        if((int)$data['attack_type'] === 1) {
+                            $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
+                            if($spyReinforcement !== null) {
+                                $spyReinforcements[] = $spyReinforcement;
+                            }
                         }
                         for ($i = 1; $i <= 50; $i++) {
                             $Defender['u'.$i] += $enforce['u'.$i];
@@ -1312,9 +1316,11 @@ class Automation {
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
                     foreach ($enforcementarray as $enforce) {
-                        $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
-                        if($spyReinforcement !== null) {
-                            $spyReinforcements[] = $spyReinforcement;
+                        if((int)$data['attack_type'] === 1) {
+                            $spyReinforcement = $this->buildSpyReinforcementSnapshot($enforce);
+                            if($spyReinforcement !== null) {
+                                $spyReinforcements[] = $spyReinforcement;
+                            }
                         }
                         for ($i = 1; $i <= 50; $i++) {
                             $Defender['u'.$i] += $enforce['u'.$i];
@@ -1642,9 +1648,15 @@ class Automation {
                 if(count($database->getEnforceVillage($data['to'], 0)) > 0) {
                     foreach ($database->getEnforceVillage($data['to'], 0) as $enforce) {
                         $wrong = '0';
-                        $reinforcementOwner = $database->getVillageField($enforce['from'], "owner");
-                        $reinforcementAlly = $database->getUserField($reinforcementOwner, "alliance", 0);
-                        $tribe = $database->getUserField($reinforcementOwner, "tribe", 0);
+                        if((int)$enforce['from'] === 0) {
+                            $reinforcementOwner = 0;
+                            $reinforcementAlly = 0;
+                            $tribe = 4;
+                        } else {
+                            $reinforcementOwner = $database->getVillageField($enforce['from'], "owner");
+                            $reinforcementAlly = $database->getUserField($reinforcementOwner, "alliance", 0);
+                            $tribe = $database->getUserField($reinforcementOwner, "tribe", 0);
+                        }
                         $start = ($tribe - 1) * 10 + 1;
                         $reinforcementDead = array_fill($start, 10, 0);
 
@@ -1695,7 +1707,7 @@ class Automation {
                         $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                         //NEED TO SEND A RAPPORTAGE!!!
                         $data2 = ''.$reinforcementOwner.','.$to['wref'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.'';
-                        if($scout) {
+                        if($scout && $reinforcementOwner > 0) {
                             if($totaldead_att > 0) {
                                 if($totaldead_att == $totalsend_att) {
                                     $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
@@ -1703,13 +1715,15 @@ class Automation {
                                     $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                                 }
                             }
-                        } else {
-                            if($totalnotlife == 0) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
-                            } else if($totallife > $totalnotlife) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
-                            } else {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                        } else if(!$scout) {
+                            if($reinforcementOwner > 0) {
+                                if($totalnotlife == 0) {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                } else if($totallife > $totalnotlife) {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                } else {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                }
                             }
                             //delete reinf sting when its killed all.
                             if($wrong == '0') {
@@ -1887,14 +1901,22 @@ class Automation {
                 }
                 $totaldead_def += $dead['hero'];
 
-                $database->modifyPoints($toF['owner'], 'dpall', $totaldead_att);
-                $database->modifyPoints($from['owner'], 'apall', $totaldead_def);
-                $database->modifyPoints($toF['owner'], 'dp', $totaldead_att);
-                $database->modifyPoints($from['owner'], 'ap', $totaldead_def);
-                $database->modifyPointsAlly($targetally, 'Adp', $totaldead_att);
-                $database->modifyPointsAlly($ownally, 'Aap', $totaldead_def);
-                $database->modifyPointsAlly($targetally, 'dp', $totaldead_att);
-                $database->modifyPointsAlly($ownally, 'ap', $totaldead_def);
+                $attackerCasualtiesByUnit = array();
+                $attackerUnitStart = (($owntribe - 1) * 10);
+                for ($i = 1; $i <= 10; $i++) {
+                    $attackerCasualtiesByUnit[$attackerUnitStart + $i] = ${'dead'.$i};
+                }
+                $defensivePoints = calculateCombatRankingPoints($attackerCasualtiesByUnit, $dead11);
+                $offensivePoints = calculateCombatRankingPoints($dead, $dead['hero']);
+
+                $database->modifyPoints($toF['owner'], 'dpall', $defensivePoints);
+                $database->modifyPoints($from['owner'], 'apall', $offensivePoints);
+                $database->modifyPoints($toF['owner'], 'dp', $defensivePoints);
+                $database->modifyPoints($from['owner'], 'ap', $offensivePoints);
+                $database->modifyPointsAlly($targetally, 'Adp', $defensivePoints);
+                $database->modifyPointsAlly($ownally, 'Aap', $offensivePoints);
+                $database->modifyPointsAlly($targetally, 'dp', $defensivePoints);
+                $database->modifyPointsAlly($ownally, 'ap', $offensivePoints);
 
 
                 if(!$isoasis) {

@@ -8,6 +8,21 @@ if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
     $topic = $message->readingNotice['topic'];
     $time = $message->readingNotice['time'];
 }
+$spyReinforcements = array();
+foreach($dataarray as $reportField) {
+	if(strpos($reportField, 'spyref:') !== 0) {
+		continue;
+	}
+	$decodedReinforcements = base64_decode(substr($reportField, 7), true);
+	if($decodedReinforcements === false) {
+		continue;
+	}
+	$decodedReinforcements = json_decode($decodedReinforcements, true);
+	if(is_array($decodedReinforcements)) {
+		$spyReinforcements = $decodedReinforcements;
+	}
+	break;
+}
 $trap = $faild = false;
 if($dataarray[154] != '?'){ //if attack didn't fail
 $trapstart = 159;
@@ -171,11 +186,12 @@ if (!$faild && $dataarray[155]!='' and $dataarray[156]!=''){ //chief
     <?php echo $dataarray[158]; ?>
     </td></tr></tbody>
 <?php }
-if (!$faild && $dataarray[$trapstart+11]!='' and $dataarray[$trapstart+11]!=''){ //release prisoners
+$extraReportInformation = isset($dataarray[$trapstart+11]) ? $dataarray[$trapstart+11] : '';
+if (!$faild && $extraReportInformation !== '' && strpos($extraReportInformation, 'spyref:') !== 0){ //release prisoners
 ?>
     <tbody><tr><td class="empty" colspan="12"></td></tr></tbody>
     <tbody class="goods"><tr><th><?php echo REPORT_INFORMATION; ?></th><td style="text-align:left" colspan="11">
-    <?php echo $dataarray[$trapstart+11]; ?>
+    <?php echo $extraReportInformation; ?>
     </td></tr></tbody>
 <?php } ?>
 
@@ -222,6 +238,33 @@ if (!$faild && $dataarray[$trapstart+11]!='' and $dataarray[$trapstart+11]!=''){
 <?php
 $targettribe = $dataarray['33'];
 $ddd = '36';
+if(!empty($spyReinforcements)) {
+	foreach($spyReinforcements as $spyReinforcement) {
+		$reinforcementTribe = (int)$spyReinforcement['tribe'];
+		if($reinforcementTribe < 1 || $reinforcementTribe > 5 || !isset($spyReinforcement['units'])) {
+			continue;
+		}
+		$reportUnitsStart = 37 + (($reinforcementTribe - 1) * 23);
+		for($position = 0; $position < 10; $position++) {
+			$reinforcementAmount = isset($spyReinforcement['units'][$position])
+				? (int)$spyReinforcement['units'][$position]
+				: 0;
+			$dataarray[$reportUnitsStart + $position] = max(
+				0,
+				(int)$dataarray[$reportUnitsStart + $position] - $reinforcementAmount
+			);
+		}
+		$dataarray[$reportUnitsStart + 10] = max(
+			0,
+			(int)$dataarray[$reportUnitsStart + 10] - (int)$spyReinforcement['hero']
+		);
+	}
+	for($tribe = 1; $tribe <= 5; $tribe++) {
+		if($tribe !== (int)$targettribe) {
+			$dataarray[36 + (($tribe - 1) * 23)] = 0;
+		}
+	}
+}
 include "Templates/Notice/tribe_".$targettribe.".tpl";
 for($s=1;$s<=5;$s++){
 	if($s != $targettribe){
@@ -230,6 +273,15 @@ for($s=1;$s<=5;$s++){
         }
     }
     $ddd += '23';
+}
+foreach($spyReinforcements as $spyReinforcement) {
+	if(
+		isset($spyReinforcement['tribe'], $spyReinforcement['units'], $spyReinforcement['hero'])
+		&& (int)$spyReinforcement['tribe'] >= 1
+		&& (int)$spyReinforcement['tribe'] <= 5
+	) {
+		include "Templates/Notice/spy_reinforcement.tpl";
+	}
 }
 ?>	
 </td></tr></tbody></table>
