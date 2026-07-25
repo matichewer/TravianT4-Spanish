@@ -12,3 +12,4 @@
 
 - [x] 3.1 Add regression coverage for target validation, troop mapping, hero availability, and editable animal quantities
 - [x] 3.2 Run PHP syntax checks, OpenSpec validation, and the simulator regression suite
+- [x] 3.3 Verify that `warsim.php?oasis=<wref>` invokes the prefilled simulation path

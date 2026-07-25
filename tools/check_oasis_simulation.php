@@ -85,6 +85,13 @@ require dirname(__DIR__).'/GameEngine/Data/unitdata.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
 require dirname(__DIR__).'/GameEngine/Battle.php';
 
+$warsimSource = file_get_contents(dirname(__DIR__).'/warsim.php');
+oasisSimulationAssert(
+	strpos($warsimSource, 'getOasisSimulationInput') !== false
+		&& strpos($warsimSource, 'procSim($simulationInput)') !== false,
+	'warsim.php procesa el parámetro oasis mediante el escenario precargado'
+);
+
 $battle = new Battle();
 $input = $battle->getOasisSimulationInput(900);
 

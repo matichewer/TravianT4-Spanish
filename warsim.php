@@ -2,7 +2,15 @@
 
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
-$battle->procSim($_POST);
+$simulationInput = $_POST;
+if(empty($_POST) && isset($_GET['oasis'])) {
+	$simulationInput = $battle->getOasisSimulationInput($_GET['oasis']);
+	if($simulationInput === false) {
+		$form->addError('oasis', 'El objetivo seleccionado no es un oasis desocupado válido.');
+		$simulationInput = array();
+	}
+}
+$battle->procSim($simulationInput);
 include "Templates/html.tpl";
 ?>
 <body class="v35 webkit chrome warsim">
