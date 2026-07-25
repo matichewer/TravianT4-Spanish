@@ -30,6 +30,15 @@ include "Templates/html.tpl";
 <div class="contentContainer">
 <div id="content"  class="warsim">
 <h1><?php echo WARSIM; ?></h1>
+<?php
+if($form->returnErrors() > 0) {
+	echo '<div class="error"><div class="boxes boxesColor red"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">';
+	foreach($form->getErrors() as $error) {
+		echo '<p>'.$error.'</p>';
+	}
+	echo '</div></div></div>';
+}
+?>
 <form action="warsim.php" method="post">
 <?php
 if(isset($_POST['result'])) {

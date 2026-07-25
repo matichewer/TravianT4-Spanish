@@ -28,6 +28,8 @@ class Battle {
 		$defenderTribe = $target[0];
 		$isRaid = isset($post['ktyp']) && (int)$post['ktyp'] === 1;
 		if($defenderTribe === 4 && !$isRaid) {
+			global $form;
+			$form->addError('target', 'Los oasis solo pueden ser saqueados, no atacados normalmente.');
 			return;
 		}
 		$configurationChanged = $defenderTribe === 4 || (isset($post['displayed_attacker'])
