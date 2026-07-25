@@ -6,15 +6,13 @@ foreach($building->buildArray as $notificationJob) {
 		continue;
 	}
 
-	$notificationPage = ((int)$notificationJob['field'] <= 18) ? 'dorf1.php' : 'dorf2.php';
 	$buildNotificationJobs[] = array(
 		'id' => (int)$notificationJob['id'],
 		'villageId' => (int)$notificationJob['wid'],
 		'village' => $village->vname,
 		'building' => $building->procResType($notificationJob['type']),
 		'level' => (int)$notificationJob['level'],
-		'finishAt' => (int)$notificationJob['timestamp'],
-		'url' => $notificationPage.'?newdid='.(int)$notificationJob['wid']
+		'finishAt' => (int)$notificationJob['timestamp']
 	);
 }
 

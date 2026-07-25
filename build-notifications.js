@@ -77,8 +77,7 @@
 			village: String(rawJob.village || ''),
 			building: String(rawJob.building || ''),
 			level: parseInt(rawJob.level, 10),
-			finishAt: parseInt(rawJob.finishAt, 10),
-			url: String(rawJob.url || 'dorf1.php')
+			finishAt: parseInt(rawJob.finishAt, 10)
 		};
 
 		if (!job.id || !job.villageId || !job.finishAt || isNaN(job.level)) {
@@ -157,7 +156,7 @@
 
 			notification.onclick = function() {
 				window.focus();
-				window.location.href = job.url;
+				window.location.href = 'dorf2.php?newdid=' + encodeURIComponent(job.villageId);
 				notification.close();
 			};
 		} catch (error) {
