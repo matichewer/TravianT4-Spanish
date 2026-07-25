@@ -5,7 +5,7 @@
 	<td class="desc">Héroe</td>
 	<td class="value">
 		<input class="check" type="checkbox" name="a1_hero" value="1"
-			<?php if((int)$form->getValue('a1_hero') === 1) { echo 'checked'; } ?>
+			<?php if((int)$form->getValue('a1_hero') !== 0) { echo 'checked'; } ?>
 			title="Agregar al héroe atacante">
 	</td>
 	<td class="research"></td>

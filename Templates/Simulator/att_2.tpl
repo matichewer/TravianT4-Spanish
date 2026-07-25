@@ -16,8 +16,14 @@
 					<tbody>
                 
 <?php
+global $database, $village;
+$villageUnits = $database->getUnit($village->wid);
 $u = '11';
 for($i=1;$i<=10;$i++){
+	$fieldValue = $form->getValue('a1_'.$i);
+	if($fieldValue === '' && is_array($villageUnits)) {
+		$fieldValue = $villageUnits['u'.$u] ?? 0;
+	}
 echo "
 	<tr>
 		<td class=\"ico\">
@@ -27,7 +33,7 @@ echo "
 		</td>
         <td class=\"desc\">".$technology->unarray[$u]."</td>
         <td class=\"value\">
-            <input class=\"text\" type=\"text\" name=\"a1_".$i."\" value=\"".$form->getValue('a1_'.$i)."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
+            <input class=\"text\" type=\"text\" name=\"a1_".$i."\" value=\"".$fieldValue."\" maxlength=\"6\" inputmode=\"numeric\" title=\"Cantidad de tropas\">
         </td>
         <td class=\"research\">
             ".($i <= 8 ? "<input class=\"text\" type=\"text\" name=\"f1_".$i."\" value=\"".$form->getValue('f1_'.$i)."\" maxlength=\"2\" inputmode=\"numeric\" title=\"Nivel de mejora en la herrería (0-20)\" placeholder=\"0\">" : "")."
