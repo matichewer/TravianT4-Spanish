@@ -17,7 +17,7 @@
 		<script src="unx.js?v=2" type="text/javascript"></script>
 		<script src="crypt.js?<?php echo time(); ?>" type="text/javascript"></script>
 		<?php if(isset($session) && $session->logged_in) { ?>
-		<script src="build-notifications.js?v=1" type="text/javascript"></script>
+		<script src="build-notifications.js?v=2" type="text/javascript"></script>
 		<script type="text/javascript">
 			TravianBuildNotifications.configure({
 				accountId: <?php echo (int)$session->uid; ?>,
