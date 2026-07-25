@@ -145,6 +145,17 @@ if(count($target) > 0) {
 	</table>
 
 <script type="text/javascript">
+function validateSimulation() {
+	var isOasisSelected = document.querySelector('input[name="a2_v4"]').checked;
+	var isNormalAttack = document.querySelector('input[name="ktyp"][value="0"]').checked;
+
+	if(isOasisSelected && isNormalAttack) {
+		alert('Los oasis solo pueden ser saqueados, no atacados normalmente.');
+		return false;
+	}
+	return true;
+}
+
 (function() {
 	var targetRow = document.getElementById('warsimCatapultTarget');
 	var attackTypes = document.getElementsByName('ktyp');
@@ -186,7 +197,7 @@ if(count($target) > 0) {
 })();
 </script>
 
-<p class="btn"><button type="submit" value="Simular ataque" name="s1" id="btn_ok"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo WARSIM_SIMULATE; ?></div></div></button></p>
+<p class="btn"><button type="submit" value="Simular ataque" name="s1" id="btn_ok" onclick="return validateSimulation()"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents"><?php echo WARSIM_SIMULATE; ?></div></div></button></p>
 </form>
 </div>
 <div class="clear">&nbsp;</div>

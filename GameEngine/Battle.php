@@ -144,6 +144,8 @@ class Battle {
 
 		if($attackerTotal > 0) {
 			$_POST['result'] = $this->simulate($values);
+		} else {
+			$form->addError('troops', 'Debe enviar al menos una tropa.');
 		}
 	}
 
