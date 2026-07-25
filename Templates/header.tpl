@@ -12,7 +12,7 @@ $htitle = HEADER_DAY;
 	<div class="content-background-r">&nbsp;</div>
 	<div class="content <?php echo $hclass; ?>" title="<?php echo $htitle; ?>">
 		<?php echo SERVER_TIME; ?>&nbsp;<span id="tp1" ><?php echo date('H:i:s'); ?></span>
-\t</div>
+	</div>
 </div>
 
 <div id="plusLink">
