@@ -387,6 +387,39 @@ class Automation {
         return $popT;
     }
 
+    public function hasOrdinaryTroopReturnInEvasionWindow($database, $villageId, $attackArrivalTime, $windowSeconds = 10) {
+        $villageId = (int)$villageId;
+        $attackArrivalTime = (int)$attackArrivalTime;
+        $windowSeconds = max(0, (int)$windowSeconds);
+        if($villageId <= 0 || $attackArrivalTime <= 0) {
+            return false;
+        }
+
+        $returns = $database->getOrdinaryTroopReturnsInWindow(
+            $villageId,
+            $attackArrivalTime - $windowSeconds,
+            $attackArrivalTime
+        );
+        return is_array($returns) && count($returns) > 0;
+    }
+
+    public function buildTroopEvasionPayload($defenderUnits, $tribe) {
+        $payload = array_fill(1, 10, 0);
+        $tribe = (int)$tribe;
+        if(!is_array($defenderUnits) || $tribe < 1 || $tribe > 5) {
+            return $payload;
+        }
+
+        $playerUnit = ($tribe - 1) * 10;
+        for($position = 1; $position <= 10; $position++) {
+            $unitKey = 'u'.($playerUnit + $position);
+            $payload[$position] = isset($defenderUnits[$unitKey])
+                ? max(0, (int)$defenderUnits[$unitKey])
+                : 0;
+        }
+        return $payload;
+    }
+
     public function __construct() {
         if(!file_exists("GameEngine/Prevention/cleardeleting.txt") or time() - filemtime("GameEngine/Prevention/cleardeleting.txt") > 50) {
             $this->clearDeleting();
@@ -1402,37 +1435,25 @@ class Automation {
                 $evasion = $database->getUserField($DefenderID, "evasion", 0);
                 $capital = $database->getVillageField($data['to'], "capital");
                 $playerunit = ($targettribe - 1) * 10;
-                $cannotsend = 0;
-                $movements = $database->getMovement("34", $data['to'], 1);
-                for ($y = 0; $y < count($movements); $y++) {
-                    $returntime = $movements[$y]['endtime'] - time();
-                    if($movements[$y]['sort_type'] == 4 && $movements[$y]['from'] != 0 && $returntime <= 10) {
-                        $cannotsend = 1;
-                    }
-                }
+                $cannotsend = $this->hasOrdinaryTroopReturnInEvasionWindow(
+                    $database,
+                    $data['to'],
+                    $AttackArrivalTime
+                );
                 if($evasion == 1 && $capital == 1 && $cannotsend == 0 && $data['attack_type'] > 2 && $targettribe >= 1 && $targettribe <= 5) {
-                    $evade = array_fill(1, 11, 0);
-                    $totaltroops = 0;
-                    for ($i = 1; $i <= 10; $i++) {
-                        $evade[$i] = (int)$DefenderUnit['u'.($playerunit + $i)];
-                        $totaltroops += $evade[$i];
-                    }
-                    $evade[11] = (int)$DefenderUnit['hero'];
-                    $totaltroops += $evade[11];
+                    $evade = $this->buildTroopEvasionPayload($DefenderUnit, $targettribe);
+                    $totaltroops = array_sum($evade);
                     if($totaltroops > 0) {
                         for ($i = 1; $i <= 10; $i++) {
                             if($evade[$i] > 0) {
                                 $database->modifyUnit($data['to'], $playerunit + $i, $evade[$i], 0);
                             }
                         }
-                        if($evade[11] > 0) {
-                            $database->modifyUnit($data['to'], "hero", $evade[11], 0);
-                        }
                         $evasionSpeed = (int)EVASION_SPEED;
                         if($evasionSpeed < 1) {
                             $evasionSpeed = 1;
                         }
-                        $attackid = $database->addAttack($data['to'], $evade[1], $evade[2], $evade[3], $evade[4], $evade[5], $evade[6], $evade[7], $evade[8], $evade[9], $evade[10], $evade[11], 2, 0, 0, 0);
+                        $attackid = $database->addAttack($data['to'], $evade[1], $evade[2], $evade[3], $evade[4], $evade[5], $evade[6], $evade[7], $evade[8], $evade[9], $evade[10], 0, 2, 0, 0, 0);
                         $database->addMovement(4, 0, $data['to'], $attackid, '0,0,0,0,0', time() + (int)round(180 / $evasionSpeed));
                     }
                 }
@@ -2720,7 +2741,7 @@ class Automation {
                 }
 
                 // When all troops die, sends no info.
-                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_deff[1].','.$unitsdead_deff[1].','.$ger.','.$unitssend_deff[2].','.$unitsdead_deff[2].','.$gal.','.$unitssend_deff[3].','.$unitsdead_deff[3].','.$nat.','.$unitssend_deff[4].','.$unitsdead_deff[4].','.$natar.','.$unitssend_deff[5].','.$unitsdead_deff[5].',,,'.$unitstraped_att;
+                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).',0,,,0,'.$unitssend_deff[1].','.$unitsdead_deff[1].',0,'.$unitssend_deff[2].','.$unitsdead_deff[2].',0,'.$unitssend_deff[3].','.$unitsdead_deff[3].',0,'.$unitssend_deff[4].','.$unitsdead_deff[4].',0,'.$unitssend_deff[5].','.$unitsdead_deff[5].',,,'.$unitstraped_att.',no-defense-info-v1';
 
                 //Undetected and detected in here.
                 if($scout) {

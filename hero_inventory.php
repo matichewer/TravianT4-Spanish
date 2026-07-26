@@ -2,6 +2,19 @@
 include("GameEngine/Village.php");
 include("GameEngine/Inventory.php");
 $start = $generator->pageLoadTimeStart();
+
+if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
+	&& isset($_POST['a']) && $_POST['a'] === 'heroHiding'){
+	$tokenIsValid = isset($_POST['c']) && is_scalar($_POST['c'])
+		&& hash_equals((string)$session->mchecker, (string)$_POST['c']);
+	if($tokenIsValid){
+		$hideHero = isset($_POST['hide']) && (int)$_POST['hide'] === 1 ? 1 : 0;
+		$database->modifyHero2('hide', $hideHero, (int)$session->uid, 0);
+	}
+	header("Location: hero_inventory.php");
+	exit;
+}
+
 include "Templates/html.tpl";
 
 if(isset($_GET['inventory'])){
@@ -28,12 +41,6 @@ if(isset($_GET['inventory'])){
 			unequipHeroBagItem($database, $uid, (int)$_GET['bag']);
 		}
 	}
-}
-if(isset($_GET['showhero'])){
-$database->modifyHero2('hide', 0, $session->uid, 0);
-}
-if(isset($_GET['hidehero'])){
-$database->modifyHero2('hide', 1, $session->uid, 0);
 }
 ?>
 <body class="v35 webkit chrome hero_inventory">
@@ -147,15 +154,24 @@ foreach($equipmentSlots as $slot => $expectedBtype){
 		</div>
 	</div>
 	<div class="heroHidden">
-	<?php
-	if($hero['hide'] == 1){
-	?>
-		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?showhero=<?php echo $hero['heroid'];?>';" checked="checked"> Si está marcado, el héroe se esconderá cuando ataquen la aldea.
-	<?php 
-	}else{
-	?>
-		<input type="checkbox" class="check" name="hideShow" onclick="window.location.href = '?hidehero=<?php echo $hero['heroid'];?>';"> Si está marcado, el héroe se esconderá cuando ataquen la aldea.
-	<?php } ?>
+		<form method="post" action="hero_inventory.php">
+			<input type="hidden" name="a" value="heroHiding">
+			<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
+			<input type="hidden" name="hide" value="<?php echo (int)$hero['hide'] === 1 ? 0 : 1; ?>">
+			<label for="heroHideShow">
+				<input
+					type="checkbox"
+					class="check"
+					id="heroHideShow"
+					onchange="this.form.submit();"
+					<?php if((int)$hero['hide'] === 1){ echo 'checked="checked"'; } ?>
+				>
+				Evasión del héroe: ocultarlo durante los ataques para que no defienda.
+			</label>
+			<div class="description">
+				Esta opción es independiente de la evasión de tropas del Club de Oro.
+			</div>
+		</form>
 	</div>
 </div>
 <div id="hero_inventory">

@@ -121,3 +121,8 @@ ALTER TABLE s1_users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci
 ALTER TABLE s1_vdata CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE s1_wdata CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE s1_ww_attacks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- 2026-07-26 - Ventana de retorno para la evasion del Club de Oro
+-- Evita recorrer toda la tabla de movimientos por cada ataque entrante.
+ALTER TABLE s1_movement
+  ADD INDEX IF NOT EXISTS evasion_return_window (`to`, sort_type, endtime, `from`);
