@@ -6,6 +6,11 @@ else {
 $aid = $session->alliance;
 }
 $allianceinfo = $database->getAlliance($aid);
+$allianceEventPlayerName = function($userId) use ($database) {
+    return (int)$userId === 3
+        ? 'Naturaleza'
+        : $database->getUserField($userId, 'username', 0);
+};
 echo "<h1>".$allianceinfo['tag']." - ".$allianceinfo['name']."</h1>";
 include("alli_menu.tpl"); 
 ?>
@@ -66,10 +71,10 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
     $outputList .= "<div><a href=\"berichte.php?id=".$id."&aid=".$ally."\">";
     if($ntype==0){ $nn = " explora "; }else{ $nn = " ataca "; }
 
-    $outputList .= $database->getUserField($dataarray[0],'username',0);
+    $outputList .= $allianceEventPlayerName($dataarray[0]);
        
     $outputList .= $nn;
-    $outputList .= $database->getUserField($dataarray[30],'username',0);
+    $outputList .= $allianceEventPlayerName($dataarray[30]);
 	if($ntype==0){ 
 	$isoasis = $database->isVillageOases($toWref);
 	if($isoasis == 0){

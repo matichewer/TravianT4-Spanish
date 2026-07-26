@@ -38,10 +38,10 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
     $outputList .= "<div><a href=\"berichte.php?id=".$id."&aid=".$ally."\">";
     if($ntype==0){ $nn = " explora "; }else{ $nn = " ataca "; }
 
-    $outputList .= $database->getUserField($dataarray[0],username,0);
+    $outputList .= $allianceEventPlayerName($dataarray[0]);
        
     $outputList .= $nn;
-    $outputList .= $database->getUserField($dataarray[28],username,0);
+    $outputList .= $allianceEventPlayerName($dataarray[28]);
     $getUserAlly = $database->getUserField($dataarray[28],'alliance',0);
     $getAllyName = $database->getAllianceName($getUserAlly);
     
