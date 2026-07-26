@@ -127,15 +127,14 @@ if ($buildingHelpType === 'rally-point') {
 		$buildingHelpCurrentValue = round($bid41[$buildingHelpLevel]['attri'] * 100);
 		$buildingHelpNote = 'Velocidad actual configurada: '.$buildingHelpCurrentValue.'%. '.$buildingHelpNote;
 	}
-	$buildingHelpNote .= ' La reducción clásica del consumo de cereal de la caballería no está activa en esta versión.';
+	$buildingHelpNote .= ' Además, desde los niveles 10, 15 y 20 los Equites Legati, Imperatoris y Caesaris, respectivamente, consumen una unidad menos de cereal.';
 } elseif ($buildingHelpType === 'brewery') {
 	$buildingHelpTitle = 'Ventajas de la Cervecería';
 	$buildingHelpItems = array(
-		1 => 'Está concebida para aumentar el ataque de las tropas germanas de toda la cuenta, a cambio de reducir la persuasión de los jefes y obligar a las catapultas a disparar al azar.',
-		10 => 'Es el nivel máximo del edificio.'
+		1 => 'Durante una celebración de hidromiel, aumenta un 1% el ataque de las tropas germanas de toda la cuenta, reduce a la mitad la persuasión de los jefes y obliga a las catapultas a disparar al azar.',
+		10 => 'Durante una celebración, alcanza el bono máximo de ataque del 10%.'
 	);
-	$buildingHelpNote = 'Atención: en esta instalación los diez niveles tienen una bonificación configurada de 0% y el combate no aplica el efecto de la Cervecería. Hasta corregir esa mecánica, subirla solo aporta población y puntos de cultura.';
-	$buildingHelpWarning = true;
+	$buildingHelpNote = 'Solo puede construirse en la capital germana. La celebración dura 72 horas a velocidad 1 y su efecto se evalúa cuando llega cada ataque enviado desde cualquier aldea de la cuenta.';
 } elseif ($buildingHelpType === 'main-building') {
 	$buildingHelpTitle = 'Ventajas del Edificio principal';
 	$buildingHelpItems = array(

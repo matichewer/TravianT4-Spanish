@@ -23,6 +23,17 @@ if(isset($_SESSION['movement_cancel_status'])) {
 		echo '<p class="error">No se pudo cancelar el movimiento.</p>';
 	}
 }
+if(isset($_SESSION['prisoner_status'])) {
+	$prisonerStatus = $_SESSION['prisoner_status'];
+	unset($_SESSION['prisoner_status']);
+	if($prisonerStatus === 'released') {
+		echo '<p class="notice">Los prisioneros fueron liberados y están regresando a su aldea.</p>';
+	} elseif($prisonerStatus === 'disbanded') {
+		echo '<p class="notice">Las tropas atrapadas fueron disueltas.</p>';
+	} else {
+		echo '<p class="error">No se pudo gestionar ese grupo de prisioneros.</p>';
+	}
+}
 ?>
 <?php include("upgrade.tpl"); ?>
 <?php if(!$village->resarray['f'.$id] < 1){ ?>
@@ -57,6 +68,37 @@ if(isset($_SESSION['movement_cancel_status'])) {
 </div>
 
 <?php
+$prisonerTotal = function($prisoner) {
+	$total = 0;
+	for($position = 1; $position <= 11; $position++) {
+		$total += max(0, (int)$prisoner['t'.$position]);
+	}
+	return $total;
+};
+$captivesHere = $database->getPrisoners($village->wid);
+$ownCaptured = $database->getPrisoners3($village->wid);
+if(!empty($captivesHere) || !empty($ownCaptured)) {
+	echo '<h4 class="spacer">Tropas atrapadas</h4>';
+	echo '<table class="troop_details" cellpadding="1" cellspacing="1"><thead><tr><th>Situación</th><th>Aldea</th><th>Tropas</th><th>Acción</th></tr></thead><tbody>';
+	foreach($captivesHere as $prisoner) {
+		$originName = htmlspecialchars((string)$database->getVillageField((int)$prisoner['from'],'name'),ENT_QUOTES,'UTF-8');
+		echo '<tr><td>Prisioneros en tus trampas</td><td>'.$originName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
+		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
+		echo '<input type="hidden" name="operation" value="release"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
+		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
+		echo '<button type="submit" class="build"><span class="button-contents">Liberar</span></button></form></td></tr>';
+	}
+	foreach($ownCaptured as $prisoner) {
+		$trapName = htmlspecialchars((string)$database->getVillageField((int)$prisoner['wref'],'name'),ENT_QUOTES,'UTF-8');
+		echo '<tr><td>Tropas tuyas prisioneras</td><td>'.$trapName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
+		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
+		echo '<input type="hidden" name="operation" value="disband"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
+		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
+		echo '<button type="submit" class="build"><span class="button-contents">Disolver</span></button></form></td></tr>';
+	}
+	echo '</tbody></table>';
+}
+
 $units_type = $database->getMovement("34",$village->wid,1);
 $units_incomming = 0;
 foreach($units_type as $incoming_unit) {

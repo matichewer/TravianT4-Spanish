@@ -3,14 +3,14 @@ $_GET['bid'] = 34;
 $bid = $_GET['bid'];
 $uprequire = $building->resourceRequired($id,$bid);
 ?>
-<h2>Cabaña del picapedrero</h2>
+<h2>Taller de cantería</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(34,4);" class="build_logo">
-		<img class="building big white g34" src="img/x.gif" alt="Cabaña del picapedrero">
+		<img class="building big white g34" src="img/x.gif" alt="Taller de cantería">
 
 
 	</a>
-	En la cabaña del picapedrero trabajan expertos en tallar piedra. Con cada nivel, la estabilidad de los edificios y la muralla de la aldea aumenta un 10%.</div>
+	En el Taller de cantería trabajan especialistas en tallar piedra. Con cada nivel, la estabilidad de los edificios y la muralla de la aldea aumenta un 10%.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">

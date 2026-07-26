@@ -321,35 +321,57 @@ class Technology {
 	
 	private function procTrain($post,$great=false) {
 		global $session;
-		if($session->access != BANNED){
-        $start = ($session->tribe-1)*10+1;
-        $end = ($session->tribe*10);
-        for($i=$start;$i<=($end);$i++) {
-			if(isset($post['t'.$i]) && $post['t'.$i] != 0) {
-				$amt = $post['t'.$i];
-				$amt = intval($amt);
-					if ($amt < 0) $amt = 1;
-					$this->trainUnit($i,$amt,$great);
-			}
-		}
-		if($session->tribe == 3){
-			if(isset($post['t99']) && $post['t99'] != 0) {
-				$amt = $post['t99'];
-				$amt = intval($amt);
-					if ($amt < 0) $amt = 1;
-					$this->trainUnit(99,$amt,$great);
-			}
-		}
-		header("Location: build.php?id=".$post['id']);
-		}else{
+		$fieldId = isset($post['id']) && is_scalar($post['id']) && ctype_digit((string)$post['id'])
+			? (int)$post['id']
+			: 0;
+		if($session->access == BANNED) {
 			header("Location: banned.php");
+			return;
 		}
+		$tokenIsValid = isset($post['k']) && is_scalar($post['k'])
+			&& hash_equals((string)$session->mchecker,(string)$post['k']);
+		if(!$tokenIsValid || $fieldId < 1 || $fieldId > 40) {
+			header("Location: build.php?id=".($fieldId > 0 ? $fieldId : 1));
+			return;
+		}
+		$session->changeChecker();
+
+		$start = ($session->tribe-1)*10+1;
+		$end = ($session->tribe*10);
+		for($i=$start;$i<=$end;$i++) {
+			$amt = isset($post['t'.$i]) ? (int)$post['t'.$i] : 0;
+			if($amt > 0) {
+				$this->trainUnit($i,$amt,$great,$fieldId);
+			}
+		}
+		if($session->tribe == 3) {
+			$amt = isset($post['t99']) ? (int)$post['t99'] : 0;
+			if($amt > 0) {
+				$this->trainUnit(99,$amt,$great,$fieldId);
+			}
+		}
+		header("Location: build.php?id=".$fieldId);
 	}
 	
 	public function getUpkeep($array,$type) {
-		global $building,$session;
+		global $building,$database,$session;
 		$upkeep = 0;
 		$nocrop = 0;
+		$horseDrinkingLevel = 0;
+		if((int)$session->tribe === 1) {
+			if(is_object($building) && method_exists($building,'getTypeLevel')) {
+				$horseDrinkingLevel = (int)$building->getTypeLevel(41);
+			} elseif(isset($array['vref']) && (int)$array['vref'] > 0) {
+				$fields = $database->getResourceLevel((int)$array['vref']);
+				if(is_array($fields)) {
+					for($field = 19; $field <= 38; $field++) {
+						if((int)$fields['f'.$field.'t'] === 41) {
+							$horseDrinkingLevel = max($horseDrinkingLevel,(int)$fields['f'.$field]);
+						}
+					}
+				}
+			}
+		}
 		switch($type) {
 			case 0:
 			$start = 1;
@@ -381,97 +403,132 @@ class Technology {
 		for($i=$start;$i<=$end;$i++) {
 			$hdt = 0;
 			if($session->tribe == 1 && $i>=4 && $i<=6) {
-				//if($building->getTypeLevel(41)>=1) { $hdt = 1; }
+				if(
+					($i == 4 && $horseDrinkingLevel >= 10)
+					|| ($i == 5 && $horseDrinkingLevel >= 15)
+					|| ($i == 6 && $horseDrinkingLevel >= 20)
+				) {
+					$hdt = 1;
+				}
 			}
 			$unit = "u".$i;
 			global $$unit;
 			$dataarray = $$unit;
-			$upkeep += ($dataarray['pop'] - $hdt) * $array[$unit];
+			$amount = isset($array[$unit]) ? max(0, (int)$array[$unit]) : 0;
+			$upkeep += max(0, $dataarray['pop'] - $hdt) * $amount;
 		}
-            if($array['hero']){
+            if(!empty($array['hero'])){
             	$upkeep += 6;
 			}
 		}
 		return $upkeep;
 	}
 
-private function trainUnit($unit,$amt,$great=false) {
-        global $session,$database,${'u'.$unit},$building,$village,$bid19,$bid20,$bid21,$bid25,$bid26,$bid29,$bid30,$bid36,$bid41,$bid42;        
-        
-        if($this->getTech($unit) || $unit%10 <= 1 || $unit == 99) {
-            $footies = array(1,2,3,11,12,13,14,21,22,31,32,33,34,41,42,43,44);
-            $calvary = array(4,5,6,15,16,23,24,25,26,35,36,45,46);
-            $workshop = array(7,8,17,18,27,28,37,38,47,48);
-            $special = array(9,10,19,20,29,30,39,40,49,50);
-			$trapper = array(99);
-            if(in_array($unit,$footies)) {
-				if($great) {
-					$each = round(($bid29[$building->getTypeLevel(29)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-				} else {
-					$each = round(($bid19[$building->getTypeLevel(19)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-				}
-            }
-            if(in_array($unit,$calvary)) {
-				if($great) {
-					$each = round(($bid30[$building->getTypeLevel(30)]['attri'] * ($building->getTypeLevel(41)>=1?(1/$bid41[$building->getTypeLevel(41)]['attri']):1) / 100) * ${'u'.$unit}['time'] / SPEED);
-				} else {
-					$each = round(($bid20[$building->getTypeLevel(20)]['attri'] * ($building->getTypeLevel(41)>=1?(1/$bid41[$building->getTypeLevel(41)]['attri']):1) / 100) * ${'u'.$unit}['time'] / SPEED);
-				}
-            }
-            if(in_array($unit,$workshop)) {
-				if($great) {
-					$each = round(($bid42[$building->getTypeLevel(42)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-				} else {
-					$each = round(($bid21[$building->getTypeLevel(21)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-				}
-            }
-            if(in_array($unit,$special)) {
-                if($building->getTypeLevel(25) > 0){
-					$each = round(($bid25[$building->getTypeLevel(25)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-                } else {
-					$each = round(($bid26[$building->getTypeLevel(26)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-                }
-            }
-			if(in_array($unit,$trapper)) {
-					$each = round(($bid19[$building->getTypeLevel(36)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+	private function trainUnit($unit,$amt,$great=false,$fieldId=0) {
+		global $session,$database,${'u'.$unit},$building,$village,$bid19,$bid20,$bid21,$bid25,$bid26,$bid29,$bid30,$bid36,$bid41,$bid42;
+
+		$unit = (int)$unit;
+		$amt = (int)$amt;
+		$fieldId = (int)$fieldId;
+		if($amt <= 0 || $fieldId < 1 || $fieldId > 40
+			|| !($this->getTech($unit) || $unit%10 <= 1 || $unit == 99)) {
+			return false;
+		}
+
+		$footies = array(1,2,3,11,12,13,14,21,22,31,32,33,34,41,42,43,44);
+		$calvary = array(4,5,6,15,16,23,24,25,26,35,36,45,46);
+		$workshop = array(7,8,17,18,27,28,37,38,47,48);
+		$special = array(9,10,19,20,29,30,39,40,49,50);
+		$trapper = array(99);
+		$isExpansionUnit = ($unit%10 == 0 || ($unit%10 == 9 && $unit != 99));
+		$fieldType = isset($village->resarray['f'.$fieldId.'t']) ? (int)$village->resarray['f'.$fieldId.'t'] : 0;
+		$fieldLevel = isset($village->resarray['f'.$fieldId]) ? (int)$village->resarray['f'.$fieldId] : 0;
+		if($isExpansionUnit && ($great || !in_array($fieldType,array(25,26),true) || $fieldLevel < 10)) {
+			return false;
+		}
+
+		$lockAcquired = false;
+		if($isExpansionUnit) {
+			$lockAcquired = $database->acquireSettlementLock($session->uid,5);
+			if(!$lockAcquired) {
+				return false;
 			}
-			if($unit%10 == 0 || $unit%10 == 9 && $unit != 99) {
+		}
+
+		try {
+			$each = 0;
+			if(in_array($unit,$footies,true)) {
+				$each = $great
+					? round(($bid29[$building->getTypeLevel(29)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED)
+					: round(($bid19[$building->getTypeLevel(19)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+			}
+			if(in_array($unit,$calvary,true)) {
+				$horseDrinking = $building->getTypeLevel(41)>=1 ? (1/$bid41[$building->getTypeLevel(41)]['attri']) : 1;
+				$each = $great
+					? round(($bid30[$building->getTypeLevel(30)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED)
+					: round(($bid20[$building->getTypeLevel(20)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED);
+			}
+			if(in_array($unit,$workshop,true)) {
+				$each = $great
+					? round(($bid42[$building->getTypeLevel(42)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED)
+					: round(($bid21[$building->getTypeLevel(21)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+			}
+			if(in_array($unit,$special,true)) {
+				$buildingData = $fieldType === 25 ? $bid25 : $bid26;
+				$each = round(($buildingData[$fieldLevel]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+			}
+			if(in_array($unit,$trapper,true)) {
+				$each = round(($bid19[$building->getTypeLevel(36)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+			}
+
+			if($isExpansionUnit) {
 				$slots = $database->getAvailableExpansionTraining();
-				if($unit%10 == 0 && $slots['settlers'] <= $amt) { $amt = $slots['settlers']; }
-				if($unit%10 == 9 && $slots['chiefs'] <= $amt) { $amt = $slots['chiefs']; }
-			} else {
-			if($unit != 99){
+				$available = $unit%10 == 0 ? (int)$slots['settlers'] : (int)$slots['chiefs'];
+				if($available < $amt) {
+					return false;
+				}
+			} elseif($unit != 99) {
 				if($this->maxUnit($unit,$great) < $amt) {
-					$amt = 0;
+					return false;
 				}
-			}else{
-			$trainlist = $this->getTrainingList(8);
-			foreach($trainlist as $train) {
-			$train_amt += $train['amt'];
-			}
-			$max = 0;
-			for($i=19;$i<41;$i++){
-			if($village->resarray['f'.$i.'t'] == 36){
-			$max += $bid36[$village->resarray['f'.$i]]['attri'];
-			}
-			}
-			$max1 = $max - ($village->unitarray['u99'] + $train_amt);
-				if($max1 < $amt) {
-					$amt = 0;
+			} else {
+				$trainlist = $this->getTrainingList(8);
+				$train_amt = 0;
+				foreach($trainlist as $train) {
+					$train_amt += max(0,(int)$train['amt']);
+				}
+				$max = 0;
+				for($i=19;$i<41;$i++) {
+					if($village->resarray['f'.$i.'t'] == 36) {
+						$max += $bid36[$village->resarray['f'.$i]]['attri'] * TRAPPER_CAPACITY;
+					}
+				}
+				if($max - ($village->unitarray['u99'] + $train_amt) < $amt) {
+					return false;
 				}
 			}
-			}
-            $wood = ${'u'.$unit}['wood'] * $amt * ($great?3:1);
-            $clay = ${'u'.$unit}['clay'] * $amt * ($great?3:1);
-            $iron = ${'u'.$unit}['iron'] * $amt * ($great?3:1);
-            $crop = ${'u'.$unit}['crop'] * $amt * ($great?3:1);
-			$each = ($each == 0) ? 1 : $each;
+
+			$multiplier = $great ? 3 : 1;
+			$wood = ${'u'.$unit}['wood'] * $amt * $multiplier;
+			$clay = ${'u'.$unit}['clay'] * $amt * $multiplier;
+			$iron = ${'u'.$unit}['iron'] * $amt * $multiplier;
+			$crop = ${'u'.$unit}['crop'] * $amt * $multiplier;
+			$each = max(1,(int)$each);
 			$time = $each*$amt;
-            if($database->modifyResource($village->wid,$wood,$clay,$iron,$crop,0)) {
-                $database->trainUnit($village->wid,$unit+($great?60:0),$amt,${'u'.$unit}['pop'],$each,time()+$time,0);
-            }
-        }
-    } 	
+			if(!$database->deductResourcesIfAvailable($village->wid,$wood,$clay,$iron,$crop)) {
+				return false;
+			}
+			if(!$database->trainUnit($village->wid,$unit+($great?60:0),$amt,${'u'.$unit}['pop'],$each,time()+$time,0)) {
+				$database->modifyResource($village->wid,$wood,$clay,$iron,$crop,1);
+				return false;
+			}
+			return true;
+		} finally {
+			if($lockAcquired) {
+				$database->releaseSettlementLock($session->uid);
+			}
+		}
+	}
 	
 	public function meetRRequirement($tech) {
 		global $session,$building;

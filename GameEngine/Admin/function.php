@@ -144,7 +144,7 @@ class funct {
 			case 31: $build = "City Wall"; break;
 			case 32: $build = "Earth Wall"; break;
 			case 33: $build = "Palisade"; break;
-			case 34: $build = "Stonemason's Lodge"; break;
+			case 34: $build = "Taller de cantería"; break;
 			case 35: $build = "Brewery"; break;
 			case 36: $build = "Trapper"; break;
 			case 37: $build = "Hero's Mansion"; break;

@@ -9,8 +9,7 @@ $uprequire = $building->resourceRequired($id,$bid);
 		<img class="building big white g35" src="img/x.gif" alt="Cervecería">
 
 	</a>
-	En la cervecería se elabora un sabroso hidromiel que los soldados beben durante sus celebraciones.
-    Estas bebidas hacen que tus soldados sean más valientes y fuertes al atacar (1% por nivel). Lamentablemente, el poder de persuasión de los jefes se reduce en un 50% y las catapultas solo pueden disparar al azar.</div>
+	La cervecería permite celebrar festivales de hidromiel. Mientras uno está activo, aumenta un 1% por nivel el ataque de todas las tropas germanas de la cuenta; a cambio, el poder de persuasión de los jefes se reduce un 50% y las catapultas solo pueden disparar al azar. Solo puede construirse en la capital.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">

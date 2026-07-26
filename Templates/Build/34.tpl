@@ -1,10 +1,10 @@
-﻿<h1 class="titleInHeader">Cabaña del picapedrero <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
+﻿<h1 class="titleInHeader">Taller de cantería <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid34">
     <div class="build_desc">
         <a href="#" onClick="return Travian.Game.iPopup(34,4);" class="build_logo">
-        <img class="building big white g34" src="img/x.gif" alt="Cabaña del picapedrero" title="Cabaña del picapedrero"></a>
-       El picapedrero es un experto en trabajar la piedra. Cuanto más alto sea su nivel, más resistentes serán los edificios de tu aldea</div>
+        <img class="building big white g34" src="img/x.gif" alt="Taller de cantería" title="Taller de cantería"></a>
+       En el Taller de cantería trabajan especialistas en tallar piedra. Cuanto más alto sea su nivel, más resistentes serán los edificios de tu aldea.</div>
 
 
 	<table cellpadding="1" cellspacing="1" id="build_value">

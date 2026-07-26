@@ -45,7 +45,7 @@ $wallClasses = array(
 						<td class="value">
 							<input class="text" type="text" name="stonemason"
 								value="<?php echo $form->getValue('stonemason') === '' ? 0 : $form->getValue('stonemason'); ?>"
-								maxlength="2" inputmode="numeric" title="Nivel de la Cabaña del picapedrero del defensor (0-20)">
+								maxlength="2" inputmode="numeric" title="Nivel del Taller de cantería del defensor (0-20)">
 						</td>
 						<td class="research"></td>
 					</tr>

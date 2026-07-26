@@ -24,6 +24,9 @@ $start = $generator->pageLoadTimeStart();
 if(isset($_POST['action']) && $_POST['action'] === 'cancelTroopMovement') {
 	$units->cancelTroopMovement($_POST);
 }
+if(isset($_POST['action']) && $_POST['action'] === 'managePrisoners') {
+	$units->managePrisoners($_POST);
+}
 $alliance->procAlliForm($_POST);
 $technology->procTech($_POST);
 $market->procMarket($_POST);

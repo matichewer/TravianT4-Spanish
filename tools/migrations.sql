@@ -45,3 +45,8 @@ CREATE TABLE IF NOT EXISTS s1_auction_bids (
   KEY auction_id (auction_id),
   KEY uid (uid)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+-- 2026-07-25 - Celebraciones de la Cerveceria
+-- Momento hasta el que permanece activa la celebracion de hidromiel de la cuenta.
+ALTER TABLE s1_users
+  ADD COLUMN IF NOT EXISTS brewery int(11) unsigned NOT NULL DEFAULT 0 AFTER b4;

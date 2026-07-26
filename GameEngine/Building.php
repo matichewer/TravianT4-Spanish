@@ -48,6 +48,11 @@ class Building {
 	
 	public function canBuild($id,$tid) {
 		global $village,$session,$database;
+		$id = (int)$id;
+		$tid = (int)$tid;
+		if(!$this->isTribeBuildingAllowed($tid)) {
+			return 1;
+		}
 		$demolition = $database->getDemolition($village->wid);
 		if($demolition[0]['buildnumber']==$id) { return 11; }
 		if($this->isMax($tid,$id)) {
@@ -61,7 +66,7 @@ class Building {
 		}
 		else {
 			if($this->allocated <= $this->maxConcurrent) {
-				$resRequired = $this->resourceRequired($id,$village->resarray['f'.$id.'t']);
+				$resRequired = $this->resourceRequired($id,$tid);
 				$resRequiredPop = $resRequired['pop'];
 				if ($resRequiredPop == "") {
 					$buildarray = $GLOBALS["bid".$tid];
@@ -275,9 +280,12 @@ class Building {
 	private function upgradeBuilding($id) {
 		global $database,$village,$session,$logging;
 		if($this->allocated < $this->maxConcurrent) {
+			$bindicate = $this->canBuild($id,$village->resarray['f'.$id.'t']);
+			if($bindicate != 8 && $bindicate != 9) {
+				return;
+			}
 			$uprequire = $this->resourceRequired($id,$village->resarray['f'.$id.'t']);
 			$time = time() + $uprequire['time'];
-			$bindicate = $this->canBuild($id,$village->resarray['f'.$id.'t']);
 			$loop = ($bindicate == 9 ? 1 : 0);
 			$loopsame = 0;
 			if($loop == 1) {
@@ -369,15 +377,31 @@ class Building {
 	private function constructBuilding($id,$tid) {
 		global $database,$village,$session,$logging;
 		if($this->allocated < $this->maxConcurrent) {
+			$id = (int)$id;
+			$tid = (int)$tid;
 			if($tid == 16) {
 				$id = 39;
 			}
 			else if($tid == 31 || $tid == 32 || $tid == 33) {
 				$id = 40;
 			}
+			else if($id < 19 || $id > 38) {
+				return;
+			}
+			if((int)$village->resarray['f'.$id.'t'] !== 0 || !$this->meetRequirement($tid)) {
+				return;
+			}
+			foreach($this->buildArray as $queuedBuilding) {
+				if((int)$queuedBuilding['field'] === $id) {
+					return;
+				}
+			}
 			$uprequire = $this->resourceRequired($id,$tid);
 			$time = time() + $uprequire['time'];
-			$bindicate = $this->canBuild($id,$village->resarray['f'.$id.'t']);
+			$bindicate = $this->canBuild($id,$tid);
+			if($bindicate != 8 && $bindicate != 9) {
+				return;
+			}
 			$loop = ($bindicate == 9 ? 1 : 0);
 			if($loop == 1) {
 				foreach($this->buildArray as $build) {
@@ -386,7 +410,6 @@ class Building {
 					}
 				}
 			}
-			if($this->meetRequirement($tid)) {
 			if($session->access!=BANNED){
 			$level = $database->getResourceLevel($village->wid);
 				if($database->addBuilding($village->wid,$id,$tid,$loop,$time,0,$level['f'.$id] + 1 + count($database->getBuildingByField($village->wid,$id)))) {
@@ -397,12 +420,15 @@ class Building {
 			}else{
 			header("Location: banned.php");
 			}
-			}
 		}
 	}
 	
 	private function meetRequirement($id) {
 		global $village;
+		$id = (int)$id;
+		if(!$this->isTribeBuildingAllowed($id)) {
+			return false;
+		}
 		switch($id) {
 			case 1:
 			case 2:
@@ -483,10 +509,10 @@ class Building {
 			if($village->capital == 1 && $this->getTypeLevel(26) >= 3 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
 			break;
 			case 35:
-			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
+			if($this->getTypeCount(35) == 0 && !$this->hasQueuedType(35) && $this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
 			break;
 			case 36:
-			if($this->getTypeLevel(16) >= 1) { return true; } else { return false; }
+			if(!$this->hasQueuedType(36) && $this->getTypeLevel(16) >= 1 && ($this->getTypeCount(36) == 0 || $this->getTypeLevel(36) == 20)) { return true; } else { return false; }
 			break;
 			case 37:
 			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(16) >= 1) { return true; } else { return false; }
@@ -501,12 +527,42 @@ class Building {
 			return false; //not implemented
 			break;
 			case 41:
-			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
+			if($this->getTypeCount(41) == 0 && !$this->hasQueuedType(41) && $this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
 			break;
 			case 42:
 			if($this->getTypeLevel(21) == 20 && $village->capital == 0) { return true; } else { return false; }
 			break;
 		}
+	}
+
+	private function isTribeBuildingAllowed($tid) {
+		global $session,$village;
+		$tribe = isset($session->tribe) ? (int)$session->tribe : 0;
+		switch((int)$tid) {
+			case 31:
+				return in_array($tribe, array(1, 5), true);
+			case 32:
+				return in_array($tribe, array(2, 4), true);
+			case 33:
+				return $tribe === 3;
+			case 35:
+				return $tribe === 2 && (int)$village->capital === 1;
+			case 36:
+				return $tribe === 3;
+			case 41:
+				return $tribe === 1;
+			default:
+				return true;
+		}
+	}
+
+	private function hasQueuedType($tid) {
+		foreach($this->buildArray as $queuedBuilding) {
+			if((int)$queuedBuilding['type'] === (int)$tid) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private function checkResource($tid,$id) {
@@ -663,6 +719,23 @@ class Building {
 		else {
 			return 0;
 		}
+	}
+
+	public function getTypeCount($tid,$vid=0) {
+		global $village,$database;
+		$resourcearray = $vid == 0
+			? $village->resarray
+			: $database->getResourceLevel($vid);
+		if(!is_array($resourcearray)) {
+			return 0;
+		}
+		$count = 0;
+		for($field = 1; $field <= 40; $field++) {
+			if(isset($resourcearray['f'.$field.'t']) && (int)$resourcearray['f'.$field.'t'] === (int)$tid) {
+				$count++;
+			}
+		}
+		return $count;
 	}
 	
 	

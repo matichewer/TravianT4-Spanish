@@ -41,9 +41,9 @@
 
 <img id="big_unit" class="big_u28" src="img/x.gif" alt="Catapulta" title="Catapulta" /><div id="t_desc">La Catapulta es un excelente arma de largo alcance; se usa para destruir los campos y edificios de aldeas enemigas. Sin embargo, sin tropas de escolta queda casi indefensa, así que no olvides enviar algunas de tus tropas con ella.
 <br /><br />
-Tener una plaza de reuniones de nivel alto hace que tus catapultas sean más precisas y te da la opción de apuntar a edificios enemigos adicionales. Con una plaza de reuniones de nivel 10 se puede apuntar a cualquier edificio excepto el escondite, la logia del picapedrero y la trampa.
+Tener una plaza de reuniones de nivel alto hace que tus catapultas sean más precisas y te da la opción de apuntar a edificios enemigos adicionales. Con una plaza de reuniones de nivel 10 se puede apuntar a cualquier edificio excepto el escondite, el Taller de cantería y la trampa.
 <br />
-CONSEJO: la Catapulta SÍ puede golpear el escondite, las trampas o la logia del picapedrero cuando apunta al azar.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=21">Taller</a> Nivel 10, <a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 15</div><map id="nav" name="nav">
+CONSEJO: la Catapulta SÍ puede golpear el escondite, las trampas o el Taller de cantería cuando apunta al azar.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=21">Taller</a> Nivel 10, <a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 15</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=27" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
 
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />

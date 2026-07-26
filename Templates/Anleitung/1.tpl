@@ -563,7 +563,7 @@ En los niveles 10, 15 y 20 se pueden entrenar tres colonos o un administrador (S
 
 <br><br>
 
-La capital es el único lugar donde se puede erigir una cabaña del picapedrero. Además, la capital es la única aldea donde los campos de recursos se pueden ampliar más allá del nivel 10.    <br>
+La capital es el único lugar donde se puede construir un Taller de cantería. Además, la capital es la única aldea donde los campos de recursos se pueden ampliar más allá del nivel 10.    <br>
 
     <br>
 

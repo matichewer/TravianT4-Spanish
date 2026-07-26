@@ -458,14 +458,84 @@
         		return mysql_query($q, $this->connection);
         	}
 
-			function claimFieldForSettlement($id) {
-				$id = (int) $id;
-				$q = "UPDATE " . TB_PREFIX . "wdata SET occupied = 1 WHERE id = $id AND occupied = 0 AND oasistype = 0 AND fieldtype > 0";
-				$result = mysql_query($q, $this->connection);
-				return $result && mysql_affected_rows($this->connection) === 1;
-			}
+				function claimFieldForSettlement($id) {
+					$id = (int) $id;
+					$q = "UPDATE " . TB_PREFIX . "wdata SET occupied = 1 WHERE id = $id AND occupied = 0 AND oasistype = 0 AND fieldtype > 0";
+					$result = mysql_query($q, $this->connection);
+					return $result && mysql_affected_rows($this->connection) === 1;
+				}
 
-		function addVillage($wid, $uid, $username, $capital) {
+				function acquireSettlementLock($uid, $timeout = 5) {
+					$uid = (int) $uid;
+					$timeout = max(0, min(10, (int) $timeout));
+					if($uid <= 0) {
+						return false;
+					}
+					$lockName = mysql_real_escape_string(TB_PREFIX . "settlement_" . $uid,$this->connection);
+					$result = mysql_query("SELECT GET_LOCK('$lockName',$timeout)",$this->connection);
+					$row = $result ? mysql_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
+				function releaseSettlementLock($uid) {
+					$uid = (int) $uid;
+					if($uid <= 0) {
+						return false;
+					}
+					$lockName = mysql_real_escape_string(TB_PREFIX . "settlement_" . $uid,$this->connection);
+					$result = mysql_query("SELECT RELEASE_LOCK('$lockName')",$this->connection);
+					$row = $result ? mysql_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
+				function assignExpansionSlot($from, $target, $owner) {
+					$from = (int) $from;
+					$target = (int) $target;
+					$owner = (int) $owner;
+					if($from <= 0 || $target <= 0 || $owner <= 0) {
+						return false;
+					}
+					for($slot = 1; $slot <= 3; $slot++) {
+						$q = "UPDATE " . TB_PREFIX . "vdata SET exp$slot = $target WHERE wref = $from AND owner = $owner AND exp$slot = 0";
+						$result = mysql_query($q,$this->connection);
+						if($result && mysql_affected_rows($this->connection) === 1) {
+							return true;
+						}
+					}
+					return false;
+				}
+
+				function cleanupFailedSettlement($wid, $uid) {
+					$wid = (int) $wid;
+					$uid = (int) $uid;
+					if($wid <= 0 || $uid <= 0) {
+						return false;
+					}
+					$result = mysql_query("SELECT owner FROM " . TB_PREFIX . "vdata WHERE wref = $wid",$this->connection);
+					$row = $result ? mysql_fetch_assoc($result) : false;
+					if(!$row || (int)$row['owner'] !== $uid) {
+						return false;
+					}
+					foreach(array('abdata','tdata','units','fdata') as $table) {
+						mysql_query("DELETE FROM " . TB_PREFIX . "$table WHERE vref = $wid",$this->connection);
+					}
+					mysql_query("DELETE FROM " . TB_PREFIX . "vdata WHERE wref = $wid AND owner = $uid",$this->connection);
+					$q = "UPDATE " . TB_PREFIX . "wdata w LEFT JOIN " . TB_PREFIX . "vdata v ON v.wref = w.id SET w.occupied = 0 WHERE w.id = $wid AND v.wref IS NULL";
+					$result = mysql_query($q,$this->connection);
+					return $result && mysql_affected_rows($this->connection) === 1;
+				}
+
+				function releaseUninitializedSettlementClaim($wid) {
+					$wid = (int) $wid;
+					if($wid <= 0) {
+						return false;
+					}
+					$q = "UPDATE " . TB_PREFIX . "wdata w LEFT JOIN " . TB_PREFIX . "vdata v ON v.wref = w.id SET w.occupied = 0 WHERE w.id = $wid AND w.occupied = 1 AND v.wref IS NULL";
+					$result = mysql_query($q,$this->connection);
+					return $result && mysql_affected_rows($this->connection) === 1;
+				}
+
+			function addVillage($wid, $uid, $username, $capital) {
 			$total = count($this->getVillagesID($uid));
 			if($total >= 1) {
 				$vname = "Aldea de " . $username . " " . ($total + 1);
@@ -476,7 +546,7 @@
         		$time = time();
         		$q = "INSERT into " . TB_PREFIX . "vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values
         ('$wid', '$uid', '$vname', '$capital', 2, 1, 0, 780, 780, 780, 800, 780, 800, '$time', '$time')";
-        		return mysql_query($q, $this->connection) or die(mysql_error());
+			return mysql_query($q, $this->connection);
         	}
 
         	function addResourceFields($vid, $type) {
@@ -650,6 +720,21 @@
         		return $newarray;
         	}
 
+			function getPendingSettlementCountByOwner($uid, $excludeMoveId = 0, $target = 0) {
+				$uid = (int) $uid;
+				$excludeMoveId = (int) $excludeMoveId;
+				$target = (int) $target;
+				if($uid <= 0) {
+					return 0;
+				}
+				$exclude = $excludeMoveId > 0 ? " AND m.moveid != $excludeMoveId" : "";
+				$targetCondition = $target > 0 ? " AND m.`to` = $target" : "";
+				$q = "SELECT COUNT(*) FROM " . TB_PREFIX . "movement m LEFT JOIN " . TB_PREFIX . "vdata v ON v.wref = m.`from` WHERE m.sort_type = 5 AND m.proc = 0$exclude$targetCondition AND ((CAST(m.data AS UNSIGNED) = $uid AND CAST(m.data AS UNSIGNED) > 0) OR (CAST(m.data AS UNSIGNED) = 0 AND v.owner = $uid))";
+				$result = mysql_query($q,$this->connection);
+				$row = $result ? mysql_fetch_row($result) : false;
+				return $row ? (int)$row[0] : 0;
+			}
+
 			function getVillagesID2($uid) {
 				$q = "SELECT wref from " . TB_PREFIX . "vdata where owner = $uid order by capital DESC,pop DESC";
 				$result = mysql_query($q, $this->connection);
@@ -730,6 +815,77 @@
         		$result = mysql_query($q, $this->connection);
         		return mysql_fetch_assoc($result);
         	}
+
+			function getBreweryLevel($uid) {
+				$uid = (int)$uid;
+				if($uid <= 0 || $this->getBreweryCelebrationEnd($uid) <= time()) {
+					return 0;
+				}
+				$q = "SELECT f.* FROM " . TB_PREFIX . "fdata AS f INNER JOIN " . TB_PREFIX . "vdata AS v ON v.wref = f.vref WHERE v.owner = $uid AND v.capital = 1 LIMIT 1";
+				$result = mysql_query($q, $this->connection);
+				$fields = $result ? mysql_fetch_assoc($result) : false;
+				if(!$fields) {
+					return 0;
+				}
+				for($field = 19; $field <= 38; $field++) {
+					if((int)$fields['f'.$field.'t'] === 35) {
+						return max(0, min(10, (int)$fields['f'.$field]));
+					}
+				}
+				return 0;
+			}
+
+			function getBreweryCelebrationEnd($uid) {
+				$uid = (int)$uid;
+				if($uid <= 0) {
+					return 0;
+				}
+				$result = mysql_query("SELECT brewery FROM " . TB_PREFIX . "users WHERE id = $uid LIMIT 1",$this->connection);
+				$row = $result ? mysql_fetch_assoc($result) : false;
+				return $row ? max(0, (int)$row['brewery']) : 0;
+			}
+
+			function startBreweryCelebration($uid,$wid,$endtime,$wood,$clay,$iron,$crop) {
+				$uid = (int)$uid;
+				$wid = (int)$wid;
+				$endtime = (int)$endtime;
+				$wood = max(0, (int)$wood);
+				$clay = max(0, (int)$clay);
+				$iron = max(0, (int)$iron);
+				$crop = max(0, (int)$crop);
+				if($uid <= 0 || $wid <= 0 || $endtime <= time() || !$this->acquireBreweryLock($uid)) {
+					return false;
+				}
+				try {
+					if($this->getBreweryCelebrationEnd($uid) > time()) {
+						return false;
+					}
+					if(!$this->deductResourcesIfAvailable($wid,$wood,$clay,$iron,$crop)) {
+						return false;
+					}
+					$q = "UPDATE " . TB_PREFIX . "users SET brewery = $endtime WHERE id = $uid AND brewery <= " . time();
+					$result = mysql_query($q,$this->connection);
+					$started = $result && mysql_affected_rows($this->connection) === 1;
+					if(!$started) {
+						$this->modifyResource($wid,$wood,$clay,$iron,$crop,1);
+					}
+					return $started;
+				} finally {
+					$this->releaseBreweryLock($uid);
+				}
+			}
+
+			private function acquireBreweryLock($uid) {
+				$lockName = mysql_real_escape_string(TB_PREFIX . "brewery_" . (int)$uid,$this->connection);
+				$result = mysql_query("SELECT GET_LOCK('$lockName',5)",$this->connection);
+				$row = $result ? mysql_fetch_row($result) : false;
+				return $row && (int)$row[0] === 1;
+			}
+
+			private function releaseBreweryLock($uid) {
+				$lockName = mysql_real_escape_string(TB_PREFIX . "brewery_" . (int)$uid,$this->connection);
+				mysql_query("SELECT RELEASE_LOCK('$lockName')",$this->connection);
+			}
 
         	function getAdminLog() {
         		$q = "SELECT id,user,log,time from " . TB_PREFIX . "admin_log where id != 0 ORDER BY id DESC";
@@ -1343,54 +1499,57 @@
         		return $this->mysql_fetch_all($result);
         	}
 
-        	function clearCel($ref) {
-        		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = 0, type = 0 where wref = $ref";
-        		return mysql_query($q, $this->connection);
-        	}
-        	function setCelCp($user, $cp) {
-        		$q = "UPDATE " . TB_PREFIX . "users set cp = cp + $cp where id = $user";
-        		return mysql_query($q, $this->connection);
-        	}
+	function clearCel($ref) {
+		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = 0, type = 0 where wref = $ref";
+		return mysql_query($q, $this->connection);
+	}
+	function setCelCp($user, $cp) {
+		$q = "UPDATE " . TB_PREFIX . "users set cp = cp + $cp where id = $user";
+		return mysql_query($q, $this->connection);
+	}
 
-        	function clearExpansionSlot($id) {
-        		for($i = 1; $i <= 3; $i++) {
-        			$q = "UPDATE " . TB_PREFIX . "vdata SET exp" . $i . "=0 WHERE exp" . $i . "=" . $id;
-        			mysql_query($q, $this->connection);
-        		}
-        	}
+	function clearExpansionSlot($id, $excludeVillage = 0) {
+		$id = (int)$id;
+		$excludeVillage = (int)$excludeVillage;
+		$exclude = $excludeVillage > 0 ? " AND wref != " . $excludeVillage : "";
+		for($i = 1; $i <= 3; $i++) {
+			$q = "UPDATE " . TB_PREFIX . "vdata SET exp" . $i . "=0 WHERE exp" . $i . "=" . $id . $exclude;
+			mysql_query($q, $this->connection);
+		}
+	}
 
-        	function getInvitation($uid) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where uid = $uid";
-        		$result = mysql_query($q, $this->connection);
-        		return $this->mysql_fetch_all($result);
-        	}
+	function getInvitation($uid) {
+		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where uid = $uid";
+		$result = mysql_query($q, $this->connection);
+		return $this->mysql_fetch_all($result);
+	}
 
-        	function getInvitation2($uid, $aid) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where uid = $uid AND alliance = $aid";
-        		$result = mysql_query($q, $this->connection);
-        		return $this->mysql_fetch_all($result);
-        	}
+	function getInvitation2($uid, $aid) {
+		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where uid = $uid AND alliance = $aid";
+		$result = mysql_query($q, $this->connection);
+		return $this->mysql_fetch_all($result);
+	}
 
-        	function getAliInvitations($aid) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where alliance = $aid && accept = 0";
-        		$result = mysql_query($q, $this->connection);
-        		return $this->mysql_fetch_all($result);
-        	}
+	function getAliInvitations($aid) {
+		$q = "SELECT * FROM " . TB_PREFIX . "ali_invite where alliance = $aid && accept = 0";
+		$result = mysql_query($q, $this->connection);
+		return $this->mysql_fetch_all($result);
+	}
 
-        	function sendInvitation($uid, $alli, $sender) {
-        		$time = time();
-        		$q = "INSERT INTO " . TB_PREFIX . "ali_invite values (0,$uid,$alli,$sender,$time,0)";
-        		return mysql_query($q, $this->connection) or die(mysql_error());
-        	}
+	function sendInvitation($uid, $alli, $sender) {
+		$time = time();
+		$q = "INSERT INTO " . TB_PREFIX . "ali_invite values (0,$uid,$alli,$sender,$time,0)";
+		return mysql_query($q, $this->connection) or die(mysql_error());
+	}
 
-        	function removeInvitation($id) {
-        		$q = "DELETE FROM " . TB_PREFIX . "ali_invite where id = $id";
-        		return mysql_query($q, $this->connection);
-        	}
+	function removeInvitation($id) {
+		$q = "DELETE FROM " . TB_PREFIX . "ali_invite where id = $id";
+		return mysql_query($q, $this->connection);
+	}
 
 			function delNotice($id, $uid) {
-        		$q = "DELETE FROM " . TB_PREFIX . "ndata WHERE id = $id AND uid = $uid";
-        		return mysql_query($q, $this->connection);
+		$q = "DELETE FROM " . TB_PREFIX . "ndata WHERE id = $id AND uid = $uid";
+		return mysql_query($q, $this->connection);
         	}
 
 			function sendMessage($client, $owner, $topic, $message, $send, $alliance, $player, $coor, $report) {
@@ -2591,7 +2750,7 @@
 			$time += $queued[count($queued) - 1]['timestamp'] - $now;
 			$time2 += $queued[count($queued) - 1]['timestamp'] - $now;
 			}
-			if($queued[count($queued) - 1]['unit'] == $unit){
+			if(!empty($queued) && $queued[count($queued) - 1]['unit'] == $unit){
 			$time = $amt*$queued[count($queued) - 1]['eachtime'];
 					$q = "UPDATE " . TB_PREFIX . "training SET amt = amt + $amt, timestamp = timestamp + $time WHERE id = ".$queued[count($queued) - 1]['id']."";
 			}else{
@@ -2676,6 +2835,19 @@
 				}
 				$q = "UPDATE " . TB_PREFIX . "units SET $column = $column - $amt WHERE vref = $vref AND $column >= $amt";
 				$result = mysql_query($q, $this->connection);
+				return $result && mysql_affected_rows($this->connection) === 1;
+			}
+
+			function refundFoundingAssets($vref, $owner, $settlerUnit) {
+				$vref = (int)$vref;
+				$owner = (int)$owner;
+				$settlerUnit = (int)$settlerUnit;
+				if($vref <= 0 || $owner <= 0 || $settlerUnit < 1 || $settlerUnit > 50) {
+					return false;
+				}
+				$column = 'u'.$settlerUnit;
+				$q = "UPDATE " . TB_PREFIX . "units u INNER JOIN " . TB_PREFIX . "vdata v ON v.wref = u.vref SET u.$column = u.$column + 3, v.wood = v.wood + 750, v.clay = v.clay + 750, v.iron = v.iron + 750, v.crop = v.crop + 750 WHERE u.vref = $vref AND v.owner = $owner";
+				$result = mysql_query($q,$this->connection);
 				return $result && mysql_affected_rows($this->connection) === 1;
 			}
 
@@ -3074,15 +3246,19 @@ break;
         		$q = "SELECT (IF(exp1=0,1,0)+IF(exp2=0,1,0)+IF(exp3=0,1,0)) FROM " . TB_PREFIX . "vdata WHERE wref = $village->wid";
         		$result = mysql_query($q, $this->connection);
         		$row = mysql_fetch_row($result);
-        		$maxslots = $row[0];
-        		$residence = $building->getTypeLevel(25);
-        		$palace = $building->getTypeLevel(26);
-        		if($residence > 0) {
-        			$maxslots -= (3 - floor($residence / 10));
+		$emptySlots = $row ? (int)$row[0] : 0;
+		$occupiedSlots = 3 - $emptySlots;
+		$residence = (int)$building->getTypeLevel(25);
+		$palace = (int)$building->getTypeLevel(26);
+		$unlockedSlots = $residence >= 20 ? 2 : ($residence >= 10 ? 1 : 0);
+		if($palace >= 20) {
+			$unlockedSlots = max($unlockedSlots,3);
+		} elseif($palace >= 15) {
+			$unlockedSlots = max($unlockedSlots,2);
+		} elseif($palace >= 10) {
+			$unlockedSlots = max($unlockedSlots,1);
         		}
-        		if($palace > 0) {
-        			$maxslots -= (3 - floor(($palace - 5) / 5));
-        		}
+		$maxslots = max(0,$unlockedSlots - $occupiedSlots);
 
         		$q = "SELECT (u10+u20+u30) FROM " . TB_PREFIX . "units WHERE vref = $village->wid";
         		$result = mysql_query($q, $this->connection);
@@ -3122,21 +3298,20 @@ break;
         				$chiefs += $build['t9'];
         			}
         		}
-        		$q = "SELECT (u10+u20+u30) FROM " . TB_PREFIX . "enforcement WHERE `from` = $village->wid";
+		$q = "SELECT COALESCE(SUM(u10+u20+u30),0) FROM " . TB_PREFIX . "enforcement WHERE `from` = $village->wid";
         		$result = mysql_query($q, $this->connection);
         		$row = mysql_fetch_row($result);
-        		if(!empty($row)) {
-        			foreach($row as $reinf) {
-        				$settlers += $reinf[0];
-        			}
-        		}
-        		$q = "SELECT (u9+u19+u29) FROM " . TB_PREFIX . "enforcement WHERE `from` = $village->wid";
+		$settlers += $row ? (int)$row[0] : 0;
+		$q = "SELECT COALESCE(SUM(u9+u19+u29),0) FROM " . TB_PREFIX . "enforcement WHERE `from` = $village->wid";
         		$result = mysql_query($q, $this->connection);
         		$row = mysql_fetch_row($result);
-        		if(!empty($row)) {
-        			foreach($row as $reinf) {
-        				$chiefs += $reinf[0];
-        			}
+		$chiefs += $row ? (int)$row[0] : 0;
+		$q = "SELECT COALESCE(SUM(t10),0),COALESCE(SUM(t9),0) FROM " . TB_PREFIX . "prisoners WHERE `from` = $village->wid";
+		$result = mysql_query($q, $this->connection);
+		$row = mysql_fetch_row($result);
+		if($row) {
+			$settlers += (int)$row[0];
+			$chiefs += (int)$row[1];
         		}
         		$trainlist = $technology->getTrainingList(4);
         		if(!empty($trainlist)) {
@@ -3149,22 +3324,20 @@ break;
         				}
         			}
         		}
-        		// trapped settlers/chiefs calculation required
-
-        		$settlerslots = $maxslots * 3 - $settlers - $chiefs * 3;
-        		$chiefslots = $maxslots - $chiefs - floor(($settlers + 2) / 3);
+		$settlerslots = max(0,$maxslots * 3 - $settlers - $chiefs * 3);
+		$chiefslots = max(0,$maxslots - $chiefs - floor(($settlers + 2) / 3));
 
         		if(!$technology->getTech(($session->tribe - 1) * 10 + 9)) {
-        			$chiefslots = 0;
-        		}
-        		$slots = array("chiefs" => $chiefslots, "settlers" => $settlerslots);
-        		return $slots;
-        	}
+			$chiefslots = 0;
+		}
+		$slots = array("chiefs" => max(0,(int)$chiefslots), "settlers" => max(0,(int)$settlerslots));
+		return $slots;
+	}
 
-        	function addArtefact($vref, $owner, $type, $size, $name, $desc, $effect, $img) {
-        		$q = "INSERT INTO `" . TB_PREFIX . "artefacts` (`vref`, `owner`, `type`, `size`, `conquered`, `name`, `desc`, `effect`, `img`) VALUES ('$vref', '$owner', '$type', '$size', '" . time() . "', '$name', '$desc', '$effect', '$img')";
-        		return mysql_query($q, $this->connection);
-        	}
+	function addArtefact($vref, $owner, $type, $size, $name, $desc, $effect, $img) {
+		$q = "INSERT INTO `" . TB_PREFIX . "artefacts` (`vref`, `owner`, `type`, `size`, `conquered`, `name`, `desc`, `effect`, `img`) VALUES ('$vref', '$owner', '$type', '$size', '" . time() . "', '$name', '$desc', '$effect', '$img')";
+		return mysql_query($q, $this->connection);
+	}
 
 			function getOwnArtefactInfo($vref) {
 				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref";
@@ -4295,8 +4468,29 @@ break;
 	}
 
 	function updatePrisoners($wid,$from,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11) {
-		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wid = $wid and from = $from";
+		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wref = $wid and from = $from";
 		return mysql_query($q, $this->connection) or die(mysql_error());
+	}
+
+	function destroyUsedTraps($wid,$amount) {
+		$wid = (int)$wid;
+		$amount = max(0, (int)$amount);
+		if($wid <= 0 || $amount === 0) {
+			return true;
+		}
+		$q = "UPDATE " . TB_PREFIX . "units SET u99 = GREATEST(0, u99 - $amount), u99o = GREATEST(0, u99o - $amount) WHERE vref = $wid";
+		return mysql_query($q, $this->connection);
+	}
+
+	function areAlliancesAllied($firstAlliance,$secondAlliance) {
+		$firstAlliance = (int)$firstAlliance;
+		$secondAlliance = (int)$secondAlliance;
+		if($firstAlliance <= 0 || $secondAlliance <= 0) {
+			return false;
+		}
+		$q = "SELECT 1 FROM " . TB_PREFIX . "diplomacy WHERE accepted = 1 AND type = 1 AND ((alli1 = $firstAlliance AND alli2 = $secondAlliance) OR (alli1 = $secondAlliance AND alli2 = $firstAlliance)) LIMIT 1";
+		$result = mysql_query($q, $this->connection);
+		return $result && mysql_num_rows($result) > 0;
 	}
 
 	function getPrisoners($wid) {
@@ -4312,6 +4506,7 @@ break;
 	}
 
 	function getPrisonersByID($id) {
+		$id = (int)$id;
 		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where id = $id";
 		$result = mysql_query($q, $this->connection);
 		return mysql_fetch_array($result);
@@ -4324,8 +4519,31 @@ break;
 	}
 
 	function deletePrisoners($id) {
-		$q = "DELETE from " . TB_PREFIX . "prisoners where id = '$id'";
-		mysql_query($q, $this->connection);
+		$id = (int)$id;
+		$q = "DELETE from " . TB_PREFIX . "prisoners where id = $id";
+		return mysql_query($q, $this->connection);
+	}
+
+	function claimPrisoners($id,$wref,$from) {
+		$id = (int)$id;
+		$wref = (int)$wref;
+		$from = (int)$from;
+		if($id <= 0 || $wref <= 0 || $from <= 0) {
+			return false;
+		}
+		$q = "DELETE FROM " . TB_PREFIX . "prisoners WHERE id = $id AND wref = $wref AND `from` = $from";
+		$result = mysql_query($q,$this->connection);
+		return $result && mysql_affected_rows($this->connection) === 1;
+	}
+
+	function freeUsedTraps($wid,$amount) {
+		$wid = (int)$wid;
+		$amount = max(0, (int)$amount);
+		if($wid <= 0 || $amount <= 0) {
+			return false;
+		}
+		$q = "UPDATE " . TB_PREFIX . "units SET u99o = GREATEST(0, u99o - $amount) WHERE vref = $wid";
+		return mysql_query($q,$this->connection);
 	}
 
 	function hasActiveAdventures($adv_time, $uid) {

@@ -1,10 +1,10 @@
-<h1><img class="unit ugeb" src="img/x.gif"> Cervecer韆</h1><img class="building g35" src="img/x.gif" alt="Cervecer韆" title="Cervecer韆" />En la Cervecer韆 se elabora un sabroso hidromiel que los soldados beben durante las celebraciones.
+<h1><img class="unit ugeb" src="img/x.gif"> Cervecer铆a</h1><img class="building g35" src="img/x.gif" alt="Cervecer铆a" title="Cervecer铆a" />En la Cervecer铆a se elaboran bebidas para celebraciones de hidromiel. Mientras una celebraci贸n est谩 activa, aumenta un 1% por nivel el ataque de todas las tropas germanas de la cuenta.
 <br /><br />
-Estas bebidas hacen que tus soldados sean m醩 valientes y fuertes en batalla (un 1 % por nivel). Por desgracia, reducen el poder de persuasi髇 de los jefes y hacen que las catapultas solo puedan atacar objetivos al azar.
+A cambio, el poder de persuasi贸n de los jefes se reduce a la mitad y las catapultas atacan objetivos aleatorios.
 <br /><br />
-Solo puede ser construida por los germanos y 鷑icamente en su capital. Afecta a todo el imperio.<p><b>Costos</b> y <b>tiempo de construcci髇</b> para el nivel 1:<br /><img class="r1" src="img/x.gif" alt="Madera" title="Madera" />1460 | <img class="r2" src="img/x.gif" alt="Barro" title="Barro" />930 | <img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" />1250 | <img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" />1740 | <img class="r5" src="img/x.gif" alt="Consumo de cereal" title="Consumo de cereal" />6 | <span class="dur"><img class="clock" alt="duraci髇" title="duraci髇" src="img/x.gif" />2:13:20</span></p>
+Solo puede ser construida por los germanos y 煤nicamente en su capital. Afecta a todo el imperio.<p><b>Costos</b> y <b>tiempo de construcci贸n</b> para el nivel 1:<br /><img class="r1" src="img/x.gif" alt="Madera" title="Madera" />1460 | <img class="r2" src="img/x.gif" alt="Barro" title="Barro" />930 | <img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" />1250 | <img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" />1740 | <img class="r5" src="img/x.gif" alt="Consumo de cereal" title="Consumo de cereal" />6 | <span class="dur"><img class="clock" alt="duraci贸n" title="duraci贸n" src="img/x.gif" />2:13:20</span></p>
 	<p><b>Requisitos</b><br /><a href="manual.php?typ=4&gid=11">Granero</a> Nivel 20, <a href="manual.php?typ=4&gid=16">Plaza de reuniones</a> Nivel 10</p><map id="nav" name="nav">
- <area href="manual.php?typ=4&amp;s=32" title="atr醩" coords="0,0,45,18" shape="rect" alt="" />
+ <area href="manual.php?typ=4&amp;s=32" title="atr谩s" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?typ=4&amp;s=34" title="adelante" coords="71,0,116,18" shape="rect" alt="" />
 </map>

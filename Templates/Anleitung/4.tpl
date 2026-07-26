@@ -2963,7 +2963,7 @@ En cuanto el administrador de una ciudad (senador, jefe germano, jefe galo) haya
 
         <th class="text">
 
-            Cabaña del picapedrero        </th>
+            Taller de cantería        </th>
 
                 <td>
 

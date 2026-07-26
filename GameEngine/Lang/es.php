@@ -487,11 +487,11 @@ define("WARSIM_PALACE","Residencia/Palacio");
 define("WARSIM_POP","Población de la aldea");
 define("WARSIM_RAID","Saqueo");
 define("WARSIM_SIMULATE","Simular ataque");
-define("WARSIM_STONEMASON","Cabaña del picapedrero");
+define("WARSIM_STONEMASON","Taller de cantería");
 define("WARSIM_TROOPS","Tropas");
 define("WARSIM_TYPE","Tipo de ataque");
 define("WARSIM_WALL1","Muralla");
-define("WARSIM_WALL2","Terraplén");
+define("WARSIM_WALL2","Muro de tierra");
 define("WARSIM_WALL3","Empalizada");
 
 $lang['HELP1']['TITRE'] = "Ayuda del sistema";

@@ -40,11 +40,13 @@ include("upgrade.tpl");
 <?php if ($building->getTypeLevel(36) > 0) { ?>
 <form method="POST" name="snd" action="build.php">
 				<input type="hidden" name="id" value="<?php echo $id; ?>" />
-				<input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
 			<?php
 			$trainlist = $technology->getTrainingList(8);
+			$train_amt = 0;
 			foreach($trainlist as $train) {
-			$train_amt += $train['amt'];
+				$train_amt += $train['amt'];
 			}
 			
 			$max = $technology->maxUnit(99,false);
@@ -66,7 +68,7 @@ include("upgrade.tpl");
 			<div class="action first">
 			<div class="details">
 			<div class="tit"><a href="#" onclick="return Travian.Game.iPopup(36,4,'gid')"><img class="unit u99" src="img/x.gif" alt="Trampa"></a> <a href="#" onclick="return Travian.Game.iPopup(36,4,'gid')">Trampas</a>
-			<span class="furtherInfo">(Disponibles: <?php echo $village->unitarray['u99']; ?>)</span>
+			<span class="furtherInfo">(Disponibles: <?php echo max(0, $village->unitarray['u99'] - $village->unitarray['u99o']); ?>)</span>
 			</div>
 
 			<div class="showCosts">
