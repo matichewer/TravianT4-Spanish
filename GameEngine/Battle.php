@@ -1,5 +1,62 @@
 <?php
 class Battle {
+	private $catapultUnits = array(8, 18, 28, 48);
+
+	public function isCatapultUnit($unitId) {
+		return in_array((int)$unitId, $this->catapultUnits, true);
+	}
+
+	public function getTribeCatapultUnit($tribe) {
+		$unitId = ((int)$tribe - 1) * 10 + 8;
+		return $this->isCatapultUnit($unitId) ? $unitId : 0;
+	}
+
+	public function calculateSiegeFiring($unitCount, $attackerLosses, $attackPoints, $effectiveDefense) {
+		$unitCount = max(0, (float)$unitCount);
+		$attackerLosses = max(0, min(1, (float)$attackerLosses));
+		$attackPoints = max(0, (float)$attackPoints);
+		$effectiveDefense = max(0.000001, (float)$effectiveDefense);
+		if($unitCount <= 0 || $attackPoints <= 0 || $attackerLosses >= 1) {
+			return 0.0;
+		}
+
+		$battleRatio = pow($attackPoints / $effectiveDefense, 1.5);
+		$firingFactor = $battleRatio >= 1
+			? 1 - 0.5 / $battleRatio
+			: 0.5 * $battleRatio;
+
+		return $unitCount * (1 - $attackerLosses) * max(0, $firingFactor);
+	}
+
+	public function calculateSiegeOutcome($firingPower, $targetLevel, $upgradeLevel, $moralBonus = 1, $durabilityFactor = 1) {
+		$firingPower = max(0, (float)$firingPower);
+		$targetLevel = max(0, (int)$targetLevel);
+		$upgradeLevel = max(0, min(20, (int)$upgradeLevel));
+		$moralBonus = max(0.000001, (float)$moralBonus);
+		$durabilityFactor = max(1, (float)$durabilityFactor);
+		$upgradeFactor = round(200 * pow(1.0205, $upgradeLevel)) / 200;
+		$required = $targetLevel > 0
+			? (int)ceil(
+				$moralBonus * (pow($targetLevel, 2) + $targetLevel + 1)
+				/ (8 * $upgradeFactor / $durabilityFactor)
+			)
+			: 0;
+		$damage = $firingPower * 8 * $upgradeFactor / ($moralBonus * $durabilityFactor);
+		$remainingLevel = $targetLevel;
+		if($targetLevel > 0 && $firingPower > 0) {
+			$remainingLevel = $firingPower >= $required
+				? 0
+				: max(0, (int)floor(sqrt(max(0, pow($targetLevel + 0.5, 2) - $damage))));
+		}
+
+		return array(
+			'required' => $required,
+			'firing' => $firingPower,
+			'damage' => $damage,
+			'level_before' => $targetLevel,
+			'level_after' => $remainingLevel
+		);
+	}
 
 	public function getOasisSimulationInput($oasisId) {
 		global $database, $session, $village;
@@ -399,31 +456,32 @@ class Battle {
 			}
 		}
 
-		$targetLevel = (int)$post['kata'];
-		$catapultCount = (int)$post['a1_8'];
-		if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $targetLevel > 0 && $catapultCount > 0 && $attackPoints > 0) {
-			$catapultUpgrade = (int)$post['f1_8'];
-			$stonemasonLevel = (int)$post['stonemason'];
-			$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
-				? $bid34[$stonemasonLevel]['attri'] / 100
-				: 1.0;
-			$upgradeFactor = round(200 * pow(1.0205, $catapultUpgrade)) / 200;
-			$battleRatio = pow($attackPoints / max($defensePoints, 0.000001), 1.5);
-			$firingFactor = $battleRatio >= 1 ? 1 - 0.5 / $battleRatio : 0.5 * $battleRatio;
-			$catapultsFiring = $catapultCount * (1 - $attackerLosses) * max(0, $firingFactor);
-			$required = (int)round(
-				$moralBonus * (pow($targetLevel, 2) + $targetLevel + 1)
-				/ (8 * $upgradeFactor / $stonemasonFactor)
-				+ 0.5
-			);
-			$damage = $catapultsFiring * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor);
-			$remainingLevel = $catapultsFiring >= $required
-				? 0
-				: max(0, (int)floor(sqrt(max(0, pow($targetLevel + 0.5, 2) - $damage))));
-			$result[3] = $required;
-			$result[4] = $catapultsFiring;
-			$result['target_level_after'] = $remainingLevel;
-		}
+			$targetLevel = (int)$post['kata'];
+			$catapultCount = (int)$post['a1_8'];
+			$catapultUnit = $this->getTribeCatapultUnit($attackerTribe);
+			if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $catapultUnit > 0 && $targetLevel > 0 && $catapultCount > 0 && $attackPoints > 0) {
+				$catapultUpgrade = (int)$post['f1_8'];
+				$stonemasonLevel = (int)$post['stonemason'];
+				$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
+					? $bid34[$stonemasonLevel]['attri'] / 100
+					: 1.0;
+				$catapultsFiring = $this->calculateSiegeFiring(
+					$catapultCount,
+					$attackerLosses,
+					$attackPoints,
+					$effectiveDefense
+				);
+				$outcome = $this->calculateSiegeOutcome(
+					$catapultsFiring,
+					$targetLevel,
+					$catapultUpgrade,
+					$moralBonus,
+					$stonemasonFactor
+				);
+				$result[3] = $outcome['required'];
+				$result[4] = $catapultsFiring;
+				$result['target_level_after'] = $outcome['level_after'];
+			}
 
 		$ramCount = (int)$post['a1_7'];
 		if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $wallLevel > 0 && $ramCount > 0 && $attackPoints > 0) {
@@ -436,12 +494,14 @@ class Battle {
 			$battleRatio = pow($attackPoints / max($defensePoints, 0.000001), 1.5);
 			$firingFactor = $battleRatio >= 1 ? 1 - 0.5 / $battleRatio : 0.5 * $battleRatio;
 			$ramsFiring = $ramCount * (1 - $attackerLosses) * max(0, $firingFactor);
+			$wallDurability = $this->battleWallDurability($defenderTribe);
 			$required = (int)round(
 				$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
 				/ (8 * $upgradeFactor / $stonemasonFactor)
+				* $wallDurability
 				+ 0.5
 			);
-			$damage = $ramsFiring * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor);
+			$damage = $ramsFiring * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor * $wallDurability);
 			$remainingLevel = $ramsFiring >= $required
 				? 0
 				: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
@@ -480,6 +540,27 @@ class Battle {
 		}
 		$horse = $database->getEquippedHeroItem((int)$uid, 6);
 		return is_array($horse) && !empty($horse['id']);
+	}
+
+	private function battleBreweryLevel($attackerId,$attackerTribe) {
+		global $database;
+		if((int)$attackerTribe !== 2 || (int)$attackerId <= 0 || !method_exists($database, 'getBreweryLevel')) {
+			return 0;
+		}
+		return max(0, min(10, (int)$database->getBreweryLevel((int)$attackerId)));
+	}
+
+	private function battleBreweryActive($attackerId,$attackerTribe) {
+		global $database;
+		if((int)$attackerTribe !== 2 || (int)$attackerId <= 0 || !method_exists($database, 'getBreweryCelebrationEnd')) {
+			return false;
+		}
+		return (int)$database->getBreweryCelebrationEnd((int)$attackerId) > time();
+	}
+
+	private function battleWallDurability($tribe) {
+		$durability = array(1 => 1.0, 2 => 5.0, 3 => 2.0);
+		return isset($durability[(int)$tribe]) ? $durability[(int)$tribe] : 1.0;
 	}
 
 	private function battleUpgradeLevel($upgrades, $position) {
@@ -534,6 +615,8 @@ class Battle {
 			'Defend_points' => 0,
 			'Winner' => 'defender',
 			'bounty' => 0,
+			'brewery_active' => 0,
+			'brewery_level' => 0,
 			'deadherodef' => 0,
 			'deadheroref' => array(),
 			'casualties_attacker' => array()
@@ -589,6 +672,15 @@ class Battle {
 				$attackerCavalry *= $heroBonus;
 				$involved++;
 			}
+		}
+		$breweryActive = $this->battleBreweryActive($AttackerID, $att_tribe);
+		$result['brewery_active'] = $breweryActive ? 1 : 0;
+		$breweryLevel = $breweryActive ? $this->battleBreweryLevel($AttackerID, $att_tribe) : 0;
+		if((int)$type !== 1 && $breweryLevel > 0) {
+			$breweryFactor = 1 + $breweryLevel / 100;
+			$attackerInfantry *= $breweryFactor;
+			$attackerCavalry *= $breweryFactor;
+			$result['brewery_level'] = $breweryLevel;
 		}
 
 		$defenderSources = array();
@@ -819,34 +911,52 @@ class Battle {
 		}
 		$result['bounty'] = $maxBounty;
 
-		if((int)$type === 3 && $attackPoints > 0) {
-			$stonemasonFactor = isset($bid34[(int)$stonemason]['attri'])
-				? max(1, $bid34[(int)$stonemason]['attri'] / 100)
-				: 1;
-			$battleRatio = pow($attackPoints / max($effectiveDefense, 0.000001), 1.5);
-			$firingFactor = $battleRatio >= 1 ? 1 - 0.5 / $battleRatio : 0.5 * $battleRatio;
+			if((int)$type === 3 && $attackPoints > 0) {
+				$stonemasonFactor = isset($bid34[(int)$stonemason]['attri'])
+					? max(1, $bid34[(int)$stonemason]['attri'] / 100)
+					: 1;
 
-			$catapultCount = isset($attackerAmounts[8]) ? $attackerAmounts[8] : 0;
-			if($catapultCount > 0 && (int)$tblevel > 0) {
-				$upgradeFactor = round(200 * pow(1.0205, $result[6])) / 200;
-				$result[3] = (int)round(
-					$moralBonus * (pow((int)$tblevel, 2) + (int)$tblevel + 1)
-					/ (8 * $upgradeFactor / $stonemasonFactor)
-					+ 0.5
-				);
-				$result[4] = $catapultCount * (1 - $result[1]) * max(0, $firingFactor);
-			}
+				$catapultCount = isset($attackerAmounts[8]) ? $attackerAmounts[8] : 0;
+				$catapultUnit = $this->getTribeCatapultUnit($att_tribe);
+				if($catapultUnit > 0 && $catapultCount > 0 && (int)$tblevel > 0) {
+					$result[4] = $this->calculateSiegeFiring(
+						$catapultCount,
+						$result[1],
+						$attackPoints,
+						$effectiveDefense
+					);
+					$outcome = $this->calculateSiegeOutcome(
+						$result[4],
+						(int)$tblevel,
+						$result[6],
+						$moralBonus,
+						$stonemasonFactor
+					);
+					$result[3] = $outcome['required'];
+					$result['target_level_after'] = $outcome['level_after'];
+				}
 
-			$ramCount = isset($attackerAmounts[7]) ? $attackerAmounts[7] : 0;
-			if($ramCount > 0 && $wallLevel > 0) {
-				$ramUpgrade = $this->battleUpgradeLevel($att_ab, 7);
-				$upgradeFactor = round(200 * pow(1.0205, $ramUpgrade)) / 200;
+				$ramCount = isset($attackerAmounts[7]) ? $attackerAmounts[7] : 0;
+				if($ramCount > 0 && $wallLevel > 0) {
+					$ramUpgrade = $this->battleUpgradeLevel($att_ab, 7);
+					$upgradeFactor = round(200 * pow(1.0205, $ramUpgrade)) / 200;
+					$wallDurability = $this->battleWallDurability($def_tribe);
 				$result[7] = (int)round(
 					$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
 					/ (8 * $upgradeFactor / $stonemasonFactor)
+					* $wallDurability
 					+ 0.5
 				);
-				$result[8] = $ramCount * (1 - $result[1]) * max(0, $firingFactor);
+					$result[8] = $this->calculateSiegeFiring(
+						$ramCount,
+						$result[1],
+						$attackPoints,
+						$effectiveDefense
+					);
+				$damage = $result[8] * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor * $wallDurability);
+				$result['wall_level_after'] = $result[8] >= $result[7]
+					? 0
+					: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
 			}
 		}
 
@@ -858,7 +968,7 @@ class Battle {
 		global $bid34,$database;
 		// Definieer de array met de eenheden
 		$calvary = array(4,5,6,15,16,23,24,25,26,35,36,45,46);
-		$catapult = array(8,18,28,38,48);
+		$catapult = array(8,18,28,48);
 		$rams = array(7,17,27,37,47);		
 		$catp = $ram = 0;
 		// Array om terug te keren met het resultaat van de berekening
