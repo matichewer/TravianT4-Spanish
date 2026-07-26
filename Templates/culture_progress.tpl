@@ -50,7 +50,7 @@ $cultureProtectionClass = (isset($session->userinfo['protect']) && (int)$session
 	<div class="cultureProgressInfo">
 		<strong><?php echo number_format($cultureStatus['culturePoints'], 0, ',', '.'); ?> / <?php echo number_format($cultureStatus['nextRequiredPoints'], 0, ',', '.'); ?> PC</strong>
 	</div>
-	<div class="cultureProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="<?php echo $cultureStatus['nextRequiredPoints']; ?>" aria-valuenow="<?php echo min($cultureStatus['culturePoints'], $cultureStatus['nextRequiredPoints']); ?>" title="Faltan <?php echo number_format($cultureStatus['remainingPoints'], 0, ',', '.'); ?> puntos de cultura">
+	<div class="cultureProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="<?php echo $cultureStatus['progressRequiredPoints']; ?>" aria-valuenow="<?php echo $cultureStatus['progressPoints']; ?>" title="Faltan <?php echo number_format($cultureStatus['remainingPoints'], 0, ',', '.'); ?> puntos de cultura">
 		<div class="cultureProgressBarFill" style="width:<?php echo number_format($cultureStatus['progressPercent'], 2, '.', ''); ?>%;"></div>
 	</div>
 <?php } ?>
