@@ -1293,8 +1293,9 @@ class Automation {
             $totalattackdead = 0;
             $totaldead_att = $totaldead_def = $totalsend_def = 0;
             $totaltraped_att = $DefenderHeroRef = 0;
+            $totaldead_alldef = array_fill(1, 5, 0);
             $rams = $catp = $chiefs = 0;
-            $scout = 0;
+            $scout = $type = 0;
             $rom = $ger = $gal = $nat = $natar = 0;
             $info_ram = $info_cat = $info_chief = $info_spy = $info_trap = '';
             $spyReinforcements = array();
@@ -1308,6 +1309,7 @@ class Automation {
             $dead['hero'] = 0;
             $DefenderHeroByTribe = array_fill(1, 5, 0);
             $DeadHeroByTribe = array_fill(1, 5, 0);
+            unset($empty);
             for($i = 1; $i <= 11; $i++) {
                 ${'dead'.$i} = 0;
                 ${'traped'.$i} = 0;
@@ -2020,8 +2022,8 @@ class Automation {
                 $totaldead_alldef[4] = $dead['31'] + $dead['32'] + $dead['33'] + $dead['34'] + $dead['35'] + $dead['36'] + $dead['37'] + $dead['38'] + $dead['39'] + $dead['40'];
                 $totaldead_alldef[5] = $dead['41'] + $dead['42'] + $dead['43'] + $dead['44'] + $dead['45'] + $dead['46'] + $dead['47'] + $dead['48'] + $dead['49'] + $dead['50'];
 
-                $totaldead_alldef = $totaldead_alldef[1] + $totaldead_alldef[2] + $totaldead_alldef[3] + $totaldead_alldef[4] + $totaldead_alldef[5] + $deadhero;
-                $totalattackdead += $totaldead_alldef;
+                $totalDefenderDeaths = $totaldead_alldef[1] + $totaldead_alldef[2] + $totaldead_alldef[3] + $totaldead_alldef[4] + $totaldead_alldef[5] + $deadhero;
+                $totalattackdead += $totalDefenderDeaths;
 
                 // Set units returning from attack
                 $database->modifyAttack($data['ref'], 1, $dead1);
@@ -2363,24 +2365,28 @@ class Automation {
                     $info_cat = $catapultResolution['report'];
                     $catapultDestroyedVillage = $catapultResolution['village_destroyed'];
                 }
-                //chiefing village
-                //there are senators
-                if(!$catapultDestroyedVillage && ($data['t9'] - $dead9) > 0) {
-                    $varray = $database->getProfileVillages($to['owner']);
-                    //kijken of laatste dorp is, of hoofddorp
-                    if(count($varray) != '1' AND $to['capital'] != '1') {
-                        //if there is no Palace/Residence
-                        for ($i = 18; $i < 39; $i++) {
-                            if($database->getFieldLevel($data['to'], "".$i."t") == 25 or $database->getFieldLevel($data['to'], "".$i."t") == 26) {
-                                $nochiefing = '1';
-                                $info_chief = "".$chief_pic.",Palace or Residence still exists.";
-                            }
-                        }
-                        $settlementLockAcquired = false;
-                        if(!isset($nochiefing)) {
-                            $attackerOwner = (int)$database->getVillageField($data['from'], "owner");
-                            $settlementLockAcquired = $database->acquireSettlementLock($attackerOwner,5);
-                            if($settlementLockAcquired) {
+                // A village can only be conquered by surviving, non-trapped chiefs
+                // sent in a normal attack. Raids must never lower loyalty.
+                $survivingChiefs = max(0, (int)$data['t9'] - (int)$dead9 - (int)$traped9);
+                if(!$catapultDestroyedVillage && (int)$type === 3 && $survivingChiefs > 0) {
+                    $attackerOwner = (int)$database->getVillageField($data['from'], 'owner');
+                    $defenderOwner = (int)$database->getVillageField($data['to'], 'owner');
+                    $settlementLockAcquired = $attackerOwner > 0
+                        && $database->acquireSettlementLock($attackerOwner, 5);
+
+                    if(!$settlementLockAcquired) {
+                        $info_chief = "".$chief_pic.", No se pudo reservar la capacidad de expansión.";
+                    } else {
+                        try {
+                            $conquestEligibility = $database->getConquestEligibility(
+                                $data['from'],
+                                $data['to'],
+                                $attackerOwner,
+                                $defenderOwner
+                            );
+                            $conquestStatus = $conquestEligibility['status'];
+
+                            if($conquestStatus === 'eligible') {
                                 $attackerCulturePoints = (int)$database->getUserField($attackerOwner, 'cp', 0);
                                 $attackerVillageCount = count($database->getVillagesID($attackerOwner));
                                 $pendingSettlements = $database->getPendingSettlementCountByOwner($attackerOwner);
@@ -2390,54 +2396,59 @@ class Automation {
                                     $pendingSettlements,
                                     CP
                                 );
-                            } else {
-                                $nochiefing = '1';
-                                $info_chief = "".$chief_pic.", No se pudo reservar la capacidad de expansión.";
-                            }
-                        }
-
-                        if(!isset($nochiefing) && !$cultureEligibility['eligible']) {
-                            $info_chief = "".$chief_pic.", No tienes suficientes puntos de cultura para conquistar otra aldea.";
-                        }
-
-                        if(!isset($nochiefing) && $cultureEligibility['eligible']) {
-                            $loyaltyDamage = 0;
-                            for ($i = 0; $i < ($data['t9'] - $dead9); $i++) {
-                                $loyaltyDamage += rand(15, 25);
-                            }
-                            if($breweryActive) {
-                                $loyaltyDamage = max(1, (int)floor($loyaltyDamage / 2));
-                            }
-                            //loyalty is more than 0
-                            if(($toF['loyalty'] - $loyaltyDamage) > 0) {
-                                $info_chief = "".$chief_pic.", Reduced Loyalty from <b>".$toF['loyalty']."</b> To <b>".($toF['loyalty'] - $loyaltyDamage)."</b>";
-                                $database->setVillageField($data['to'], loyalty, ($toF['loyalty'] - $loyaltyDamage));
-                            } else {
-                                if(!$database->assignExpansionSlot($data['from'],$data['to'],$attackerOwner)) {
-                                    $info_chief = "".$chief_pic.", No hay un cupo de expansión libre en la aldea atacante.";
-                                } else {
-                                    //you took over the village
-                                    $artifact = $database->getOwnArtefactInfo($data['to']);
-                                    $info_chief = "".$chief_pic.", You conquered the village!";
-                                    if($artifact['vref'] == $data['to']) {
-                                        $database->claimArtefact($data['to'], $data['to'], $attackerOwner);
-                                    }
-                                    $database->setVillageField($data['to'], loyalty, 33);
-                                    $database->setVillageField($data['to'], owner, $attackerOwner);
-                                    //destroy wall
-                                    $database->setVillageLevel($data['to'], "f40", 0);
-                                    $database->setVillageLevel($data['to'], "f40t", 0);
-                                    $database->clearExpansionSlot($data['to'],$data['from']);
-                                    //kill a chief
-                                    $database->modifyAttack($data['ref'], 9, 1);
+                                if(!$cultureEligibility['eligible']) {
+                                    $conquestStatus = 'culture';
                                 }
                             }
-                        }
-                        if($settlementLockAcquired) {
+
+                            if($conquestStatus === 'eligible') {
+                                $loyaltyDamage = 0;
+                                for($i = 0; $i < $survivingChiefs; $i++) {
+                                    $loyaltyDamage += rand(15, 25);
+                                }
+                                if($breweryActive) {
+                                    $loyaltyDamage = max(1, (int)floor($loyaltyDamage / 2));
+                                }
+                                $conquestResult = $database->applyConquestLoyalty(
+                                    $data['from'],
+                                    $data['to'],
+                                    $attackerOwner,
+                                    $defenderOwner,
+                                    $data['ref'],
+                                    $loyaltyDamage
+                                );
+                                $conquestStatus = $conquestResult['status'];
+                            } else {
+                                $conquestResult = $conquestEligibility;
+                            }
+
+                            if($conquestStatus === 'loyalty_reduced') {
+                                $info_chief = "".$chief_pic.", Lealtad reducida de <b>".$conquestResult['old_loyalty']."</b> a <b>".$conquestResult['new_loyalty']."</b>.";
+                            } elseif($conquestStatus === 'conquered') {
+                                $info_chief = "".$chief_pic.", ¡Conquistaste la aldea!";
+                            } else {
+                                $conquestMessages = array(
+                                    'same_owner' => 'No puedes conquistar una aldea propia.',
+                                    'capital' => 'No puedes conquistar una capital.',
+                                    'last_village' => 'No puedes conquistar la última aldea de un jugador.',
+                                    'residence' => 'La Residencia o el Palacio todavía existe.',
+                                    'no_slot' => 'No hay un cupo de expansión libre en la aldea atacante.',
+                                    'culture' => 'No tienes suficientes puntos de cultura para conquistar otra aldea.',
+                                    'source_changed' => 'La aldea atacante cambió de dueño.',
+                                    'target_changed' => 'La aldea objetivo ya cambió de dueño.',
+                                    'no_chief' => 'No quedó ningún jefe disponible para completar la conquista.',
+                                    'busy' => 'Otra conquista sobre esta aldea se está procesando.',
+                                    'database_error' => 'No se pudo completar la conquista por un error de base de datos.',
+                                    'invalid' => 'La conquista no cumple los requisitos.'
+                                );
+                                $message = isset($conquestMessages[$conquestStatus])
+                                    ? $conquestMessages[$conquestStatus]
+                                    : $conquestMessages['database_error'];
+                                $info_chief = "".$chief_pic.", ".$message;
+                            }
+                        } finally {
                             $database->releaseSettlementLock($attackerOwner);
                         }
-                    } else {
-                        $info_chief = "".$chief_pic.", You cannot Conquer the Capital!";
                     }
                 }
 

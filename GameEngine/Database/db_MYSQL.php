@@ -505,6 +505,175 @@
 					return false;
 				}
 
+				function getConquestEligibility($from, $target, $attackerOwner, $defenderOwner) {
+					$from = (int)$from;
+					$target = (int)$target;
+					$attackerOwner = (int)$attackerOwner;
+					$defenderOwner = (int)$defenderOwner;
+					$result = array('status' => 'invalid');
+					if($from <= 0 || $target <= 0 || $attackerOwner <= 0 || $defenderOwner <= 0 || $from === $target) {
+						return $result;
+					}
+
+					$query = mysql_query(
+						"SELECT owner,exp1,exp2,exp3 FROM " . TB_PREFIX . "vdata WHERE wref = $from LIMIT 1",
+						$this->connection
+					);
+					$source = $query ? mysql_fetch_assoc($query) : false;
+					$query = mysql_query(
+						"SELECT owner,capital,loyalty FROM " . TB_PREFIX . "vdata WHERE wref = $target LIMIT 1",
+						$this->connection
+					);
+					$destination = $query ? mysql_fetch_assoc($query) : false;
+					if(!$source || !$destination) {
+						$result['status'] = 'database_error';
+						return $result;
+					}
+					if((int)$source['owner'] !== $attackerOwner) {
+						$result['status'] = 'source_changed';
+						return $result;
+					}
+					if((int)$destination['owner'] !== $defenderOwner) {
+						$result['status'] = (int)$destination['owner'] === $attackerOwner ? 'same_owner' : 'target_changed';
+						return $result;
+					}
+					if($attackerOwner === $defenderOwner) {
+						$result['status'] = 'same_owner';
+						return $result;
+					}
+					if((int)$destination['capital'] === 1) {
+						$result['status'] = 'capital';
+						return $result;
+					}
+
+					$query = mysql_query(
+						"SELECT COUNT(*) AS villages FROM " . TB_PREFIX . "vdata WHERE owner = $defenderOwner",
+						$this->connection
+					);
+					$count = $query ? mysql_fetch_assoc($query) : false;
+					if(!$count) {
+						$result['status'] = 'database_error';
+						return $result;
+					}
+					if((int)$count['villages'] <= 1) {
+						$result['status'] = 'last_village';
+						return $result;
+					}
+
+					$query = mysql_query(
+						"SELECT * FROM " . TB_PREFIX . "fdata WHERE vref = $target LIMIT 1",
+						$this->connection
+					);
+					$fields = $query ? mysql_fetch_assoc($query) : false;
+					if(!$fields) {
+						$result['status'] = 'database_error';
+						return $result;
+					}
+					for($field = 19; $field <= 38; $field++) {
+						if((int)$fields['f'.$field.'t'] === 25 || (int)$fields['f'.$field.'t'] === 26) {
+							$result['status'] = 'residence';
+							return $result;
+						}
+					}
+
+					$slot = 0;
+					for($candidate = 1; $candidate <= 3; $candidate++) {
+						if((int)$source['exp'.$candidate] === 0) {
+							$slot = $candidate;
+							break;
+						}
+					}
+					if($slot === 0) {
+						$result['status'] = 'no_slot';
+						return $result;
+					}
+
+					return array(
+						'status' => 'eligible',
+						'slot' => $slot,
+						'loyalty' => (int)$destination['loyalty']
+					);
+				}
+
+				function applyConquestLoyalty($from, $target, $attackerOwner, $defenderOwner, $attackId, $loyaltyDamage) {
+					$from = (int)$from;
+					$target = (int)$target;
+					$attackerOwner = (int)$attackerOwner;
+					$defenderOwner = (int)$defenderOwner;
+					$attackId = (int)$attackId;
+					$loyaltyDamage = max(1, (int)$loyaltyDamage);
+					if($from <= 0 || $target <= 0 || $attackerOwner <= 0 || $defenderOwner <= 0 || $attackId <= 0) {
+						return array('status' => 'invalid');
+					}
+
+					$lockName = mysql_real_escape_string(TB_PREFIX . "conquest_" . $target, $this->connection);
+					$lockQuery = mysql_query("SELECT GET_LOCK('$lockName',5)", $this->connection);
+					$lockRow = $lockQuery ? mysql_fetch_row($lockQuery) : false;
+					if(!$lockRow || (int)$lockRow[0] !== 1) {
+						return array('status' => 'busy');
+					}
+
+					try {
+						$eligibility = $this->getConquestEligibility($from, $target, $attackerOwner, $defenderOwner);
+						if($eligibility['status'] !== 'eligible') {
+							return $eligibility;
+						}
+
+						$oldLoyalty = (int)$eligibility['loyalty'];
+						$newLoyalty = $oldLoyalty - $loyaltyDamage;
+						if($newLoyalty > 0) {
+							$query = "UPDATE " . TB_PREFIX . "vdata SET loyalty = $newLoyalty"
+								. " WHERE wref = $target AND owner = $defenderOwner AND loyalty = $oldLoyalty";
+							$updated = mysql_query($query, $this->connection);
+							if(!$updated || mysql_affected_rows($this->connection) !== 1) {
+								return array('status' => 'target_changed');
+							}
+							return array(
+								'status' => 'loyalty_reduced',
+								'old_loyalty' => $oldLoyalty,
+								'new_loyalty' => $newLoyalty
+							);
+						}
+
+						$slot = (int)$eligibility['slot'];
+						$query = "UPDATE " . TB_PREFIX . "vdata AS source"
+							. " INNER JOIN " . TB_PREFIX . "vdata AS destination ON destination.wref = $target"
+							. " INNER JOIN " . TB_PREFIX . "fdata AS fields ON fields.vref = destination.wref"
+							. " INNER JOIN " . TB_PREFIX . "attacks AS attack ON attack.id = $attackId"
+							. " LEFT JOIN " . TB_PREFIX . "artefacts AS artefact ON artefact.vref = destination.wref"
+							. " SET source.exp$slot = $target, destination.owner = $attackerOwner,"
+							. " destination.loyalty = 33, fields.f40 = 0, fields.f40t = 0,"
+							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner"
+							. " WHERE source.wref = $from AND source.owner = $attackerOwner"
+							. " AND source.exp$slot = 0 AND destination.owner = $defenderOwner"
+							. " AND destination.capital = 0 AND attack.t9 > 0";
+						$updated = mysql_query($query, $this->connection);
+						if(!$updated) {
+							return array('status' => 'database_error');
+						}
+						if(mysql_affected_rows($this->connection) < 3) {
+							return array('status' => 'no_chief');
+						}
+
+						$cleanup = mysql_query(
+							"UPDATE " . TB_PREFIX . "vdata SET"
+							. " exp1 = IF(exp1 = $target,0,exp1),"
+							. " exp2 = IF(exp2 = $target,0,exp2),"
+							. " exp3 = IF(exp3 = $target,0,exp3)"
+							. " WHERE wref != $from AND (exp1 = $target OR exp2 = $target OR exp3 = $target)",
+							$this->connection
+						);
+						return array(
+							'status' => 'conquered',
+							'old_loyalty' => $oldLoyalty,
+							'new_loyalty' => 33,
+							'cleanup' => (bool)$cleanup
+						);
+					} finally {
+						mysql_query("SELECT RELEASE_LOCK('$lockName')", $this->connection);
+					}
+				}
+
 				function cleanupFailedSettlement($wid, $uid) {
 					$wid = (int) $wid;
 					$uid = (int) $uid;
@@ -3391,12 +3560,11 @@ break;
 				return $this->mysql_fetch_all($result);
 			}
 
-        	function claimArtefact($vref, $ovref, $id) {
-        		$time = time();
-        		$q = "UPDATE " . TB_PREFIX . "artefacts SET vref = $vref, owner = $id WHERE vref = $ovref";
-        		$result = mysql_query($q, $this->connection);
-        		return mysql_fetch_array($result);
-        	}
+			function claimArtefact($vref, $ovref, $id) {
+				$time = time();
+				$q = "UPDATE " . TB_PREFIX . "artefacts SET vref = $vref, owner = $id WHERE vref = $ovref";
+				return mysql_query($q, $this->connection);
+			}
 
         	function getArtefactDetails($id) {
         		$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE id = " . $id . "";
