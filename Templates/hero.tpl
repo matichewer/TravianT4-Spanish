@@ -96,7 +96,7 @@ ob_start();
 
 		<div class="clear"></div>
 
-	  <div class="attribute productionPoints tooltip" title="El héroe recolecta recursos de forma continua. Cuantos más puntos asignes, mayor será la producción.<br><font color='#5dcbfb'>Bonificación actual: +<?php echo $selectedResourceRate; ?>/h</font>">
+	  <div class="attribute productionPoints tooltip" title="El héroe recolecta recursos de forma continua. Cuantos más puntos asignes, mayor será la producción.<br><font color='#5dcbfb'>Aporte directo actual: +<?php echo $selectedResourceRate; ?>/h</font>">
 				<div class="element attribName">Recursos</div>
 				<div class="element current power"><?php echo $productPoints; ?></div>
 				<div class="element progress">
@@ -117,7 +117,7 @@ ob_start();
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     <div class="attribute res" id="setResource">
 		<div class="changeResourcesHeadline">Distribuir la producción de recursos del héroe</div>
-		<div class="heroResourceExplanation">Bonificación por hora: se acumula desde el momento del cambio y no entrega recursos al instante. Al elegir un recurso, su valor reemplaza el bono de «Todos los recursos»; no se suma encima.</div>
+		<div class="heroResourceExplanation">Aporte directo por hora: el valor mostrado se suma tal cual a la producción de la aldea, sin porcentajes. Se aplica desde el cambio y no entrega recursos al instante; al elegir uno, reemplaza el aporte de «Todos los recursos».</div>
 		<div class="clear"></div>
 		<div class="resource">
 		  <input type="radio" onclick="window.location.href = '?product=r0';" name="resource" value="0" id="resourceHero0" <?php if($hero['r0']!=0){ echo $checked="checked"; } ?>>

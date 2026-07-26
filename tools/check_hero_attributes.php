@@ -36,6 +36,7 @@ $allRates = heroVillageResourceBonus($allResourceHero,100,1);
 heroAttributeAssert($allRates===array('wood'=>12.0,'clay'=>12.0,'iron'=>12.0,'crop'=>12.0),'All-resource production is incorrect');
 $allRatesSpeedThree = heroVillageResourceBonus($allResourceHero,100,3);
 heroAttributeAssert($allRatesSpeedThree===array('wood'=>36.0,'clay'=>36.0,'iron'=>36.0,'crop'=>36.0),'Speed-three all-resource production is incorrect');
+heroAttributeAssert(300+$allRatesSpeedThree['wood']===336.0,'Displayed all-resource rate was not added directly');
 $overCapRates = heroResourceRates(array('product'=>150,'r0'=>1,'r1'=>0,'r2'=>0,'r3'=>0,'r4'=>0),1);
 heroAttributeAssert($overCapRates===array('wood'=>300.0,'clay'=>300.0,'iron'=>300.0,'crop'=>300.0),'Resource points are not capped at 100');
 
@@ -46,15 +47,31 @@ $focusedRates = heroVillageResourceBonus($focusedHero,100,1);
 heroAttributeAssert($focusedRates===array('wood'=>0,'clay'=>40.0,'iron'=>0,'crop'=>0),'Focused resource production is incorrect');
 $focusedRatesSpeedThree = heroVillageResourceBonus($focusedHero,100,3);
 heroAttributeAssert($focusedRatesSpeedThree===array('wood'=>0,'clay'=>120.0,'iron'=>0,'crop'=>0),'Speed-three focused production is incorrect');
+heroAttributeAssert(300+$focusedRatesSpeedThree['clay']===420.0,'Displayed focused rate was not added directly');
 $focusedHero['dead'] = 1;
 heroAttributeAssert(array_sum(heroVillageResourceBonus($focusedHero,100,1))===0,'Dead hero produced resources');
 $focusedHero['dead'] = 0;
 heroAttributeAssert(array_sum(heroVillageResourceBonus($focusedHero,101,1))===0,'Hero produced resources in another village');
 
+$villageEngine = file_get_contents(dirname(__DIR__).'/GameEngine/Village.php');
+heroAttributeAssert($villageEngine!==false,'Could not read village engine');
+$normalizedVillageEngine = preg_replace('/\s+/','',$villageEngine);
+foreach(array('wood'=>'getWoodProd','clay'=>'getClayProd','iron'=>'getIronProd') as $resource=>$baseMethod){
+	$directAddition = '$this->production[\''.$resource.'\']=$this->'.$baseMethod.'()+$heroProduction[\''.$resource.'\'];';
+	heroAttributeAssert(
+		strpos($normalizedVillageEngine,$directAddition)!==false,
+		'Normal village production does not add the hero '.$resource.' rate directly'
+	);
+}
+heroAttributeAssert(
+	substr_count($normalizedVillageEngine,'+$heroProduction[\'crop\'];')===4,
+	'Normal village production does not add the hero crop rate directly in every upkeep branch'
+);
+
 $heroTemplate = file_get_contents(dirname(__DIR__).'/Templates/hero.tpl');
 heroAttributeAssert($heroTemplate!==false,'Could not read hero template');
 heroAttributeAssert(
-	strpos($heroTemplate,'Bonificación actual: +<?php echo $selectedResourceRate; ?>/h')!==false,
+	strpos($heroTemplate,'Aporte directo actual: +<?php echo $selectedResourceRate; ?>/h')!==false,
 	'Current hero resource bonus is missing its hourly unit'
 );
 heroAttributeAssert(
@@ -65,7 +82,7 @@ heroAttributeAssert(
 	substr_count($heroTemplate,'<span class="current">+<?php echo $focusedResourceRate; ?>/h</span>')===4,
 	'Focused resource options are missing positive hourly labels'
 );
-foreach(array('Bonificación por hora','desde el momento del cambio','no entrega recursos al instante','reemplaza','no se suma encima') as $explanationPart){
+foreach(array('Aporte directo por hora','se suma tal cual','sin porcentajes','desde el cambio','no entrega recursos al instante','reemplaza') as $explanationPart){
 	heroAttributeAssert(
 		strpos($heroTemplate,$explanationPart)!==false,
 		'Hero resource distribution explanation is incomplete'
