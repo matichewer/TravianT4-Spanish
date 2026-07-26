@@ -4902,13 +4902,13 @@ class Automation {
                     }
                 }
                 if($week > 1) {
-                    $totalpoints = $climbers[$myrank]['oldrank'] - $myrank;
-                    $database->addclimberrankpop($climbers[$myrank]['id'], $totalpoints);
-                    $database->updateoldrank($climbers[$myrank]['id'], $myrank);
+                    $totalpoints = $climber['oldrank'] - $myrank;
+                    $database->addclimberrankpop($uid, $totalpoints);
+                    $database->updateoldrank($uid, $myrank);
                 } else {
                     $totalpoints = mysql_num_rows(mysql_query($users)) - $myrank;
-                    $database->setclimberrankpop($climbers[$myrank]['id'], $totalpoints);
-                    $database->updateoldrank($climbers[$myrank]['id'], $myrank);
+                    $database->setclimberrankpop($uid, $totalpoints);
+                    $database->updateoldrank($uid, $myrank);
                 }
             } else if($climber['oldrank'] < $myrank) {
                 for ($i = $climber['oldrank']; $i <= $myrank; $i++) {
@@ -4926,13 +4926,13 @@ class Automation {
                     }
                 }
                 if($week > 1) {
-                    $totalpoints = $myrank - $climbers[$myrank - 1]['oldrank'];
-                    $database->removeclimberrankpop($climbers[$myrank - 1]['id'], $totalpoints);
-                    $database->updateoldrank($climbers[$myrank - 1]['id'], $myrank);
+                    $totalpoints = $myrank - $climber['oldrank'];
+                    $database->removeclimberrankpop($uid, $totalpoints);
+                    $database->updateoldrank($uid, $myrank);
                 } else {
                     $totalpoints = mysql_num_rows(mysql_query($users)) - $myrank;
-                    $database->setclimberrankpop($climbers[$myrank - 1]['id'], $totalpoints);
-                    $database->updateoldrank($climbers[$myrank - 1]['id'], $myrank);
+                    $database->setclimberrankpop($uid, $totalpoints);
+                    $database->updateoldrank($uid, $myrank);
                 }
             }
         }
