@@ -400,17 +400,21 @@ $end = ($tribe*10);
 <?php
 $attacker = $database->getUserField($session->uid,'alliance',0);
 $defender = $database->getUserField($process['2'],'alliance',0);
-		if($attacker!=0 && $attacker==$defender){
-			echo "<div class=\"alert\">¡Advertencia! ¿Estás seguro de que quieres atacar a este jugador?</div>";
+// c: 1 = explorar, 2 = refuerzo, 3 = ataque normal, 4 = saqueo.
+// El refuerzo no es hostil, así que no dispara ninguna de las advertencias.
+$hostile = $process['c'] != 2;
+		if($hostile && $attacker!=0 && $attacker==$defender){
+			$hostileAction = ($process['c'] == 1) ? "explorar a" : "atacar a";
+			echo "<div class=\"alert\">¡Advertencia! ¿Estás seguro de que quieres ".$hostileAction." este jugador de tu alianza?</div>";
 		}
 
-    if($database->hasBeginnerProtection($process['0'])==1) {  
-        echo"<div class=\"alert\"><b>No se puede atacar, está bajo protección de principiante.</b></div>"; 
-    } else { 
+    if($hostile && $database->hasBeginnerProtection($process['0'])==1) {
+        echo"<div class=\"alert\"><b>No se puede atacar, está bajo protección de principiante.</b></div>";
+    } else {
 ?> 
 <button type="submit" value="ok" name="s1" id="btn_ok"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">confirmar</div></div></button>
 <?php
-if($database->hasBeginnerProtection($village->wid)==1 && $process['2']!=2 && $process['2']!=3) { 
+if($hostile && $database->hasBeginnerProtection($village->wid)==1 && $process['2']!=2 && $process['2']!=3) {
 		$del_protect = 1;
 ?>
 		</br></br><span style="color: #DD0000"><b>Advertencia:</b> si atacas a este jugador perderás tu protección de principiante.</span>

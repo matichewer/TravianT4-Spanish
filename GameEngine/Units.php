@@ -266,9 +266,11 @@ class Units {
 					}
 
                 if ($database->isVillageOases($id) == 0) {
-				if($database->hasBeginnerProtection($id)==1) {
+				// Solo los envíos hostiles (explorar/atacar/saquear) chocan con la
+				// protección de principiante; el refuerzo (c = 2) siempre se permite.
+				if((isset($post['c']) ? (int)$post['c'] : 0) != 2 && $database->hasBeginnerProtection($id)==1) {
 	                $form->addError("error","El jugador está bajo protección de principiante. No puedes atacarlo");
-                }    
+                }
                 
 				//check if banned:
 				$villageOwner = $database->getVillageField($id,'owner');
