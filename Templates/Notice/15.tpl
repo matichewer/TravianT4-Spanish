@@ -45,19 +45,20 @@ if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
 				</thead>
 				<tbody>
 					<tr><td colspan="2" class="report_content">
-			<img src="img/x.gif" class="adventureReportImage adventureGrasslandVictory" alt="">
-
 <table cellspacing="0" cellpadding="0" id="attacker">
+<?php $reinforcementHasOrigin = isset($dataarray[26]) && $dataarray[26] === 'reinforcement-origin-v1'; ?>
 	<thead>
 		<tr>
 			<td class="role">
 				<div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
-                <div class="role"><?php echo REPORT_DEFENDER; ?></div>
+                <div class="role"><?php echo REPORT_REINF; ?></div>
 					</div>
 				</div>			</td>
 			<td colspan="11" class="troopHeadline">
 				<p>
-					<a href="spieler.php?uid=<?php echo $database->getUserField($dataarray[0],"id",0); ?>"><?php echo $database->getUserField($dataarray[0],"username",0); ?></a> <?php echo REPORT_FROM_VIL; ?> <a href="karte.php?d=<?php echo $dataarray[1]."&amp;c=".$generator->getMapCheck($dataarray[1]); ?>"><?php echo $database->getVillageField($dataarray[1],"name"); ?></a>
+					<a href="spieler.php?uid=<?php echo $database->getUserField($dataarray[0],"id",0); ?>"><?php echo $database->getUserField($dataarray[0],"username",0); ?></a>
+					<?php echo $reinforcementHasOrigin ? REPORT_FROM_VIL : 'en la aldea'; ?>
+					<a href="karte.php?d=<?php echo $dataarray[1]."&amp;c=".$generator->getMapCheck($dataarray[1]); ?>"><?php echo $database->getVillageField($dataarray[1],"name"); ?></a>
 				</p>
 			</td>
 		</tr>
