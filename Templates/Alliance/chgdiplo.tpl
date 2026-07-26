@@ -186,8 +186,7 @@ echo "<h1>Alianza - ".$allianceinfo['tag']."</h1>";
 <div class="boxes boxesColor gray infos"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">		<div class="title">
 			Pista		</div>
 		<div class="text">
-			Para mostrar automáticamente las relaciones de la alianza en el perfil, simplemente escribe [diplomatie], [ally], [nap] y [war] por separado en el perfil.
- <span class="e">[diplomatie]
-</span><span class="e"></span><span class="e"></span><span class="e"></span>  		</div>
+			Para mostrar automáticamente las relaciones de la alianza, escribe <span class="e">[diplomatie]</span> en el perfil, o bien <span class="e">[ally]</span>, <span class="e">[nap]</span> y <span class="e">[war]</span> por separado.
+  		</div>
 		</div>
 				</div>
