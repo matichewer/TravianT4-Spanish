@@ -6,18 +6,26 @@
 </a>
 El cereal de las granjas se almacena en el granero. Cuanto mayor sea el nivel, mayor será la capacidad de almacenamiento. </div>
 
+<?php
+$capacityLevel = $building->constructionTargetLevel($id);
+$hasQueuedCapacityLevel = ($capacityLevel !== false);
+if(!$hasQueuedCapacityLevel) {
+	$capacityLevel = (int)$village->resarray['f'.$id];
+}
+$nextCapacityLevel = $capacityLevel + 1;
+?>
 	<table cellpadding="1" cellspacing="1" id="build_value">
 	<tr>
-		<th>Capacidad de almacenamiento actual:</th>
-		<td><b><?php echo $bid11[$village->resarray['f'.$id]]['attri']*STORAGE_MULTIPLIER; ?></b></td>
+		<th><?php echo $hasQueuedCapacityLevel ? 'Capacidad en el nivel '.$capacityLevel.':' : 'Capacidad de almacenamiento actual:'; ?></th>
+		<td><b><?php echo $bid11[$capacityLevel]['attri']*STORAGE_MULTIPLIER; ?></b></td>
 	</tr>
     
 	<tr>
 <?php 
-        if(!$building->isMax($village->resarray['f'.$id.'t'],$id)) {
+        if(isset($bid11[$nextCapacityLevel])) {
         ?>
-		<th>Capacidad en el nivel <?php echo $village->resarray['f'.$id]+1; ?> </th>
-		<td><b><?php echo $bid11[$village->resarray['f'.$id]+1]['attri']*STORAGE_MULTIPLIER; ?></b></td>
+		<th>Capacidad en el nivel <?php echo $nextCapacityLevel; ?> </th>
+		<td><b><?php echo $bid11[$nextCapacityLevel]['attri']*STORAGE_MULTIPLIER; ?></b></td>
         <?php
             }
             ?>
