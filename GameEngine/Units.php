@@ -613,6 +613,7 @@ class Units {
 				$database->refundFoundingAssets($village->wid,$session->uid,$unit);
 				return false;
 			}
+			$database->markFollowupQuestAchieved($session->uid,9);
 			return true;
 		}
 

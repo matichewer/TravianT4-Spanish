@@ -447,22 +447,25 @@ if (isset($qact)){
 			$reward = array(1600, 1800, 1950, 1200);
 			break;
 		case 33:
-			$requirementMet = $building->getTypeLevel(25) >= 10 || $building->getTypeLevel(26) >= 10;
+			$requirementMet = $database->hasBuildingAtLevelForUser($session->uid, 25, 10)
+				|| $database->hasBuildingAtLevelForUser($session->uid, 26, 10);
 			$reward = array(3400, 2800, 3600, 2200);
 			break;
 		case 34:
-			$settlers = array(1 => 'u10', 2 => 'u20', 3 => 'u30');
 			$tribe = (int)$session->userinfo['tribe'];
-			$requirementMet = isset($settlers[$tribe], $village->unitall[$settlers[$tribe]]) && (int)$village->unitall[$settlers[$tribe]] >= 3;
+			$requirementMet = (int)$dataarray[9] === 2
+				|| $database->hasOwnSettlersForUser($session->uid, $tribe, 3)
+				|| $database->hasSettlementAttemptForQuest($session->uid);
 			$reward = array(1050, 800, 900, 750);
 			break;
 		case 35:
-			$requirementMet = count($database->getProfileVillages($session->uid)) >= 2;
+			$requirementMet = (int)$dataarray[10] === 2
+				|| $database->hasFoundedVillageForQuest($session->uid);
 			$reward = array(1600, 2000, 1800, 1300);
 			break;
 	}
 
-	if($_SESSION['qst'] === 24 && isset($dataarray[$questIndex]) && (int)$dataarray[$questIndex] === 0 && $requirementMet) {
+	if($_SESSION['qst'] === 24 && isset($dataarray[$questIndex]) && (int)$dataarray[$questIndex] !== 1 && $requirementMet) {
 		$dataarray[$questIndex] = 1;
 		$nextFquest = implode(',', $dataarray);
 		if(!$database->claimFollowupQuestResources($session->uid, $session->villages[0], $currentFquest, $nextFquest, $reward[0], $reward[1], $reward[2], $reward[3])) {
@@ -948,14 +951,14 @@ if ($ironL<4 || $clayL<4 || $woodL<4 || $cropL<6){?>
 
 <?php } elseif($_SESSION['qst']== 33){
 
-$residence = $building->getTypeLevel(25);
-$palace = $building->getTypeLevel(26);
-if($palace >= 10){
+$residenceReady = $database->hasBuildingAtLevelForUser($session->uid, 25, 10);
+$palaceReady = $database->hasBuildingAtLevelForUser($session->uid, 26, 10);
+if($palaceReady){
 $text = "El palacio ";
-}else if($residence >= 10){
+}else if($residenceReady){
 $text = "La residencia ";
 }
-if ($residence<10 && $palace<10){?>
+if (!$residenceReady && !$palaceReady){?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>¿Palacio o residencia?<\/h4><div class=\"spoken\">&rdquo;Para fundar una nueva aldea necesitarás colonos. Puedes entrenarlos tanto en un palacio como en una residencia.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Construye un palacio o una residencia hasta el nivel 10.<\/div><div class=\"rew\"><p class=\"ta_aw\">Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">3400<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">2800<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">3600<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">2200<\/span><div class=\"clear\"><\/div><\/div><input type=\"hidden\" id=\"qst_val\" value=\"\"><a href=\"javascript: qst_next('','24');\" class=\"qle arrow\">Volver al resumen.<\/a><div class=\"clear\"><\/div><\/div><\/div>\n\t\t<div class=\"quest_palace_or_residence\" id=\"qstbg\"><\/div>\n\t\t","number":"-33","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>¿Palacio o residencia?<\/h4><div class=\"spoken\">&rdquo;¡<?php echo $text; ?>ha alcanzado el nivel 10! Ahora puedes entrenar colonos y fundar tu segunda aldea. Ten en cuenta los puntos de cultura...&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">3400<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">2800<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">3600<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">2200<\/span><div class=\"clear\"><\/div><\/div><input type=\"hidden\" id=\"qst_val\" value=\"\"><a href=\"#\" onclick=\"qst_next('','24')\" class=\"qle arrow\">Volver al resumen.<\/a><a href=\"javascript: qst_next('','33');\" class=\"qri arrow\">Recoger recompensa<\/a><div class=\"clear\"><\/div><\/div>\n\t\t<div id=\"qstbg\" class=\"quest_palace_or_residence\"><\/div>\n\t\t","number":33,"reward":{"wood":3400,"clay":2800,"iron":3600,"crop":2200},"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>g","msrc":"<?php echo $messagelol; ?>","altstep":0}
@@ -963,10 +966,13 @@ if ($residence<10 && $palace<10){?>
 
 <?php } elseif($_SESSION['qst']== 34){
 
-// Checking 3 settlers trained or no
-$units = $village->unitall;
-$unarray2=array("","u10", "u20","u30");
-if ($units[$unarray2[$session->userinfo['tribe']]]<3){ $cp = CP;?>
+$settlersReady = (int)$dataarray[9] === 2
+	|| $database->hasOwnSettlersForUser($session->uid, (int)$session->userinfo['tribe'], 3)
+	|| $database->hasSettlementAttemptForQuest($session->uid);
+if($settlersReady && (int)$dataarray[9] === 0 && $database->markFollowupQuestAchieved($session->uid, 9)) {
+	$dataarray[9] = 2;
+}
+if (!$settlersReady){ $cp = CP;?>
 
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>3 colonos<\/h4><div class=\"spoken\">&rdquo;Para fundar una nueva aldea necesitarás colonos. Puedes entrenarlos en el palacio o la residencia.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Entrena 3 colonos.<\/div><div class=\"rew\"><p class=\"ta_aw\">Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">1050<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">800<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">900<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">750<\/span><div class=\"clear\"><\/div><\/div><input type=\"hidden\" id=\"qst_val\" value=\"\"><a href=\"javascript: qst_next('','24');\" class=\"qle arrow\">Volver al resumen.<\/a><div class=\"clear\"><\/div><\/div><\/div>\n\t\t<div class=\"quest_three_settlers\" id=\"qstbg\"><\/div>\n\t\t","number":"-34","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>
@@ -975,8 +981,11 @@ if ($units[$unarray2[$session->userinfo['tribe']]]<3){ $cp = CP;?>
 
 <?php } elseif($_SESSION['qst']== 35){
 
-$vil = $database->getProfileVillages($session->uid);
-if (count($vil)<2){ ?>
+$villageFounded = (int)$dataarray[10] === 2 || $database->hasFoundedVillageForQuest($session->uid);
+if($villageFounded && (int)$dataarray[10] === 0 && $database->markFollowupQuestAchieved($session->uid, 10)) {
+	$dataarray[10] = 2;
+}
+if (!$villageFounded){ ?>
 
 {"markup":"\n\t\t<div id=\"popup3\"><div id=\"qstd\"><h4>Nueva aldea<\/h4><div class=\"spoken\">&rdquo;Hay muchas casillas vacías en el mapa. Encuentra una que te convenga y funda una nueva aldea.&rdquo;<\/div><div class=\"rew\"><p class=\"ta_aw\">Orden:<\/p>Funda una nueva aldea.<\/div><div class=\"rew\"><p class=\"ta_aw\">Recompensa:<\/p><span class=\"resources r1\"><img class=\"r1\" title=\"Madera\" src=\"img\/x.gif\" alt=\"Madera\">1600<\/span><span class=\"resources r2\"><img class=\"r2\" title=\"Barro\" src=\"img\/x.gif\" alt=\"Barro\">2000<\/span><span class=\"resources r3\"><img class=\"r3\" title=\"Hierro\" src=\"img\/x.gif\" alt=\"Hierro\">1800<\/span><span class=\"resources r4\"><img class=\"r4\" title=\"Cereal\" src=\"img\/x.gif\" alt=\"Cereal\">1300<\/span><div class=\"clear\"><\/div><\/div><input type=\"hidden\" id=\"qst_val\" value=\"\"><a href=\"javascript: qst_next('','24');\" class=\"qle arrow\">Volver al resumen.<\/a><div class=\"clear\"><\/div><\/div><\/div>\n\t\t<div class=\"quest_new_village\" id=\"qstbg\"><\/div>\n\t\t","number":"-35","reward":false,"qgsrc":"q_l<?php echo $session->userinfo['tribe'];?>","msrc":"<?php echo $messagelol; ?>","altstep":0}
 <?php $_SESSION['qstnew']='0'; }else{ $_SESSION['qstnew']='1'; ?>

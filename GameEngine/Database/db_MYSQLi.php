@@ -1817,7 +1817,7 @@
 			function claimFollowupQuestGold($userid, $currentFquest, $nextFquest, $gold) {
 				$userid = (int)$userid;
 				$gold = (int)$gold;
-				if($userid <= 0 || $gold <= 0 || !preg_match('/^[01](,[01]){10}$/', $currentFquest) || !preg_match('/^[01](,[01]){10}$/', $nextFquest)) {
+				if($userid <= 0 || $gold <= 0 || !preg_match('/^[012](,[012]){10}$/', $currentFquest) || !preg_match('/^[012](,[012]){10}$/', $nextFquest)) {
 					return false;
 				}
 
@@ -1835,7 +1835,7 @@
 				$clay = (int)$clay;
 				$iron = (int)$iron;
 				$crop = (int)$crop;
-				if($userid <= 0 || $vref <= 0 || min($wood, $clay, $iron, $crop) < 0 || !preg_match('/^[01](,[01]){10}$/', $currentFquest) || !preg_match('/^[01](,[01]){10}$/', $nextFquest)) {
+				if($userid <= 0 || $vref <= 0 || min($wood, $clay, $iron, $crop) < 0 || !preg_match('/^[012](,[012]){10}$/', $currentFquest) || !preg_match('/^[012](,[012]){10}$/', $nextFquest)) {
 					return false;
 				}
 
@@ -1844,6 +1844,104 @@
 				$q = "UPDATE " . TB_PREFIX . "users AS u INNER JOIN " . TB_PREFIX . "vdata AS v ON v.wref = $vref AND v.owner = u.id SET u.fquest = '$nextFquest', v.wood = v.wood + $wood, v.clay = v.clay + $clay, v.iron = v.iron + $iron, v.crop = v.crop + $crop WHERE u.id = $userid AND u.quest = 24 AND u.fquest = '$currentFquest'";
 				$result = mysqli_query($this->connection, $q);
 				return $result && mysqli_affected_rows($this->connection) === 2;
+			}
+
+			function markFollowupQuestAchieved($userid, $questIndex) {
+				$userid = (int)$userid;
+				$questIndex = (int)$questIndex;
+				if($userid <= 0 || $questIndex < 0 || $questIndex > 10) {
+					return false;
+				}
+
+				for($attempt = 0; $attempt < 3; $attempt++) {
+					$result = mysqli_query($this->connection, "SELECT fquest FROM " . TB_PREFIX . "users WHERE id = $userid LIMIT 1");
+					$row = $result ? mysqli_fetch_assoc($result) : false;
+					$currentFquest = $row ? (string)$row['fquest'] : '';
+					if(!preg_match('/^[012](,[012]){10}$/', $currentFquest)) {
+						return false;
+					}
+
+					$states = explode(',', $currentFquest);
+					if((int)$states[$questIndex] !== 0) {
+						return true;
+					}
+					$states[$questIndex] = 2;
+					$nextFquest = implode(',', $states);
+					$currentEscaped = mysqli_real_escape_string($this->connection, $currentFquest);
+					$nextEscaped = mysqli_real_escape_string($this->connection, $nextFquest);
+					$result = mysqli_query(
+						$this->connection,
+						"UPDATE " . TB_PREFIX . "users SET fquest = '$nextEscaped' WHERE id = $userid AND fquest = '$currentEscaped'"
+					);
+					if($result && mysqli_affected_rows($this->connection) === 1) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			function hasBuildingAtLevelForUser($userid, $buildingType, $minimumLevel) {
+				$userid = (int)$userid;
+				$buildingType = (int)$buildingType;
+				$minimumLevel = (int)$minimumLevel;
+				if($userid <= 0 || $buildingType <= 0 || $minimumLevel <= 0) {
+					return false;
+				}
+
+				$conditions = array();
+				for($field = 19; $field <= 40; $field++) {
+					$conditions[] = "(f.f{$field}t = $buildingType AND f.f$field >= $minimumLevel)";
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "fdata AS f"
+					. " INNER JOIN " . TB_PREFIX . "vdata AS v ON v.wref = f.vref"
+					. " WHERE v.owner = $userid AND (" . implode(' OR ', $conditions) . ") LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_num_rows($result) === 1;
+			}
+
+			function hasOwnSettlersForUser($userid, $tribe, $required = 3) {
+				$userid = (int)$userid;
+				$tribe = (int)$tribe;
+				$required = (int)$required;
+				if($userid <= 0 || $tribe < 1 || $tribe > 5 || $required <= 0) {
+					return false;
+				}
+
+				$column = 'u' . ($tribe * 10);
+				$q = "SELECT 1 FROM " . TB_PREFIX . "units AS units"
+					. " INNER JOIN " . TB_PREFIX . "vdata AS v ON v.wref = units.vref"
+					. " WHERE v.owner = $userid AND units.$column >= $required LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_num_rows($result) === 1;
+			}
+
+			function hasSettlementAttemptForQuest($userid) {
+				$userid = (int)$userid;
+				if($userid <= 0) {
+					return false;
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "movement"
+					. " WHERE sort_type = 5 AND data = '$userid' LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_num_rows($result) === 1;
+			}
+
+			function hasFoundedVillageForQuest($userid) {
+				$userid = (int)$userid;
+				if($userid <= 0) {
+					return false;
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "movement AS movement"
+					. " INNER JOIN " . TB_PREFIX . "vdata AS source"
+					. " ON source.wref = movement.`from` AND source.owner = $userid"
+					. " INNER JOIN " . TB_PREFIX . "vdata AS target"
+					. " ON target.wref = movement.`to` AND target.owner = $userid"
+					. " WHERE movement.sort_type = 5 AND movement.proc = 1"
+					. " AND movement.data = '$userid' AND target.created >= movement.endtime"
+					. " AND (source.exp1 = target.wref OR source.exp2 = target.wref OR source.exp3 = target.wref)"
+					. " LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_num_rows($result) === 1;
 			}
 
         	function setArchived($id) {

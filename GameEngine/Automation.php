@@ -3190,7 +3190,10 @@ class Automation {
                     }
                     continue;
                 }
-                $database->setMovementProc($data['moveid']);
+                if($database->setMovementProc($data['moveid'])) {
+                    $database->markFollowupQuestAchieved($owner,9);
+                    $database->markFollowupQuestAchieved($owner,10);
+                }
             } finally {
                 $database->releaseSettlementLock($owner);
             }
@@ -3959,10 +3962,19 @@ class Automation {
                     if($trained > $train['amt']) {
                         $trained = $train['amt'];
                     }
+                    $completedUnit = (int)$train['unit'];
                     if($train['unit'] > 60 && $train['unit'] != 99) {
-                        $database->modifyUnit($train['vref'], $train['unit'] - 60, $trained, 1);
+                        $completedUnit -= 60;
+                        $database->modifyUnit($train['vref'], $completedUnit, $trained, 1);
                     } else {
-                        $database->modifyUnit($train['vref'], $train['unit'], $trained, 1);
+                        $database->modifyUnit($train['vref'], $completedUnit, $trained, 1);
+                    }
+                    if($trained > 0 && $completedUnit >= 10 && $completedUnit <= 50 && $completedUnit % 10 === 0) {
+                        $owner = (int)$database->getVillageField($train['vref'],'owner');
+                        $tribe = (int)$database->getUserField($owner,'tribe',0);
+                        if($completedUnit === $tribe * 10 && $database->hasOwnSettlersForUser($owner,$tribe,3)) {
+                            $database->markFollowupQuestAchieved($owner,9);
+                        }
                     }
                     $database->updateTraining($train['id'], $trained, $trained * $train['eachtime']);
                 }

@@ -159,6 +159,7 @@ class SettlerFoundingDatabaseStub {
 	public $resourceDeductions = array();
 	public $unitDeductions = array();
 	public $movements = array();
+	public $questAchievements = array();
 	public $refunds = array();
 	public $movementAllowed = true;
 
@@ -213,6 +214,11 @@ class SettlerFoundingDatabaseStub {
 		return $this->movementAllowed;
 	}
 
+	public function markFollowupQuestAchieved($uid, $questIndex) {
+		$this->questAchievements[] = array((int)$uid,(int)$questIndex);
+		return true;
+	}
+
 	public function refundFoundingAssets($wid, $owner, $unit) {
 		$this->refunds[] = array($wid,$owner,$unit);
 		return true;
@@ -239,6 +245,10 @@ settlerAssert($database->unitDeductions === array(array(100,20,3)), 'Founding mu
 settlerAssert(
 	count($database->movements) === 1 && $database->movements[0][0] === 5 && $database->movements[0][4] === 7,
 	'Settlement movement must store the founding account id.'
+);
+settlerAssert(
+	$database->questAchievements === array(array(7,9)),
+	'Queuing a settlement must preserve completion of the three-settler quest.'
 );
 
 $database = new SettlerFoundingDatabaseStub();
