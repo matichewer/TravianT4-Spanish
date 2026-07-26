@@ -10,7 +10,14 @@ if(!in_array($village->wid, $session->villages)) {
 
 $culturePoints = (int)$database->getUserField($cultureOwnerId, 'cp', 0);
 $cultureStatus = travianCultureStatus($culturePoints, count($cultureVillageIds), CP);
-$cultureReadyClass = ($cultureStatus['availableVillageSlots'] > 0) ? ' cultureProgressReady' : '';
+$pendingSettlements = $database->getPendingSettlementCountByOwner($cultureOwnerId);
+$cultureEligibility = travianCultureExpansionEligibility(
+	$culturePoints,
+	count($cultureVillageIds),
+	$pendingSettlements,
+	CP
+);
+$cultureReadyClass = $cultureEligibility['eligible'] ? ' cultureProgressReady' : '';
 $cultureProtectionClass = (isset($session->userinfo['protect']) && (int)$session->userinfo['protect'] > time())
 	? ' cultureProgressWithProtection'
 	: '';
@@ -27,7 +34,7 @@ $cultureProtectionClass = (isset($session->userinfo['protect']) && (int)$session
 				<span class="cultureProgressTooltipFoot">Los PC pertenecen a toda la cuenta, permiten fundar o conquistar más aldeas y no se gastan al utilizarlos. Con Plus, el desglose por aldea está en Resumen de aldeas → Puntos de cultura.</span>
 			</span>
 		</span>
-		<span class="cultureProgressVillages">Aldeas: <strong><?php echo $cultureStatus['ownedVillages']; ?> de <?php echo $cultureStatus['cultureCapacity']; ?></strong> posibles</span>
+		<span class="cultureProgressVillages">Aldeas: <strong><?php echo $cultureStatus['ownedVillages']; ?> de <?php echo $cultureStatus['cultureCapacity']; ?></strong> posibles<?php if($pendingSettlements > 0) { echo ' ('.$pendingSettlements.' en camino)'; } ?></span>
 	</div>
 <?php if(!$cultureStatus['available']) { ?>
 	<div class="cultureProgressUnavailable">No hay una tabla de cultura configurada para este modo.</div>

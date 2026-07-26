@@ -1,6 +1,7 @@
 <form method="POST" name="snd" action="build.php">
 				<input type="hidden" name="id" value="<?php echo $id; ?>" />
-                <input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
 
 			<table cellpadding="1" cellspacing="1" class="build_details">
 				<thead>

@@ -425,6 +425,23 @@ if(!function_exists('travianCultureThresholds')) {
 		return isset($thresholds[$villageCount]) ? (int)$thresholds[$villageCount] : null;
 	}
 
+	function travianCultureExpansionEligibility($culturePoints, $ownedVillages, $pendingSettlements, $mode) {
+		$culturePoints = max(0, (int)$culturePoints);
+		$ownedVillages = max(0, (int)$ownedVillages);
+		$pendingSettlements = max(0, (int)$pendingSettlements);
+		$nextVillageCount = $ownedVillages + $pendingSettlements + 1;
+		$requiredPoints = travianCultureRequiredForVillageCount($nextVillageCount, $mode);
+
+		return array(
+			'culturePoints' => $culturePoints,
+			'ownedVillages' => $ownedVillages,
+			'pendingSettlements' => $pendingSettlements,
+			'nextVillageCount' => $nextVillageCount,
+			'requiredPoints' => $requiredPoints,
+			'eligible' => $requiredPoints !== null && $culturePoints >= $requiredPoints
+		);
+	}
+
 	function travianCultureStatus($culturePoints, $ownedVillages, $mode) {
 		$thresholds = travianCultureThresholds($mode);
 		$culturePoints = max(0, (int)$culturePoints);

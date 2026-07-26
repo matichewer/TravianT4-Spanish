@@ -12,7 +12,8 @@ include("upgrade.tpl");
 <?php if ($building->getTypeLevel(29) > 0) { ?>
 <form method="POST" name="snd" action="build.php">
                 <input type="hidden" name="id" value="<?php echo $id; ?>" />
-                <input type="hidden" name="ft" value="t3" />
+<input type="hidden" name="ft" value="t3" />
+<input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
             <div class="buildActionOverview trainUnits">
                 <?php
                     include("29_train.tpl");

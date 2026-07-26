@@ -16,7 +16,8 @@
 
 <form method="POST" name="snd" action="build.php">
 <input type="hidden" name="id" value="<?php echo $id; ?>" />
-<input type="hidden" name="ft" value="t1" />
+	<input type="hidden" name="ft" value="t1" />
+	<input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
 <div class="buildActionOverview trainUnits">
 <?php
 		for ($i=($session->tribe-1)*10+9;$i<=($session->tribe*10);$i++) {

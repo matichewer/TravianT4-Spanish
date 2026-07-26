@@ -11,7 +11,8 @@ include("upgrade.tpl");
 <div class="clear"></div>
 		<form method="POST" name="snd" action="build.php">
 			<input type="hidden" name="id" value="<?php echo $id; ?>" />
-            <input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="ft" value="t1" />
+<input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
                 <div class="buildActionOverview trainUnits">
                 <?php 
                 	include("20_".$session->tribe.".tpl");

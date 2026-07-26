@@ -67,14 +67,15 @@ echo '</pre>';
 
 <p class="button">
 <?php
-$total = count($session->villages);
-$need_cps = travianCultureRequiredForVillageCount($total + 1, CP);
 $cps = (int)$database->getUserField($session->uid, 'cp', 0);
+$pendingSettlements = $database->getPendingSettlementCountByOwner($session->uid);
+$cultureEligibility = travianCultureExpansionEligibility($cps,count($session->villages),$pendingSettlements,CP);
+$need_cps = $cultureEligibility['requiredPoints'];
 $wood = round($village->awood);
 $clay = round($village->aclay);
 $iron = round($village->airon);
 $crop = round($village->acrop);
-if($need_cps !== null && $cps >= $need_cps) {
+if($cultureEligibility['eligible']) {
 	if($wood>=750 && $clay>=750 && $iron>=750 && $crop>=750){
 ?>
 

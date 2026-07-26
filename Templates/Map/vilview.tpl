@@ -58,10 +58,11 @@ if($tileDetailsPopup) {
  <?php if(!$basearray['occupied']) { ?>
  <div class="option">
  <?php 
-      $total = count($session->villages);
-      $need_cps = travianCultureRequiredForVillageCount($total + 1, CP);
-      $cps = (int)$database->getUserField($session->uid, 'cp', 0);
-      $enough_cp = ($need_cps !== null && $cps >= $need_cps);
+	      $cps = (int)$database->getUserField($session->uid, 'cp', 0);
+	      $pendingSettlements = $database->getPendingSettlementCountByOwner($session->uid);
+	      $cultureEligibility = travianCultureExpansionEligibility($cps,count($session->villages),$pendingSettlements,CP);
+	      $need_cps = $cultureEligibility['requiredPoints'];
+	      $enough_cp = $cultureEligibility['eligible'];
       
 			$otext = ($basearray['occupied'] == 1)? "Ocupado" : "Desocupado"; 
 			if($village->unitarray['u'.$session->tribe.'0'] >= 3 AND $enough_cp) {

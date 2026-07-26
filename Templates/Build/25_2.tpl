@@ -27,13 +27,23 @@ include("25_menu.tpl"); ?>
 </tr>
 </table><?php
 $totalVillages = count($session->villages);
-$requiredCulturePoints = travianCultureRequiredForVillageCount($totalVillages + 1, CP);
+$pendingSettlements = $database->getPendingSettlementCountByOwner($session->uid);
 $currentCulturePoints = (int)$database->getUserField($session->uid, 'cp', 0);
+$cultureEligibility = travianCultureExpansionEligibility(
+        $currentCulturePoints,
+        $totalVillages,
+        $pendingSettlements,
+        CP
+);
+$requiredCulturePoints = $cultureEligibility['requiredPoints'];
 ?>
 <?php if($requiredCulturePoints === null) { ?>
 <p>No hay un umbral de cultura configurado para fundar otra aldea. Tienes <b><?php echo number_format($currentCulturePoints, 0, ',', '.'); ?></b> puntos de cultura.</p>
 <?php } else { ?>
 <p>Para fundar una nueva aldea necesitas <b><?php echo number_format($requiredCulturePoints, 0, ',', '.'); ?></b> puntos de cultura. Tienes <b><?php echo number_format($currentCulturePoints, 0, ',', '.'); ?></b> puntos de cultura.</p>
+<?php } ?>
+<?php if($pendingSettlements > 0) { ?>
+<p><b><?php echo $pendingSettlements; ?></b> fundación<?php echo $pendingSettlements === 1 ? '' : 'es'; ?> en camino ya reserva<?php echo $pendingSettlements === 1 ? '' : 'n'; ?> puntos de cultura.</p>
 <?php } ?>
 </div><div class="clear">&nbsp;</div>
     <div class="clear"></div>
