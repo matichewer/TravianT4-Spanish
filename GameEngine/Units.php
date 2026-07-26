@@ -131,20 +131,16 @@ class Units {
 					? $trapOwner === (int)$session->uid && (int)$prisoner['wref'] === (int)$village->wid
 					: $troopOwner === (int)$session->uid && (int)$prisoner['from'] === (int)$village->wid;
 
-				if($authorized && $database->claimPrisoners($prisonerId,(int)$prisoner['wref'],(int)$prisoner['from'])) {
-					$total = 0;
-					for($i = 1; $i <= 11; $i++) {
-						$total += max(0, (int)$prisoner['t'.$i]);
-					}
-					$database->freeUsedTraps((int)$prisoner['wref'],$total);
+				if($authorized) {
 					if($operation === 'release') {
 						$status = $this->queuePrisonerReturn($prisoner,$troopOwner) ? 'released' : 'failed';
 					} else {
-						if((int)$prisoner['t11'] > 0) {
-							$database->modifyHero2('dead',1,$troopOwner,0);
-							$database->modifyHero2('health',0,$troopOwner,0);
-						}
-						$status = 'disbanded';
+						$status = $database->disbandPrisonersAtomic(
+							$prisonerId,
+							(int)$prisoner['wref'],
+							(int)$prisoner['from'],
+							$troopOwner
+						) ? 'disbanded' : 'failed';
 					}
 				}
 			}
@@ -180,20 +176,20 @@ class Units {
 		$trapCoordinates = $database->getCoor((int)$prisoner['wref']);
 		$homeCoordinates = $database->getCoor((int)$prisoner['from']);
 		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1));
-		$reference = $database->addAttack(
-			(int)$prisoner['from'],
-			(int)$prisoner['t1'],(int)$prisoner['t2'],(int)$prisoner['t3'],
-			(int)$prisoner['t4'],(int)$prisoner['t5'],(int)$prisoner['t6'],
-			(int)$prisoner['t7'],(int)$prisoner['t8'],(int)$prisoner['t9'],
-			(int)$prisoner['t10'],(int)$prisoner['t11'],3,0,0,0
-		);
-		return $reference > 0 && $database->addMovement(
-			4,
+		$troops = array();
+		for($i = 1; $i <= 11; $i++) {
+			$troops[$i] = max(0,(int)$prisoner['t'.$i]);
+		}
+		$start = time();
+		return $database->returnPrisonersAtomic(
+			(int)$prisoner['id'],
 			(int)$prisoner['wref'],
 			(int)$prisoner['from'],
-			$reference,
-			time(),
-			time() + $travelTime
+			$troops,
+			$start,
+			$start + $travelTime,
+			false,
+			$troops
 		);
 	}
 

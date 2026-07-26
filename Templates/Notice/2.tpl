@@ -154,11 +154,12 @@ if ($dataarray[155]!='' and $dataarray[156]!=''){ //chief
     <?php echo $dataarray[158]; ?>
     </td></tr></tbody>
 <?php }
-if ($dataarray[169]!='' and $dataarray[169]!=''){ //release prisoners
+$releaseInfo = isset($dataarray[170]) ? $dataarray[170] : '';
+if ($releaseInfo !== '') { //release prisoners
 ?>
     <tbody><tr><td class="empty" colspan="12"></td></tr></tbody>
     <tbody class="goods"><tr><th><?php echo REPORT_INFORMATION; ?></th><td style="text-align:left" colspan="11">
-    <?php echo $dataarray[169]; ?>
+    <?php echo $releaseInfo; ?>
     </td></tr></tbody>
 <?php } ?>
 

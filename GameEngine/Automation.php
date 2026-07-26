@@ -694,8 +694,6 @@ class Automation {
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."training where vref =".$village;
                     $database->query($q);
-                    $q = "DELETE FROM ".TB_PREFIX."units where vref =".$village;
-                    $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."farmlist where wref =".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."raidlist where towref = ".$village;
@@ -718,17 +716,18 @@ class Automation {
                             $survivors[$i] = max(0, (int)$pris['t'.$i]);
                         }
                         $this->queueFreedPrisonerReturn($pris, $owner, $tribe, $survivors);
-                        $database->deletePrisoners($pris['id']);
                     }
                     $getprisoners = $database->getPrisoners3($village);
                     foreach ($getprisoners as $pris) {
-                        $troops = 0;
-                        for ($i = 1; $i < 12; $i++) {
-                            $troops += $pris['t'.$i];
-                        }
-                        $database->modifyUnit($pris['wref'], "99o", $troops, 0);
-                        $database->deletePrisoners($pris['id']);
+                        $database->disbandPrisonersAtomic(
+                            (int)$pris['id'],
+                            (int)$pris['wref'],
+                            (int)$pris['from'],
+                            (int)$need['uid']
+                        );
                     }
+                    $q = "DELETE FROM ".TB_PREFIX."units where vref =".$village;
+                    $database->query($q);
                     $enforcement = $database->getEnforceVillage($village, 0);
                     foreach ($enforcement as $enforce) {
                         $time = time();
@@ -1815,31 +1814,31 @@ class Automation {
                     $def_spy = $Defender['u54'];
                 }
                 if(!$scout or $def_spy > 0) {
-                    $traps = 0;
+                    $capturedTroops = array_fill(1,11,0);
                     if($isoasis == 0 && (int)$targettribe === 3) {
                         $trapCapacity = 0;
                         $trapFields = $database->getResourceLevel($data['to']);
                         for($field = 19; $field <= 38; $field++) {
                             if((int)$trapFields['f'.$field.'t'] === 36) {
                                 $trapLevel = (int)$trapFields['f'.$field];
-                                if(isset($bid36[$trapLevel]['attri'])) {
+                                if($trapLevel > 0 && isset($bid36[$trapLevel]['attri'])) {
                                     $trapCapacity += $bid36[$trapLevel]['attri'] * TRAPPER_CAPACITY;
                                 }
                             }
                         }
-                        $traps = min(
-                            max(0, (int)$Defender['u99'] - (int)$Defender['u99o']),
-                            max(0, $trapCapacity - (int)$Defender['u99o'])
+                        $attackingTroops = array();
+                        for($i = 1; $i <= 11; $i++) {
+                            $attackingTroops[$i] = max(0,(int)$data['t'.$i]);
+                        }
+                        $capturedTroops = $database->capturePrisonersAtomic(
+                            (int)$data['to'],
+                            (int)$data['from'],
+                            $attackingTroops,
+                            $trapCapacity
                         );
                     }
                     for ($i = 1; $i <= 11; $i++) {
-                        $traps1 = $traps;
-                        if($data['t'.$i] < $traps1) {
-                            $traps1 = $data['t'.$i];
-                        }
-                        ${'traped'.$i} = $traps1;
-                        $traps -= $traps1;
-                        $database->modifyUnit($data['to'], "99o", $traps1, 1);
+                        ${'traped'.$i} = max(0,(int)$capturedTroops[$i]);
                     }
                     for ($i = $start; $i <= $end; $i++) {
                         $j = $i - $start + 1;
@@ -1847,14 +1846,6 @@ class Automation {
                     }
                     $Attacker['hero'] -= $traped11;
                     $totaltraped_att = $traped1 + $traped2 + $traped3 + $traped4 + $traped5 + $traped6 + $traped7 + $traped8 + $traped9 + $traped10 + $traped11;
-                    if($totaltraped_att > 0) {
-                        $prisoners2 = $database->getPrisoners2($data['to'], $data['from']);
-                        if(empty($prisoners2)) {
-                            $database->addPrisoners($data['to'], $data['from'], $traped1, $traped2, $traped3, $traped4, $traped5, $traped6, $traped7, $traped8, $traped9, $traped10, $traped11);
-                        } else {
-                            $database->updatePrisoners($data['to'], $data['from'], $traped1, $traped2, $traped3, $traped4, $traped5, $traped6, $traped7, $traped8, $traped9, $traped10, $traped11);
-                        }
-                    }
                 }
                 $storedAttackerUpgrades = $database->getABTech($data['from']);
                 if(is_array($storedAttackerUpgrades)) {
@@ -2767,21 +2758,38 @@ class Automation {
                                     continue;
                                 }
                                 $released = $this->trappedTroopSurvivors($prisoner);
+                                $capturedSnapshot = array();
+                                for($i = 1; $i <= 11; $i++) {
+                                    $capturedSnapshot[$i] = max(0,(int)$prisoner['t'.$i]);
+                                }
+                                $releaseCompleted = false;
                                 if($isOwnPrisoner) {
-                                    for($i = 1; $i <= 11; $i++) {
-                                        if($released['units'][$i] > 0) {
-                                            $database->modifyAttack2($data['ref'], $i, $released['units'][$i]);
-                                        }
+                                    $releaseCompleted = $database->mergePrisonersIntoAttackAtomic(
+                                        (int)$prisoner['id'],
+                                        (int)$prisoner['wref'],
+                                        (int)$prisoner['from'],
+                                        (int)$data['ref'],
+                                        $released['units'],
+                                        $capturedSnapshot
+                                    );
+                                    if($releaseCompleted) {
+                                        $mytroops += $released['survived'];
                                     }
-                                    $mytroops += $released['survived'];
                                 } else {
                                     $p_tribe = (int)$database->getUserField($p_owner, "tribe", 0);
-                                    $this->queueFreedPrisonerReturn($prisoner, $p_owner, $p_tribe, $released['units']);
-                                    $anothertroops += $released['survived'];
+                                    $releaseCompleted = $this->queueFreedPrisonerReturn(
+                                        $prisoner,
+                                        $p_owner,
+                                        $p_tribe,
+                                        $released['units']
+                                    );
+                                    if($releaseCompleted) {
+                                        $anothertroops += $released['survived'];
+                                    }
                                 }
-                                $releasedDeaths += $released['dead'];
-                                $database->destroyUsedTraps($data['to'], $released['captured']);
-                                $database->deletePrisoners($prisoner['id']);
+                                if($releaseCompleted) {
+                                    $releasedDeaths += $released['dead'];
+                                }
                             }
                             $trapper_pic = "<img src=\"".GP_LOCATE."img/u/98.gif\" alt=\"Trampa\" title=\"Trampa\" />";
                             $p_username = $database->getUserField($from['owner'], "username", 0);
@@ -3001,7 +3009,7 @@ class Automation {
     private function queueFreedPrisonerReturn($prisoner,$owner,$tribe,$survivors) {
         global $database;
         if(array_sum($survivors) <= 0) {
-            return;
+            return false;
         }
         $trapCoordinates = $database->getCoor($prisoner['wref']);
         $homeCoordinates = $database->getCoor($prisoner['from']);
@@ -3019,7 +3027,7 @@ class Automation {
             }
         }
         if(empty($speeds)) {
-            return;
+            return false;
         }
         $travelTime = $this->procDistanceTime(
             array('x' => $homeCoordinates['x'], 'y' => $homeCoordinates['y']),
@@ -3027,13 +3035,29 @@ class Automation {
             min($speeds),
             1
         );
-        $reference = $database->addAttack(
-            $prisoner['from'],
-            $survivors[1],$survivors[2],$survivors[3],$survivors[4],$survivors[5],
-            $survivors[6],$survivors[7],$survivors[8],$survivors[9],$survivors[10],
-            $survivors[11],3,0,0,0
+        $start = time();
+        return $database->returnPrisonersAtomic(
+            (int)$prisoner['id'],
+            (int)$prisoner['wref'],
+            (int)$prisoner['from'],
+            $survivors,
+            $start,
+            $start + max(1,(int)$travelTime),
+            true,
+            array(
+                1 => max(0,(int)$prisoner['t1']),
+                2 => max(0,(int)$prisoner['t2']),
+                3 => max(0,(int)$prisoner['t3']),
+                4 => max(0,(int)$prisoner['t4']),
+                5 => max(0,(int)$prisoner['t5']),
+                6 => max(0,(int)$prisoner['t6']),
+                7 => max(0,(int)$prisoner['t7']),
+                8 => max(0,(int)$prisoner['t8']),
+                9 => max(0,(int)$prisoner['t9']),
+                10 => max(0,(int)$prisoner['t10']),
+                11 => max(0,(int)$prisoner['t11'])
+            )
         );
-        $database->addMovement(4,$prisoner['wref'],$prisoner['from'],$reference,time(),time() + $travelTime);
     }
 
     private function buildSpyReinforcementSnapshot($enforcement) {
@@ -3744,25 +3768,8 @@ class Automation {
     }
 
     function getAllUnits($base) {
-        global $database;
-        $ownunit = $database->getUnit($base);
-        $enforcementarray = $database->getEnforceVillage($base, 0);
-        if(count($enforcementarray) > 0) {
-            foreach ($enforcementarray as $enforce) {
-                for ($i = 1; $i <= 50; $i++) {
-                    $ownunit['u'.$i] += $enforce['u'.$i];
-                }
-                $ownunit['hero'] += $enforce['hero'];
-            }
-        }
-        $movement = $database->getVillageMovement($base);
-        if(!empty($movement)) {
-            for ($i = 1; $i <= 50; $i++) {
-                $ownunit['u'.$i] += $movement['u'.$i];
-            }
-            $ownunit['hero'] += $movement['hero'];
-        }
-        return $ownunit;
+        global $technology;
+        return $technology->getAllUnits($base);
     }
 
     public function getUpkeep($array, $type, $vid = 0, $prisoners = 0) {

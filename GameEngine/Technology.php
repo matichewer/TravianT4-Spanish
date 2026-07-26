@@ -220,14 +220,34 @@ class Technology {
 		if(count($enforcementarray) > 0) {
 			foreach($enforcementarray as $enforce) {
 				for($i=1;$i<=50;$i++) {
-					$ownunit['u'.$i] += $enforce['u'.$i];
+					$ownunit['u'.$i] = (int)(isset($ownunit['u'.$i]) ? $ownunit['u'.$i] : 0)
+						+ (int)(isset($enforce['u'.$i]) ? $enforce['u'.$i] : 0);
 				}
+				$ownunit['hero'] = (int)(isset($ownunit['hero']) ? $ownunit['hero'] : 0)
+					+ (int)(isset($enforce['hero']) ? $enforce['hero'] : 0);
 			}
 		}
 		$movement = $database->getVillageMovement($base);
 		if(!empty($movement)) {
 			for($i=1;$i<=50;$i++) {
-				$ownunit['u'.$i] += $movement['u'.$i];
+				$ownunit['u'.$i] = (int)(isset($ownunit['u'.$i]) ? $ownunit['u'.$i] : 0)
+					+ (int)(isset($movement['u'.$i]) ? $movement['u'.$i] : 0);
+			}
+			$ownunit['hero'] = (int)(isset($ownunit['hero']) ? $ownunit['hero'] : 0)
+				+ (int)(isset($movement['hero']) ? $movement['hero'] : 0);
+		}
+		$owner = (int)$database->getVillageField($base,'owner');
+		$tribe = (int)$database->getUserField($owner,'tribe',0);
+		if($tribe >= 1 && $tribe <= 5) {
+			$prisoners = $database->getPrisoners3($base);
+			foreach($prisoners as $prisoner) {
+				for($position = 1; $position <= 10; $position++) {
+					$unit = (($tribe - 1) * 10) + $position;
+					$ownunit['u'.$unit] = (int)(isset($ownunit['u'.$unit]) ? $ownunit['u'.$unit] : 0)
+						+ max(0,(int)$prisoner['t'.$position]);
+				}
+				$ownunit['hero'] = (int)(isset($ownunit['hero']) ? $ownunit['hero'] : 0)
+					+ max(0,(int)$prisoner['t11']);
 			}
 		}
 		return $ownunit;
@@ -472,6 +492,9 @@ class Technology {
 		if($isExpansionUnit && ($great || !in_array($fieldType,array(25,26),true) || $fieldLevel < 10)) {
 			return false;
 		}
+		if($unit === 99 && ($great || (int)$session->tribe !== 3 || $fieldType !== 36 || $fieldLevel < 1)) {
+			return false;
+		}
 
 		$lockAcquired = false;
 		if($isExpansionUnit) {
@@ -503,7 +526,7 @@ class Technology {
 				$each = $this->getExpansionUnitTrainingTime($unit,$fieldId);
 			}
 			if(in_array($unit,$trapper,true)) {
-				$each = round(($bid19[$building->getTypeLevel(36)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+				$each = round(($bid19[$fieldLevel]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
 			}
 
 			if($isExpansionUnit) {
@@ -524,8 +547,9 @@ class Technology {
 				}
 				$max = 0;
 				for($i=19;$i<41;$i++) {
-					if($village->resarray['f'.$i.'t'] == 36) {
-						$max += $bid36[$village->resarray['f'.$i]]['attri'] * TRAPPER_CAPACITY;
+					$level = (int)$village->resarray['f'.$i];
+					if((int)$village->resarray['f'.$i.'t'] === 36 && $level > 0 && isset($bid36[$level]['attri'])) {
+						$max += $bid36[$level]['attri'] * TRAPPER_CAPACITY;
 					}
 				}
 				if($max - ($village->unitarray['u99'] + $train_amt) < $amt) {

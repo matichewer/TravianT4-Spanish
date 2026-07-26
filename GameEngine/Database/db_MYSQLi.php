@@ -3334,20 +3334,28 @@
         		$movingunits = array();
         		$outgoingarray = $this->getMovement(3, $id, 0);
         		if(!empty($outgoingarray)) {
-        			foreach($outgoingarray as $out) {
-        				for($i = 1; $i <= 10; $i++) {
-        					$movingunits['u' . (($vtribe - 1) * 10 + $i)] += $out['t' . $i];
-        				}
-        			}
+			foreach($outgoingarray as $out) {
+				for($i = 1; $i <= 10; $i++) {
+					$key = 'u' . (($vtribe - 1) * 10 + $i);
+					$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
+						+ (int)$out['t' . $i];
+				}
+				$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+					+ (int)$out['t11'];
+			}
         		}
         		$returningarray = $this->getMovement(4, $id, 1);
         		if(!empty($returningarray)) {
         			foreach($returningarray as $ret) {
-        				if($ret['attack_type'] != 1) {
-        					for($i = 1; $i <= 10; $i++) {
-        						$movingunits['u' . (($vtribe - 1) * 10 + $i)] += $ret['t' . $i];
-        					}
-        				}
+				if($ret['attack_type'] != 1) {
+					for($i = 1; $i <= 10; $i++) {
+						$key = 'u' . (($vtribe - 1) * 10 + $i);
+						$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
+							+ (int)$ret['t' . $i];
+					}
+					$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+						+ (int)$ret['t11'];
+				}
         			}
         		}
         		$settlerarray = $this->getMovement(5, $id, 0);
@@ -5028,6 +5036,394 @@ break;
 		}
 	}
 
+	function allocateTrapsProportionally($troops,$limit) {
+		$normalized = array();
+		$total = 0;
+		for($i = 1; $i <= 11; $i++) {
+			$normalized[$i] = max(0,(int)(isset($troops[$i]) ? $troops[$i] : 0));
+			$total += $normalized[$i];
+		}
+		$limit = min(max(0,(int)$limit),$total);
+		$allocated = array_fill(1,11,0);
+		if($limit === 0 || $total === 0) {
+			return $allocated;
+		}
+
+		$remainders = array();
+		$assigned = 0;
+		for($i = 1; $i <= 11; $i++) {
+			$product = $normalized[$i] * $limit;
+			$allocated[$i] = (int)floor($product / $total);
+			$assigned += $allocated[$i];
+			$remainders[] = array(
+				'position' => $i,
+				'remainder' => $product % $total,
+				'tie' => mt_rand()
+			);
+		}
+		usort($remainders,function($first,$second) {
+			if($first['remainder'] === $second['remainder']) {
+				return $first['tie'] <=> $second['tie'];
+			}
+			return $second['remainder'] <=> $first['remainder'];
+		});
+		$remaining = $limit - $assigned;
+		foreach($remainders as $candidate) {
+			if($remaining <= 0) {
+				break;
+			}
+			$position = $candidate['position'];
+			if($allocated[$position] < $normalized[$position]) {
+				$allocated[$position]++;
+				$remaining--;
+			}
+		}
+		return $allocated;
+	}
+
+	function capturePrisonersAtomic($wid,$from,$troops,$capacity) {
+		$wid = (int)$wid;
+		$from = (int)$from;
+		$capacity = max(0,(int)$capacity);
+		$empty = array_fill(1,11,0);
+		if($wid <= 0 || $from <= 0 || $capacity <= 0) {
+			return $empty;
+		}
+
+		$locked = mysqli_query(
+			$this->connection,
+			"LOCK TABLES ".TB_PREFIX."units WRITE, ".TB_PREFIX."prisoners WRITE"
+		);
+		if(!$locked) {
+			return $empty;
+		}
+		try {
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT u99,u99o FROM ".TB_PREFIX."units WHERE vref = $wid LIMIT 1"
+			);
+			$traps = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$traps) {
+				return $empty;
+			}
+			$available = min(
+				max(0,(int)$traps['u99'] - (int)$traps['u99o']),
+				max(0,$capacity - (int)$traps['u99o'])
+			);
+			$allocated = $this->allocateTrapsProportionally($troops,$available);
+			$total = array_sum($allocated);
+			if($total <= 0) {
+				return $empty;
+			}
+
+			$occupied = mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."units SET u99o = u99o + $total ".
+				"WHERE vref = $wid AND u99o + $total <= u99 AND u99o + $total <= $capacity"
+			);
+			if(!$occupied || mysqli_affected_rows($this->connection) !== 1) {
+				return $empty;
+			}
+
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT id FROM ".TB_PREFIX."prisoners WHERE wref = $wid AND `from` = $from LIMIT 1"
+			);
+			$existing = $result ? mysqli_fetch_assoc($result) : false;
+			$parts = array();
+			for($i = 1; $i <= 11; $i++) {
+				$parts[] = "t$i = t$i + ".$allocated[$i];
+			}
+			if($existing) {
+				$persisted = mysqli_query(
+					$this->connection,
+					"UPDATE ".TB_PREFIX."prisoners SET ".implode(',',$parts)." WHERE id = ".(int)$existing['id']
+				);
+			} else {
+				$values = array($wid,$from);
+				for($i = 1; $i <= 11; $i++) {
+					$values[] = $allocated[$i];
+				}
+				$persisted = mysqli_query(
+					$this->connection,
+					"INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) ".
+					"VALUES (".implode(',',$values).")"
+				);
+			}
+			if(!$persisted) {
+				mysqli_query(
+					$this->connection,
+					"UPDATE ".TB_PREFIX."units SET u99o = GREATEST(0,u99o - $total) WHERE vref = $wid"
+				);
+				return $empty;
+			}
+			return $allocated;
+		} finally {
+			mysqli_query($this->connection,"UNLOCK TABLES");
+		}
+	}
+
+	function returnPrisonersAtomic($id,$wref,$from,$troops,$start,$endtime,$destroyTraps=false,$expectedCaptured=array()) {
+		$id = (int)$id;
+		$wref = (int)$wref;
+		$from = (int)$from;
+		$start = max(0,(int)$start);
+		$endtime = max($start + 1,(int)$endtime);
+		if($id <= 0 || $wref <= 0 || $from <= 0) {
+			return false;
+		}
+		$returning = array();
+		for($i = 1; $i <= 11; $i++) {
+			$returning[$i] = max(0,(int)(isset($troops[$i]) ? $troops[$i] : 0));
+		}
+		if(array_sum($returning) <= 0) {
+			return false;
+		}
+
+		$locked = mysqli_query(
+			$this->connection,
+			"LOCK TABLES ".TB_PREFIX."prisoners WRITE, ".TB_PREFIX."units WRITE, ".
+			TB_PREFIX."attacks WRITE, ".TB_PREFIX."movement WRITE"
+		);
+		if(!$locked) {
+			return false;
+		}
+		try {
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT * FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from LIMIT 1"
+			);
+			$prisoner = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$prisoner) {
+				return false;
+			}
+			$captured = 0;
+			for($i = 1; $i <= 11; $i++) {
+				$captured += max(0,(int)$prisoner['t'.$i]);
+				$expected = isset($expectedCaptured[$i])
+					? max(0,(int)$expectedCaptured[$i])
+					: ($destroyTraps ? null : $returning[$i]);
+				if($expected !== null && $expected !== max(0,(int)$prisoner['t'.$i])) {
+					return false;
+				}
+			}
+			if($captured <= 0) {
+				return false;
+			}
+
+			$attackValues = array($from);
+			for($i = 1; $i <= 11; $i++) {
+				$attackValues[] = $returning[$i];
+			}
+			$attackValues = array_merge($attackValues,array(3,0,0,0));
+			$attackCreated = mysqli_query(
+				$this->connection,
+				"INSERT INTO ".TB_PREFIX."attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy) ".
+				"VALUES (".implode(',',$attackValues).")"
+			);
+			$attackId = $attackCreated ? (int)mysqli_insert_id($this->connection) : 0;
+			if($attackId <= 0) {
+				return false;
+			}
+			$movementCreated = mysqli_query(
+				$this->connection,
+				"INSERT INTO ".TB_PREFIX."movement (sort_type,`from`,`to`,ref,ref2,data,endtime,proc,send,wood,clay,iron,crop) ".
+				"VALUES (4,$wref,$from,$attackId,0,'$start',$endtime,0,1,0,0,0,0)"
+			);
+			$movementId = $movementCreated ? (int)mysqli_insert_id($this->connection) : 0;
+			if(!$movementCreated || $movementId <= 0) {
+				mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = $attackId");
+				return false;
+			}
+
+			$trapUpdate = $destroyTraps
+				? "u99 = GREATEST(0,u99 - $captured), u99o = GREATEST(0,u99o - $captured)"
+				: "u99o = GREATEST(0,u99o - $captured)";
+			$trapsChanged = mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."units SET $trapUpdate WHERE vref = $wref"
+			);
+			if(!$trapsChanged || mysqli_affected_rows($this->connection) !== 1) {
+				mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."movement WHERE moveid = $movementId");
+				mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = $attackId");
+				return false;
+			}
+
+			$removed = mysqli_query(
+				$this->connection,
+				"DELETE FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from"
+			);
+			if(!$removed || mysqli_affected_rows($this->connection) !== 1) {
+				$restore = $destroyTraps
+					? "u99 = u99 + $captured, u99o = u99o + $captured"
+					: "u99o = u99o + $captured";
+				mysqli_query($this->connection,"UPDATE ".TB_PREFIX."units SET $restore WHERE vref = $wref");
+				mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."movement WHERE moveid = $movementId");
+				mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = $attackId");
+				return false;
+			}
+			return true;
+		} finally {
+			mysqli_query($this->connection,"UNLOCK TABLES");
+		}
+	}
+
+	function mergePrisonersIntoAttackAtomic($id,$wref,$from,$attackId,$survivors,$expectedCaptured=array()) {
+		$id = (int)$id;
+		$wref = (int)$wref;
+		$from = (int)$from;
+		$attackId = (int)$attackId;
+		if($id <= 0 || $wref <= 0 || $from <= 0 || $attackId <= 0) {
+			return false;
+		}
+		$units = array();
+		for($i = 1; $i <= 11; $i++) {
+			$units[$i] = max(0,(int)(isset($survivors[$i]) ? $survivors[$i] : 0));
+		}
+
+		$locked = mysqli_query(
+			$this->connection,
+			"LOCK TABLES ".TB_PREFIX."prisoners WRITE, ".TB_PREFIX."units WRITE, ".TB_PREFIX."attacks WRITE"
+		);
+		if(!$locked) {
+			return false;
+		}
+		try {
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT * FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from LIMIT 1"
+			);
+			$prisoner = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$prisoner) {
+				return false;
+			}
+			$captured = 0;
+			$additions = array();
+			$subtractions = array();
+			for($i = 1; $i <= 11; $i++) {
+				$captured += max(0,(int)$prisoner['t'.$i]);
+				if(isset($expectedCaptured[$i])
+					&& max(0,(int)$expectedCaptured[$i]) !== max(0,(int)$prisoner['t'.$i])) {
+					return false;
+				}
+				$additions[] = "t$i = t$i + ".$units[$i];
+				$subtractions[] = "t$i = GREATEST(0,t$i - ".$units[$i].")";
+			}
+			$attackChanged = mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."attacks SET ".implode(',',$additions)." WHERE id = $attackId"
+			);
+			if(!$attackChanged || mysqli_affected_rows($this->connection) !== 1) {
+				return false;
+			}
+			$trapsChanged = mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."units SET u99 = GREATEST(0,u99 - $captured), ".
+				"u99o = GREATEST(0,u99o - $captured) WHERE vref = $wref"
+			);
+			if(!$trapsChanged || mysqli_affected_rows($this->connection) !== 1) {
+				mysqli_query($this->connection,"UPDATE ".TB_PREFIX."attacks SET ".implode(',',$subtractions)." WHERE id = $attackId");
+				return false;
+			}
+			$removed = mysqli_query(
+				$this->connection,
+				"DELETE FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from"
+			);
+			if(!$removed || mysqli_affected_rows($this->connection) !== 1) {
+				mysqli_query($this->connection,"UPDATE ".TB_PREFIX."units SET u99 = u99 + $captured, u99o = u99o + $captured WHERE vref = $wref");
+				mysqli_query($this->connection,"UPDATE ".TB_PREFIX."attacks SET ".implode(',',$subtractions)." WHERE id = $attackId");
+				return false;
+			}
+			return true;
+		} finally {
+			mysqli_query($this->connection,"UNLOCK TABLES");
+		}
+	}
+
+	function disbandPrisonersAtomic($id,$wref,$from,$owner) {
+		$id = (int)$id;
+		$wref = (int)$wref;
+		$from = (int)$from;
+		$owner = (int)$owner;
+		if($id <= 0 || $wref <= 0 || $from <= 0 || $owner <= 0) {
+			return false;
+		}
+		$locked = mysqli_query(
+			$this->connection,
+			"LOCK TABLES ".TB_PREFIX."prisoners WRITE, ".TB_PREFIX."units WRITE, ".
+			TB_PREFIX."hero WRITE, ".TB_PREFIX."vdata READ"
+		);
+		if(!$locked) {
+			return false;
+		}
+		try {
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT * FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from LIMIT 1"
+			);
+			$prisoner = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$prisoner) {
+				return false;
+			}
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT owner FROM ".TB_PREFIX."vdata WHERE wref = $from LIMIT 1"
+			);
+			$origin = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$origin || (int)$origin['owner'] !== $owner) {
+				return false;
+			}
+			$captured = 0;
+			for($i = 1; $i <= 11; $i++) {
+				$captured += max(0,(int)$prisoner['t'.$i]);
+			}
+			$heroBefore = false;
+			if((int)$prisoner['t11'] > 0) {
+				$result = mysqli_query(
+					$this->connection,
+					"SELECT dead,health FROM ".TB_PREFIX."hero WHERE uid = $owner LIMIT 1"
+				);
+				$heroBefore = $result ? mysqli_fetch_assoc($result) : false;
+				if(!$heroBefore) {
+					return false;
+				}
+			}
+			$trapsChanged = mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."units SET u99o = GREATEST(0,u99o - $captured) WHERE vref = $wref"
+			);
+			if(!$trapsChanged || mysqli_affected_rows($this->connection) !== 1) {
+				return false;
+			}
+			if($heroBefore) {
+				$heroChanged = mysqli_query(
+					$this->connection,
+					"UPDATE ".TB_PREFIX."hero SET dead = 1, health = 0 WHERE uid = $owner"
+				);
+				if(!$heroChanged) {
+					mysqli_query($this->connection,"UPDATE ".TB_PREFIX."units SET u99o = u99o + $captured WHERE vref = $wref");
+					return false;
+				}
+			}
+			$removed = mysqli_query(
+				$this->connection,
+				"DELETE FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref AND `from` = $from"
+			);
+			if(!$removed || mysqli_affected_rows($this->connection) !== 1) {
+				mysqli_query($this->connection,"UPDATE ".TB_PREFIX."units SET u99o = u99o + $captured WHERE vref = $wref");
+				if($heroBefore) {
+					$dead = (int)$heroBefore['dead'];
+					$health = (float)$heroBefore['health'];
+					mysqli_query($this->connection,"UPDATE ".TB_PREFIX."hero SET dead = $dead, health = $health WHERE uid = $owner");
+				}
+				return false;
+			}
+			return true;
+		} finally {
+			mysqli_query($this->connection,"UNLOCK TABLES");
+		}
+	}
+
 	function addPrisoners($wid,$from,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11) {
 		$q = "INSERT INTO " . TB_PREFIX . "prisoners values (0,$wid,$from,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11)";
 		mysqli_query($this->connection,$q);
@@ -5035,7 +5431,7 @@ break;
 	}
 
 	function updatePrisoners($wid,$from,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11) {
-		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wref = $wid and from = $from";
+		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wref = $wid and `from` = $from";
 		return mysqli_query($this->connection,$q) or die(mysqli_error());
 	}
 
@@ -5067,7 +5463,7 @@ break;
 	}
 
 	function getPrisoners2($wid,$from) {
-		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where wref = $wid and from = $from";
+		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where wref = $wid and `from` = $from";
 		$result = mysqli_query($this->connection,$q);
 		return $this->mysqli_fetch_all($result);
 	}
@@ -5080,7 +5476,7 @@ break;
 	}
 
 	function getPrisoners3($from) {
-		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where from = $from";
+		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where `from` = $from";
 		$result = mysqli_query($this->connection,$q);
 		return $this->mysqli_fetch_all($result);
 	}

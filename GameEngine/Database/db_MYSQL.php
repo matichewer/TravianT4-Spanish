@@ -3261,20 +3261,28 @@
         		$movingunits = array();
         		$outgoingarray = $this->getMovement(3, $id, 0);
         		if(!empty($outgoingarray)) {
-        			foreach($outgoingarray as $out) {
-        				for($i = 1; $i <= 10; $i++) {
-        					$movingunits['u' . (($vtribe - 1) * 10 + $i)] += $out['t' . $i];
-        				}
-        			}
+			foreach($outgoingarray as $out) {
+				for($i = 1; $i <= 10; $i++) {
+					$key = 'u' . (($vtribe - 1) * 10 + $i);
+					$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
+						+ (int)$out['t' . $i];
+				}
+				$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+					+ (int)$out['t11'];
+			}
         		}
         		$returningarray = $this->getMovement(4, $id, 1);
         		if(!empty($returningarray)) {
         			foreach($returningarray as $ret) {
-        				if($ret['attack_type'] != 1) {
-        					for($i = 1; $i <= 10; $i++) {
-        						$movingunits['u' . (($vtribe - 1) * 10 + $i)] += $ret['t' . $i];
-        					}
-        				}
+				if($ret['attack_type'] != 1) {
+					for($i = 1; $i <= 10; $i++) {
+						$key = 'u' . (($vtribe - 1) * 10 + $i);
+						$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
+							+ (int)$ret['t' . $i];
+					}
+					$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+						+ (int)$ret['t11'];
+				}
         			}
         		}
         		$settlerarray = $this->getMovement(5, $id, 0);
@@ -4798,7 +4806,7 @@ break;
 	}
 
 	function updatePrisoners($wid,$from,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11) {
-		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wref = $wid and from = $from";
+		$q = "UPDATE " . TB_PREFIX . "prisoners set t1 = t1 + $t1, t2 = t2 + $t2, t3 = t3 + $t3, t4 = t4 + $t4, t5 = t5 + $t5, t6 = t6 + $t6, t7 = t7 + $t7, t8 = t8 + $t8, t9 = t9 + $t9, t10 = t10 + $t10, t11 = t11 + $t11 where wref = $wid and `from` = $from";
 		return mysql_query($q, $this->connection) or die(mysql_error());
 	}
 
@@ -4830,7 +4838,7 @@ break;
 	}
 
 	function getPrisoners2($wid,$from) {
-		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where wref = $wid and from = $from";
+		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where wref = $wid and `from` = $from";
 		$result = mysql_query($q, $this->connection);
 		return $this->mysql_fetch_all($result);
 	}
@@ -4843,7 +4851,7 @@ break;
 	}
 
 	function getPrisoners3($from) {
-		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where from = $from";
+		$q = "SELECT * FROM " . TB_PREFIX . "prisoners where `from` = $from";
 		$result = mysql_query($q, $this->connection);
 		return $this->mysql_fetch_all($result);
 	}
