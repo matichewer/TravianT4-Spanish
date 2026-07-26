@@ -466,6 +466,65 @@ class Automation {
         return round($dist, 1);
     }
 
+    /**
+     * Decides what a successful hero raid does to the attacked oasis. Pure: the
+     * caller reads the state and applies the resulting database changes.
+     *
+     * $village: wref, x, y, mansion (hero's mansion level), oases (already held).
+     * $oasis:   x, y, conqured (holding village, 0 when free), loyalty,
+     *           holder_oases (oases held by the village that owns it).
+     *
+     * A free oasis falls with a single raid; one held by a player needs 1, 2 or 3
+     * raids depending on how many oases its holder has (3 -> 1, 2 -> 2, 1 -> 3).
+     */
+    public function oasisAnnexationOutcome($village, $oasis) {
+        $result = array(
+            'status' => '',
+            'loyalty' => (int)$oasis['loyalty'],
+            'needed_mansion' => (int)$village['oases'] * 5 + 10
+        );
+
+        $worldSize = 2 * WORLD_MAX + 1;
+        $distanceX = abs((int)$oasis['x'] - (int)$village['x']);
+        $distanceY = abs((int)$oasis['y'] - (int)$village['y']);
+        $distanceX = min($distanceX, $worldSize - $distanceX);
+        $distanceY = min($distanceY, $worldSize - $distanceY);
+
+        if($distanceX > 3 || $distanceY > 3) {
+            $result['status'] = 'out_of_range';
+            return $result;
+        }
+        if((int)$oasis['conqured'] !== 0 && (int)$oasis['conqured'] === (int)$village['wref']) {
+            $result['status'] = 'already_owned';
+            return $result;
+        }
+        if((int)$village['oases'] >= 3) {
+            $result['status'] = 'oasis_limit';
+            return $result;
+        }
+        if((int)$village['mansion'] < $result['needed_mansion']) {
+            $result['status'] = 'mansion_too_low';
+            return $result;
+        }
+        if((int)$oasis['conqured'] === 0) {
+            $result['status'] = 'conquered';
+            $result['loyalty'] = 100;
+            return $result;
+        }
+
+        // ceil() so three raids are always enough (100 -> 66 -> 32 -> taken).
+        $loyaltyDamage = (int)ceil(100 / min(3, max(1, 4 - (int)$oasis['holder_oases'])));
+        $loyalty = (int)$oasis['loyalty'] - $loyaltyDamage;
+        if($loyalty <= 0) {
+            $result['status'] = 'conquered';
+            $result['loyalty'] = 100;
+        } else {
+            $result['status'] = 'loyalty_reduced';
+            $result['loyalty'] = $loyalty;
+        }
+        return $result;
+    }
+
     public function getTypeLevel($tid, $vid) {
         global $village, $database;
         $keyholder = array();
@@ -535,7 +594,12 @@ class Automation {
             }
         }
         $array = array();
-        $q = "SELECT * FROM ".TB_PREFIX."odata WHERE loyalty<>100";
+        // Occupied oases regenerate loyalty like villages do, driven by the
+        // residence/palace of the village holding them. odata has no `lastupdate`
+        // column: `lastupdated2` is the loyalty clock here (on free oases the same
+        // column times the animal respawn instead), and it is reset on every
+        // change so the elapsed time never counts twice.
+        $q = "SELECT * FROM ".TB_PREFIX."odata WHERE loyalty < 100 AND conqured <> 0";
         $array = $database->query_return($q);
         if(!empty($array)) {
             foreach ($array as $loyalty) {
@@ -546,8 +610,8 @@ class Automation {
                 } else {
                     $value = 0;
                 }
-                $newloyalty = min(100, $loyalty['loyalty'] + $value * (time() - $loyalty['lastupdate']) * SPEED / (60 * 60));
-                $q = "UPDATE ".TB_PREFIX."odata SET loyalty = $newloyalty WHERE wref = '".$loyalty['wref']."'";
+                $newloyalty = round(min(100, $loyalty['loyalty'] + $value * (time() - $loyalty['lastupdated2']) * SPEED / (60 * 60)));
+                $q = "UPDATE ".TB_PREFIX."odata SET loyalty = $newloyalty, lastupdated2 = ".time()." WHERE wref = '".$loyalty['wref']."'";
                 $database->query($q);
             }
         }
@@ -1341,26 +1405,35 @@ class Automation {
                 $cannotsend = 0;
                 $movements = $database->getMovement("34", $data['to'], 1);
                 for ($y = 0; $y < count($movements); $y++) {
-                    $returntime = $units[$y]['endtime'] - time();
-                    if($units[$y]['sort_type'] == 4 && $units[$y]['from'] != 0 && $returntime <= 10) {
+                    $returntime = $movements[$y]['endtime'] - time();
+                    if($movements[$y]['sort_type'] == 4 && $movements[$y]['from'] != 0 && $returntime <= 10) {
                         $cannotsend = 1;
                     }
                 }
-                if($evasion == 1 && $capital == 1 && $cannotsend == 0 && $data['attack_type'] > 2) {
+                if($evasion == 1 && $capital == 1 && $cannotsend == 0 && $data['attack_type'] > 2 && $targettribe >= 1 && $targettribe <= 5) {
+                    $evade = array_fill(1, 11, 0);
                     $totaltroops = 0;
                     for ($i = 1; $i <= 10; $i++) {
-                        $playerunit += $i;
-                        $data['u'.$i] = $DefenderUnit['u'.$playerunit];
-                        $database->modifyUnit($data['to'], array($playerunit), array($DefenderUnit['u'.$playerunit]), array(0));
-                        $playerunit -= $i;
-                        $totaltroops += $data['u'.$i];
+                        $evade[$i] = (int)$DefenderUnit['u'.($playerunit + $i)];
+                        $totaltroops += $evade[$i];
                     }
-                    $data['u11'] = $DefenderUnit['hero'];
-                    $totaltroops += $data['u11'];
+                    $evade[11] = (int)$DefenderUnit['hero'];
+                    $totaltroops += $evade[11];
                     if($totaltroops > 0) {
-                        $database->modifyUnit($data['to'], array("hero"), array($DefenderUnit['hero']), array(0));
-                        $attackid = $database->addAttack($data['to'], $data['u1'], $data['u2'], $data['u3'], $data['u4'], $data['u5'], $data['u6'], $data['u7'], $data['u8'], $data['u9'], $data['u10'], $data['u11'], 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                        $database->addMovement(4, 0, $data['to'], $attackid, '0,0,0,0,0', time() + (180 / EVASION_SPEED));
+                        for ($i = 1; $i <= 10; $i++) {
+                            if($evade[$i] > 0) {
+                                $database->modifyUnit($data['to'], $playerunit + $i, $evade[$i], 0);
+                            }
+                        }
+                        if($evade[11] > 0) {
+                            $database->modifyUnit($data['to'], "hero", $evade[11], 0);
+                        }
+                        $evasionSpeed = (int)EVASION_SPEED;
+                        if($evasionSpeed < 1) {
+                            $evasionSpeed = 1;
+                        }
+                        $attackid = $database->addAttack($data['to'], $evade[1], $evade[2], $evade[3], $evade[4], $evade[5], $evade[6], $evade[7], $evade[8], $evade[9], $evade[10], $evade[11], 2, 0, 0, 0);
+                        $database->addMovement(4, 0, $data['to'], $attackid, '0,0,0,0,0', time() + (int)round(180 / $evasionSpeed));
                     }
                 }
 
@@ -2330,7 +2403,9 @@ class Automation {
                 $info_cat = $info_chief = $info_ram = ",";
                 $catapultDestroyedVillage = false;
 
-                if($type == '3') {
+                // Oases have neither wall nor buildings: rams and catapults never
+                // do anything there (and $wallid only exists on the village path).
+                if($type == '3' && !$isoasis) {
                     if($rams != '0') {
                         if(isset($empty)) {
                             $info_ram = "".$ram_pic.", There is no wall to destroy.";
@@ -2355,7 +2430,7 @@ class Automation {
                             }
                     }
                 }
-                if($type == '3' && $catp != '0' && $toF['pop'] > 0) {
+                if($type == '3' && !$isoasis && $catp != '0' && $toF['pop'] > 0) {
                     $catapultResolution = $this->resolveCatapultAttacks(
                         $data,
                         $battlepart,
@@ -2471,7 +2546,9 @@ class Automation {
                             $troops_o += $o_unit['hero'];
                         }
 
-                        if($troops_o <= 0) {
+                        // The oasis is annexed only if every defender died and the
+                        // hero came back alive.
+                        if($troops_o <= 0 && $dead11 == 0) {
                             //check hero mansion level
                             $hero_mansion_level = 0;
                             $dbo2 = mysql_query("select * from ".TB_PREFIX."fdata where `vref`='".$data['from']."'");
@@ -2486,27 +2563,58 @@ class Automation {
                             $dbo2 = mysql_query("select * from ".TB_PREFIX."odata where `conqured`='".$data['from']."'");
                             $number_o = mysql_num_rows($dbo2);
 
-                            if($number_o < 3) {
-                                $needed_hero_mansion_level = $number_o * 5 + 10;
-                                if($hero_mansion_level >= $needed_hero_mansion_level) {
-                                    $dbo2 = mysql_query("select * from ".TB_PREFIX."odata where `wref`='".$data['to']."'");
-                                    $dbo = mysql_fetch_array($dbo2);
-                                    $o_owner = $dbo['owner'];
-                                    $o_conqured = $dbo['conqured'];
-                                    $o_loyalty = $dbo['loyalty'];
+                            $dbo2 = mysql_query("select * from ".TB_PREFIX."odata where `wref`='".$data['to']."'");
+                            $dbo = mysql_fetch_array($dbo2);
+                            $o_conqured = $dbo['conqured'];
+                            $o_loyalty = $dbo['loyalty'];
+                            $holder_o = 0;
+                            if($o_conqured != 0) {
+                                $dbo3 = mysql_query("select * from ".TB_PREFIX."odata where `conqured`='".$o_conqured."'");
+                                $holder_o = mysql_num_rows($dbo3);
+                            }
+                            $o_coor = $database->getCoor($data['to']);
+                            $v_coor = $database->getCoor($data['from']);
+
+                            $annexation = $this->oasisAnnexationOutcome(
+                                array(
+                                    'wref' => $data['from'],
+                                    'x' => $v_coor['x'],
+                                    'y' => $v_coor['y'],
+                                    'mansion' => $hero_mansion_level,
+                                    'oases' => $number_o
+                                ),
+                                array(
+                                    'x' => $o_coor['x'],
+                                    'y' => $o_coor['y'],
+                                    'conqured' => $o_conqured,
+                                    'loyalty' => $o_loyalty,
+                                    'holder_oases' => $holder_o
+                                )
+                            );
+
+                            switch($annexation['status']) {
+                                case 'conquered':
                                     $a_uid = $database->getVillageField($data['from'], "owner");
-                                    if($o_conqured == '0' or $o_conqured != $data['from']) {
-                                        mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `lastupdated`='".time()."' WHERE `wref`='".$data['to']."' ");
-                                        mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
-                                        $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
-                                    } elseif($o_conqured == $data['from']) {
-                                        $info_chief = "".$hero_pic.", tu héroe ya había conquistado este oasis.";
-                                    }
-                                } else {
-                                    $info_chief = "".$hero_pic.", necesitas una Mansión del Héroe de nivel ".$needed_hero_mansion_level." para conquistar este oasis.";
-                                }
-                            } else {
-                                $info_chief = "".$hero_pic.", tu héroe ya conquistó 3 oasis.";
+                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".time()."', `lastupdated2`='".time()."' WHERE `wref`='".$data['to']."' ");
+                                    mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
+                                    $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
+                                    break;
+                                case 'loyalty_reduced':
+                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `loyalty`='".$annexation['loyalty']."', `lastupdated2`='".time()."' WHERE `wref`='".$data['to']."' ");
+                                    $info_chief = "".$hero_pic.", la lealtad del oasis bajó de ".round($o_loyalty)."% a ".$annexation['loyalty']."%.";
+                                    break;
+                                case 'already_owned':
+                                    $info_chief = "".$hero_pic.", tu héroe ya había conquistado este oasis.";
+                                    break;
+                                case 'oasis_limit':
+                                    $info_chief = "".$hero_pic.", tu héroe ya conquistó 3 oasis.";
+                                    break;
+                                case 'mansion_too_low':
+                                    $info_chief = "".$hero_pic.", necesitas una Mansión del Héroe de nivel ".$annexation['needed_mansion']." para conquistar este oasis.";
+                                    break;
+                                case 'out_of_range':
+                                    $info_chief = "".$hero_pic.", este oasis está demasiado lejos: solo puedes conquistar oasis a 3 casillas o menos de la aldea.";
+                                    break;
                             }
                         }
                     } else {
@@ -2531,6 +2639,8 @@ class Automation {
 <tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Escondite\">".$cranny."</div></div></td></tr></tbody>";
 
                     } else if($data['spy'] == 2) {
+                        $rptitle = 'Palacio/Residencia';
+                        $rpid = 25; //Use icon for Residence
                         if($isoasis == 0) {
                             $basearray = $database->getMInfo($data['to']);
                             $resarray = $database->getResourceLevel($basearray['wref']);
@@ -2541,33 +2651,33 @@ class Automation {
 
                             for ($j = 19; $j <= 40; $j++) {
                                 if($resarray['f'.$j.'t'] == 25) {
-                                    $rplevel = $database->getFieldLevel($basearray['wref'], $j);
+                                    $rplevel = (int)$resarray['f'.$j];
                                     $rptitle = 'Residencia';
                                     $rpid = 25;
+                                    break;
                                 } elseif($resarray['f'.$j.'t'] == 26) {
-                                    $rplevel = $database->getFieldLevel($basearray['wref'], $j);
+                                    $rplevel = (int)$resarray['f'.$j];
                                     $rptitle = 'Palacio';
                                     $rpid = 26;
-                                } else {
-                                    $rplevel = 0;
-                                    $rptitle = 'Palacio/Residencia';
-                                    $rpid = 25; //Use icon for Residence
+                                    break;
                                 }
                             }
-                            for ($j = 19; $j <= 40; $j++) {
-                                if($resarray['f'.$j.'t'] == 31) {
-                                    $walllevel = $database->getFieldLevel($basearray['wref'], $j);
-                                }
+                            // The wall always sits on field 40, its gid depends on the tribe
+                            // (31 city wall, 32 earth wall, 33 palisade).
+                            if(in_array((int)$resarray['f40t'], array(31, 32, 33), true)) {
+                                $walllevel = (int)$resarray['f40'];
                             }
                             for ($j = 19; $j <= 40; $j++) {
                                 if($resarray['f'.$j.'t'] == 23) {
-                                    $crannylevel = $database->getFieldLevel($basearray['wref'], $j);
+                                    $crannylevel = (int)$resarray['f'.$j];
+                                    break;
                                 }
                             }
                         } else {
                             $crannylevel = 0;
                             $walllevel = 0;
                             $rplevel = 0;
+                            $tribe = 0;
                         }
                         if($tribe == 1) {
                             $walltitle = 'Muralla';
