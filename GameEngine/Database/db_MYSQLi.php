@@ -2960,6 +2960,26 @@
 					return mysqli_query($this->connection,$q);
 				}
 
+				function consumeBookOfWisdom($uid,$itemid) {
+					$uid = (int)$uid;
+					$itemid = (int)$itemid;
+					if($uid<1 || $itemid<1){
+						return false;
+					}
+
+					$q = "UPDATE ".TB_PREFIX."hero AS hero"
+						." INNER JOIN ".TB_PREFIX."heroitems AS item ON item.uid = hero.uid"
+						." SET hero.points = hero.points + hero.power + hero.offBonus + hero.defBonus + hero.product,"
+						." hero.power = 0, hero.offBonus = 0, hero.defBonus = 0, hero.product = 0,"
+						." hero.r0 = 1, hero.r1 = 0, hero.r2 = 0, hero.r3 = 0, hero.r4 = 0,"
+						." item.proc = 1"
+						." WHERE hero.uid = $uid AND hero.dead = 0"
+						." AND item.id = $itemid AND item.uid = $uid"
+						." AND item.btype = 13 AND item.num = 1 AND item.proc = 0";
+					$result = mysqli_query($this->connection,$q);
+					return $result && mysqli_affected_rows($this->connection)>0;
+				}
+
 				function setHeroResourceMode($uid,$mode) {
 					$uid = (int)$uid;
 					$mode = max(0,min(4,(int)$mode));
@@ -4186,32 +4206,68 @@ break;
         		return mysqli_fetch_array($result);
         	}
 
-			function addAuction($owner, $itemid, $btype, $type, $amount) {
-				$time = time()+AUCTIONTIME;
-				if($btype==7 || $btype==8 || $btype==9 || $btype==10 || $btype==11 || $btype==13 || $btype==14){
-					$silver = $amount;
-
-					$itemData = $this->getItemData($itemid);
-					if($amount == $itemData['num']){
-                        $q = "DELETE FROM ".TB_PREFIX."heroitems where id = ".$itemid;
-                        mysqli_query($this->connection, $q);
-						$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$silver', '$time', 0)";
-						//$this->editProcItem($itemid, 1);
-					}else{
-						$this->editHeroNum($itemid, $amount, 0);
-						$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$silver', '$time', 0)";
-						$this->editProcItem($itemid, 0);
+				function addAuction($owner, $itemid, $btype, $type, $amount) {
+					$owner = (int)$owner;
+					$itemid = (int)$itemid;
+					$amount = (int)$amount;
+					if($owner<1 || $itemid<1 || $amount<1 || !$this->acquireAuctionLock()){
+						return false;
 					}
-				}else{
-					$silver = 100;
-                    $q = "DELETE FROM ".TB_PREFIX."heroitems where id = ".$itemid;
-                    mysqli_query($this->connection, $q);
-					$q = "INSERT INTO " . TB_PREFIX . "auction (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`) VALUES ('$owner', '$itemid', '$btype', '$type', '$amount', 0, 0, '$silver', '$silver', '$time', 0)";
-					//$this->editProcItem($itemid, 1);
-				}
 
-        		return mysqli_query($this->connection,$q);
-        	}
+					try {
+						$q = "SELECT * FROM ".TB_PREFIX."heroitems"
+							." WHERE id = $itemid AND uid = $owner AND proc = 0 LIMIT 1";
+						$result = mysqli_query($this->connection,$q);
+						$itemData = $result ? mysqli_fetch_assoc($result) : false;
+						if(!$itemData || $amount>(int)$itemData['num']){
+							return false;
+						}
+
+						$btype = (int)$itemData['btype'];
+						$type = (int)$itemData['type'];
+						$itemAmount = (int)$itemData['num'];
+						$stackable = in_array($btype,array(7,8,9,10,11,13,14),true);
+						if(!$stackable && $amount!==$itemAmount){
+							return false;
+						}
+
+						$removedWholeItem = ($amount===$itemAmount);
+						if($removedWholeItem){
+							$q = "DELETE FROM ".TB_PREFIX."heroitems"
+								." WHERE id = $itemid AND uid = $owner AND proc = 0 AND num = $itemAmount";
+						}else{
+							$q = "UPDATE ".TB_PREFIX."heroitems SET num = num - $amount"
+								." WHERE id = $itemid AND uid = $owner AND proc = 0 AND num = $itemAmount";
+						}
+						$claimed = mysqli_query($this->connection,$q);
+						if(!$claimed || mysqli_affected_rows($this->connection)!==1){
+							return false;
+						}
+
+						$time = time()+AUCTIONTIME;
+						$silver = $stackable ? $amount : 100;
+						$q = "INSERT INTO ".TB_PREFIX."auction"
+							." (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`)"
+							." VALUES ($owner, $itemid, $btype, $type, $amount, 0, 0, $silver, $silver, $time, 0)";
+						$created = mysqli_query($this->connection,$q);
+						if($created){
+							return true;
+						}
+
+						if($removedWholeItem){
+							$this->addHeroItem($owner,$btype,$type,$amount);
+						}else{
+							mysqli_query(
+								$this->connection,
+								"UPDATE ".TB_PREFIX."heroitems SET num = num + $amount"
+									." WHERE id = $itemid AND uid = $owner AND proc = 0"
+							);
+						}
+						return false;
+					} finally {
+						$this->releaseAuctionLock();
+					}
+				}
 
 			function placeAuctionBid($id, $bidder, $maxBid) {
 				$id = (int) $id;
@@ -4388,12 +4444,15 @@ break;
         	}
 
 			function getItemData($id) {
+				$id = (int)$id;
         		$q = "SELECT * FROM " . TB_PREFIX . "heroitems WHERE id = $id";
         		$result = mysqli_query($this->connection,$q);
         		return mysqli_fetch_array($result);
         	}
 
 			function editHeroNum($id, $num, $mode) {
+				$id = (int)$id;
+				$num = max(0,(int)$num);
 				if($mode==0){
         			$q = "UPDATE " . TB_PREFIX . "heroitems set num = num - $num where id = $id and proc = 0";
 				}elseif($mode==1){
@@ -4427,6 +4486,7 @@ break;
         	}
 
 			function editProcItem($id, $mode) {
+				$id = (int)$id;
 				if($mode==0){
         			$q = "UPDATE " . TB_PREFIX . "heroitems set proc = 0 where id = $id";
 				}else{

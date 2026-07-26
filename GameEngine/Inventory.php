@@ -219,6 +219,13 @@ if(!function_exists('unequipHeroBagItem')){
 
 if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	$data = $_POST;
+	$tokenIsValid = isset($data['c']) && is_scalar($data['c'])
+		&& hash_equals((string)$session->mchecker,(string)$data['c']);
+	if(!$tokenIsValid){
+		header("Location: hero_inventory.php");
+		exit;
+	}
+
 	$uid = (int)$session->uid;
 	$heroData = $database->getHeroData($uid);
 	$itemId = isset($data['id']) ? (int)$data['id'] : 0;
@@ -292,10 +299,9 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 		elseif($data['btype']==13){
-			if($database->resetHeroAttributes($uid)){
-				$database->editProcItem($data['id'], 1);
-			}
+			$database->consumeBookOfWisdom($uid,$data['id']);
 			header("Location: hero_inventory.php");
+			exit;
 		}
 
 	elseif($data['btype']==14){

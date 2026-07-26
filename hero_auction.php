@@ -71,16 +71,25 @@ if(isset($_SESSION['auctionBidMessage'])) {
 }
 
 if(isset($_GET['action'], $_GET['abort']) && $_GET['action'] == 'sell') {
-	if(!$database->delAuction((int) $_GET['abort'], (int) $session->uid)) {
+	$tokenIsValid = isset($_GET['c']) && is_scalar($_GET['c'])
+		&& hash_equals((string)$session->mchecker,(string)$_GET['c']);
+	if(!$tokenIsValid || !$database->delAuction((int) $_GET['abort'], (int) $session->uid)) {
 		$bidError = "No se pudo cancelar la subasta. Sólo puedes cancelar una venta propia, vigente y sin ofertas.";
 	}
 }
 $sql = mysql_query("SELECT * FROM ".TB_PREFIX."auction WHERE finish = 0 and owner = '".$session->uid."'");
 $query = mysql_num_rows($sql);
-if($_GET['action']=='sell' && $_POST['a']=='e45'){
-	if($query < 5){
-		$data = $database->getItemData($_POST['id']);
-		$database->addAuction($session->uid, $_POST['id'], $data['btype'], $data['type'], $_POST['amount']);
+if(isset($_GET['action'],$_POST['a']) && $_GET['action']=='sell' && $_POST['a']=='e45'){
+	$tokenIsValid = isset($_POST['c']) && is_scalar($_POST['c'])
+		&& hash_equals((string)$session->mchecker,(string)$_POST['c']);
+	$itemId = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+	$amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
+	if(!$tokenIsValid){
+		$bidError = "La solicitud de venta expiró. Vuelve a intentarlo.";
+	}elseif($query>=5){
+		$bidError = "Ya tienes el máximo de cinco subastas activas.";
+	}elseif(!$database->addAuction((int)$session->uid,$itemId,0,0,$amount)){
+		$bidError = "No se pudo poner el objeto en venta. Comprueba que siga disponible y que la cantidad sea válida.";
 	}
 }
 
@@ -163,4 +172,3 @@ include("Templates/quest.tpl");
 </div>
 </body>
 </html>
-

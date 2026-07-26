@@ -237,10 +237,11 @@ if($inv <= 12){
 <div id="placeHolder"></div>
 <form id="HeroInventory" method="post" action="hero_inventory.php">
 	<input type="hidden" name="a" value="inventory">
-	<input type="hidden" name="id" value="<?php echo $_POST['id']; ?>">
-	<input type="hidden" name="amount" value="<?php echo $_POST['amount']; ?>">
-    <input type="hidden" name="btype" value="<?php echo $_POST['btype']; ?>">
-    <input type="hidden" name="type" value="<?php echo $_POST['type']; ?>">
+	<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
+	<input type="hidden" name="id" value="<?php echo isset($_POST['id']) ? (int)$_POST['id'] : ''; ?>">
+	<input type="hidden" name="amount" value="<?php echo isset($_POST['amount']) ? (int)$_POST['amount'] : ''; ?>">
+    <input type="hidden" name="btype" value="<?php echo isset($_POST['btype']) ? (int)$_POST['btype'] : ''; ?>">
+    <input type="hidden" name="type" value="<?php echo isset($_POST['type']) ? (int)$_POST['type'] : ''; ?>">
 </form>
 <script type="text/javascript">
 	Travian.Game.Hero.Inventory = new (new Class(
@@ -263,7 +264,7 @@ while($row2 = mysql_fetch_array($sql2)){
 $id = $row2["id"];$num = $row2["num"];$btype = $row2["btype"];$type = $row2["type"];
 	if($btype<=10 or $btype==11 or $btype==13){
 		if($hero['dead']==0){
-			if($num==1){
+			if($num==1 && $btype!=13){
 ?>
 	$this.bindItem($('item_<?php echo $id; ?>'), <?php echo $id; ?>, <?php echo $num; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, true);
 <?php		}else{ ?>
