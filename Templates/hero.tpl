@@ -96,7 +96,7 @@ ob_start();
 
 		<div class="clear"></div>
 
-	  <div class="attribute productionPoints tooltip" title="El héroe también recolecta recursos, cuanto más alto el nivel, más recursos.<br><font color='#5dcbfb'>Bonificación de recursos: <?php echo $selectedResourceRate; ?></font>">
+	  <div class="attribute productionPoints tooltip" title="El héroe recolecta recursos de forma continua. Cuantos más puntos asignes, mayor será la producción.<br><font color='#5dcbfb'>Bonificación actual: +<?php echo $selectedResourceRate; ?>/h</font>">
 				<div class="element attribName">Recursos</div>
 				<div class="element current power"><?php echo $productPoints; ?></div>
 				<div class="element progress">
@@ -116,41 +116,42 @@ ob_start();
   </div>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     <div class="attribute res" id="setResource">
-		<div class="changeResourcesHeadline">Cambiar la producción de recursos de tu héroe</div>
+		<div class="changeResourcesHeadline">Distribuir la producción de recursos del héroe</div>
+		<div class="heroResourceExplanation">Bonificación por hora: se acumula desde el momento del cambio y no entrega recursos al instante. Al elegir un recurso, su valor reemplaza el bono de «Todos los recursos»; no se suma encima.</div>
 		<div class="clear"></div>
 		<div class="resource">
 		  <input type="radio" onclick="window.location.href = '?product=r0';" name="resource" value="0" id="resourceHero0" <?php if($hero['r0']!=0){ echo $checked="checked"; } ?>>
 			<label for="resourceHero0">
 					<img title="Todos los recursos" class="r0" src="img/x.gif">
-	                <span class="current"> <?php echo $allResourceRate; ?></span>
+	                <span class="current">+<?php echo $allResourceRate; ?>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r1';" name="resource" value="1" id="resourceHero1" <?php if($hero['r1']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',1); ?>>
 			<label for="resourceHero1">
 					<img title="Madera" class="r1" src="img/x.gif">
-	                <span class="current"> <?php echo $focusedResourceRate; ?></span>
+	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r2';" name="resource" value="2" id="resourceHero2" <?php if($hero['r2']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',2); ?>>
 			<label for="resourceHero2">
 					<img title="Barro" class="r2" src="img/x.gif">
-	                <span class="current"> <?php echo $focusedResourceRate; ?></span>
+	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r3';" name="resource" value="3" id="resourceHero3" <?php if($hero['r3']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',3); ?>>
 			<label for="resourceHero3">
 					<img title="Hierro" class="r3" src="img/x.gif">
-	                <span class="current"> <?php echo $focusedResourceRate; ?></span>
+	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r4';" name="resource" value="4" id="resourceHero4" <?php if($hero['r4']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',4); ?>>
 			<label for="resourceHero4">
 					<img title="Cereal" class="r4" src="img/x.gif">
-	                <span class="current"> <?php echo $focusedResourceRate; ?></span>
+	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
 			</label>
 		</div>
 			</div>
