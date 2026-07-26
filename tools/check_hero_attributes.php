@@ -141,4 +141,79 @@ heroAttributeAssert(
 	'Attribute reset did not restore all-resource mode'
 );
 
+$temporaryHeroItemsTable = TB_PREFIX.'heroitems';
+$qualifiedHeroItemsTable = SQL_DB.'.'.TB_PREFIX.'heroitems';
+heroAttributeAssert(
+	mysqli_query($database->connection,"CREATE TEMPORARY TABLE $temporaryHeroItemsTable AS SELECT * FROM $qualifiedHeroItemsTable WHERE 0"),
+	'Could not create temporary hero-item table'
+);
+
+$temporaryAuctionTable = TB_PREFIX.'auction';
+$qualifiedAuctionTable = SQL_DB.'.'.TB_PREFIX.'auction';
+heroAttributeAssert(
+	mysqli_query($database->connection,"CREATE TEMPORARY TABLE $temporaryAuctionTable AS SELECT * FROM $qualifiedAuctionTable WHERE 0"),
+	'Could not create temporary auction table'
+);
+
+$bookResetState = "UPDATE $temporaryHeroTable SET points=10,power=10,offBonus=5,defBonus=5,product=10,"
+	."dead=0,r0=0,r1=1,r2=0,r3=0,r4=0 WHERE uid=900001";
+heroAttributeAssert(mysqli_query($database->connection,$bookResetState),'Could not prepare Book of Wisdom state');
+heroAttributeAssert(
+	mysqli_query(
+		$database->connection,
+		"INSERT INTO $temporaryHeroItemsTable (id,uid,btype,type,num,proc) VALUES (1,900001,13,110,1,0)"
+	),
+	'Could not create Book of Wisdom'
+);
+heroAttributeAssert($database->consumeBookOfWisdom(900001,1),'Book of Wisdom was not consumed');
+$state = $database->getHeroData(900001);
+$book = $database->getItemData(1);
+heroAttributeAssert((int)$state['points']===40,'Book of Wisdom did not preserve all points');
+heroAttributeAssert(
+	(int)$state['power']===0 && (int)$state['offBonus']===0 && (int)$state['defBonus']===0 && (int)$state['product']===0,
+	'Book of Wisdom did not clear allocated attributes'
+);
+heroAttributeAssert((int)$book['proc']===1,'Book of Wisdom was not marked as consumed');
+heroAttributeAssert(!$database->consumeBookOfWisdom(900001,1),'Consumed Book of Wisdom was reused');
+
+$deadHeroState = "UPDATE $temporaryHeroTable SET points=10,power=10,offBonus=5,defBonus=5,product=10,"
+	."dead=1,r0=0,r1=1,r2=0,r3=0,r4=0 WHERE uid=900001";
+heroAttributeAssert(mysqli_query($database->connection,$deadHeroState),'Could not prepare dead hero state');
+heroAttributeAssert(
+	mysqli_query(
+		$database->connection,
+		"INSERT INTO $temporaryHeroItemsTable (id,uid,btype,type,num,proc) VALUES (2,900001,13,110,1,0)"
+	),
+	'Could not create dead-hero Book of Wisdom'
+);
+heroAttributeAssert(!$database->consumeBookOfWisdom(900001,2),'Dead hero used a Book of Wisdom');
+$state = $database->getHeroData(900001);
+$book = $database->getItemData(2);
+heroAttributeAssert((int)$state['points']===10 && (int)$state['power']===10,'Rejected Book use changed dead hero state');
+heroAttributeAssert((int)$book['proc']===0,'Rejected Book use consumed the item');
+
+heroAttributeAssert(
+	mysqli_query(
+		$database->connection,
+		"INSERT INTO $temporaryHeroItemsTable (id,uid,btype,type,num,proc) VALUES"
+			." (3,900002,13,110,1,0),(4,900001,13,110,1,0)"
+	),
+	'Could not create auction security items'
+);
+heroAttributeAssert(!$database->addAuction(900001,3,13,110,1),'Auction accepted another user\'s item');
+heroAttributeAssert((int)$database->getItemData(3)['uid']===900002,'Rejected auction removed another user\'s item');
+heroAttributeAssert(!$database->addAuction(900001,4,13,110,-1),'Auction accepted a negative amount');
+heroAttributeAssert((int)$database->getItemData(4)['num']===1,'Negative auction amount changed item quantity');
+heroAttributeAssert($database->addAuction(900001,4,0,0,1),'Valid Book of Wisdom auction was rejected');
+heroAttributeAssert(!$database->getItemData(4),'Auctioned Book of Wisdom remained in inventory');
+$auctionResult = mysqli_query(
+	$database->connection,
+	"SELECT owner,btype,type,num FROM $temporaryAuctionTable WHERE owner=900001 LIMIT 1"
+);
+$auction = $auctionResult ? mysqli_fetch_assoc($auctionResult) : false;
+heroAttributeAssert(
+	$auction && (int)$auction['btype']===13 && (int)$auction['type']===110 && (int)$auction['num']===1,
+	'Auction did not derive Book of Wisdom data from the owned item'
+);
+
 echo "Hero attribute regression: OK\n";

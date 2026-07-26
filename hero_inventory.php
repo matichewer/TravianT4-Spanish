@@ -215,11 +215,7 @@ include "Templates/Auction/alt.tpl";
 }
 	echo $outputList;
 	
-if($inv <= 12){
-	for($i=$inv;$i<=((12+$inv)-$inv);$i++){
-		echo '<div id="inventory_'.$i.'" class="inventory draggable"></div>';
-	}
-}else{
+for($i=$inv;$i<=12;$i++){
 	echo '<div id="inventory_'.$i.'" class="inventory draggable"></div>';
 }
 ?>

@@ -1,4 +1,5 @@
 ﻿<div id="auction">
+<span class="error"><?php echo htmlspecialchars((string)$bidError,ENT_QUOTES,'UTF-8'); ?></span>
 <div class="silverAmount">
 <div id="filter">
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">		<div class="wrapper">
@@ -30,7 +31,7 @@ include "Templates/Auction/alt.tpl";
     if($bids!=0){
     $outputList .= "<tr><td class=\"delete\"><img class=\"del inactive\" src=\"img/x.gif\" title=\"Cancelar\"></td><td class=\"icon\"><img class=\"itemCategory itemCategory_".$typeArray[$btype]."\" src=\"img/x.gif\" title=\"".$title."\"></td>";
     }else{
-    $outputList .= "<tr><td class=\"delete\"><a href=\"?action=sell&abort=".$id."\"><img class=\"del\" src=\"img/x.gif\" title=\"Cancelar\"></a></td><td class=\"icon\"><img class=\"itemCategory itemCategory_".$typeArray[$btype]."\" src=\"img/x.gif\" title=\"".$title."\"></td>";
+    $outputList .= "<tr><td class=\"delete\"><a href=\"?action=sell&amp;abort=".$id."&amp;c=".rawurlencode((string)$session->mchecker)."\"><img class=\"del\" src=\"img/x.gif\" title=\"Cancelar\"></a></td><td class=\"icon\"><img class=\"itemCategory itemCategory_".$typeArray[$btype]."\" src=\"img/x.gif\" title=\"".$title."\"></td>";
     }
 
 	$outputList .= "<td class=\"name\">".$num." x ".$name."</td>";
@@ -288,8 +289,9 @@ include "Templates/Auction/alt.tpl";
 </div>
 <form id="sellForm" method="post" action="hero_auction.php?action=sell">
 	<input type="hidden" name="a" value="e45">
-	<input type="hidden" name="id" value="<?php echo $_POST['id']; ?>">
-	<input type="hidden" name="amount" value="<?php echo $_POST['amount']; ?>">
+	<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
+	<input type="hidden" name="id" value="<?php echo isset($_POST['id']) ? (int)$_POST['id'] : ''; ?>">
+	<input type="hidden" name="amount" value="<?php echo isset($_POST['amount']) ? (int)$_POST['amount'] : ''; ?>">
 </form>
 <script type="text/javascript">
 	Travian.Game.HeroAuction = new (new Class(

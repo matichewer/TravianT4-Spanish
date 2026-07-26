@@ -299,14 +299,26 @@ class Units {
 
 			}
                   }else{
-                      
+
+                // Oases can only be raided (the radios in search.tpl are disabled
+                // client side, so anything else here is a tampered request), and
+                // only an oasis already held by a player can be reinforced.
+                $oasisConquered = (int)$database->getOasisField($id,"conqured");
+                $attackType = isset($post['c']) ? (int)$post['c'] : 0;
+                if($attackType === 3) {
+                    $form->addError("error","Los oasis solo pueden ser saqueados, no atacados normalmente.");
+                }
+                if($attackType === 2 && $oasisConquered === 0) {
+                    $form->addError("error","No puedes reforzar un oasis sin ocupar.");
+                }
+
                       if($form->returnErrors() > 0) {
                     $_SESSION['errorarray'] = $form->getErrors();
                     $_SESSION['valuearray'] = $_POST;
-                    header("Location: a2b.php");        
-                }else{                
+                    header("Location: a2b.php");
+                }else{
 
-                $villageName = "Oasis sin ocupar";
+                $villageName = $oasisConquered !== 0 ? $database->getOasisField($id,"name") : "Oasis sin ocupar";
                 $speed= 300;
                 $timetaken = $generator->procDistanceTime($coor,$village->coor,INCREASE_SPEED,1);                                
                 array_push($post, "$id", "$villageName", "3","$timetaken");
@@ -353,6 +365,16 @@ class Units {
                                 $form->addError("error","No puedes enviar una cantidad negativa de unidades.");
                                 //break;
                             }
+				// Same oasis rules as in loadUnits(): the stored order is checked
+				// again here so a hand crafted confirmation cannot bypass them.
+				if($database->isVillageOases($data['to_vid']) != 0) {
+					if((int)$data['type'] === 3) {
+						$form->addError("error","Los oasis solo pueden ser saqueados, no atacados normalmente.");
+					}
+					if((int)$data['type'] === 2 && (int)$database->getOasisField($data['to_vid'],"conqured") === 0) {
+						$form->addError("error","No puedes reforzar un oasis sin ocupar.");
+					}
+				}
 				if($form->returnErrors() > 0) {
 					$_SESSION['errorarray'] = $form->getErrors();
 					$_SESSION['valuearray'] = $_POST;

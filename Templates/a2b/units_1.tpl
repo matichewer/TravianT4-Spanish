@@ -14,12 +14,6 @@ if(isset($_GET['bid'])) {
     $U8 = $dataarray['10'];
     $U9 = $dataarray['11'];
     $U10 = $dataarray['12'];
-    $too = $database->getOasisField($dataarray['1'],"conqured");
-    if($too['conqured'] == 0){$disabledr ="disabled=disabled";}else{
-    $disabledr ="";
-    }
-    $disabled ="disabled=disabled";
-    $checked  ="checked=checked";
 }
 ?>
 <form method="POST" name="snd" action="a2b.php">

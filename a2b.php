@@ -28,13 +28,21 @@ $building->procBuild($_GET);
 if(isset($_GET['id'])) {
 	$id = $_GET['id'];
 }
+// Attack type radios in Templates/a2b/search.tpl: only oases restrict them
+// (raid only, and no reinforcement while the oasis is still unoccupied).
+$disabled = $disabledr = $checked = "";
 if(isset($_GET['bid'])) {
 	$bid = $_GET['bid'];
-	if($too['conqured'] == 0){$disabledr ="disabled=disabled";}else{
-    $disabledr ="";
-    }
-	$disabled ="disabled=disabled";
-    $checked  ="checked=checked";
+	// Report data is a CSV; index 31 holds the attacked village/oasis wref.
+	$reportdata = explode(",",$database->getNoticeData($bid));
+	$reporttarget = isset($reportdata[31]) ? (int)$reportdata[31] : 0;
+	if($reporttarget > 0 && $database->isVillageOases($reporttarget) != 0) {
+		if($database->getOasisField($reporttarget,"conqured") == 0){$disabledr ="disabled=disabled";}else{
+	$disabledr ="";
+	}
+		$disabled ="disabled=disabled";
+	$checked  ="checked=checked";
+	}
 }
 if(isset($_GET['w'])) {
 	$w = $_GET['w'];
