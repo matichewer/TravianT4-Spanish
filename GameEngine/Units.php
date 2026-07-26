@@ -5,6 +5,26 @@ class Units {
 
 	public $sending,$recieving,$return = array();
 
+	private function normalizeCatapultTarget($value, $allowSecondRandom = false) {
+		if(!is_scalar($value) || !is_numeric($value)) {
+			return 0;
+		}
+
+		$target = (int)$value;
+		if($allowSecondRandom && $target === 99) {
+			return 99;
+		}
+
+		$allowedTargets = array(
+			0,
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+			14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+			25, 26, 27, 28, 29, 30, 34, 35, 36, 37, 38,
+			39, 40, 41, 42
+		);
+		return in_array($target, $allowedTargets, true) ? $target : 0;
+	}
+
 	public function procUnits($post) {
 		if(isset($post['c'])) {
 			switch($post['c']) {
@@ -88,6 +108,95 @@ class Units {
 		header("Location: build.php?id=39");
 		exit;
 	}
+
+	public function managePrisoners($post) {
+		global $database, $village, $session;
+
+		$status = 'invalid';
+		$tokenIsValid = isset($post['c']) && is_scalar($post['c'])
+			&& hash_equals((string)$session->mchecker,(string)$post['c']);
+		$prisonerId = isset($post['prisoner_id']) && ctype_digit((string)$post['prisoner_id'])
+			? (int)$post['prisoner_id']
+			: 0;
+		$operation = isset($post['operation']) && is_scalar($post['operation'])
+			? (string)$post['operation']
+			: '';
+
+		if($tokenIsValid && $prisonerId > 0 && in_array($operation,array('release','disband'),true)) {
+			$prisoner = $database->getPrisonersByID($prisonerId);
+			if($prisoner) {
+				$trapOwner = (int)$database->getVillageField((int)$prisoner['wref'],'owner');
+				$troopOwner = (int)$database->getVillageField((int)$prisoner['from'],'owner');
+				$authorized = $operation === 'release'
+					? $trapOwner === (int)$session->uid && (int)$prisoner['wref'] === (int)$village->wid
+					: $troopOwner === (int)$session->uid && (int)$prisoner['from'] === (int)$village->wid;
+
+				if($authorized && $database->claimPrisoners($prisonerId,(int)$prisoner['wref'],(int)$prisoner['from'])) {
+					$total = 0;
+					for($i = 1; $i <= 11; $i++) {
+						$total += max(0, (int)$prisoner['t'.$i]);
+					}
+					$database->freeUsedTraps((int)$prisoner['wref'],$total);
+					if($operation === 'release') {
+						$status = $this->queuePrisonerReturn($prisoner,$troopOwner) ? 'released' : 'failed';
+					} else {
+						if((int)$prisoner['t11'] > 0) {
+							$database->modifyHero2('dead',1,$troopOwner,0);
+							$database->modifyHero2('health',0,$troopOwner,0);
+						}
+						$status = 'disbanded';
+					}
+				}
+			}
+		}
+
+		$_SESSION['prisoner_status'] = $status;
+		header("Location: build.php?gid=16");
+		exit;
+	}
+
+	private function queuePrisonerReturn($prisoner,$owner) {
+		global $database, $generator;
+
+		$owner = (int)$owner;
+		$tribe = (int)$database->getUserField($owner,'tribe',0);
+		if($tribe < 1 || $tribe > 5) {
+			return false;
+		}
+		$speeds = array();
+		for($position = 1; $position <= 10; $position++) {
+			if((int)$prisoner['t'.$position] > 0) {
+				$unit = $GLOBALS['u'.(($tribe - 1) * 10 + $position)];
+				$speeds[] = max(1, (float)$unit['speed']);
+			}
+		}
+		if((int)$prisoner['t11'] > 0) {
+			$hero = $database->getHeroData($owner);
+			$speeds[] = is_array($hero) && !empty($hero['speed']) ? max(1, (float)$hero['speed']) : 6;
+		}
+		if(empty($speeds)) {
+			return false;
+		}
+		$trapCoordinates = $database->getCoor((int)$prisoner['wref']);
+		$homeCoordinates = $database->getCoor((int)$prisoner['from']);
+		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1));
+		$reference = $database->addAttack(
+			(int)$prisoner['from'],
+			(int)$prisoner['t1'],(int)$prisoner['t2'],(int)$prisoner['t3'],
+			(int)$prisoner['t4'],(int)$prisoner['t5'],(int)$prisoner['t6'],
+			(int)$prisoner['t7'],(int)$prisoner['t8'],(int)$prisoner['t9'],
+			(int)$prisoner['t10'],(int)$prisoner['t11'],3,0,0,0
+		);
+		return $reference > 0 && $database->addMovement(
+			4,
+			(int)$prisoner['wref'],
+			(int)$prisoner['from'],
+			$reference,
+			time(),
+			time() + $travelTime
+		);
+	}
+
 	private function loadUnits($post) {
 		global $database,$village,$session,$generator,$logging,$form;
 				// Busqueda por nombre de pueblo
@@ -208,7 +317,7 @@ class Units {
 
 	}
 	private function sendTroops($post) {
-		global $form, $database, $village, $generator, $session;
+		global $form, $database, $village, $generator, $session, $building, $battle;
 
 		$data = $database->getA2b($post['timestamp_checksum'], $post['timestamp']);
 
@@ -294,21 +403,29 @@ class Units {
 				if($data['u'.$i] != '' && $data['u'.$i] > 0){
 					if($unitarray) { reset($unitarray); }
 					$unitarray = $GLOBALS["u".(($session->tribe-1)*10+$i)];
-					$speeds[] = $unitarray['speed'];
+					$speeds[] = max(1, (int)$unitarray['speed']);
                 }
 			}
 		}
 		if (isset($data['u11'])) {
 			if($data['u11'] != '' && $data['u11'] > 0){
 				$heroarray = $database->getHeroData($session->uid);
-				$speeds[] = $heroarray['speed'];
+				$speeds[] = max(1, (int)$heroarray['speed']);
 			}
 		}
 
-		$time = $generator->procDistanceTime($from,$to,min($speeds),1);
+		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1);
 		$sentAt = time();
-        if (isset($post['ctar1'])){$post['ctar1'] = $post['ctar1'];}else{ $post['ctar1'] = 0;}
-        if (isset($post['ctar2'])){$post['ctar2'] = $post['ctar2'];}else{ $post['ctar2'] = 0;}  
+		$catapultUnit = $battle->getTribeCatapultUnit((int)$session->tribe);
+		$hasCatapults = $catapultUnit > 0
+			&& isset($data['u8']) && (int)$data['u8'] > 0
+			&& isset($data['type']) && (int)$data['type'] === 3;
+		$post['ctar1'] = $hasCatapults
+			? $this->normalizeCatapultTarget(isset($post['ctar1']) ? $post['ctar1'] : 0)
+			: 0;
+		$post['ctar2'] = $hasCatapults && $building->getTypeLevel(16) >= 20
+			? $this->normalizeCatapultTarget(isset($post['ctar2']) ? $post['ctar2'] : 0, true)
+			: 0;
         if (isset($post['spy'])){$post['spy'] = $post['spy'];}else{ $post['spy'] = 0;} 
 		$abdata = $database->getABTech($village->wid);
 		$reference = $database->addAttack(($village->wid),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$post['ctar1'],$post['ctar2'],$post['spy'],$abdata['b1'],$abdata['b2'],$abdata['b3'],$abdata['b4'],$abdata['b5'],$abdata['b6'],$abdata['b7'],$abdata['b8']);
@@ -430,17 +547,28 @@ class Units {
 				$this->redirectToRallyPoint();
 			}
 			$session->changeChecker();
+			if(!$database->acquireSettlementLock($session->uid,5)) {
+				$this->redirectToRallyPoint();
+			}
+			try {
+				$this->queueSettlement($target);
+			} finally {
+				$database->releaseSettlementLock($session->uid);
+			}
+			$this->redirectToRallyPoint();
+		}
+
+		private function queueSettlement($target) {
+			global $building, $database, $generator, $village, $session;
 
 			$targetInfo = $database->getMInfo($target);
 			if(!is_array($targetInfo) || (int)$targetInfo['occupied'] !== 0 || (int)$targetInfo['oasistype'] !== 0 || (int)$targetInfo['fieldtype'] <= 0) {
-				$this->redirectToRallyPoint();
+				return false;
 			}
 
 			$outgoingSettlers = $database->getMovement(5,$village->wid,0);
-			foreach($outgoingSettlers as $movement) {
-				if((int)$movement['to'] === $target) {
-					$this->redirectToRallyPoint();
-				}
+			if($database->getPendingSettlementCountByOwner($session->uid,0,$target) > 0) {
+				return false;
 			}
 			$residenceLevel = (int)$building->getTypeLevel(25);
 			$palaceLevel = (int)$building->getTypeLevel(26);
@@ -459,32 +587,33 @@ class Units {
 				}
 			}
 			if($unlockedSlots <= $usedSlots + count($outgoingSettlers)) {
-				$this->redirectToRallyPoint();
+				return false;
 			}
 
-			$total = count($database->getVillagesID($session->uid)) + count($outgoingSettlers);
-			$needCps = travianCultureRequiredForVillageCount($total + 1,CP);
 			$cps = (int)$database->getUserField($session->uid,'cp',0);
+			$ownedVillages = count($database->getVillagesID($session->uid));
+			$pendingSettlements = $database->getPendingSettlementCountByOwner($session->uid);
+			$cultureEligibility = travianCultureExpansionEligibility($cps,$ownedVillages,$pendingSettlements,CP);
 			$unit = (int)$session->tribe * 10;
 			$units = $database->getUnit($village->wid);
-			if($needCps === null || $cps < $needCps || !is_array($units) || (int)$units['u'.$unit] < 3) {
-				$this->redirectToRallyPoint();
+			if(!$cultureEligibility['eligible'] || !is_array($units) || (int)$units['u'.$unit] < 3) {
+				return false;
 			}
 
 			$targetCoor = array('x'=>$targetInfo['x'],'y'=>$targetInfo['y']);
 			$travelTime = $generator->procDistanceTime($village->coor,$targetCoor,300,0);
 			if($travelTime <= 0 || !$database->deductResourcesIfAvailable($village->wid,750,750,750,750)) {
-				$this->redirectToRallyPoint();
+				return false;
 			}
 			if(!$database->deductUnitIfAvailable($village->wid,$unit,3)) {
 				$database->modifyResource($village->wid,750,750,750,750,1);
-				$this->redirectToRallyPoint();
+				return false;
 			}
-			if(!$database->addMovement(5,$village->wid,$target,0,0,time()+$travelTime)) {
-				$database->modifyUnit($village->wid,$unit,3,1);
-				$database->modifyResource($village->wid,750,750,750,750,1);
+			if(!$database->addMovement(5,$village->wid,$target,0,$session->uid,time()+$travelTime)) {
+				$database->refundFoundingAssets($village->wid,$session->uid,$unit);
+				return false;
 			}
-			$this->redirectToRallyPoint();
+			return true;
 		}
 
 		public function Adventures($post) {
