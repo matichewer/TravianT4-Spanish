@@ -162,7 +162,7 @@ while($row = mysql_fetch_array($sql2)){
     if($owner <= 1) {
     $outputList .= "<td class=\"send\"><a><u>".$database->getUserField($target,'username',0)."</u></a></td><td class=\"dat\">".$date[0]." ".$date[1]."</td>";
     }else {
-    $outputList .= "<td class=\"send\"><a href=\"spieler.php?uid=".$owner."\">".$database->getUserField($target,'username',0)."</a></td><td class=\"dat\">".$date[0]." ".date('H:i',$time)."</td>";
+    $outputList .= "<td class=\"send\"><a href=\"spieler.php?uid=".$target."\">".$database->getUserField($target,'username',0)."</a></td><td class=\"dat\">".$date[0]." ".date('H:i',$time)."</td>";
     }
 
 	$name++;
