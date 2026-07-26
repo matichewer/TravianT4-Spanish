@@ -194,7 +194,11 @@ $end = ($tribe*10);
     <?php } ?>
                 
 
-        <?php if(isset($kata) AND $process['c']!='2'){?>
+        <?php
+        $catapultUnitId = $battle->getTribeCatapultUnit((int)$session->tribe);
+        $hasCatapultArmy = $catapultUnitId > 0 && (int)$t8 > 0;
+        if($hasCatapultArmy && $process['c'] != '2'){
+        ?>
 
             <?php if($process['c']=='3'){ ?><tbody class="cata">
                 <tr>
@@ -205,7 +209,7 @@ $end = ($tribe*10);
                             <option value="0">Aleatorio</option>
                             <?php if($building->getTypeLevel(16) >= 5) { ?>
                 			<optgroup label="Recursos">
-                                <option value="1">Aserradero</option>
+                                <option value="1">Leñador</option>
                                 <option value="2">Excavación de barro</option>
                                 <option value="3">Mina de hierro</option>
                                 <option value="4">Campo de cereal</option>
@@ -254,10 +258,10 @@ $end = ($tribe*10);
             <?php if($building->getTypeLevel(16) == 20) { ?>
                      <select name="ctar2" class="dropdown">
                 <option value="0">-</option>
-                <option value="0">Aleatorio</option>
+                <option value="99">Aleatorio</option>
                             <?php if($building->getTypeLevel(16) >= 5) { ?>
                             <optgroup label="Recursos">
-                                <option value="1">aserradero</option>
+                                <option value="1">leñador</option>
                                 <option value="2">excavación de barro</option>
                                 <option value="3">mina de hierro</option>
                                 <option value="4">campo de cereal</option>
