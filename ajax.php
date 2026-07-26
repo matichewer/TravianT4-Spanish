@@ -9,7 +9,7 @@ if($_GET){
 	}
 
 	$renderBbPreview = function() use ($bbPreviewBufferLevel, $bbPreviewText) {
-		global $database, $generator;
+		global $database, $generator, $session;
 
 		$input = htmlspecialchars($bbPreviewText, ENT_QUOTES, 'UTF-8');
 		$input = preg_replace_callback('/\[report([0-9]+)\](.*?)\[\/report\\1\]/is', function($matches) {

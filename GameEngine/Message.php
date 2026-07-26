@@ -83,18 +83,14 @@
 				}
 				if(isset($get['id'])) {
 					$noticeId = (int)$get['id'];
-					$this->readingNotice = $this->getReadNotice($noticeId);
-
-					if(empty($this->readingNotice)) {
-						$sharedNotices = $database->getNotice4($noticeId);
-						$isAllianceReport = isset($sharedNotices[0])
-							&& $session->alliance > 0
-							&& (int)$sharedNotices[0]['ally'] === (int)$session->alliance;
-						$isMessageReport = isset($sharedNotices[0])
-							&& $database->hasSharedReportMessage($session->uid, $noticeId);
-						if($isAllianceReport || $isMessageReport) {
-							$this->readingNotice = $sharedNotices[0];
-						}
+					$authorizedNotice = $database->getAuthorizedNotice(
+						$session->uid,
+						$session->alliance,
+						$noticeId
+					);
+					$this->readingNotice = $authorizedNotice ? $authorizedNotice : array();
+					if($authorizedNotice && (int)$authorizedNotice['uid'] === (int)$session->uid) {
+						$database->noticeViewed($noticeId, $session->uid);
 					}
 				}
 			}
@@ -251,13 +247,13 @@
         		header("Location: nachrichten.php");
         	}
 
-        	private function removeNotice($post) {
-        		global $database;
-        		for($i = 1; $i <= 10; $i++) {
-        			if(isset($post['n' . $i])) {
-        				$database->removeNotice($post['n' . $i]);
-        			}
-        		}
+			private function removeNotice($post) {
+				global $database, $session;
+				for($i = 1; $i <= 10; $i++) {
+					if(isset($post['n' . $i])) {
+						$database->removeNotice($post['n' . $i], $session->uid);
+					}
+				}
 				if(isset($post['t'])){
 					header("Location: berichte.php?t=".$post['t']."");
 				}else{
@@ -294,37 +290,27 @@
 				}
 			}
 
-        	private function archiveNotice($post) {
-        		global $database;
-        		for($i = 1; $i <= 10; $i++) {
-        			if(isset($post['n' . $i])) {
-        				$database->archiveNotice($post['n' . $i]);
-        			}
-        		}
-        		header("Location: berichte.php?t=4");
-        	}
+			private function archiveNotice($post) {
+				global $database, $session;
+				for($i = 1; $i <= 10; $i++) {
+					if(isset($post['n' . $i])) {
+						$database->archiveNotice($post['n' . $i], $session->uid);
+					}
+				}
+				header("Location: berichte.php?t=4");
+			}
 
-        	private function unarchiveNotice($post) {
-        		global $database;
-        		for($i = 1; $i <= 10; $i++) {
-        			if(isset($post['n' . $i])) {
-        				$database->unarchiveNotice($post['n' . $i]);
-        			}
-        		}
-        		header("Location: berichte.php");
-        	}
+			private function unarchiveNotice($post) {
+				global $database, $session;
+				for($i = 1; $i <= 10; $i++) {
+					if(isset($post['n' . $i])) {
+						$database->unarchiveNotice($post['n' . $i], $session->uid);
+					}
+				}
+				header("Location: berichte.php");
+			}
 
-        	private function getReadNotice($id) {
-        		global $database;
-        		foreach($this->allNotice as $notice) {
-        			if($notice['id'] == $id) {
-        				$database->noticeViewed($notice['id']);
-        				return $notice;
-        			}
-        		}
-        	}
-
-        	public function loadNotes() {
+			public function loadNotes() {
         		global $session;
         		if(file_exists("GameEngine/Notes/" . md5($session->username) . ".txt")) {
         			$this->note = file_get_contents("GameEngine/Notes/" . md5($session->username) . ".txt");

@@ -1,14 +1,7 @@
+<?php include __DIR__ . "/report_data.tpl"; ?>
 <?php
-if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
-	$dataarray = explode(",",$database->getNotice2($_GET['id'], 'data'));
-    $topic = $database->getNotice2($_GET['id'], 'topic');
-    $time = $database->getNotice2($_GET['id'], 'time');
-}else{
-	$dataarray = explode(",",$message->readingNotice['data']);
-    $topic = $message->readingNotice['topic'];
-    $time = $message->readingNotice['time'];
-}
 $spyReinforcements = array();
+$noDefenseInformation = in_array('no-defense-info-v1', $dataarray, true);
 foreach($dataarray as $reportField) {
 	if(strpos($reportField, 'spyref:') !== 0) {
 		continue;
@@ -29,6 +22,9 @@ $trapstart = 159;
 }else{
 $faild = true;
 $trapstart = 158;
+}
+if($noDefenseInformation) {
+	$faild = true;
 }
 for($i=$trapstart;$i<=$trapstart+9;$i++){
 if($dataarray[$i] != 0){ $trap = true; }
@@ -236,7 +232,13 @@ if (!$faild && $extraReportInformation !== '' && strpos($extraReportInformation,
 </table>
 
 <?php
-$targettribe = $dataarray['33'];
+$targettribe = $faild ? 0 : $dataarray['33'];
+if($faild) {
+?>
+<p class="notice">No se obtuvo información de la defensa porque no sobrevivió ninguna unidad.</p>
+<?php
+}
+if(!$faild) {
 $ddd = '36';
 if(!empty($spyReinforcements)) {
 	foreach($spyReinforcements as $spyReinforcement) {
@@ -282,6 +284,7 @@ foreach($spyReinforcements as $spyReinforcement) {
 	) {
 		include "Templates/Notice/spy_reinforcement.tpl";
 	}
+}
 }
 ?>	
 </td></tr></tbody></table>

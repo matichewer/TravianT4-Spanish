@@ -1,13 +1,5 @@
+<?php include __DIR__ . "/report_data.tpl"; ?>
 <?php
-if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
-	$dataarray = explode(",",$database->getNotice2($_GET['id'], 'data'));
-    $topic = $database->getNotice2($_GET['id'], 'topic');
-    $time = $database->getNotice2($_GET['id'], 'time');
-}else{
-	$dataarray = explode(",",$message->readingNotice['data']);
-    $topic = $message->readingNotice['topic'];
-    $time = $message->readingNotice['time'];
-}
 if($dataarray[158] != 0 or $dataarray[159] != 0 or $dataarray[160] != 0 or $dataarray[161] != 0 or $dataarray[162] != 0 or $dataarray[163] != 0 or $dataarray[164] != 0 or $dataarray[165] != 0 or $dataarray[166] != 0 or $dataarray[167] != 0){
 $class = "units";
 }else{
@@ -126,7 +118,10 @@ echo "</tr></tbody>";
 </td></tr></tbody></table>
 
 <?php
-$targettribe = $dataarray['33'];
+$targettribe = 0;
+?>
+<p class="notice">No se obtuvo información de la defensa porque no sobrevivió ninguna unidad.</p>
+<?php
 if ($targettribe=='1'){
 $start=1;
 ?>

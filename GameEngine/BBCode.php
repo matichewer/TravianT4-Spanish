@@ -1,5 +1,7 @@
 <?php
 
+global $database, $session;
+
 $pattern = array();
 $pattern[0] = "/\[b\](.*?)\[\/b\]/is";
 $pattern[1] = "/\[i\](.*?)\[\/i\]/is";
@@ -212,12 +214,15 @@ $pattern[$rep2+$i] = "/\[report".$i."\](.*?)\[\/report".$i."\]/is";
 ${'bbcoded3_'.$i} = preg_replace($pattern[$rep2+$i], "$1", $input);
 ${'bbcoded3_'.$i} = preg_replace('/\[\/report'.$i.'\](.*?)\[\/message\]/is', '', $input);
 ${'bbcoded3_'.$i} = preg_replace('/\[message\](.*?)\[report'.$i.'\]/is', '', ${'bbcoded3_'.$i});
-$reportExists = count($database->getNotice4(${'bbcoded3_'.$i}));
-if($reportExists > 0){
-$topic = $database->getNotice2(${'bbcoded3_'.$i},"topic");
-$replace[$rep2+$i] = "<a href=berichte.php?id=$1>$topic</a>";
+$reportId = (int)trim(${'bbcoded3_'.$i});
+$authorizedReport = isset($session)
+	? $database->getAuthorizedNotice($session->uid, $session->alliance, $reportId)
+	: false;
+if($authorizedReport){
+$topic = htmlspecialchars($authorizedReport['topic'], ENT_QUOTES, 'UTF-8');
+$replace[$rep2+$i] = "<a href=berichte.php?id=$reportId>$topic</a>";
 }else{
-$replace[$rep2+$i] = "report not exist";
+$replace[$rep2+$i] = "Informe no disponible";
 }
 $rep3 = $rep2+$i+1;
 }

@@ -1,9 +1,7 @@
 <h1>Enviar tropas</h1>
 <?php
-if(isset($_GET['bid'])) {
-	$bid = $_GET['bid'];
-    $dbarray = $database->getNoticeData($bid);
-    $dataarray = explode(",",$dbarray);
+if(is_array($reportdata)) {
+    $dataarray = $reportdata;
 	$U11 = $dataarray['3'];
     $U12 = $dataarray['4'];
     $U13 = $dataarray['5'];

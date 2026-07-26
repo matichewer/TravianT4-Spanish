@@ -1,16 +1,5 @@
-<?php
-if(isset($_GET['aid']) && $_GET['aid']==$session->alliance){
-	$dataarray = explode(",",$database->getNotice2($_GET['id'], 'data'));
-    $topic = $database->getNotice2($_GET['id'], 'topic');
-    $time = $database->getNotice2($_GET['id'], 'time');
-    $ReceiveTime = $database->getNotice2($_GET['id'], 'time');
-}else{
-	$dataarray = explode(",",$message->readingNotice['data']);
-    $topic = $message->readingNotice['topic'];
-    $time = $message->readingNotice['time'];
-    $ReceiveTime = $message->readingNotice['time'];
-}
-?>
+<?php include __DIR__ . "/report_data.tpl"; ?>
+<?php $ReceiveTime = $time; ?>
 				<table cellpadding="1" cellspacing="1" id="report_surround">
 				<thead class="theader">
 					<tr>

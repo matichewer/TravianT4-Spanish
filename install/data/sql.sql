@@ -1145,7 +1145,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%movement` (
   `clay` int(11) unsigned NOT NULL,
   `iron` int(11) unsigned NOT NULL,
   `crop` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`moveid`)
+  PRIMARY KEY (`moveid`),
+  KEY `evasion_return_window` (`to`,`sort_type`,`endtime`,`from`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 --

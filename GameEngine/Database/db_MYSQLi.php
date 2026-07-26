@@ -1718,6 +1718,8 @@
 	}
 
 			function delNotice($id, $uid) {
+		$id = (int)$id;
+		$uid = (int)$uid;
 		$q = "DELETE FROM " . TB_PREFIX . "ndata WHERE id = $id AND uid = $uid";
 		return mysqli_query($this->connection,$q);
 	}
@@ -2023,27 +2025,6 @@
 				return mysqli_fetch_assoc($result)['count'];
 			}
 
-			function hasSharedReportMessage($uid, $reportId) {
-				$uid = (int)$uid;
-				$reportId = (int)$reportId;
-				if($uid <= 0 || $reportId <= 0) {
-					return false;
-				}
-
-				$pattern = '\[report[0-9]+\]'.$reportId.'\[/report[0-9]+\]';
-				$pattern = mysqli_real_escape_string($this->connection, $pattern);
-				$q = "SELECT 1 FROM " . TB_PREFIX . "mdata AS message"
-					." INNER JOIN " . TB_PREFIX . "ndata AS report ON report.id = $reportId"
-					." LEFT JOIN " . TB_PREFIX . "users AS sender ON sender.id = message.owner"
-					." WHERE message.target = $uid AND message.deltarget = 0"
-					." AND message.message REGEXP '$pattern'"
-					." AND (message.owner = report.uid"
-					." OR (report.ally > 0 AND sender.alliance = report.ally))"
-					." LIMIT 1";
-				$result = mysqli_query($this->connection,$q);
-				return $result && mysqli_num_rows($result) === 1;
-			}
-
 			function getDelSent($uid) {
 				$q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE owner = $uid and delowner = 1 ORDER BY time DESC";
 				$result = mysqli_query($this->connection,$q);
@@ -2062,18 +2043,24 @@
 				return $this->mysqli_fetch_all($result);
 			}
 
-        	function unarchiveNotice($id) {
-        		$q = "UPDATE " . TB_PREFIX . "ndata set archive = 0 where id = $id";
-        		return mysqli_query($this->connection,$q);
-        	}
+			function unarchiveNotice($id, $uid) {
+				$id = (int)$id;
+				$uid = (int)$uid;
+				$q = "UPDATE " . TB_PREFIX . "ndata set archive = 0 where id = $id and uid = $uid";
+				return mysqli_query($this->connection,$q);
+			}
 
-        	function archiveNotice($id) {
-        		$q = "update " . TB_PREFIX . "ndata set archive = 1 where id = $id";
-        		return mysqli_query($this->connection,$q);
-        	}
+			function archiveNotice($id, $uid) {
+				$id = (int)$id;
+				$uid = (int)$uid;
+				$q = "update " . TB_PREFIX . "ndata set archive = 1 where id = $id and uid = $uid";
+				return mysqli_query($this->connection,$q);
+			}
 
-			function removeNotice($id) {
-				$q = "UPDATE " . TB_PREFIX . "ndata set del = 1 ,viewed = 1 where id = $id";
+			function removeNotice($id, $uid) {
+				$id = (int)$id;
+				$uid = (int)$uid;
+				$q = "UPDATE " . TB_PREFIX . "ndata set del = 1 ,viewed = 1 where id = $id and uid = $uid";
 				return mysqli_query($this->connection,$q);
 			}
 
@@ -2106,10 +2093,18 @@
 			}
 
 			function getNotice2($id, $field) {
-				$q = "SELECT ".$field." FROM " . TB_PREFIX . "ndata where `id` = '$id'";
+				$id = (int)$id;
+				$allowedFields = array(
+					'id', 'uid', 'toWref', 'ally', 'topic', 'ntype',
+					'data', 'time', 'viewed', 'archive', 'del'
+				);
+				if($id <= 0 || !in_array($field, $allowedFields, true)) {
+					return false;
+				}
+				$q = "SELECT `".$field."` FROM " . TB_PREFIX . "ndata where `id` = $id";
 				$result = mysqli_query($this->connection,$q);
-				$dbarray = mysqli_fetch_array($result);
-				return $dbarray[$field];
+				$dbarray = $result ? mysqli_fetch_assoc($result) : false;
+				return $dbarray ? $dbarray[$field] : false;
 			}
 
 			function getNotice3($uid) {
@@ -2119,9 +2114,33 @@
 			}
 
 			function getNotice4($id) {
+				$id = (int)$id;
+				if($id <= 0) {
+					return array();
+				}
 				$q = "SELECT * FROM " . TB_PREFIX . "ndata where id = $id ORDER BY time DESC";
 				$result = mysqli_query($this->connection,$q);
 				return $this->mysqli_fetch_all($result);
+			}
+
+			function getAuthorizedNotice($uid, $alliance, $id) {
+				$uid = (int)$uid;
+				$alliance = (int)$alliance;
+				$id = (int)$id;
+				if($uid <= 0 || $id <= 0) {
+					return false;
+				}
+
+				$allianceCondition = "";
+				if($alliance > 0) {
+					$allianceCondition = " OR (ally = $alliance"
+						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21))";
+				}
+				$q = "SELECT * FROM " . TB_PREFIX . "ndata"
+					." WHERE id = $id AND (uid = $uid$allianceCondition) LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				$row = $result ? mysqli_fetch_assoc($result) : false;
+				return $row ? $row : false;
 			}
 
 			function getNotice5($uid) {
@@ -2660,6 +2679,26 @@
         		$row3 = mysqli_fetch_row($result3);
         		return $row[0] + $row2[0] + $row3[0];
         	}
+
+			function getOrdinaryTroopReturnsInWindow($village, $windowStart, $windowEnd) {
+				$village = (int)$village;
+				$windowStart = (int)$windowStart;
+				$windowEnd = (int)$windowEnd;
+				if($village <= 0 || $windowEnd < $windowStart) {
+					return array();
+				}
+
+				$q = "SELECT moveid, `from`, `to`, endtime, proc"
+					." FROM " . TB_PREFIX . "movement"
+					." WHERE `to` = $village"
+					." AND sort_type = 4"
+					." AND `from` <> 0"
+					." AND endtime >= $windowStart"
+					." AND endtime <= $windowEnd"
+					." ORDER BY endtime ASC";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? $this->mysqli_fetch_all($result) : array();
+			}
 
         	/***************************
         	Function to retrieve movement of village
@@ -4140,11 +4179,15 @@ break;
 			}
 
 			function getNoticeData($nid) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "ndata where id = $nid";
+				$nid = (int)$nid;
+				if($nid <= 0) {
+					return false;
+				}
+				$q = "SELECT * FROM " . TB_PREFIX . "ndata where id = $nid";
 				$result = mysqli_query($this->connection,$q);
-        		$dbarray = mysqli_fetch_array($result);
-        		return $dbarray['data'];
-        	}
+				$dbarray = $result ? mysqli_fetch_assoc($result) : false;
+				return $dbarray ? $dbarray['data'] : false;
+			}
 
 			function setSilver($uid, $silver, $mode) {
 				if(!$mode){

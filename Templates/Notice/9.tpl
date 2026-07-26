@@ -1,7 +1,5 @@
+<?php include __DIR__ . "/report_data.tpl"; ?>
 <?php
-	$dataarray = explode(",",$database->getNotice2($_GET['id'], 'data'));
-    $topic = $message->readingNotice['topic'];
-    $time = $message->readingNotice['time'];
 	$userarray = $database->getUserArray($message->readingNotice['uid'], 1);
 ?>
 				<table cellpadding="1" cellspacing="1" id="report_surround">
