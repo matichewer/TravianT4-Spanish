@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__.'/CombatRanking.php';
+require_once __DIR__.'/Hero.php';
 
 class Automation {
 
@@ -3336,12 +3337,7 @@ class Automation {
                         $exp = rand(10, 80);
                         $sgh = 2000;
                     }
-                    if($tribe == 1) {
-                        $tp = 100;
-                    } else {
-                        $tp = 80;
-                    }
-                    $health = round((3.007 / ((100 + $tp * $getHero['power']) + $getHero['itempower'])) * $sgh);
+                    $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
                     if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
@@ -3410,12 +3406,7 @@ class Automation {
                         $exp = rand(10, 80);
                         $sgh = 2000;
                     }
-                    if($tribe == 1) {
-                        $tp = 100;
-                    } else {
-                        $tp = 80;
-                    }
-                    $health = round((3.007 / ((100 + $tp * $getHero['power']) + $getHero['itempower'])) * $sgh);
+                    $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
                     if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
@@ -3448,12 +3439,7 @@ class Automation {
                     $exp = rand(10, 80);
                     $sgh = 2000;
                 }
-                if($tribe == 1) {
-                    $tp = 100;
-                } else {
-                    $tp = 80;
-                }
-                $health = round((3.007 / ((100 + $tp * $getHero['power']) + $getHero['itempower'])) * $sgh);
+                $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
                 if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
                 $database->modifyHero2('experience', $exp, $ownerID, 1);
@@ -3743,40 +3729,32 @@ class Automation {
         $this->bountyOproduction['crop'] = $this->bountyGetOCropProd();
     }
 
-    private function bountycalculateProduction($bountywid, $uid) {
-        global $technology, $database, $village, $session;
-        $normalA = $database->getOwnArtefactInfoByType($bountywid, 4);
-        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
-        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
-        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
-        $q = "SELECT * FROM ".TB_PREFIX."hero where uid = $session->uid";
-        $heroData = $database->query_return($q);
+	    private function bountycalculateProduction($bountywid, $uid) {
+	        global $technology, $database;
+	        $normalA = $database->getOwnArtefactInfoByType($bountywid, 4);
+	        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
+	        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
+	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
+	        $heroData = $database->getHeroData($uid);
+	        $heroProduction = heroVillageResourceBonus($heroData, $bountywid, SPEED);
 
-        if($heroData['dead'] == 0 && $village->capital) {
-            $hwood = $heroData['r1'];
-            $hclay = $heroData['r2'];
-            $hiron = $heroData['r3'];
-            $hcrop = $heroData['r4'];
-            $hproduct = $heroData['r0'];
-        }
+	        $this->bountyproduction['wood'] = $this->bountyGetWoodProd()+$heroProduction['wood'];
+	        $this->bountyproduction['clay'] = $this->bountyGetClayProd()+$heroProduction['clay'];
+	        $this->bountyproduction['iron'] = $this->bountyGetIronProd()+$heroProduction['iron'];
 
-        $this->bountyproduction['wood'] = $this->bountyGetWoodProd() + $hwood + $hproduct;
-        $this->bountyproduction['clay'] = $this->bountyGetClayProd() + $hclay + $hproduct;
-        $this->bountyproduction['iron'] = $this->bountyGetIronProd() + $hiron + $hproduct;
+	        if($uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
+	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
 
-        if($uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
-            $this->bountyproduction['crop'] = $this->bountyGetCropProd() - $this->bountypop - (($upkeep) - round($upkeep * 0.50)) + $hcrop + $hproduct;
+	        } else if($normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
+	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
-        } else if($normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
-            $this->bountyproduction['crop'] = $this->bountyGetCropProd() - $this->bountypop - (($upkeep) - round($upkeep * 0.25)) + $hcrop + $hproduct;
+	        } else if($largeA['size'] == 2 && $largeA['owner'] == $uid) {
+	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
-        } else if($largeA['size'] == 2 && $largeA['owner'] == $uid) {
-            $this->bountyproduction['crop'] = $this->bountyGetCropProd() - $this->bountypop - (($upkeep) - round($upkeep * 0.25)) + $hcrop + $hproduct;
-
-        } else {
-            $this->bountyproduction['crop'] = $this->bountyGetCropProd() - $this->bountypop - $upkeep + $hcrop + $hproduct;
-        }
-    }
+	        } else {
+	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-$upkeep+$heroProduction['crop'];
+	        }
+	    }
 
     private function bountyprocessProduction($bountywid) {
         global $database;
@@ -4174,36 +4152,26 @@ class Automation {
         $time = time();
         $ourFileHandle = fopen("GameEngine/Prevention/updatehero.txt", 'w');
         fclose($ourFileHandle);
-        $q = "SELECT * FROM ".TB_PREFIX."hero where dead = 0";
-        $harray = $database->query_return($q);
-        if(!empty($harray)) {
-            foreach ($harray as $hdata) {
-                if($hdata['health'] < 100) {
-                    $health = $hdata['health'] + $hdata['autoregen'] * SPEED / 86400 * (time() - $hdata['lastupdate']);
-                    if($health > 100) {
-                        $health = 100;
+	        $hero_levels = $GLOBALS["hero_levels"];
+	        $q = "SELECT * FROM ".TB_PREFIX."hero";
+	        $harray = $database->query_return($q);
+	        if(!empty($harray)) {
+	            foreach ($harray as $hdata) {
+	                if((int)$hdata['dead']===0 && $hdata['health'] < 100) {
+	                    $health = $hdata['health'] + $hdata['autoregen'] * SPEED / 86400 * (time() - $hdata['lastupdate']);
+	                    if($health > 100) {
+	                        $health = 100;
                     }
-                    $database->modifyHero("health", $health, $hdata['heroid'], 0);
-                    $database->modifyHero("lastupdate", time(), $hdata['heroid'], 0);
-                }
-                $hero_levels = $GLOBALS["hero_levels"];
-                if($hdata['experience'] >= $hero_levels[$hdata['level'] + 1]) {
-                    $database->modifyHero("level", 1, $hdata['heroid'], 1);
-                    $database->modifyHero("points", 4, $hdata['heroid'], 1);
-                }
-            }
-        }
-        $q = "SELECT * FROM ".TB_PREFIX."hero where dead = 1";
-        $harray = $database->query_return($q);
-        if(!empty($harray)) {
-            foreach ($harray as $hdata) {
-                $hero_levels = $GLOBALS["hero_levels"];
-                if($hdata['experience'] >= $hero_levels[$hdata['level'] + 1]) {
-                    $database->modifyHero("level", 1, $hdata['heroid'], 1);
-                    $database->modifyHero("points", 4, $hdata['heroid'], 1);
-                }
-            }
-        }
+	                    $database->modifyHero("health", $health, $hdata['heroid'], 0);
+	                    $database->modifyHero("lastupdate", time(), $hdata['heroid'], 0);
+	                }
+	                $currentLevel = max(0,(int)$hdata['level']);
+	                $targetLevel = heroLevelForExperience($hdata['experience'],$currentLevel,$hero_levels);
+	                if($targetLevel>$currentLevel) {
+	                    $database->advanceHeroLevel($hdata['heroid'],$currentLevel,$targetLevel);
+	                }
+	            }
+	        }
         $q2 = "SELECT * FROM ".TB_PREFIX."training where unit = 0";
         $dataarray2 = $database->query_return($q2);
         foreach ($dataarray2 as $data3) {

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__.'/Hero.php';
+
 class Battle {
 	private $catapultUnits = array(8, 18, 28, 48);
 
@@ -339,12 +341,10 @@ class Battle {
 		if(isset($session->uid)) {
 			$userHero = $database->getHeroData((int)$session->uid);
 			if(is_array($userHero)) {
-				$powerPerPoint = isset($session->tribe) && (int)$session->tribe === 1 ? 100 : 80;
-				$defaultHeroPower = 100
-					+ $powerPerPoint * max(0, (int)$userHero['power'])
-					+ max(0, (int)$userHero['itempower']);
+				$heroTribe = isset($session->tribe) ? (int)$session->tribe : $attackerTribe;
+				$defaultHeroPower = heroFightingStrength($userHero,$heroTribe);
 				$defaultHeroHealth = max(1, min(100, (int)$userHero['health']));
-				$defaultHeroOffBonus = max(0, min(20, (float)$userHero['offBonus'] / 5));
+				$defaultHeroOffBonus = heroArmyBonusPercent($userHero['offBonus']);
 			}
 		}
 
@@ -665,15 +665,11 @@ class Battle {
 	}
 
 	private function battleHeroStrength($hero, $tribe) {
-		if(!is_array($hero)) {
-			return 0;
-		}
-		$pointsPerLevel = (int)$tribe === 1 ? 100 : 80;
-		return max(0, 100 + $pointsPerLevel * (int)$hero['power'] + (int)$hero['itempower']);
+		return heroFightingStrength($hero, $tribe);
 	}
 
 	private function battleHeroBonus($points) {
-		return 1 + max(0, min(100, (float)$points)) / 500;
+		return heroArmyBonusFactor($points);
 	}
 
 	private function battleHeroIsMounted($uid) {

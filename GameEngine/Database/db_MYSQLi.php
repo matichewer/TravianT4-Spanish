@@ -2910,18 +2910,68 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-			function modifyHero2($column,$value,$uid,$mode) {
-				if(!$mode){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $value WHERE uid = $uid";
+				function modifyHero2($column,$value,$uid,$mode) {
+					if(!$mode){
+						$q = "UPDATE ".TB_PREFIX."hero SET $column = $value WHERE uid = $uid";
 				} elseif($mode==1){
 					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value WHERE uid = $uid";
 				} elseif($mode==2){
 					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value WHERE uid = $uid";
 				}
-				return mysqli_query($this->connection,$q);
-			}
+					return mysqli_query($this->connection,$q);
+				}
 
-        	function addTech($vid) {
+				function allocateHeroAttributePoint($uid,$attribute,$limit=100) {
+					$attributes = array('power','offBonus','defBonus','product');
+					if(!in_array($attribute,$attributes,true)){
+						return false;
+					}
+
+					$uid = (int)$uid;
+					$limit = max(1,(int)$limit);
+					$q = "UPDATE ".TB_PREFIX."hero SET $attribute = $attribute + 1, points = points - 1"
+						." WHERE uid = $uid AND points > 0 AND $attribute < $limit";
+					$result = mysqli_query($this->connection,$q);
+					return $result && mysqli_affected_rows($this->connection)===1;
+				}
+
+				function advanceHeroLevel($heroid,$currentLevel,$targetLevel) {
+					$heroid = (int)$heroid;
+					$currentLevel = max(0,(int)$currentLevel);
+					$targetLevel = max($currentLevel,(int)$targetLevel);
+					if($heroid<1 || $targetLevel===$currentLevel){
+						return false;
+					}
+
+					$awardedPoints = 4*($targetLevel-$currentLevel);
+					$q = "UPDATE ".TB_PREFIX."hero SET level = $targetLevel, points = points + $awardedPoints"
+						." WHERE heroid = $heroid AND level = $currentLevel";
+					$result = mysqli_query($this->connection,$q);
+					return $result && mysqli_affected_rows($this->connection)===1;
+				}
+
+				function resetHeroAttributes($uid) {
+					$uid = (int)$uid;
+					$q = "UPDATE ".TB_PREFIX."hero SET"
+						." points = points + power + offBonus + defBonus + product,"
+						." power = 0, offBonus = 0, defBonus = 0, product = 0,"
+						." r0 = 1, r1 = 0, r2 = 0, r3 = 0, r4 = 0"
+						." WHERE uid = $uid";
+					return mysqli_query($this->connection,$q);
+				}
+
+				function setHeroResourceMode($uid,$mode) {
+					$uid = (int)$uid;
+					$mode = max(0,min(4,(int)$mode));
+					$values = array(0,0,0,0,0);
+					$values[$mode] = 1;
+					$q = "UPDATE ".TB_PREFIX."hero SET"
+						." r0 = ".$values[0].", r1 = ".$values[1].", r2 = ".$values[2]
+						.", r3 = ".$values[3].", r4 = ".$values[4]." WHERE uid = $uid";
+					return mysqli_query($this->connection,$q);
+				}
+
+				function addTech($vid) {
         		$q = "INSERT into " . TB_PREFIX . "tdata (vref) values ($vid)";
         		return mysqli_query($this->connection,$q);
         	}

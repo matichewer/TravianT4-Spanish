@@ -1,10 +1,8 @@
 <?php
 $totalproduction = $village->allcrop; // all crops + bakery + grain mill
 $heroData = $database->getHeroData($session->uid);
-if($heroData['dead']==0 && $heroData['wref']==$village->wid){
-$totalproduction += $heroData['r4']*10*SPEED*$heroData['product'];
-$totalproduction += $heroData['r0']*3*SPEED*$heroData['product'];
-}
+$heroProduction = heroVillageResourceBonus($heroData,$village->wid,SPEED);
+$totalproduction += $heroProduction['crop'];
 
 $formatStorageFillTime = function ($capacity, $currentAmount, $production) {
 	if ($currentAmount >= $capacity) {

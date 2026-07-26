@@ -248,21 +248,13 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	elseif($data['btype']==10){
 		if($data['amount'] <= $itemData['num']){
 			$value = ($data['amount']*10);
-			if($data['amount'] < $itemData['num']){
-				$database->modifyHero2('experience', $value, $uid, 1);
-				$database->editHeroNum($data['id'], $data['amount'], 0);
-				if($heroData['experience']>=$hero_levels[$heroData['level']+1]){
-					$database->modifyHero2("level",1,$uid,1);
-					$database->modifyHero2("points",4,$uid,1);
+				if($data['amount'] < $itemData['num']){
+					$database->modifyHero2('experience', $value, $uid, 1);
+					$database->editHeroNum($data['id'], $data['amount'], 0);
+				}else{
+					$database->editProcItem($data['id'], 1);
+					$database->modifyHero2('experience', $value, $uid, 1);
 				}
-			}else{
-				$database->editProcItem($data['id'], 1);
-				$database->modifyHero2('experience', $value, $uid, 1);
-				if($heroData['experience']>=$hero_levels[$heroData['level']+1]){
-					$database->modifyHero2("level",1,$uid,1);
-					$database->modifyHero2("points",4,$uid,1);
-				}
-			}
 		}
 		header("Location: hero_inventory.php");
 	}
@@ -299,26 +291,12 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 		}
 	}
 
-	elseif($data['btype']==13){
-		if($session->tribe == 1){ $tp = 100; }else{ $tp = 80; }
-		$rp = 30;
-		$powerPoints = $heroData['power'];
-		$offPoints = $heroData['offBonus'];
-		$defPoints = $heroData['defBonus'];
-		$productPoints = $heroData['product'];
-
-		$AllPoints = ($powerPoints+$offPoints+$defPoints+$productPoints);
-
-		$database->modifyHero2('points', $AllPoints, $uid, 0);
-		$database->modifyHero2('power', 0, $uid, 0);
-		$database->modifyHero2('offBonus', 0, $uid, 0);
-		$database->modifyHero2('defBonus', 0, $uid, 0);
-		$database->modifyHero2('product', 0, $uid, 0);
-		for($i=0;$i<=4;$i++){
-			$database->modifyHero2('r'.$i, 0, $uid, 0);
+		elseif($data['btype']==13){
+			if($database->resetHeroAttributes($uid)){
+				$database->editProcItem($data['id'], 1);
+			}
+			header("Location: hero_inventory.php");
 		}
-		$database->editProcItem($data['id'], 1);
-	}
 
 	elseif($data['btype']==14){
 		if($village->loyalty<=125){
