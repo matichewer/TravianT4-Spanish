@@ -318,6 +318,32 @@ class Technology {
 		global $village;
 		return ($village->techarray['t'.$tech] == 1);
 	}
+
+	public function getExpansionUnitTrainingTime($unit,$fieldId) {
+		global $village,$bid25,$bid26;
+
+		$unit = (int)$unit;
+		$fieldId = (int)$fieldId;
+		$unitData = isset($GLOBALS['u'.$unit]) ? $GLOBALS['u'.$unit] : null;
+		$fieldType = isset($village->resarray['f'.$fieldId.'t']) ? (int)$village->resarray['f'.$fieldId.'t'] : 0;
+		$fieldLevel = isset($village->resarray['f'.$fieldId]) ? (int)$village->resarray['f'.$fieldId] : 0;
+
+		if(!is_array($unitData)
+			|| !in_array($unit,array(9,10,19,20,29,30,39,40,49,50),true)
+			|| !in_array($fieldType,array(25,26),true)
+			|| $fieldLevel < 10) {
+			return 0;
+		}
+
+		$buildingData = $fieldType === 25 ? $bid25 : $bid26;
+		if(!isset($buildingData[$fieldLevel]['attri'])) {
+			return 0;
+		}
+
+		return max(1,(int)round(
+			($buildingData[$fieldLevel]['attri'] / 100) * $unitData['time'] / SPEED
+		));
+	}
 	
 	private function procTrain($post,$great=false) {
 		global $session;
@@ -474,8 +500,7 @@ class Technology {
 					: round(($bid21[$building->getTypeLevel(21)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
 			}
 			if(in_array($unit,$special,true)) {
-				$buildingData = $fieldType === 25 ? $bid25 : $bid26;
-				$each = round(($buildingData[$fieldLevel]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+				$each = $this->getExpansionUnitTrainingTime($unit,$fieldId);
 			}
 			if(in_array($unit,$trapper,true)) {
 				$each = round(($bid19[$building->getTypeLevel(36)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);

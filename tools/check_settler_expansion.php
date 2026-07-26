@@ -101,6 +101,35 @@ $technology = new Technology();
 $trainMethod = new ReflectionMethod('Technology','trainUnit');
 $trainMethod->setAccessible(true);
 
+$expectedTrainingTimes = array(1 => array(10,10421),2 => array(20,12009),3 => array(30,8794));
+foreach($expectedTrainingTimes as $tribe => $trainingData) {
+	$session->tribe = $tribe;
+	$unit = $trainingData[0];
+	$expectedTime = $trainingData[1];
+	$village->resarray = array('f25t' => 25, 'f25' => 10);
+	$village->techarray = array('t'.$unit => 0);
+	$database = new SettlerTrainingDatabaseStub();
+	$trained = $trainMethod->invoke($technology,$unit,1,false,25);
+	settlerAssert($trained === true, 'The tribe '.$tribe.' settler should train with valid requirements.');
+	settlerAssert(
+		count($database->queues) === 1 && $database->queues[0][4] === $expectedTime,
+		'The tribe '.$tribe.' settler queue must use the displayed Residence level 10 training time.'
+	);
+
+	$village->resarray = array('f25t' => 26, 'f25' => 10);
+	$database = new SettlerTrainingDatabaseStub();
+	$trained = $trainMethod->invoke($technology,$unit,1,false,25);
+	settlerAssert($trained === true, 'The tribe '.$tribe.' settler should also train in a Palace.');
+	settlerAssert(
+		count($database->queues) === 1 && $database->queues[0][4] === $expectedTime,
+		'The tribe '.$tribe.' settler queue must use the displayed Palace level 10 training time.'
+	);
+}
+
+$session->tribe = 2;
+$village->resarray = array('f25t' => 25, 'f25' => 10);
+$village->techarray = array('t20' => 0);
+$database = new SettlerTrainingDatabaseStub();
 $trained = $trainMethod->invoke($technology,20,3,false,25);
 settlerAssert($trained === true, 'Three German settlers should train with valid requirements.');
 settlerAssert(
@@ -312,6 +341,26 @@ foreach($iterator as $file) {
 	}
 }
 settlerAssert(count($trainingForms) === 11, 'Expected all eleven troop-training forms to be covered.');
+
+$expansionTrainingTemplates = array('25_train.tpl','26_train.tpl');
+foreach($expansionTrainingTemplates as $templateName) {
+	$templateSource = file_get_contents(dirname(__DIR__).'/Templates/Build/'.$templateName);
+	settlerAssert(
+		strpos($templateSource,'getExpansionUnitTrainingTime($i,$id)') !== false,
+		$templateName.' must use the same expansion-unit time calculation as the queue.'
+	);
+	settlerAssert(
+		strpos($templateSource,'$popupTrainingTime') !== false,
+		$templateName.' must pass the displayed settler time to the unit popup.'
+	);
+}
+
+$manualSource = file_get_contents(dirname(__DIR__).'/manual.php');
+settlerAssert(
+	strpos($manualSource,"\$bid25[10]['attri']") !== false
+		&& strpos($manualSource,"array(10,20,30)") !== false,
+	'The standalone settler manual must apply server speed and the minimum valid expansion-building level.'
+);
 
 $spanishFiles = array(dirname(__DIR__).'/GameEngine/Lang/es.php',dirname(__DIR__).'/Templates');
 foreach($spanishFiles as $path) {

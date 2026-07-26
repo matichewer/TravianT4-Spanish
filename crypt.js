@@ -9298,9 +9298,9 @@ return new Class({
 					});
 					return this
 				},
-				iPopup:function(a,b){
-					var c=parseInt(b,10)===1;
-					('<iframe class="popup" frameborder="0" id="Frame" src="manual.php?typ='+b+"&amp;gid="+a+'" width="'+(c?560:475)+'" height="'+(c?540:500)+'" border="0" allowTransparency="true"></iframe>').dialog({
+				iPopup:function(a,b,d){
+					var c=parseInt(b,10)===1,e=parseInt(d,10),f=c&&!isNaN(e)&&e>0?"&amp;train_time="+e:"";
+					('<iframe class="popup" frameborder="0" id="Frame" src="manual.php?typ='+b+"&amp;gid="+a+f+'" width="'+(c?560:475)+'" height="'+(c?540:500)+'" border="0" allowTransparency="true"></iframe>').dialog({
 					title:c?"Información de la unidad":"Información del edificio",
 					buttonOk:false,
 					cssClass:"white manualInfo"

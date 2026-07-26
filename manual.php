@@ -19,6 +19,30 @@ $manualSection = isset($_GET['s']) && ctype_digit((string) $_GET['s']) ? (int) $
 $manualGid = isset($_GET['gid']) && ctype_digit((string) $_GET['gid']) ? (int) $_GET['gid'] : null;
 $manualUnitId = $manualType === 1 ? ($manualGid !== null ? $manualGid : $manualSection) : null;
 $isUnitManual = $manualUnitId !== null && $manualUnitId > 0;
+$manualTrainingDuration = null;
+if (in_array($manualUnitId, array(10,20,30), true)) {
+	require_once("GameEngine/Data/unitdata.php");
+	require_once("GameEngine/Data/buidata.php");
+	$manualUnitData = isset($GLOBALS['u'.$manualUnitId]) ? $GLOBALS['u'.$manualUnitId] : null;
+	$manualTrainingTime = is_array($manualUnitData)
+		? max(1,(int)round(($bid25[10]['attri'] / 100) * $manualUnitData['time'] / SPEED))
+		: 0;
+
+	if (isset($_GET['train_time']) && ctype_digit((string) $_GET['train_time'])) {
+		$contextTrainingTime = (int) $_GET['train_time'];
+		if ($contextTrainingTime > 0 && $contextTrainingTime <= 604800) {
+			$manualTrainingTime = $contextTrainingTime;
+		}
+	}
+	if ($manualTrainingTime > 0) {
+		$manualTrainingDuration = sprintf(
+			'%d:%02d:%02d',
+			(int) floor($manualTrainingTime / 3600),
+			(int) floor(($manualTrainingTime % 3600) / 60),
+			$manualTrainingTime % 60
+		);
+	}
+}
 $unitPortrait = null;
 if ($isUnitManual) {
 	$portraitCandidates = array(

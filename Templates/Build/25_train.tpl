@@ -23,10 +23,12 @@
 		for ($i=($session->tribe-1)*10+9;$i<=($session->tribe*10);$i++) {
 			if ($slots['settlers']>0 && $i%10==0 || $slots['chiefs']>0 && $i%10==9) {
 			       $maxunit = MIN($technology->maxUnit($i),($i%10==0?$slots['settlers']:$slots['chiefs']));
+			       $trainingTime = $technology->getExpansionUnitTrainingTime($i,$id);
+			       $popupTrainingTime = $i%10==0 ? ",".$trainingTime : "";
 
 echo "<div class=\"action first\">
                 	<div class=\"bigUnitSection\">
-						<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1);\">
+						<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1".$popupTrainingTime.");\">
 							<img class=\"unitSection u".$i."Section\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($i)."\">
 						</a>
 						<a href=\"#\" class=\"zoom\" onclick=\"return Travian.Game.unitZoom(".$i.");\">
@@ -35,8 +37,8 @@ echo "<div class=\"action first\">
 					</div>
 					<div class=\"details\">
 						<div class=\"tit\">
-							<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1);\"><img class=\"unit u".$i."\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($i)."\"></a>
-							<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1);\">".$technology->getUnitName($i)."</a>
+							<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1".$popupTrainingTime.");\"><img class=\"unit u".$i."\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($i)."\"></a>
+							<a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1".$popupTrainingTime.");\">".$technology->getUnitName($i)."</a>
 							<span class=\"furtherInfo\">(Disponibles: ".$village->unitarray['u'.$i].")</span>
 						</div>
                         <div class=\"showCosts\">
@@ -47,7 +49,7 @@ echo "<div class=\"action first\">
                         <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Consumo de cereal\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
-echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid25[$village->resarray['f'.$id]]['attri'] / 100) / SPEED));
+echo $generator->getTimeFormat($trainingTime);
                 echo "</span>";
 if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
 echo "&nbsp;&nbsp;<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".${'u'.$i}['wood']."&r2=".${'u'.$i}['clay']."&r3=".${'u'.$i}['iron']."&r4=".${'u'.$i}['crop']."'; return false;\">&nbsp;<img src=\"img/x.gif\" class=\"npc\" alt=\"npc\"></button>";
