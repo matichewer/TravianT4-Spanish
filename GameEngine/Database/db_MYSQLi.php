@@ -801,6 +801,13 @@
         		return $dbarray['oasistype'];
         	}
 
+			function getVillageType3($wref) {
+				$wref = (int)$wref;
+				$q = "SELECT * FROM " . TB_PREFIX . "wdata where id = $wref";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? mysqli_fetch_array($result) : false;
+			}
+
 			function getVilWref($x, $y) {
 				$x = (int) $x;
 				$y = (int) $y;
@@ -2013,6 +2020,27 @@
 				$q = "SELECT COUNT(1) 'count' FROM " . TB_PREFIX . "mdata where target = $id and viewed = 0";
 				$result = mysqli_query($this->connection,$q);
 				return mysqli_fetch_assoc($result)['count'];
+			}
+
+			function hasSharedReportMessage($uid, $reportId) {
+				$uid = (int)$uid;
+				$reportId = (int)$reportId;
+				if($uid <= 0 || $reportId <= 0) {
+					return false;
+				}
+
+				$pattern = '\[report[0-9]+\]'.$reportId.'\[/report[0-9]+\]';
+				$pattern = mysqli_real_escape_string($this->connection, $pattern);
+				$q = "SELECT 1 FROM " . TB_PREFIX . "mdata AS message"
+					." INNER JOIN " . TB_PREFIX . "ndata AS report ON report.id = $reportId"
+					." LEFT JOIN " . TB_PREFIX . "users AS sender ON sender.id = message.owner"
+					." WHERE message.target = $uid AND message.deltarget = 0"
+					." AND message.message REGEXP '$pattern'"
+					." AND (message.owner = report.uid"
+					." OR (report.ally > 0 AND sender.alliance = report.ally))"
+					." LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_num_rows($result) === 1;
 			}
 
 			function getDelSent($uid) {

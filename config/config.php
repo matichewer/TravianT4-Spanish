@@ -204,11 +204,11 @@ define("HOME3",$home3);
 ////////////////////////////////////
 
 // ***** Censore words
-//define("WORD_CENSOR", "%ACTCEN%");
+define("WORD_CENSOR", false);
 
 // ***** Words (censore)
 // Choose which words do you want to be censored
-//define("CENSORED","%CENWORDS%");
+define("CENSORED","");
 
 
 // ***** Limit Mailbox

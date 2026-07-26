@@ -85,9 +85,14 @@
 					$noticeId = (int)$get['id'];
 					$this->readingNotice = $this->getReadNotice($noticeId);
 
-					if(empty($this->readingNotice) && $session->alliance > 0) {
+					if(empty($this->readingNotice)) {
 						$sharedNotices = $database->getNotice4($noticeId);
-						if(isset($sharedNotices[0]) && (int)$sharedNotices[0]['ally'] === (int)$session->alliance) {
+						$isAllianceReport = isset($sharedNotices[0])
+							&& $session->alliance > 0
+							&& (int)$sharedNotices[0]['ally'] === (int)$session->alliance;
+						$isMessageReport = isset($sharedNotices[0])
+							&& $database->hasSharedReportMessage($session->uid, $noticeId);
+						if($isAllianceReport || $isMessageReport) {
 							$this->readingNotice = $sharedNotices[0];
 						}
 					}
