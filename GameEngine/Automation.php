@@ -2049,7 +2049,7 @@ class Automation {
                         $totalsend_att = $data['t1'] + $data['t2'] + $data['t3'] + $data['t4'] + $data['t5'] + $data['t6'] + $data['t7'] + $data['t8'] + $data['t9'] + $data['t10'] + $data['t11'];
                         $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                         //NEED TO SEND A RAPPORTAGE!!!
-                        $data2 = ''.$reinforcementOwner.','.$to['wref'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.'';
+                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1';
                         if($scout && $reinforcementOwner > 0) {
                             if($totaldead_att > 0) {
                                 if($totaldead_att == $totalsend_att) {
@@ -4398,16 +4398,16 @@ class Automation {
         $itemName = $this->getAuctionItemName($auction);
         $quantity = max(1, (int) $auction['num']);
 
-        $safeBidderNames = array();
-        foreach($bidderNames as $bidderName) {
-            $safeBidderNames[] = htmlspecialchars($bidderName, ENT_QUOTES, 'UTF-8');
+        $bidderLinks = array();
+        foreach($bidderNames as $bidderID => $bidderName) {
+            $bidderLinks[] = $this->getAuctionPlayerLink($bidderID, $bidderName);
         }
 
         $message = "[message][b]La subasta ha finalizado[/b]\n\n"
-            . "[b]Vendedor:[/b] ".htmlspecialchars($sellerName, ENT_QUOTES, 'UTF-8')."\n"
+            . "[b]Vendedor:[/b] ".$this->getAuctionPlayerLink($ownerID, $sellerName)."\n"
             . "[b]Objeto:[/b] ".$quantity." × ".htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8')."\n"
-            . "[b]Postores:[/b] ".implode(', ', $safeBidderNames)."\n"
-            . "[b]Ganador:[/b] ".htmlspecialchars($winnerName, ENT_QUOTES, 'UTF-8')."\n"
+            . "[b]Postores:[/b] ".implode(', ', $bidderLinks)."\n"
+            . "[b]Ganador:[/b] ".$this->getAuctionPlayerLink($winnerID, $winnerName)."\n"
             . "[b]Precio inicial:[/b] ".$startingPrice." de plata\n"
             . "[b]Precio final:[/b] ".(int) $auction['silver']." de plata[/message]";
 
@@ -4424,6 +4424,12 @@ class Automation {
                 0
             );
         }
+    }
+
+    private function getAuctionPlayerLink($playerID, $playerName) {
+        return '<a href="spieler.php?uid='.(int) $playerID.'">'
+            .htmlspecialchars((string) $playerName, ENT_QUOTES, 'UTF-8')
+            .'</a>';
     }
 
     private function getAuctionStartingPrice($auction) {
