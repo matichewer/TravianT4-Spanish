@@ -152,6 +152,28 @@ settlerAssert(!$eligibility['eligible'] && $eligibility['requiredPoints'] === 12
 $eligibility = travianCultureExpansionEligibility(12000,2,1,CP);
 settlerAssert($eligibility['eligible'], '12,000 PC must allow owned and pending villages plus a fourth village.');
 
+$cultureStatus = travianCultureStatus(1016,1,CP);
+settlerAssert(
+	$cultureStatus['cultureCapacity'] === 2
+		&& $cultureStatus['currentRequiredPoints'] === 1000
+		&& $cultureStatus['nextRequiredPoints'] === 4600,
+	'Culture progress must use the thresholds for the current and next village capacity.'
+);
+settlerAssert(
+	$cultureStatus['progressPoints'] === 16
+		&& $cultureStatus['progressRequiredPoints'] === 3600
+		&& abs($cultureStatus['progressPercent'] - (16 / 3600 * 100)) < 0.0001,
+	'Culture progress must measure only the current threshold segment.'
+);
+$cultureStatus = travianCultureStatus(4600,2,CP);
+settlerAssert(
+	$cultureStatus['cultureCapacity'] === 3
+		&& $cultureStatus['progressPoints'] === 0
+		&& $cultureStatus['progressRequiredPoints'] === 7400
+		&& (float)$cultureStatus['progressPercent'] === 0.0,
+	'Culture progress must restart when a new village capacity is unlocked.'
+);
+
 class SettlerFoundingDatabaseStub {
 	public $pending = 0;
 	public $pendingTarget = 0;

@@ -461,15 +461,20 @@ if(!function_exists('travianCultureThresholds')) {
 		// Imported/admin-edited accounts must never render an impossible X/Y value.
 		$cultureCapacity = max($cultureCapacity, $ownedVillages);
 		$nextVillageCount = $cultureCapacity + 1;
+		$currentRequiredPoints = isset($thresholds[$cultureCapacity]) ? (int)$thresholds[$cultureCapacity] : 0;
 		$nextRequiredPoints = isset($thresholds[$nextVillageCount]) ? (int)$thresholds[$nextVillageCount] : null;
 		$atConfiguredMaximum = ($nextRequiredPoints === null);
+		$progressRequiredPoints = $atConfiguredMaximum ? 0 : max(0, $nextRequiredPoints - $currentRequiredPoints);
+		$progressPoints = $atConfiguredMaximum
+			? 0
+			: min($progressRequiredPoints, max(0, $culturePoints - $currentRequiredPoints));
 
 		if($atConfiguredMaximum) {
 			$progressPercent = 100;
-		} elseif($nextRequiredPoints <= 0) {
+		} elseif($progressRequiredPoints <= 0) {
 			$progressPercent = 100;
 		} else {
-			$progressPercent = min(100, max(0, ($culturePoints / $nextRequiredPoints) * 100));
+			$progressPercent = ($progressPoints / $progressRequiredPoints) * 100;
 		}
 
 		return array(
@@ -479,8 +484,11 @@ if(!function_exists('travianCultureThresholds')) {
 			'cultureCapacity' => $cultureCapacity,
 			'availableVillageSlots' => max(0, $cultureCapacity - $ownedVillages),
 			'nextVillageCount' => $nextVillageCount,
+			'currentRequiredPoints' => $currentRequiredPoints,
 			'nextRequiredPoints' => $nextRequiredPoints,
 			'remainingPoints' => $atConfiguredMaximum ? 0 : max(0, $nextRequiredPoints - $culturePoints),
+			'progressPoints' => $progressPoints,
+			'progressRequiredPoints' => $progressRequiredPoints,
 			'progressPercent' => $progressPercent,
 			'atConfiguredMaximum' => $atConfiguredMaximum,
 			'maxConfiguredVillages' => $maxConfiguredVillages
