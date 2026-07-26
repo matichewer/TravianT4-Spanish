@@ -5,6 +5,7 @@
 
         	function __construct() {
 				$this->connection = mysqli_connect(SQL_SERVER, SQL_USER, SQL_PASS);
+				mysqli_set_charset($this->connection, 'utf8mb4');
 				mysqli_select_db($this->connection, SQL_DB);
         	}
 

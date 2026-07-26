@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%config` (
   `medal_top` int(2) NOT NULL DEFAULT '10',
   `medal_ally_top` int(2) NOT NULL DEFAULT '10'
 
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 --
 -- Dumping data for table `%prefix%config`

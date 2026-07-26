@@ -8,6 +8,7 @@ class MYSQLi_DB {
 
     function __construct() {
         $this->connection = mysqli_connect(SQL_SERVER, SQL_USER, SQL_PASS, SQL_DB) or die(mysqli_error());
+        mysqli_set_charset($this->connection, 'utf8mb4');
     }
 
     function query($query) {

@@ -1,5 +1,6 @@
 <?php
 $connection = mysqli_connect(SQL_SERVER, SQL_USER, SQL_PASS);
+mysqli_set_charset($connection, 'utf8mb4');
 mysqli_select_db($connection, SQL_DB);
 $sql = mysqli_query($connection, "SELECT * FROM ".TB_PREFIX."config");
 $result = mysqli_fetch_array($sql);
