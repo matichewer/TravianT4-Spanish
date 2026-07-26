@@ -19,12 +19,20 @@ if($_GET){
 			}
 			return '[report'.$matches[1].']'.$content.'[/report'.$matches[1].']';
 		}, $input);
-		$reportIndex = 0;
-		$input = preg_replace_callback('/\[report[0-9]+\](.*?)\[\/report[0-9]+\]/is', function($matches) use (&$reportIndex) {
-			$tag = '[report'.$reportIndex.']'.$matches[1].'[/report'.$reportIndex.']';
-			$reportIndex++;
-			return $tag;
-		}, $input);
+		foreach (array('alliance', 'player', 'coor', 'report') as $referenceType) {
+			$referenceIndex = 0;
+			$input = preg_replace_callback(
+				'/\['.$referenceType.'[0-9]+\](.*?)\[\/'.$referenceType.'[0-9]+\]/is',
+				function($matches) use ($referenceType, &$referenceIndex) {
+					$tag = '['.$referenceType.$referenceIndex.']'
+						.$matches[1]
+						.'[/'.$referenceType.$referenceIndex.']';
+					$referenceIndex++;
+					return $tag;
+				},
+				$input
+			);
+		}
 		$input = '[message]'.$input.'[/message]';
 
 		$alliance = -1;
