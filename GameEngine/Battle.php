@@ -58,6 +58,182 @@ class Battle {
 		);
 	}
 
+	private function calculateCombatOutcome(
+		$attackInfantry,
+		$attackCavalry,
+		$defenderInfantry,
+		$defenderCavalry,
+		$residenceDefense,
+		$defenderTribe,
+		$wallLevel,
+		$attackerPopulation,
+		$defenderPopulation,
+		$involved,
+		$type
+	) {
+		$wallFactors = array(1 => 1.030, 2 => 1.020, 3 => 1.025, 4 => 1.000, 5 => 1.000);
+		$wallBaseDefense = array(1 => 10, 2 => 6, 3 => 8, 4 => 0, 5 => 0);
+		$wallLevel = max(0, min(20, (int)$wallLevel));
+		$wallFactor = pow(
+			isset($wallFactors[(int)$defenderTribe]) ? $wallFactors[(int)$defenderTribe] : 1,
+			$wallLevel
+		);
+		$wallBase = isset($wallBaseDefense[(int)$defenderTribe])
+			? $wallBaseDefense[(int)$defenderTribe]
+			: 0;
+		$defenderInfantry = ($defenderInfantry + $residenceDefense) * $wallFactor + $wallLevel * $wallBase;
+		$defenderCavalry = ($defenderCavalry + $residenceDefense) * $wallFactor + $wallLevel * $wallBase;
+
+		$attackPoints = $attackInfantry + $attackCavalry;
+		$defensePoints = $attackPoints > 0
+			? $defenderInfantry * ($attackInfantry / $attackPoints)
+				+ $defenderCavalry * ($attackCavalry / $attackPoints)
+				+ 10
+			: $defenderInfantry + $defenderCavalry + 10;
+		$moralBonus = 1.0;
+		if((int)$attackerPopulation > (int)$defenderPopulation) {
+			$moralExponent = $attackPoints < $defensePoints
+				? 0.2 * ($attackPoints / max($defensePoints, 0.000001))
+				: 0.2;
+			$moralBonus = min(
+				1.5,
+				pow((int)$attackerPopulation / max(1, (int)$defenderPopulation), $moralExponent)
+			);
+		}
+		$effectiveDefense = $defensePoints * $moralBonus;
+		$lossExponent = $involved >= 1000
+			? max(1.0, 2 * (1.8592 - pow($involved, 0.015)))
+			: 1.5;
+		$attackerWins = $attackPoints > $effectiveDefense;
+
+		if($attackPoints <= 0) {
+			$attackerLosses = 1.0;
+			$defenderLosses = 0.0;
+		} elseif((int)$type === 4) {
+			$ratio = pow($effectiveDefense / $attackPoints, $lossExponent);
+			$attackerLosses = $ratio / (1 + $ratio);
+			$defenderLosses = 1 - $attackerLosses;
+		} elseif($attackerWins) {
+			$attackerLosses = min(1.0, pow($effectiveDefense / $attackPoints, $lossExponent));
+			$defenderLosses = 1.0;
+		} else {
+			$attackerLosses = 1.0;
+			$defenderLosses = min(1.0, pow($attackPoints / max($effectiveDefense, 0.000001), $lossExponent));
+		}
+
+		return array(
+			'attacker_losses' => max(0, min(1, $attackerLosses)),
+			'defender_losses' => max(0, min(1, $defenderLosses)),
+			'attack_points' => $attackPoints,
+			'defense_points' => $defensePoints,
+			'effective_defense' => $effectiveDefense,
+			'moral_bonus' => $moralBonus,
+			'attacker_wins' => $attackerWins
+		);
+	}
+
+	private function calculateRamOutcome(
+		$ramCount,
+		$attackerLosses,
+		$attackPoints,
+		$effectiveDefense,
+		$wallLevel,
+		$upgradeLevel,
+		$moralBonus,
+		$stonemasonFactor,
+		$defenderTribe
+	) {
+		$upgradeFactor = round(200 * pow(1.0205, max(0, min(20, (int)$upgradeLevel)))) / 200;
+		$stonemasonFactor = max(1, (float)$stonemasonFactor);
+		$wallDurability = $this->battleWallDurability($defenderTribe);
+		$required = (int)round(
+			$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
+			/ (8 * $upgradeFactor / $stonemasonFactor)
+			* $wallDurability
+			+ 0.5
+		);
+		$firing = $this->calculateSiegeFiring(
+			$ramCount,
+			$attackerLosses,
+			$attackPoints,
+			$effectiveDefense
+		);
+		$damage = $firing * 8 * $upgradeFactor
+			/ (max(0.000001, $moralBonus) * $stonemasonFactor * $wallDurability);
+		$remainingLevel = $firing >= $required
+			? 0
+			: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
+
+		return array(
+			'required' => $required,
+			'firing' => $firing,
+			'level_after' => $remainingLevel
+		);
+	}
+
+	private function calculateCombatWithRams(
+		$attackInfantry,
+		$attackCavalry,
+		$defenderInfantry,
+		$defenderCavalry,
+		$residenceDefense,
+		$defenderTribe,
+		$wallLevel,
+		$attackerPopulation,
+		$defenderPopulation,
+		$involved,
+		$type,
+		$ramCount,
+		$ramUpgrade,
+		$stonemasonFactor
+	) {
+		$wallLevel = max(0, min(20, (int)$wallLevel));
+		$combatWallLevel = $wallLevel;
+		$ramOutcome = null;
+
+		// Ram survival depends on battle losses, while those losses depend on the
+		// wall level left by the rams. Resolve both against the same attack.
+		for($iteration = 0; $iteration <= 20; $iteration++) {
+			$combat = $this->calculateCombatOutcome(
+				$attackInfantry,
+				$attackCavalry,
+				$defenderInfantry,
+				$defenderCavalry,
+				$residenceDefense,
+				$defenderTribe,
+				$combatWallLevel,
+				$attackerPopulation,
+				$defenderPopulation,
+				$involved,
+				$type
+			);
+
+			if((int)$type !== 3 || (int)$ramCount <= 0 || $wallLevel <= 0 || $combat['attack_points'] <= 0) {
+				break;
+			}
+
+			$ramOutcome = $this->calculateRamOutcome(
+				$ramCount,
+				$combat['attacker_losses'],
+				$combat['attack_points'],
+				$combat['effective_defense'],
+				$wallLevel,
+				$ramUpgrade,
+				$combat['moral_bonus'],
+				$stonemasonFactor,
+				$defenderTribe
+			);
+			$nextWallLevel = max(0, min($wallLevel, (int)$ramOutcome['level_after']));
+			if($nextWallLevel >= $combatWallLevel) {
+				break;
+			}
+			$combatWallLevel = $nextWallLevel;
+		}
+
+		$combat['ram'] = $ramOutcome;
+		return $combat;
+	}
+
 	public function getOasisSimulationInput($oasisId) {
 		global $database, $session, $village;
 
@@ -383,46 +559,38 @@ class Battle {
 		$heroBonus = $attackerHero ? 1 + (float)$post['h_off_bonus'] / 100 : 1.0;
 		$attackInfantry *= $heroBonus;
 		$attackCavalry *= $heroBonus;
-		$attackPoints = $attackInfantry + $attackCavalry;
 
 		$residenceDefense = 2 * pow((int)$post['palast'], 2);
 		$wallLevel = isset($post['wall'.$defenderTribe]) ? (int)$post['wall'.$defenderTribe] : 0;
-		$wallFactors = array(1 => 1.030, 2 => 1.020, 3 => 1.025, 4 => 1.000);
-		$wallBaseDefense = array(1 => 10, 2 => 6, 3 => 8, 4 => 0);
-		$wallFactor = pow($wallFactors[$defenderTribe], $wallLevel);
-		$defenseInfantry = ($defenseInfantry + $residenceDefense) * $wallFactor + $wallLevel * $wallBaseDefense[$defenderTribe];
-		$defenseCavalry = ($defenseCavalry + $residenceDefense) * $wallFactor + $wallLevel * $wallBaseDefense[$defenderTribe];
-
-		if($attackPoints > 0) {
-			$defensePoints = $defenseInfantry * ($attackInfantry / $attackPoints)
-				+ $defenseCavalry * ($attackCavalry / $attackPoints)
-				+ 10;
-		} else {
-			$defensePoints = $defenseInfantry + $defenseCavalry + 10;
-		}
-
-		$moralBonus = 1.0;
-		if((int)$post['ew1'] > (int)$post['ew2']) {
-			$moralExponent = $attackPoints < $defensePoints
-				? 0.2 * ($attackPoints / max($defensePoints, 0.000001))
-				: 0.2;
-			$moralBonus = min(1.5, pow((int)$post['ew1'] / max(1, (int)$post['ew2']), $moralExponent));
-		}
-		$effectiveDefense = $defensePoints * $moralBonus;
-		$lossExponent = $involved >= 1000 ? max(1.0, 2 * (1.8592 - pow($involved, 0.015))) : 1.5;
-		$attackerWins = $attackPoints > $effectiveDefense;
-
-		if((int)$post['ktyp'] === 1) {
-			$ratio = $attackPoints > 0 ? pow($effectiveDefense / $attackPoints, $lossExponent) : INF;
-			$attackerLosses = is_finite($ratio) ? $ratio / (1 + $ratio) : 1.0;
-			$defenderLosses = 1 - $attackerLosses;
-		} elseif($attackerWins) {
-			$attackerLosses = min(1.0, pow($effectiveDefense / $attackPoints, $lossExponent));
-			$defenderLosses = 1.0;
-		} else {
-			$attackerLosses = 1.0;
-			$defenderLosses = min(1.0, pow($attackPoints / max($effectiveDefense, 0.000001), $lossExponent));
-		}
+		$ramCount = (int)$post['a1_7'];
+		$ramUpgrade = (int)$post['f1_7'];
+		$stonemasonLevel = (int)$post['stonemason'];
+		$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
+			? max(1, $bid34[$stonemasonLevel]['attri'] / 100)
+			: 1.0;
+		$combat = $this->calculateCombatWithRams(
+			$attackInfantry,
+			$attackCavalry,
+			$defenseInfantry,
+			$defenseCavalry,
+			$residenceDefense,
+			$defenderTribe,
+			$wallLevel,
+			(int)$post['ew1'],
+			(int)$post['ew2'],
+			$involved,
+			(int)$post['ktyp'] === 1 ? 4 : 3,
+			$ramCount,
+			$ramUpgrade,
+			$stonemasonFactor
+		);
+		$attackPoints = $combat['attack_points'];
+		$defensePoints = $combat['defense_points'];
+		$effectiveDefense = $combat['effective_defense'];
+		$moralBonus = $combat['moral_bonus'];
+		$attackerLosses = $combat['attacker_losses'];
+		$defenderLosses = $combat['defender_losses'];
+		$attackerWins = $combat['attacker_wins'];
 
 		$result = array(
 			1 => $attackerLosses,
@@ -456,58 +624,33 @@ class Battle {
 			}
 		}
 
-			$targetLevel = (int)$post['kata'];
-			$catapultCount = (int)$post['a1_8'];
-			$catapultUnit = $this->getTribeCatapultUnit($attackerTribe);
-			if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $catapultUnit > 0 && $targetLevel > 0 && $catapultCount > 0 && $attackPoints > 0) {
-				$catapultUpgrade = (int)$post['f1_8'];
-				$stonemasonLevel = (int)$post['stonemason'];
-				$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
-					? $bid34[$stonemasonLevel]['attri'] / 100
-					: 1.0;
-				$catapultsFiring = $this->calculateSiegeFiring(
-					$catapultCount,
-					$attackerLosses,
-					$attackPoints,
-					$effectiveDefense
-				);
-				$outcome = $this->calculateSiegeOutcome(
-					$catapultsFiring,
-					$targetLevel,
-					$catapultUpgrade,
-					$moralBonus,
-					$stonemasonFactor
-				);
-				$result[3] = $outcome['required'];
-				$result[4] = $catapultsFiring;
-				$result['target_level_after'] = $outcome['level_after'];
-			}
-
-		$ramCount = (int)$post['a1_7'];
-		if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $wallLevel > 0 && $ramCount > 0 && $attackPoints > 0) {
-			$ramUpgrade = (int)$post['f1_7'];
-			$stonemasonLevel = (int)$post['stonemason'];
-			$stonemasonFactor = $stonemasonLevel > 0 && isset($bid34[$stonemasonLevel])
-				? $bid34[$stonemasonLevel]['attri'] / 100
-				: 1.0;
-			$upgradeFactor = round(200 * pow(1.0205, $ramUpgrade)) / 200;
-			$battleRatio = pow($attackPoints / max($defensePoints, 0.000001), 1.5);
-			$firingFactor = $battleRatio >= 1 ? 1 - 0.5 / $battleRatio : 0.5 * $battleRatio;
-			$ramsFiring = $ramCount * (1 - $attackerLosses) * max(0, $firingFactor);
-			$wallDurability = $this->battleWallDurability($defenderTribe);
-			$required = (int)round(
-				$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
-				/ (8 * $upgradeFactor / $stonemasonFactor)
-				* $wallDurability
-				+ 0.5
+		$targetLevel = (int)$post['kata'];
+		$catapultCount = (int)$post['a1_8'];
+		$catapultUnit = $this->getTribeCatapultUnit($attackerTribe);
+		if((int)$post['ktyp'] === 0 && $defenderTribe !== 4 && $catapultUnit > 0 && $targetLevel > 0 && $catapultCount > 0 && $attackPoints > 0) {
+			$catapultUpgrade = (int)$post['f1_8'];
+			$catapultsFiring = $this->calculateSiegeFiring(
+				$catapultCount,
+				$attackerLosses,
+				$attackPoints,
+				$effectiveDefense
 			);
-			$damage = $ramsFiring * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor * $wallDurability);
-			$remainingLevel = $ramsFiring >= $required
-				? 0
-				: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
-			$result[7] = $required;
-			$result[8] = $ramsFiring;
-			$result['wall_level_after'] = $remainingLevel;
+			$outcome = $this->calculateSiegeOutcome(
+				$catapultsFiring,
+				$targetLevel,
+				$catapultUpgrade,
+				$moralBonus,
+				$stonemasonFactor
+			);
+			$result[3] = $outcome['required'];
+			$result[4] = $catapultsFiring;
+			$result['target_level_after'] = $outcome['level_after'];
+		}
+
+		if($combat['ram'] !== null) {
+			$result[7] = $combat['ram']['required'];
+			$result[8] = $combat['ram']['firing'];
+			$result['wall_level_after'] = $combat['ram']['level_after'];
 		}
 
 		return $result;
@@ -817,49 +960,37 @@ class Battle {
 			$defenderCavalry += $ownerDefense['cavalry'] * $ownerDefense['bonus'];
 		}
 
-		$wallFactors = array(1 => 1.030, 2 => 1.020, 3 => 1.025, 4 => 1.000, 5 => 1.000);
-		$wallBaseDefense = array(1 => 10, 2 => 6, 3 => 8, 4 => 0, 5 => 0);
 		$wallLevel = max(0, min(20, (int)$def_wall));
-		$wallFactor = pow(isset($wallFactors[(int)$def_tribe]) ? $wallFactors[(int)$def_tribe] : 1, $wallLevel);
-		$wallBase = isset($wallBaseDefense[(int)$def_tribe]) ? $wallBaseDefense[(int)$def_tribe] : 0;
 		$residenceDefense = 2 * pow(max(0, (int)$residence), 2);
-		$defenderInfantry = ($defenderInfantry + $residenceDefense) * $wallFactor + $wallLevel * $wallBase;
-		$defenderCavalry = ($defenderCavalry + $residenceDefense) * $wallFactor + $wallLevel * $wallBase;
+		$stonemasonFactor = isset($bid34[(int)$stonemason]['attri'])
+			? max(1, $bid34[(int)$stonemason]['attri'] / 100)
+			: 1;
+		$ramCount = isset($attackerAmounts[7]) ? $attackerAmounts[7] : 0;
+		$ramUpgrade = $this->battleUpgradeLevel($att_ab, 7);
+		$combat = $this->calculateCombatWithRams(
+			$attackerInfantry,
+			$attackerCavalry,
+			$defenderInfantry,
+			$defenderCavalry,
+			$residenceDefense,
+			$def_tribe,
+			$wallLevel,
+			$attpop,
+			$defpop,
+			$involved,
+			$type,
+			$ramCount,
+			$ramUpgrade,
+			$stonemasonFactor
+		);
+		$attackPoints = $combat['attack_points'];
+		$defensePoints = $combat['defense_points'];
+		$effectiveDefense = $combat['effective_defense'];
+		$moralBonus = $combat['moral_bonus'];
+		$attackerWins = $combat['attacker_wins'];
 
-		$attackPoints = $attackerInfantry + $attackerCavalry;
-		$defensePoints = $attackPoints > 0
-			? $defenderInfantry * ($attackerInfantry / $attackPoints) + $defenderCavalry * ($attackerCavalry / $attackPoints) + 10
-			: $defenderInfantry + $defenderCavalry + 10;
-		$moralBonus = 1.0;
-		if((int)$attpop > (int)$defpop) {
-			$moralExponent = $attackPoints < $defensePoints
-				? 0.2 * ($attackPoints / max($defensePoints, 0.000001))
-				: 0.2;
-			$moralBonus = min(1.5, pow((int)$attpop / max(1, (int)$defpop), $moralExponent));
-		}
-		$effectiveDefense = $defensePoints * $moralBonus;
-		$lossExponent = $involved >= 1000
-			? max(1.0, 2 * (1.8592 - pow($involved, 0.015)))
-			: 1.5;
-		$attackerWins = $attackPoints > $effectiveDefense;
-
-		if($attackPoints <= 0) {
-			$attackerLosses = 1.0;
-			$defenderLosses = 0.0;
-		} elseif((int)$type === 4) {
-			$ratio = pow($effectiveDefense / $attackPoints, $lossExponent);
-			$attackerLosses = $ratio / (1 + $ratio);
-			$defenderLosses = 1 - $attackerLosses;
-		} elseif($attackerWins) {
-			$attackerLosses = min(1.0, pow($effectiveDefense / $attackPoints, $lossExponent));
-			$defenderLosses = 1.0;
-		} else {
-			$attackerLosses = 1.0;
-			$defenderLosses = min(1.0, pow($attackPoints / max($effectiveDefense, 0.000001), $lossExponent));
-		}
-
-		$result[1] = max(0, min(1, $attackerLosses));
-		$result[2] = max(0, min(1, $defenderLosses));
+		$result[1] = $combat['attacker_losses'];
+		$result[2] = $combat['defender_losses'];
 		$result[5] = $moralBonus;
 		$result['Attack_points'] = $attackPoints;
 		$result['Defend_points'] = $defensePoints;
@@ -911,52 +1042,31 @@ class Battle {
 		}
 		$result['bounty'] = $maxBounty;
 
-			if((int)$type === 3 && $attackPoints > 0) {
-				$stonemasonFactor = isset($bid34[(int)$stonemason]['attri'])
-					? max(1, $bid34[(int)$stonemason]['attri'] / 100)
-					: 1;
-
-				$catapultCount = isset($attackerAmounts[8]) ? $attackerAmounts[8] : 0;
-				$catapultUnit = $this->getTribeCatapultUnit($att_tribe);
-				if($catapultUnit > 0 && $catapultCount > 0 && (int)$tblevel > 0) {
-					$result[4] = $this->calculateSiegeFiring(
-						$catapultCount,
-						$result[1],
-						$attackPoints,
-						$effectiveDefense
-					);
-					$outcome = $this->calculateSiegeOutcome(
-						$result[4],
-						(int)$tblevel,
-						$result[6],
-						$moralBonus,
-						$stonemasonFactor
-					);
-					$result[3] = $outcome['required'];
-					$result['target_level_after'] = $outcome['level_after'];
-				}
-
-				$ramCount = isset($attackerAmounts[7]) ? $attackerAmounts[7] : 0;
-				if($ramCount > 0 && $wallLevel > 0) {
-					$ramUpgrade = $this->battleUpgradeLevel($att_ab, 7);
-					$upgradeFactor = round(200 * pow(1.0205, $ramUpgrade)) / 200;
-					$wallDurability = $this->battleWallDurability($def_tribe);
-				$result[7] = (int)round(
-					$moralBonus * (pow($wallLevel, 2) + $wallLevel + 1)
-					/ (8 * $upgradeFactor / $stonemasonFactor)
-					* $wallDurability
-					+ 0.5
+		if((int)$type === 3 && $attackPoints > 0) {
+			$catapultCount = isset($attackerAmounts[8]) ? $attackerAmounts[8] : 0;
+			$catapultUnit = $this->getTribeCatapultUnit($att_tribe);
+			if($catapultUnit > 0 && $catapultCount > 0 && (int)$tblevel > 0) {
+				$result[4] = $this->calculateSiegeFiring(
+					$catapultCount,
+					$result[1],
+					$attackPoints,
+					$effectiveDefense
 				);
-					$result[8] = $this->calculateSiegeFiring(
-						$ramCount,
-						$result[1],
-						$attackPoints,
-						$effectiveDefense
-					);
-				$damage = $result[8] * 8 * $upgradeFactor / ($moralBonus * $stonemasonFactor * $wallDurability);
-				$result['wall_level_after'] = $result[8] >= $result[7]
-					? 0
-					: max(0, (int)floor(sqrt(max(0, pow($wallLevel + 0.5, 2) - $damage))));
+				$outcome = $this->calculateSiegeOutcome(
+					$result[4],
+					(int)$tblevel,
+					$result[6],
+					$moralBonus,
+					$stonemasonFactor
+				);
+				$result[3] = $outcome['required'];
+				$result['target_level_after'] = $outcome['level_after'];
+			}
+
+			if($combat['ram'] !== null) {
+				$result[7] = $combat['ram']['required'];
+				$result[8] = $combat['ram']['firing'];
+				$result['wall_level_after'] = $combat['ram']['level_after'];
 			}
 		}
 
