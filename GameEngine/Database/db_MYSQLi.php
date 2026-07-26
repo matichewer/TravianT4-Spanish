@@ -3430,7 +3430,7 @@
         		return mysqli_query($this->connection,$q);
         	}
         	function removeclimberrankpopAlly($user, $cp) {
-        		$q = "UPDATE " . TB_PREFIX . "alidata set clp = clp - '$cp'' where id = $user";
+        		$q = "UPDATE " . TB_PREFIX . "alidata set clp = clp - '$cp' where id = $user";
         		return mysqli_query($this->connection,$q);
         	}
         	function updateoldrankAlly($user, $cp) {
