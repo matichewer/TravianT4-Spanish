@@ -198,11 +198,11 @@ else if (is_numeric($btype))
 	else if ($btype == 16)
 	{
 		$utype = (($session->tribe - 1) * 10) + $dataarray[2];
-		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$technology->getUnitName($utype)." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"unit u".$utype."\"\"></div>";
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$technology->getUnitName($utype)." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"unit u".$utype."\"></div>";
 	}
 	else
 	{
-		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"silver (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"silver\"\"></div>";
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"Plata (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"silver\"></div>";
 	}
 }
 }

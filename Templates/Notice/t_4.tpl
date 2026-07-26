@@ -179,11 +179,30 @@ if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){
     
 }elseif($type==9){
 $btype = $dataarray[1];
-$type = $dataarray[2];
-include "Templates/Auction/alt.tpl";
-$typeArray = array("","helmet","body","leftHand","rightHand","shoes","horse","bandage25","bandage33","cage","scroll","ointment","bucketOfWater","bookOfWisdom","lawTables","artWork");
-if($dataarray[1]){
-	$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$name." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"reportInfo itemCategory itemCategory_".$typeArray[$dataarray[1]]."\"></div>";
+
+if ($btype == 'dead')
+{
+	$outputList .= "<div class=\"reportInfoIcon\"><img src=\"img/x.gif\" class=\"reportInfo adventureDifficulty0\" title=\"Tu héroe ha muerto\"></div>";
+}
+else if (is_numeric($btype))
+{
+	if ($btype < 16)
+	{
+		$type = $dataarray[2];
+		include "Templates/Auction/alt.tpl";
+		$typeArray = array("","helmet","body","leftHand","rightHand","shoes","horse","bandage25","bandage33","cage","scroll","ointment","bucketOfWater","bookOfWisdom","lawTables","artWork");
+
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$name." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"reportInfo itemCategory itemCategory_".$typeArray[$btype]."\"></div>";
+	}
+	else if ($btype == 16)
+	{
+		$utype = (($session->tribe - 1) * 10) + $dataarray[2];
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$technology->getUnitName($utype)." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"unit u".$utype."\"></div>";
+	}
+	else
+	{
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"Plata (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"silver\"></div>";
+	}
     }
 }
     $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";
