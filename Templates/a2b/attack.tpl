@@ -342,7 +342,6 @@ $end = ($tribe*10);
 
             <?php
             $speeds = array();
-            $scout = 1;
                 //find slowest unit.
                 for($i=1;$i<=11;$i++){
                     if (isset($process['t'.$i])){
@@ -353,19 +352,10 @@ $end = ($tribe*10);
 								$herodetail = $database->getHeroData($session->uid);
 								$speeds[] = $herodetail['speed'];
 							}
-
-                            if($i != 4){
-                                $scout = 0;
-                            }
                         }
                     }
                 }
-            
 
-            if($scout){
-                $process['c'] = 1;
-			}
-                
                 $time = $generator->procDistanceTime($from,$to,min($speeds),1);
 
             ?>
