@@ -37,13 +37,15 @@
 include("upgrade.tpl");
 ?>
 <div class="clear"></div>
-<?php if ($building->getTypeLevel(36) > 0) { ?>
+<?php
+$trainlist = $technology->getTrainingList(8);
+if ($building->getTypeLevel(36) > 0) {
+?>
 <form method="POST" name="snd" action="build.php">
 				<input type="hidden" name="id" value="<?php echo $id; ?>" />
 <input type="hidden" name="ft" value="t1" />
 <input type="hidden" name="k" value="<?php echo $session->mchecker; ?>" />
 			<?php
-			$trainlist = $technology->getTrainingList(8);
 			$train_amt = 0;
 			foreach($trainlist as $train) {
 				$train_amt += $train['amt'];
