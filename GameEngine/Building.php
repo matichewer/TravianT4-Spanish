@@ -206,7 +206,7 @@ class Building {
 			case 31: $build = "Muralla"; break;
 			case 32: $build = "Muro de tierra"; break;
 			case 33: $build = "Empalizada"; break;
-			case 34: $build = "Cabaña del picapedrero"; break;
+			case 34: $build = "Taller de cantería"; break;
 			case 35: $build = "Cervecería"; break;
 			case 36: $build = "Trampero"; break;
 			case 37: $build = "Mansión del héroe"; break;
@@ -480,7 +480,7 @@ class Building {
 			if($this->getTypeLevel(20) == 20 && $village->capital == 0) { return true; } else { return false; }
 			break;
 			case 34:
-			if($this->getTypeLevel(26) >= 3 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
+			if($village->capital == 1 && $this->getTypeLevel(26) >= 3 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
 			break;
 			case 35:
 			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
