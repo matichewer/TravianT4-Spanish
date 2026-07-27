@@ -4903,17 +4903,50 @@ class Automation {
         }
     }
 
-    private function weeklyMedals() {
-        // date('N') == 1 is Monday; medals are given out once, on the first page
-        // load of the week (i.e. right after Sunday ends / Monday begins).
-        if(date('N') == 1) {
-            $today = date('Y-m-d');
-            $lastRun = file_exists("GameEngine/Prevention/medals.txt") ? file_get_contents("GameEngine/Prevention/medals.txt") : '';
-            if($lastRun !== $today) {
-                file_put_contents("GameEngine/Prevention/medals.txt", $today);
-                $this->giveOutMedals();
-            }
+    private function weeklyMedalBoundary($now) {
+        $configuredStart = strtotime(START_DATE . " " . START_TIME);
+        $worldStart = max((int)COMMENCE, $configuredStart ? $configuredStart : 0);
+        $firstBoundary = strtotime("next monday 00:00:00", $worldStart);
+        if(!$firstBoundary || $now < $firstBoundary) {
+            return false;
         }
+
+        $boundary = strtotime("monday this week 00:00:00", $now);
+        return $boundary >= $firstBoundary ? date("Y-m-d", $boundary) : false;
+    }
+
+    private function weeklyMedals() {
+        $boundary = $this->weeklyMedalBoundary(time());
+        if($boundary === false) {
+            return;
+        }
+
+        // The marker itself is locked so simultaneous page requests cannot hand
+        // out the same medals twice. Keeping the completed Monday in the file
+        // also lets the first request after a Monday outage catch up later.
+        $marker = __DIR__ . "/Prevention/medals.txt";
+        $handle = @fopen($marker, "c+");
+        if(!$handle) {
+            error_log("Unable to open weekly medal marker: " . $marker);
+            return;
+        }
+        if(!flock($handle, LOCK_EX | LOCK_NB)) {
+            fclose($handle);
+            return;
+        }
+
+        rewind($handle);
+        $lastRun = trim(stream_get_contents($handle));
+        if($lastRun !== $boundary) {
+            $this->giveOutMedals();
+            ftruncate($handle, 0);
+            rewind($handle);
+            fwrite($handle, $boundary);
+            fflush($handle);
+        }
+
+        flock($handle, LOCK_UN);
+        fclose($handle);
     }
 
     /**
@@ -4974,7 +5007,7 @@ class Automation {
             mysql_query("insert into " . TB_PREFIX . "medal(userid, categorie, plaats, week, points, img) values('" . $row['id'] . "', '2', '" . ($i) . "', '" . $week . "', '" . $row['dp'] . "', '" . $img . "')");
         }
 
-        //Rank climbers of the week
+        //Population growth of the week
         $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY clp DESC Limit " . $top);
         $i = 0;
         while($row = mysql_fetch_array($result)) {
@@ -5139,7 +5172,7 @@ class Automation {
             }
         }
 
-        //je staat voor 3e / 5e / 10e keer in de top 3 rank climbers
+        //Population growth top-three streaks
         $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY clp DESC Limit " . $top);
         while($row = mysql_fetch_array($result)) {
             $result1 = mysql_query("SELECT count(*) FROM ".TB_PREFIX."medal WHERE userid='" . $row['id'] . "' AND categorie = 10 AND plaats<=" . $streakA . "");
@@ -5159,7 +5192,7 @@ class Automation {
         }
 
         if($streakSplit) {
-            //je staat voor 3e / 5e / 10e keer in de top 10 rank climbers
+            //Population growth top-ten streaks
             $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY clp DESC Limit " . $top);
             while($row = mysql_fetch_array($result)) {
                 $result1 = mysql_query("SELECT count(*) FROM ".TB_PREFIX."medal WHERE userid='" . $row['id'] . "' AND categorie = 10 AND plaats<=" . $streakB . "");
