@@ -420,6 +420,43 @@ class Automation {
         return $payload;
     }
 
+    public function calculateCrannyProtection($buildings, $attackerTribe, $defenderTribe, $capacityMultiplier = null) {
+        global $bid23;
+
+        $nominal = 0.0;
+        if(is_array($buildings) && is_array($bid23)) {
+            for($field = 19; $field <= 38; $field++) {
+                $typeKey = 'f'.$field.'t';
+                $levelKey = 'f'.$field;
+                if(!isset($buildings[$typeKey], $buildings[$levelKey])
+                    || (int)$buildings[$typeKey] !== 23) {
+                    continue;
+                }
+                $level = (int)$buildings[$levelKey];
+                if($level > 0 && isset($bid23[$level]['attri'])) {
+                    $nominal += max(0, (float)$bid23[$level]['attri']);
+                }
+            }
+        }
+
+        if($capacityMultiplier === null) {
+            $capacityMultiplier = defined('CRANNY_CAPACITY') ? CRANNY_CAPACITY : 1;
+        }
+        $nominal *= max(0, (float)$capacityMultiplier);
+
+        // German attackers reduce enemy cranny protection to 80%; Gaul
+        // defenders double the capacity of their crannies.
+        $attackerFactor = (int)$attackerTribe === 2 ? 0.8 : 1.0;
+        $defenderFactor = (int)$defenderTribe === 3 ? 2.0 : 1.0;
+        $capacity = $nominal * $defenderFactor;
+
+        return array(
+            'nominal' => $nominal,
+            'capacity' => $capacity,
+            'protected' => $capacity * $attackerFactor
+        );
+    }
+
     public function __construct() {
         if(!file_exists("GameEngine/Prevention/cleardeleting.txt") or time() - filemtime("GameEngine/Prevention/cleardeleting.txt") > 50) {
             $this->clearDeleting();
@@ -2275,20 +2312,14 @@ class Automation {
 
 
                 if(!$isoasis) {
-                    // get toatal cranny value:
                     $buildarray = $database->getResourceLevel($data['to']);
-                    $cranny = 0;
-                    for ($i = 19; $i < 39; $i++) {
-                        if($buildarray['f'.$i.'t'] == 23) {
-                            $cranny += $bid23[$buildarray['f'.$i.'']]['attri'] * CRANNY_CAPACITY;
-                        }
-                    }
-
-                    //cranny efficiency
-                    $atk_bonus = ($owntribe == 2) ? (4 / 5) : 1;
-                    $def_bonus = ($targettribe == 3) ? 2 : 1;
-
-                    $cranny_eff = ($cranny * $atk_bonus) * $def_bonus;
+                    $crannyProtection = $this->calculateCrannyProtection(
+                        $buildarray,
+                        $owntribe,
+                        $targettribe
+                    );
+                    $cranny = $crannyProtection['capacity'];
+                    $cranny_eff = $crannyProtection['protected'];
 
                     // work out available resources.
                     $this->updateRes($data['to'], $to['owner']);
@@ -2299,6 +2330,7 @@ class Automation {
                     $totwood = $database->getVillageField($data['to'], 'wood');
                     $totcrop = $database->getVillageField($data['to'], 'crop');
                 } else {
+                    $cranny = 0;
                     $cranny_eff = 0;
 
                     // work out available resources.
@@ -2648,7 +2680,7 @@ class Automation {
 <tbody class=\"goods\">
 	<tr><th>".REPORT_RESOURCES."</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"".LUMBER."\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\">".round($totcrop)."</div></div></td></tr></tbody>
 
-<tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Escondite\">".$cranny."</div></div></td></tr></tbody>";
+<tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Escondite\">".round($cranny)."</div></div></td></tr></tbody>";
 
                     } else if($data['spy'] == 2) {
                         $rptitle = 'Palacio/Residencia';
