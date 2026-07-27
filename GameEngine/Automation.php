@@ -444,11 +444,9 @@ class Automation {
         }
         $nominal *= max(0, (float)$capacityMultiplier);
 
-        // German attackers reduce enemy cranny protection to 80%; Gaul
-        // defenders double the capacity of their crannies.
+        // German attackers reduce enemy cranny protection to 80%.
         $attackerFactor = (int)$attackerTribe === 2 ? 0.8 : 1.0;
-        $defenderFactor = (int)$defenderTribe === 3 ? 2.0 : 1.0;
-        $capacity = $nominal * $defenderFactor;
+        $capacity = $nominal;
 
         return array(
             'nominal' => $nominal,

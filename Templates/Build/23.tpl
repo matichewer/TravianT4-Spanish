@@ -10,13 +10,7 @@ El escondite sirve para ocultar parte de tus recursos cuando la aldea es atacada
 	<tr>
 		<th>Capacidad del escondite</th>
 		<td><b>
-        <?php
-		if($session->tribe == 3) {
-		echo $bid23[$village->resarray['f'.$id]]['attri']*2*CRANNY_CAPACITY;
-        } else {
-        echo $bid23[$village->resarray['f'.$id]]['attri']*CRANNY_CAPACITY;
-        }
-        ?>        
+        <?php echo $bid23[$village->resarray['f'.$id]]['attri']*CRANNY_CAPACITY; ?>
         </b> unidades</td>
 	</tr>
 	<tr>
@@ -25,13 +19,7 @@ El escondite sirve para ocultar parte de tus recursos cuando la aldea es atacada
         ?>
 		<th>Capacidad del escondite en el nivel <?php echo $village->resarray['f'.$id]+1; ?></th>
 		<td><b>
-        <?php
-		if($session->tribe == 3) {
-		echo $bid23[$village->resarray['f'.$id]+1]['attri']*2*CRANNY_CAPACITY;
-        } else {
-        echo $bid23[$village->resarray['f'.$id]+1]['attri']*CRANNY_CAPACITY;
-        }
-        ?>
+        <?php echo $bid23[$village->resarray['f'.$id]+1]['attri']*CRANNY_CAPACITY; ?>
         
         </b> unidades</td>
         <?php
