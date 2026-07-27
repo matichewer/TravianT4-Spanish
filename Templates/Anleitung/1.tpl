@@ -153,13 +153,11 @@ El cereal producido por tus granjas se almacena en el granero. Al aumentar su ni
 
 <img src="img/un/h/gid23.gif" width=166 height=150 border=0 alt="Escondite" title="Escondite" align="left" />
 
-El escondite se usa para ocultar parte de tus recursos cuando la aldea es atacada. Estos recursos no se pueden robar. En el nivel 1 se ocultan 100 recursos.
+El escondite se usa para ocultar parte de tus recursos cuando la aldea es atacada. Estos recursos no se pueden robar. En el nivel 1 se ocultan 1000 unidades de cada recurso.
 
 <br><br>
 
 <b>Ventaja del pueblo:</b><br>
-
-Galos: el escondite es el doble de grande.<br>
 
 Germanos: los escondites enemigos solo ocultan el 66% de la cantidad normal en la versión 2.5 y 3 de Travian, y el 80% de la cantidad normal en la versión 3.5.    <br>
 

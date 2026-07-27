@@ -1,6 +1,6 @@
 <h1><img class="unit ugeb" src="img/x.gif"> Escondite</h1><img class="building g23" src="img/x.gif" alt="Escondite" title="Escondite" />El escondite se usa para ocultar al menos parte de tus recursos cuando la aldea es atacada. Estos recursos no se pueden robar.
 <br /><br />
-En el nivel 1 el escondite guarda 100 unidades de cada recurso. Los escondites galos son el doble de grandes que los demás.
+En el nivel 1 el escondite guarda 1000 unidades de cada recurso.
 <br /><br />
 CONSEJOS
 <br />
@@ -13,4 +13,3 @@ En T3.5 el escondite es un 80% de efectivo contra los germanos.<p><b>Costos</b> 
  <area href="manual.php?typ=4&amp;s=27" title="adelante" coords="71,0,116,18" shape="rect" alt="" />
 </map>
 <img usemap="#nav" src="img/x.gif" class="navi" alt="" />
-

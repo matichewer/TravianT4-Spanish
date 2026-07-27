@@ -438,11 +438,14 @@ class Building {
 			case 15:
 			case 16:
 			case 18:
-			case 23:
 			case 31:
 			case 32:
 			case 33:
 			return true;
+			break;
+			case 23:
+			return !$this->hasQueuedType(23)
+				&& ($this->getTypeCount(23) == 0 || $this->getTypeLevel(23) >= 10);
 			break;
 			case 10:
 			return ($this->getTypeLevel(15) >= 1)? true : false;

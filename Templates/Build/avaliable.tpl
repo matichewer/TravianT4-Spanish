@@ -58,7 +58,7 @@ foreach ($database->getJobs($_SESSION['wid']) as $bdata) {
 if($mainbuilding == 0 && !$database->getBuildList(15) && $id != 39  && $id != 40) {
     include("avaliable/mainbuilding.tpl");
 }
-if(($cranny == 0 || $cranny == 9) && !$database->getBuildList(23) && $mainbuilding >= 1 && $id != 39 && $id != 40) {
+if(($cranny == 0 || $cranny >= 10) && !$database->getBuildList(23) && $mainbuilding >= 1 && $id != 39 && $id != 40) {
     include("avaliable/cranny.tpl");
 }
 if(($granary == 0 || $granary == 20) && !$database->getBuildList(11) && $mainbuilding >= 1 && $id != 39 && $id != 40 ) {

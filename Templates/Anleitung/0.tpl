@@ -784,8 +784,6 @@ Para los principiantes y los jugadores que no saben exactamente qué quieren jug
 
 <li>Los mercaderes pueden transportar 750 unidades de recursos (velocidad: 24 casillas/hora)</li>
 
-<li>El Escondite es el doble de grande</li>
-
 <li>Armas de asedio costosas</li>
 
 <li>Colonos baratos</li></ul>
