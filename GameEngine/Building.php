@@ -445,7 +445,6 @@ class Building {
 			return true;
 			break;
 			case 10:
-			case 20:
 			return ($this->getTypeLevel(15) >= 1)? true : false;
 			break;
 			case 5:

@@ -260,7 +260,7 @@ if($blacksmith == 0 && $barrack != 0 && ($academy == 0 || $mainbuilding < 3)) {
 if($stonemasonslodge == 0 && $village->capital == 1 && $palace != 0 && $mainbuilding >= 2 && ($palace < 3 || $mainbuilding < 5)) {
    include("soon/stonemason.tpl");
 }
-if($stable == 0 && $blacksmith != 0 && $academy >= 2 && ($blacksmith < 3 || $academy < 5)) {
+if($stable == 0 && !$database->getBuildList(20) && ($blacksmith < 3 || $academy < 5)) {
    include("soon/stable.tpl");
 }
 if($treasury == 0 && $mainbuilding < 10 && $mainbuilding >= 5) {
@@ -354,9 +354,6 @@ if($greatworkshop == 0 && $workshop >= 15 && $workshop < 20 && $village->capital
     }
     if($stonemasonslodge == 0 && $village->capital == 1 && $residence == 0 && ($palace == 0 || $mainbuilding < 2)) {
     include("soon/stonemason.tpl");
-    }
-    if($stable == 0 && ($blacksmith == 0 || $academy < 2)) {
-    include("soon/stable.tpl");
     }
     if($treasury == 0 && $mainbuilding < 5) {
     include("soon/treasury.tpl");
