@@ -656,6 +656,8 @@
 							. " exp3 = IF(exp3 = $target,0,exp3)"
 							. " WHERE wref != $from AND (exp1 = $target OR exp2 = $target OR exp3 = $target)"
 						);
+						$this->syncClimberPopulation($defenderOwner);
+						$this->syncClimberPopulation($attackerOwner);
 						return array(
 							'status' => 'conquered',
 							'old_loyalty' => $oldLoyalty,
@@ -682,6 +684,7 @@
 						mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "$table WHERE vref = $wid");
 					}
 					mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "vdata WHERE wref = $wid AND owner = $uid");
+					$this->syncClimberPopulation($uid);
 					$q = "UPDATE " . TB_PREFIX . "wdata w LEFT JOIN " . TB_PREFIX . "vdata v ON v.wref = w.id SET w.occupied = 0 WHERE w.id = $wid AND v.wref IS NULL";
 					$result = mysqli_query($this->connection,$q);
 					return $result && mysqli_affected_rows($this->connection) === 1;
@@ -708,8 +711,12 @@
         		$time = time();
         		$q = "INSERT IGNORE into " . TB_PREFIX . "vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values
         ('$wid', '$uid', '$vname', '$capital', 2, 1, 0, 780, 780, 780, 800, 780, 800, '$time', '$time')";
-			return mysqli_query($this->connection,$q);
-        	}
+			$result = mysqli_query($this->connection,$q);
+			if($result) {
+				$this->syncClimberPopulation((int)$uid);
+			}
+			return $result;
+			}
 
         	function addResourceFields($vid, $type) {
         		switch($type) {
@@ -1392,25 +1399,84 @@
         		return mysqli_insert_id($this->connection);
         	}
 
+			function syncAllianceClimberPopulation($aid) {
+				$aid = (int)$aid;
+				if($aid <= 0) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "alidata a
+					LEFT JOIN (
+						SELECT u.alliance AS aid, COALESCE(SUM(v.pop),0) AS totalpop
+						FROM " . TB_PREFIX . "users u
+						LEFT JOIN " . TB_PREFIX . "vdata v ON v.owner = u.id
+						WHERE u.alliance = $aid
+						GROUP BY u.alliance
+					) totals ON totals.aid = a.id
+					SET a.clp = a.clp + (
+							CAST(COALESCE(totals.totalpop,0) AS SIGNED)
+							- CAST(a.oldrank AS SIGNED)
+						),
+						a.oldrank = COALESCE(totals.totalpop,0)
+					WHERE a.id = $aid";
+				return mysqli_query($this->connection,$q);
+			}
+
+			function syncClimberPopulation($uid) {
+				$uid = (int)$uid;
+				if($uid <= 0) {
+					return false;
+				}
+				$q = "SELECT alliance FROM " . TB_PREFIX . "users WHERE id = $uid";
+				$result = mysqli_query($this->connection,$q);
+				$row = $result ? mysqli_fetch_assoc($result) : false;
+				if(!$row) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "users u
+					LEFT JOIN (
+						SELECT owner, COALESCE(SUM(pop),0) AS totalpop
+						FROM " . TB_PREFIX . "vdata
+						WHERE owner = $uid
+						GROUP BY owner
+					) totals ON totals.owner = u.id
+					SET u.clp = u.clp + (
+							CAST(COALESCE(totals.totalpop,0) AS SIGNED)
+							- CAST(u.oldrank AS SIGNED)
+						),
+						u.oldrank = COALESCE(totals.totalpop,0)
+					WHERE u.id = $uid";
+				$updated = mysqli_query($this->connection,$q);
+				$aid = (int)$row['alliance'];
+				if($updated && $aid > 0) {
+					$this->syncAllianceClimberPopulation($aid);
+				}
+				return $updated;
+			}
+
+			function syncAllClimberPopulations() {
+				$accessLimit = INCLUDE_ADMIN ? 10 : 8;
+				$result = mysqli_query(
+					$this->connection,
+					"SELECT id FROM " . TB_PREFIX . "users
+					 WHERE id > 3 AND tribe <= 3 AND access < $accessLimit"
+				);
+				if(!$result) {
+					return false;
+				}
+				while($row = mysqli_fetch_assoc($result)) {
+					$this->syncClimberPopulation((int)$row['id']);
+				}
+				$allies = mysqli_query($this->connection,"SELECT id FROM " . TB_PREFIX . "alidata");
+				if($allies) {
+					while($ally = mysqli_fetch_assoc($allies)) {
+						$this->syncAllianceClimberPopulation((int)$ally['id']);
+					}
+				}
+				return true;
+			}
+
 			function procAllyPop($aid) {
-				$ally = $this->getAlliance($aid);
-				$memberlist = $this->getAllMember($ally['id']);
-				$oldrank = 0;
-				foreach($memberlist as $member) {
-					$oldrank += $this->getVSumField($member['id'],"pop");
-				}
-				if($ally['oldrank'] != $oldrank){
-					if($ally['oldrank'] < $oldrank) {
-						$totalpoints = $oldrank - $ally['oldrank'];
-						$this->addclimberrankpopAlly($ally['id'], $totalpoints);
-						$this->updateoldrankAlly($ally['id'], $oldrank);
-					} else
-						if($ally['oldrank'] > $oldrank) {
-							$totalpoints = $ally['oldrank'] - $oldrank;
-							$this->removeclimberrankpopAlly($ally['id'], $totalpoints);
-							$this->updateoldrankAlly($ally['id'], $oldrank);
-						}
-				}
+				return $this->syncAllianceClimberPopulation($aid);
 			}
 
         	/*****************************************
@@ -1644,14 +1710,19 @@
         		return mysqli_query($this->connection,$q);
         	}
 
-        	function modifyPop($vid, $pop, $mode) {
-        		if(!$mode) {
-        			$q = "UPDATE " . TB_PREFIX . "vdata set pop = pop + $pop where wref = $vid";
-        		} else {
-        			$q = "UPDATE " . TB_PREFIX . "vdata set pop = pop - $pop where wref = $vid";
-        		}
-        		return mysqli_query($this->connection,$q);
-        	}
+			function modifyPop($vid, $pop, $mode) {
+				$owner = (int)$this->getVillageField($vid, "owner");
+				if(!$mode) {
+					$q = "UPDATE " . TB_PREFIX . "vdata set pop = pop + $pop where wref = $vid";
+				} else {
+					$q = "UPDATE " . TB_PREFIX . "vdata set pop = pop - $pop where wref = $vid";
+				}
+				$result = mysqli_query($this->connection,$q);
+				if($result && $owner > 0) {
+					$this->syncClimberPopulation($owner);
+				}
+				return $result;
+			}
 
         	function addCP($ref, $cp) {
         		$q = "UPDATE " . TB_PREFIX . "vdata set cp = cp + '$cp' where wref = '$ref'";

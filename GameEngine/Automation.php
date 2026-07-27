@@ -4876,147 +4876,20 @@ class Automation {
     }
 
     private function procNewClimbers() {
-        if(file_exists("GameEngine/Prevention/climbers.txt")) {
-            unlink("GameEngine/Prevention/climbers.txt");
-        }
-        global $database, $ranking;
-        $users = "SELECT * FROM ".TB_PREFIX."users WHERE access < ".(INCLUDE_ADMIN ? "10" : "8")." and tribe <= 3";
-        if(mysql_num_rows(mysql_query($users)) > 0) {
-            $q = "SELECT * FROM ".TB_PREFIX."medal order by week DESC LIMIT 0, 1";
-            $result = mysql_query($q);
-            if(mysql_num_rows($result)) {
-                $row = mysql_fetch_assoc($result);
-                $week = ($row['week'] + 1);
-            } else {
-                $week = '1';
-            }
-            $q = "SELECT * FROM ".TB_PREFIX."users where oldrank = 0 and id > 4";
-            $array = $database->query_return($q);
-            foreach ($array as $user) {
-                $newrank = $ranking->getUserRank($user['id']);
-                if($week > 1) {
-                    for ($i = $newrank; $i <= mysql_num_rows(mysql_query($users)); $i++) {
-                        $q2 = mysql_query("SELECT * FROM ".TB_PREFIX."users where oldrank = ".$i);
-                        $climber2 = mysql_fetch_array($q2);
-                        $oldrank = $ranking->getUserRank($climber2['id']);
-                        $totalpoints = $oldrank - $climber2['oldrank'];
-                        $database->removeclimberrankpop($climber2['id'], $totalpoints);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    }
-                    $database->updateoldrank($user['id'], $newrank);
-                } else {
-                    $totalpoints = mysql_num_rows(mysql_query($users)) - $newrank;
-                    $database->setclimberrankpop($user['id'], $totalpoints + 1);
-                    $database->updateoldrank($user['id'], $newrank);
-                    for ($i = 1; $i <= $newrank; $i++) {
-                        $q2 = mysql_query("SELECT * FROM ".TB_PREFIX."users where oldrank = ".$i);
-                        $climber2 = mysql_fetch_array($q2);
-                        $oldrank = $ranking->getUserRank($climber2['id']);
-                        $totalpoints = mysql_num_rows(mysql_query($users)) - $oldrank;
-                        $database->setclimberrankpop($climber2['id'], $totalpoints + 1);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    }
-                    for ($i = $newrank; $i < mysql_num_rows(mysql_query($users)); $i++) {
-                        $q2 = mysql_query("SELECT * FROM ".TB_PREFIX."users where oldrank = ".$i);
-                        $climber2 = mysql_fetch_array($q2);
-                        $oldrank = $ranking->getUserRank($climber2['id']);
-                        $totalpoints = mysql_num_rows(mysql_query($users)) - $oldrank;
-                        $database->setclimberrankpop($climber2['id'], $totalpoints + 1);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    }
-                }
-            }
-        }
-        if(file_exists("GameEngine/Prevention/climbers.txt")) {
-            unlink("GameEngine/Prevention/climbers.txt");
+        global $database;
+        $accessLimit = INCLUDE_ADMIN ? 10 : 8;
+        $users = $database->query_return(
+            "SELECT id FROM ".TB_PREFIX."users
+             WHERE oldrank = 0 AND id > 3 AND tribe <= 3 AND access < ".$accessLimit
+        );
+        foreach ($users as $user) {
+            $database->syncClimberPopulation((int)$user['id']);
         }
     }
 
     private function procClimbers($uid) {
-        global $database, $ranking;
-        $users = "SELECT * FROM ".TB_PREFIX."users WHERE access < ".(INCLUDE_ADMIN ? "10" : "8")." and tribe <= 3";
-        $climber = $database->getUserArray($uid, 1);
-        if(mysql_num_rows(mysql_query($users)) > 0) {
-            $q = "SELECT * FROM ".TB_PREFIX."medal order by week DESC LIMIT 0, 1";
-            $result = mysql_query($q);
-            if(mysql_num_rows($result)) {
-                $row = mysql_fetch_assoc($result);
-                $week = ($row['week'] + 1);
-            } else {
-                $week = '1';
-            }
-            $myrank = $ranking->getUserRank($uid);
-            if($climber['oldrank'] > $myrank) {
-                for ($i = $myrank; $i <= $climber['oldrank']; $i++) {
-                    $q2 = mysql_query("SELECT * FROM ".TB_PREFIX."users where oldrank = ".$i);
-                    $climber2 = mysql_fetch_array($q2);
-                    $oldrank = $ranking->getUserRank($climber2['id']);
-                    if($week > 1) {
-                        $totalpoints = $oldrank - $climber2['oldrank'];
-                        $database->removeclimberrankpop($climber2['id'], $totalpoints);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    } else {
-                        $totalpoints = mysql_num_rows(mysql_query($users)) - $oldrank;
-                        $database->setclimberrankpop($climber2['id'], $totalpoints);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    }
-                }
-                if($week > 1) {
-                    $totalpoints = $climber['oldrank'] - $myrank;
-                    $database->addclimberrankpop($uid, $totalpoints);
-                    $database->updateoldrank($uid, $myrank);
-                } else {
-                    $totalpoints = mysql_num_rows(mysql_query($users)) - $myrank;
-                    $database->setclimberrankpop($uid, $totalpoints);
-                    $database->updateoldrank($uid, $myrank);
-                }
-            } else if($climber['oldrank'] < $myrank) {
-                for ($i = $climber['oldrank']; $i <= $myrank; $i++) {
-                    $q2 = mysql_query("SELECT * FROM ".TB_PREFIX."users where oldrank = ".$i);
-                    $climber2 = mysql_fetch_array($q2);
-                    $oldrank = $ranking->getUserRank($climber2['id']);
-                    if($week > 1) {
-                        $totalpoints = $climber2['oldrank'] - $oldrank;
-                        $database->addclimberrankpop($climber2['id'], $totalpoints);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    } else {
-                        $totalpoints = mysql_num_rows(mysql_query($users)) - $oldrank;
-                        $database->setclimberrankpop($climber2['id'], $totalpoints);
-                        $database->updateoldrank($climber2['id'], $oldrank);
-                    }
-                }
-                if($week > 1) {
-                    $totalpoints = $myrank - $climber['oldrank'];
-                    $database->removeclimberrankpop($uid, $totalpoints);
-                    $database->updateoldrank($uid, $myrank);
-                } else {
-                    $totalpoints = mysql_num_rows(mysql_query($users)) - $myrank;
-                    $database->setclimberrankpop($uid, $totalpoints);
-                    $database->updateoldrank($uid, $myrank);
-                }
-            }
-        }
-        $aid = $database->getUserField($uid, "alliance", 0);
-        if(mysql_num_rows(mysql_query($users)) > 0 && $aid != 0) {
-            $ally = $database->getAlliance($aid);
-            $memberlist = $database->getAllMember($ally['id']);
-            $oldrank = 0;
-            foreach ($memberlist as $member) {
-                $oldrank += $database->getVSumField($member['id'], "pop");
-            }
-            if($ally['oldrank'] != $oldrank) {
-                if($ally['oldrank'] < $oldrank) {
-                    $totalpoints = $oldrank - $ally['oldrank'];
-                    $database->addclimberrankpopAlly($ally['id'], $totalpoints);
-                    $database->updateoldrankAlly($ally['id'], $oldrank);
-                } else
-                    if($ally['oldrank'] > $oldrank) {
-                        $totalpoints = $ally['oldrank'] - $oldrank;
-                        $database->removeclimberrankpopAlly($ally['id'], $totalpoints);
-                        $database->updateoldrankAlly($ally['id'], $oldrank);
-                    }
-            }
-        }
+        global $database;
+        $database->syncClimberPopulation((int)$uid);
     }
 
     private function regenerateOasisTroops() {
@@ -5044,12 +4917,17 @@ class Automation {
     }
 
     /**
-     * Categories: 1 attackers top10, 2 defenders top10, 3 climbers top10 (ally), 4 robbers top10,
+     * Categories: 1 attackers top10, 2 defenders top10, 3 population growth top10 (ally), 4 robbers top10,
      * 5 bonus att+def top10, 6/12 att top3/top10 streak, 7/13 def top3/top10 streak,
-     * 8/14 pop climbers top3/top10 streak, 9/15 robbers top3/top10 streak, 10 rank climbers top10,
-     * 11/16 rank climbers top3/top10 streak.
+     * 8/14 pop growth top3/top10 streak, 9/15 robbers top3/top10 streak, 10 population growth top10,
+     * 11/16 population growth top3/top10 streak.
      */
     public function giveOutMedals() {
+        global $database;
+        // Reconcile any population change that came from an uncommon path before
+        // the scores are frozen into medals and reset for the next week.
+        $database->syncAllClimberPopulations();
+
         $q = "SELECT * FROM ".TB_PREFIX."medal order by week DESC LIMIT 0, 1";
         $result = mysql_query($q);
         if(mysql_num_rows($result)) {

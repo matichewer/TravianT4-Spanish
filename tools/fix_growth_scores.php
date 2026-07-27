@@ -1,10 +1,8 @@
 <?php
-// One-time data repair: the procClimbers()/removeclimberrankpopAlly() bugs left
-// users.clp/oldrank and alidata.clp/oldrank with garbage values (including negative
-// clp) that weeklyMedals() would otherwise use as-is to pick this week's climber
-// medal. This recomputes both from real current population so the medal reflects
-// actual growth. Safe to run again later (e.g. after a future medal reset) since it
-// only derives values from current vdata population.
+// First-week data repair: seed the current score and population baseline from the
+// real village population before the first medals are awarded. Do not run this in
+// later weeks: it intentionally sets clp to total population, while normal weekly
+// tracking keeps clp as the population gained since the previous medal reset.
 include_once("GameEngine/Database.php");
 
 $accessLimit = defined('INCLUDE_ADMIN') && INCLUDE_ADMIN ? 10 : 8;
@@ -17,15 +15,13 @@ $result = mysql_query(
      GROUP BY u.id
      ORDER BY totpop DESC, u.id ASC"
 );
-$position = 0;
 while ($row = mysql_fetch_assoc($result)) {
-    $position++;
     if ($row['id'] <= 3) {
         continue;
     }
     $pop = (int)$row['totpop'];
-    mysql_query("UPDATE " . TB_PREFIX . "users SET clp = $pop, oldrank = $position WHERE id = " . $row['id']);
-    echo "user {$row['id']}: pop=$pop rank=$position\n";
+    mysql_query("UPDATE " . TB_PREFIX . "users SET clp = $pop, oldrank = $pop WHERE id = " . $row['id']);
+    echo "user {$row['id']}: score=$pop baseline=$pop\n";
 }
 
 $allies = mysql_query("SELECT id FROM " . TB_PREFIX . "alidata");
