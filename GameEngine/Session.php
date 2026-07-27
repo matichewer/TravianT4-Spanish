@@ -200,6 +200,7 @@ ob_start(); //this is enough
             include("AutomationSinglePlayer.php");
         }
 
+		include ("Technology.php");
 		include ("Automation.php");
 		include ("Logging.php");
 		include ("Alliance.php");

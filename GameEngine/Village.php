@@ -4,7 +4,7 @@ date_default_timezone_set('America/Argentina/Buenos_Aires');
 include("Session.php");
 include("Building.php");
 include("Market.php");
-include("Technology.php");
+include_once("Technology.php");
 require_once __DIR__."/Hero.php";
 class Village {
 	
