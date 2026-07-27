@@ -5,6 +5,16 @@ if(isset($_GET['aid']) && !is_numeric($_GET['aid'])) die('Hacking Attemp');
        include ("GameEngine/Chat.php");
 $start = $generator->pageLoadTimeStart();
 $alliance->procAlliance($_GET);
+if(isset($_POST['o'], $_POST['s'], $_POST['a'])
+	&& (int)$_POST['o'] === 3
+	&& (int)$_POST['s'] === 5
+	&& (int)$_POST['a'] === 3) {
+	$alliance->procAlliForm($_POST);
+	if($session->access != BANNED && $form->returnErrors() == 0) {
+		header("Location: allianz.php?aid=".(int)$session->alliance);
+		exit;
+	}
+}
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
 	if(isset($_GET['s'])){
@@ -141,15 +151,9 @@ if($ally_exist['id']!=0 or $_GET['fid'] or $_GET['fid2'] or $session->alliance!=
        				include ("Templates/Alliance/kick.tpl");
        			}
        			break;
-       		case 3:
-			if(isset($_POST['s'],$_POST['a']) && $_POST['s'] == 5 && $_POST['a'] == 3) {
-       				$alliance->procAlliForm($_POST);
-       				//echo "Funcion para el cambio de nombre de la alianza";
-       				include ("Templates/Alliance/allidesc.tpl");
-       			} else {
-       				include ("Templates/Alliance/allidesc.tpl");
-       			}
-       			break;
+		case 3:
+			include ("Templates/Alliance/allidesc.tpl");
+			break;
        		case 4:
 			if(isset($_POST['s'],$_POST['a']) && $_POST['s'] == 5 && $_POST['a'] == 4) {
        				$alliance->procAlliForm($_POST);
