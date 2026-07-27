@@ -487,8 +487,14 @@ class Automation {
         if(!file_exists("GameEngine/Prevention/starvation.txt") or time() - filemtime("GameEngine/Prevention/starvation.txt") > 50) {
             $this->starvation();
         }
-        if(!file_exists("GameEngine/Prevention/build.txt") or time() - filemtime("GameEngine/Prevention/build.txt") > 50) {
-            $this->buildComplete();
+        $buildSweepDue = !file_exists("GameEngine/Prevention/build.txt")
+            || time() - filemtime("GameEngine/Prevention/build.txt") > 50;
+        $attackSweepDue = !file_exists("GameEngine/Prevention/sendunits.txt")
+            || time() - filemtime("GameEngine/Prevention/sendunits.txt") > 50;
+        $pendingAttackTime = null;
+        if($buildSweepDue) {
+            $pendingAttackTime = $this->nextPendingAttackArrival();
+            $this->buildComplete($pendingAttackTime);
         }
         $this->MasterBuilder();
         if(!file_exists("GameEngine/Prevention/auction.txt") or time() - filemtime("GameEngine/Prevention/auction.txt") > 50) {
@@ -515,8 +521,11 @@ class Automation {
         if(!file_exists("GameEngine/Prevention/demolition.txt") or time() - filemtime("GameEngine/Prevention/demolition.txt") > 50) {
             $this->demolitionComplete();
         }
-        if(!file_exists("GameEngine/Prevention/sendunits.txt") or time() - filemtime("GameEngine/Prevention/sendunits.txt") > 50) {
+        if($attackSweepDue || $buildSweepDue) {
             $this->sendunitsComplete();
+        }
+        if($buildSweepDue && $pendingAttackTime !== null) {
+            $this->buildComplete();
         }
         $this->updateStore();
         $this->TradeRoute();
@@ -1020,16 +1029,40 @@ class Automation {
         }
     }
 
-    private function buildComplete() {
-        if(file_exists("GameEngine/Prevention/build.txt")) {
+    private function nextPendingAttackArrival($beforeTime = null) {
+        global $database;
+
+        $beforeTime = $beforeTime === null ? time() : max(0, (int)$beforeTime);
+        $movementTable = TB_PREFIX."movement";
+        $attackTable = TB_PREFIX."attacks";
+        $q = "SELECT MIN(m.endtime) AS endtime"
+            . " FROM ".$movementTable." AS m"
+            . " INNER JOIN ".$attackTable." AS a ON a.id = m.ref"
+            . " WHERE m.proc = 0"
+            . " AND m.sort_type = 3"
+            . " AND a.attack_type != 2"
+            . " AND m.endtime < ".$beforeTime;
+        $rows = $database->query_return($q);
+        if(!is_array($rows) || empty($rows[0]['endtime'])) {
+            return null;
+        }
+        return (int)$rows[0]['endtime'];
+    }
+
+    private function buildComplete($throughTime = null, $managePreventionFile = true) {
+        if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             unlink("GameEngine/Prevention/build.txt");
         }
         global $database, $bid18, $bid10, $bid11, $bid38, $bid39;
-        $ourFileHandle = @fopen("GameEngine/Prevention/build.txt", 'w');
-        @fclose($ourFileHandle);
-        $time = time();
+        if($managePreventionFile) {
+            $ourFileHandle = @fopen("GameEngine/Prevention/build.txt", 'w');
+            @fclose($ourFileHandle);
+        }
+        $timeCondition = $throughTime === null
+            ? "timestamp < ".time()
+            : "timestamp <= ".max(0, (int)$throughTime);
         $array = array();
-        $q = "SELECT * FROM ".TB_PREFIX."bdata where timestamp < $time and master = 0";
+        $q = "SELECT * FROM ".TB_PREFIX."bdata where ".$timeCondition." and master = 0 ORDER BY timestamp ASC, id ASC";
         $array = $database->query_return($q);
         foreach ($array as $indi) {
             $q = "UPDATE ".TB_PREFIX."fdata set f".$indi['field']." = ".$indi['level'].", f".$indi['field']."t = ".$indi['type']." where vref = ".$indi['wid'];
@@ -1134,7 +1167,7 @@ class Automation {
 					$database->setVillageField($indi['wid'], 'starvupdate', $time);
 				} */
         }
-        if(file_exists("GameEngine/Prevention/build.txt")) {
+        if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             unlink("GameEngine/Prevention/build.txt");
         }
     }
@@ -1424,6 +1457,9 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."attacks where ".TB_PREFIX."movement.ref = ".TB_PREFIX."attacks.id and ".TB_PREFIX."movement.proc = '0' and ".TB_PREFIX."movement.sort_type = '3' and ".TB_PREFIX."attacks.attack_type != '2' and endtime < $time ORDER BY endtime ASC";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
+            // Bring the world up to the attack's arrival time, but never apply
+            // a building level that completed after this attack.
+            $this->buildComplete((int)$data['endtime'], false);
             $totalattackdead = 0;
             $totaldead_att = $totaldead_def = $totalsend_def = 0;
             $totaltraped_att = $DefenderHeroRef = 0;
@@ -4903,7 +4939,7 @@ class Automation {
         }
     }
 
-    private function weeklyMedalBoundary($now) {
+    private function weeklyMedalSchedule($now) {
         $configuredStart = strtotime(START_DATE . " " . START_TIME);
         $worldStart = max((int)COMMENCE, $configuredStart ? $configuredStart : 0);
         $firstBoundary = strtotime("next monday 00:00:00", $worldStart);
@@ -4912,14 +4948,65 @@ class Automation {
         }
 
         $boundary = strtotime("monday this week 00:00:00", $now);
-        return $boundary >= $firstBoundary ? date("Y-m-d", $boundary) : false;
+        if($boundary < $firstBoundary) {
+            return false;
+        }
+
+        return array(
+            "boundary" => date("Y-m-d", $boundary),
+            "week" => 1 + (int)floor(($boundary - $firstBoundary) / 604800)
+        );
+    }
+
+    private function weeklyMedalBoundary($now) {
+        $schedule = $this->weeklyMedalSchedule($now);
+        return $schedule === false ? false : $schedule["boundary"];
+    }
+
+    private function repairPrematureMedalWeeks($expectedWeek) {
+        $expectedWeek = max(1, (int)$expectedWeek);
+        foreach(array("medal", "allimedal") as $table) {
+            $result = mysql_query(
+                "SELECT COALESCE(MAX(week),0) AS maxweek FROM " . TB_PREFIX . $table
+            );
+            $row = $result ? mysql_fetch_assoc($result) : false;
+            if(!$row) {
+                error_log("Unable to inspect weekly medal numbering for " . $table);
+                return false;
+            }
+
+            $maximumWeek = (int)$row["maxweek"];
+            if($maximumWeek <= $expectedWeek) {
+                continue;
+            }
+
+            // Old worlds started on a Monday and immediately awarded an empty
+            // week. Remove those premature rows and align every real award with
+            // the number of weekly boundaries elapsed since the world started.
+            $offset = $maximumWeek - $expectedWeek;
+            if(!mysql_query(
+                "DELETE FROM " . TB_PREFIX . $table . " WHERE week <= " . $offset
+            )) {
+                error_log("Unable to remove premature weekly medals from " . $table);
+                return false;
+            }
+            if(!mysql_query(
+                "UPDATE " . TB_PREFIX . $table . " SET week = week - " . $offset
+            )) {
+                error_log("Unable to realign weekly medals in " . $table);
+                return false;
+            }
+        }
+        return true;
     }
 
     private function weeklyMedals() {
-        $boundary = $this->weeklyMedalBoundary(time());
-        if($boundary === false) {
+        $schedule = $this->weeklyMedalSchedule(time());
+        if($schedule === false) {
             return;
         }
+        $boundary = $schedule["boundary"];
+        $scheduledWeek = (int)$schedule["week"];
 
         // The marker itself is locked so simultaneous page requests cannot hand
         // out the same medals twice. Keeping the completed Monday in the file
@@ -4935,10 +5022,23 @@ class Automation {
             return;
         }
 
+        $repairMarker = __DIR__ . "/Prevention/medal_weeks_v2.txt";
+        $repairedWeek = file_exists($repairMarker)
+            ? (int)trim(file_get_contents($repairMarker))
+            : 0;
+        if($repairedWeek < $scheduledWeek) {
+            if(!$this->repairPrematureMedalWeeks($scheduledWeek)) {
+                flock($handle, LOCK_UN);
+                fclose($handle);
+                return;
+            }
+            file_put_contents($repairMarker, (string)$scheduledWeek, LOCK_EX);
+        }
+
         rewind($handle);
         $lastRun = trim(stream_get_contents($handle));
         if($lastRun !== $boundary) {
-            $this->giveOutMedals();
+            $this->giveOutMedals($scheduledWeek);
             ftruncate($handle, 0);
             rewind($handle);
             fwrite($handle, $boundary);
@@ -4955,29 +5055,21 @@ class Automation {
      * 8/14 pop growth top3/top10 streak, 9/15 robbers top3/top10 streak, 10 population growth top10,
      * 11/16 population growth top3/top10 streak.
      */
-    public function giveOutMedals() {
+    public function giveOutMedals($scheduledWeek = null) {
         global $database;
+        if($scheduledWeek === null) {
+            $schedule = $this->weeklyMedalSchedule(time());
+            if($schedule === false) {
+                return false;
+            }
+            $scheduledWeek = (int)$schedule["week"];
+        }
+        $week = max(1, (int)$scheduledWeek);
+        $allyweek = $week;
+
         // Reconcile any population change that came from an uncommon path before
         // the scores are frozen into medals and reset for the next week.
         $database->syncAllClimberPopulations();
-
-        $q = "SELECT * FROM ".TB_PREFIX."medal order by week DESC LIMIT 0, 1";
-        $result = mysql_query($q);
-        if(mysql_num_rows($result)) {
-            $row = mysql_fetch_assoc($result);
-            $week = ($row['week'] + 1);
-        } else {
-            $week = '1';
-        }
-
-        $q = "SELECT * FROM ".TB_PREFIX."allimedal order by week DESC LIMIT 0, 1";
-        $result = mysql_query($q);
-        if(mysql_num_rows($result)) {
-            $row = mysql_fetch_assoc($result);
-            $allyweek = ($row['week'] + 1);
-        } else {
-            $allyweek = '1';
-        }
 
         // Only the first $top places of every weekly ranking get a medal (MEDAL_TOP,
         // MEDAL_ALLY_TOP). On a small server this can be 1 so only the winner is awarded.
