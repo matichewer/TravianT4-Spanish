@@ -207,7 +207,7 @@ details.buildingLevelHelp summary:focus {
 	box-sizing: border-box;
 	position: absolute;
 	top: 422px;
-	left: 0;
+	left: -16px;
 	z-index: 90;
 	width: 150px;
 	margin: 0;
@@ -219,6 +219,14 @@ details.buildingLevelHelp summary:focus {
 	box-shadow: inset 0 0 0 1px rgba(255, 248, 214, 0.8), inset 0 -7px 14px rgba(104, 71, 25, 0.12), 0 2px 3px rgba(52, 35, 13, 0.35);
 	color: #3c2a14;
 	font-size: 11px;
+}
+
+/* The panel hangs past the 990px page wrapper, like the quest and protection
+   signs do. Pull it back in when the window is too narrow to show the overhang. */
+@media (max-width: 1029px) {
+	#cultureProgress {
+		left: 0;
+	}
 }
 
 #cultureProgress.cultureProgressReady {
