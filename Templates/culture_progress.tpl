@@ -27,6 +27,10 @@ $cultureProtectionClass = (isset($session->userinfo['protect']) && (int)$session
 $cultureQuestArray = $database->getUserArray($session->uid, 1);
 $cultureQuestVisible = QUEST == true && $cultureQuestArray['fquest'] != "1,1,1,1,1,1,1,1,1,1,1";
 $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
+
+// vdata.cp holds the culture points a village yields per day; GameEngine/Automation.php
+// credits the sum of all the owner's villages once every 24 hours.
+$cultureDailyProduction = (int)$database->getVSumField($cultureOwnerId, 'cp');
 ?>
 <div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass . $cultureQuestClass . $cultureProtectionClass; ?>">
 	<div class="cultureProgressHeader">
@@ -60,4 +64,5 @@ $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 		<div class="cultureProgressBarFill" style="width:<?php echo number_format($cultureStatus['progressPercent'], 2, '.', ''); ?>%;"></div>
 	</div>
 <?php } ?>
+	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día</div>
 </div>

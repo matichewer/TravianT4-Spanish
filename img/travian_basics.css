@@ -286,13 +286,10 @@ details.buildingLevelHelp summary:focus {
 .cultureProgressTitle {
 	display: inline-block;
 	float: none;
-	padding-left: 20px;
-	background-image: url("../gpack/travian_Travian_4.0_41/img/layout/icons/villageStatistics.gif");
-	background-position: left center;
-	background-repeat: no-repeat;
 	color: #4b310f;
 	font-size: 12px;
 	font-weight: bold;
+	text-align: center;
 	text-shadow: 0 1px #fff3c9;
 	cursor: help;
 	border-bottom: 1px dotted rgba(75, 49, 15, 0.65);
@@ -427,6 +424,15 @@ details.buildingLevelHelp summary:focus {
 	padding: 4px 7px 0;
 	color: #a11818;
 	font-weight: bold;
+}
+
+/* Daily account-wide culture point income, credited once every 24 hours. */
+.cultureProgressRate {
+	clear: both;
+	margin-top: 4px;
+	color: #4f7500;
+	font-weight: bold;
+	text-align: center;
 }
 div.hero_inventory #itemsToSale .item[role="button"] {
 	touch-action: manipulation;
