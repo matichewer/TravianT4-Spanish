@@ -5,6 +5,20 @@
 // tracking keeps clp as the population gained since the previous medal reset.
 include_once("GameEngine/Database.php");
 
+$medals = mysql_query("SELECT 1 FROM " . TB_PREFIX . "medal LIMIT 1");
+if(!$medals) {
+    fwrite(STDERR, "Could not verify whether weekly medals were already awarded: " . mysql_error() . PHP_EOL);
+    exit(1);
+}
+if(mysql_num_rows($medals) > 0) {
+    fwrite(
+        STDERR,
+        "Refusing to run: first-week medals were already awarded. "
+        . "Running this repair now would corrupt the current week's growth scores." . PHP_EOL
+    );
+    exit(1);
+}
+
 $accessLimit = defined('INCLUDE_ADMIN') && INCLUDE_ADMIN ? 10 : 8;
 
 $result = mysql_query(
