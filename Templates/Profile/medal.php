@@ -50,7 +50,7 @@ switch ($medal['categorie']) {
  		$woord="Puntuación";
        break;
     case "3":
-        $titel="Top 10 en ascenso de la semana";
+        $titel="Top 10 en crecimiento de la semana";
  		$woord="Puntuación";
        break;
     case "4":
@@ -70,7 +70,7 @@ switch ($medal['categorie']) {
         $bonus[$medal['id']]=1;
 		break;
 	 case "8":
-        $titel="Top en ascenso de la semana ".$medal['points']." (top 3).";
+        $titel="Top en crecimiento de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
 		break;
 	 case "9":
@@ -78,11 +78,11 @@ switch ($medal['categorie']) {
         $bonus[$medal['id']]=1;
 		break;
      case "10":
-        $titel="Ascenso de la semana";
+        $titel="Crecimiento de la semana";
         $woord="Puntuación"; 
         break;
      case "11":
-        $titel="Ascenso de la semana ".$medal['points']." (top 3).";
+        $titel="Crecimiento de la semana ".$medal['points']." (top 3).";
         $bonus[$medal['id']]=1;
         break;
      case "12":
@@ -94,7 +94,7 @@ switch ($medal['categorie']) {
         $bonus[$medal['id']]=1;
         break;
         case "14":
-        $titel="Ascenso de la semana ".$medal['points']." (top 10).";
+        $titel="Crecimiento de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
         case "15":
@@ -102,7 +102,7 @@ switch ($medal['categorie']) {
         $bonus[$medal['id']]=1;
         break;
         case "16":
-        $titel="Ascenso de la semana ".$medal['points']." (top 10).";
+        $titel="Crecimiento de la semana ".$medal['points']." (top 10).";
         $bonus[$medal['id']]=1;
         break;
         
@@ -121,4 +121,3 @@ if(isset($bonus[$medal['id']])){
 
 
 ?>
-
