@@ -33,19 +33,19 @@ foreach($varmedal as $medal) {
 
 switch ($medal['categorie']) {
     case "1":
-        $titel="Atacantes de la semana";
+        $titel="Top 10 atacantes de la semana";
 		$woord="Puntuación";
         break;
     case "2":
-        $titel="Defensores de la semana";
+        $titel="Top 10 defensores de la semana";
  		$woord="Puntuación";
        break;
     case "3":
-        $titel="Crecimiento de la semana";
+        $titel="Top 10 en crecimiento de la semana";
  		$woord="Puntuación";
        break;
     case "4":
-        $titel="Saqueadores de la semana";
+        $titel="Top 10 saqueadores de la semana";
 		$woord="Puntuación";
         break;
 	 case "5":

@@ -116,7 +116,7 @@ INDELING CATEGORIEEN:
         $titel="Top saqueadores de la semana  ".$medal['points']." top 3.";
         break;
     case "10":
-        $titel="Crecimiento de la semana";
+        $titel="Top 10 en crecimiento de la semana";
         break;
     case "11":
         $titel="Crecimiento de la semana ".$medal['points']." top 3.";

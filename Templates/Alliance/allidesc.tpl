@@ -72,16 +72,16 @@ INDELING CATEGORIEEN:
     $titel="Medalla";
     switch ($medal['categorie']) {
     case "1":
-        $titel="Atacante de la semana";
+        $titel="Top 10 atacantes de la semana";
         break;
     case "2":
-        $titel="Defensor de la semana";
+        $titel="Top 10 defensores de la semana";
         break;
     case "3":
-        $titel="Trepador de la semana";
+        $titel="Top 10 en crecimiento de la semana";
         break;
     case "4":
-        $titel="Saqueador de la semana";
+        $titel="Top 10 saqueadores de la semana";
         break;
     case "5":
         $titel="Top 10 en ataque y defensa.";
@@ -93,7 +93,7 @@ INDELING CATEGORIEEN:
         $titel="Top defensores de la semana ".$medal['points']." top 3.";
         break;
     case "8":
-        $titel="Top trepadores de la semana ".$medal['points']." top 3.";
+        $titel="Top en crecimiento de la semana ".$medal['points']." top 3.";
         break;
     case "9":
         $titel="Top saqueadores de la semana  ".$medal['points']." top 3.";
@@ -102,7 +102,7 @@ INDELING CATEGORIEEN:
         $titel="¿Se usa esto en algún lugar?";
         break;
     case "11":
-        $titel="Trepador de la semana".$medal['points']." top 3.";
+        $titel="Crecimiento de la semana ".$medal['points']." top 3.";
         break;
     case "12":
         $titel="Atacante de la semana ".$medal['points']." top 10.";
