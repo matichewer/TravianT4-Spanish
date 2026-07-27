@@ -200,16 +200,18 @@ details.buildingLevelHelp summary:focus {
 	}
 }
 
-/* Culture capacity indicator in the persistent village sidebar. */
+/* Culture capacity indicator in the persistent village sidebar. Kept narrow and
+   flush to the left edge so it never reaches the dorf1 resource field badges,
+   the leftmost of which starts at x=155 of the centred page wrapper. */
 #cultureProgress {
 	box-sizing: border-box;
 	position: absolute;
 	top: 422px;
-	left: 8px;
+	left: 0;
 	z-index: 90;
-	width: 180px;
+	width: 150px;
 	margin: 0;
-	padding: 9px 11px 10px;
+	padding: 9px 7px 10px;
 	border: 2px solid #684719;
 	border-radius: 3px 3px 6px 6px;
 	background-color: #ead69d;
