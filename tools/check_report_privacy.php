@@ -139,6 +139,7 @@ $bbcodeSource = file_get_contents(dirname(__DIR__) . '/GameEngine/BBCode.php');
 $attackSource = file_get_contents(dirname(__DIR__) . '/a2b.php');
 $automationSource = file_get_contents(dirname(__DIR__) . '/GameEngine/Automation.php');
 $spyTemplate = file_get_contents(dirname(__DIR__) . '/Templates/Notice/0.tpl');
+$unknownDefenderTemplate = file_get_contents(dirname(__DIR__) . '/Templates/Notice/unknown_defender.tpl');
 $defeatTemplate = file_get_contents(dirname(__DIR__) . '/Templates/Notice/3.tpl');
 
 $assert(strpos($messageSource, 'hasSharedReportMessage') === false, 'Messages still grant report access.');
@@ -158,8 +159,15 @@ $assert(strpos($failedPayloadSource, 'no-defense-info-v1') !== false, 'Failed ba
 foreach(array('$targettribe', '$rom', '$ger', '$gal', '$nat', '$natar') as $defenseSignal) {
 	$assert(strpos($failedPayloadSource, $defenseSignal) === false, 'Failed battle payload still stores defensive signal '.$defenseSignal.'.');
 }
-$assert(strpos($spyTemplate, '$targettribe = $faild ? 0') !== false, 'Failed espionage reports can still render defender tribes.');
+$assert(strpos($spyTemplate, '$targettribe = $faild ? 0') !== false, 'Failed espionage reports can still render stored defender tribes.');
 $assert(strpos($spyTemplate, 'if(!$faild)') !== false, 'Failed espionage reports can still render defensive sections.');
+$assert(strpos($spyTemplate, 'unknown_defender.tpl') !== false, 'Failed espionage reports omit the public defender reference.');
+$assert(strpos($unknownDefenderTemplate, 'spieler.php?uid=') !== false, 'Failed espionage reports omit the defender player link.');
+$assert(strpos($unknownDefenderTemplate, 'karte.php?d=') !== false, 'Failed espionage reports omit the defender village link.');
+preg_match_all('/\$dataarray\[(\d+)\]/', $unknownDefenderTemplate, $unknownDefenderFields);
+foreach($unknownDefenderFields[1] as $unknownDefenderField) {
+	$assert((int)$unknownDefenderField <= 32, 'Unknown defender placeholders read hidden defensive report data.');
+}
 $assert(strpos($defeatTemplate, '$targettribe = 0') !== false, 'Total-loss attack reports can still render defender tribes.');
 
 echo "Report privacy: OK (authorization, secondary routes, owner-scoped mutations, total-loss secrecy).\n";

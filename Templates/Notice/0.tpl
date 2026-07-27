@@ -237,6 +237,7 @@ if($faild) {
 ?>
 <p class="notice">No se obtuvo información de la defensa porque no sobrevivió ninguna unidad.</p>
 <?php
+include "Templates/Notice/unknown_defender.tpl";
 }
 if(!$faild) {
 $ddd = '36';
