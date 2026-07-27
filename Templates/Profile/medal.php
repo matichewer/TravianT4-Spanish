@@ -50,7 +50,7 @@ switch ($medal['categorie']) {
  		$woord="Puntuación";
        break;
     case "3":
-        $titel="Top 10 crecimiento de la semana";
+        $titel="Top 10 crecimientos de la semana";
  		$woord="Puntuación";
        break;
     case "4":
@@ -78,7 +78,7 @@ switch ($medal['categorie']) {
         $bonus[$medal['id']]=1;
 		break;
      case "10":
-        $titel="Top 10 crecimiento de la semana";
+        $titel="Top 10 crecimientos de la semana";
         $woord="Puntuación"; 
         break;
      case "11":
