@@ -78,7 +78,7 @@ INDELING CATEGORIEEN:
         $titel="Top 10 defensores de la semana";
         break;
     case "3":
-        $titel="Top 10 en crecimiento de la semana";
+        $titel="Top 10 crecimiento de la semana";
         break;
     case "4":
         $titel="Top 10 saqueadores de la semana";
