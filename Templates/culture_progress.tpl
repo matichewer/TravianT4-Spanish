@@ -21,8 +21,14 @@ $cultureReadyClass = $cultureEligibility['eligible'] ? ' cultureProgressReady' :
 $cultureProtectionClass = (isset($session->userinfo['protect']) && (int)$session->userinfo['protect'] > time())
 	? ' cultureProgressWithProtection'
 	: '';
+
+// Same condition Templates/quest.tpl uses to draw the quest master sign: once
+// every task is done the sign is gone, so the panel docks under the village sign.
+$cultureQuestArray = $database->getUserArray($session->uid, 1);
+$cultureQuestVisible = QUEST == true && $cultureQuestArray['fquest'] != "1,1,1,1,1,1,1,1,1,1,1";
+$cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 ?>
-<div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass . $cultureProtectionClass; ?>">
+<div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass . $cultureQuestClass . $cultureProtectionClass; ?>">
 	<div class="cultureProgressHeader">
 		<span class="cultureProgressTitleWrap">
 			<span class="cultureProgressTitle" aria-describedby="cultureProgressTooltip">Puntos de cultura</span>

@@ -223,7 +223,13 @@ details.buildingLevelHelp summary:focus {
 	border-color: #5f4a19;
 }
 
-/* Keep the culture panel below the beginner-protection sign while it is shown. */
+/* No quest master sign left: dock the panel right under the village name sign. */
+#cultureProgress.cultureProgressWithoutQuest {
+	top: 232px;
+}
+
+/* Keep the culture panel below the beginner-protection sign while it is shown.
+   Declared last so it also wins when the quest sign is already gone. */
 #cultureProgress.cultureProgressWithProtection {
 	top: 510px;
 }
