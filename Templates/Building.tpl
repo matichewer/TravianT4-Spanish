@@ -34,21 +34,21 @@
         foreach($building->buildArray as $jobs) {
 		if($jobs['master'] == 0){
         	echo "<tr><td class=\"ico\"><a href=\"?d=".$jobs['id']."&a=0&c=$session->checker\">";
-            echo "<img src=\"img/x.gif\" class=\"del\" title=\"cancel\" alt=\"cancel\" /></a></td><td>";
-			echo $building->procResType($jobs['type'])." <span class=\"lvl\"> Level ".$jobs['level']."</span>";
+            echo "<img src=\"img/x.gif\" class=\"del\" title=\"Cancelar\" alt=\"Cancelar\" /></a></td><td>";
+			echo $building->procResType($jobs['type'])." <span class=\"lvl\"> Nivel ".$jobs['level']."</span>";
 			if($jobs['loopcon'] == 0) { $BuildFirst = $jobs['field']; }
             if($jobs['loopcon'] == 1) {
-            	echo " (waiting loop)";
+				echo " (en cola)";
             }
             echo "</td><td colspan=\"2\" class=\"buildingTime\"><span id=\"timer".$timer."\">";
             echo $generator->getTimeFormat($jobs['timestamp']-time());
-            echo "</span> hrs. ";
-            echo "Time ".date('H:i', $jobs['timestamp'])."</td></tr>";
+            echo "</span> h. ";
+            echo "Hora ".date('H:i', $jobs['timestamp'])."</td></tr>";
             $timer +=1;
       	}else{
         	echo "<tr><td class=\"ico\"><a href=\"?d=".$jobs['id']."&a=0&c=$session->checker\">";
-            echo "<img src=\"img/x.gif\" class=\"del\" title=\"cancel\" alt=\"cancel\" /></a></td><td>";
-			echo "<span class=\"none\">".$building->procResType($jobs['type'])."</span> <span class=\"lvl\"> Level ".$jobs['level']."</span>";
+            echo "<img src=\"img/x.gif\" class=\"del\" title=\"Cancelar\" alt=\"Cancelar\" /></a></td><td>";
+			echo "<span class=\"none\">".$building->procResType($jobs['type'])."</span> <span class=\"lvl\"> Nivel ".$jobs['level']."</span>";
 		}
 		}
         ?>
