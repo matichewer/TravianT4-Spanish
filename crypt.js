@@ -9569,11 +9569,20 @@ return new Class({
 						return
 					}l.value=g(j,l.value)
 				};
+				var e=function(j,k){
+					var l=g(j,k.value);
+					if(l!=k.value){
+						k.value=l
+					}
+				};
 				var b=function(m,j,l,k){
 					if(j.options.passThroughChars[m.code]){
 						return
 					}
 					if(m.control){
+						return
+					}
+					if(!m.code||m.code==229){
 						return
 					}
 					if(j.options.validChars[m.code]=="-"&&l.value.indexOf("-")!=-1&&l.getSelectionStart()!=0){
@@ -9731,6 +9740,22 @@ return new Class({
 							keyup:function(m){
 								h(m,l,j,j.y)
 							}
+						});
+						[j.x,j.y].each(function(m){
+							var n=false;
+							m.addEventListener("compositionstart",function(){
+								n=true
+							},false);
+							m.addEventListener("compositionend",function(){
+								n=false;
+								e(l,m)
+							},false);
+							m.addEventListener("input",function(o){
+								if(n||o.isComposing){
+									return
+								}
+								e(l,m)
+							},false)
 						});
 						return this
 					},

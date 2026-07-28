@@ -225,11 +225,11 @@ $coor['y'] = "";
 ?>			<div class="coordinatesInput">
 				<div class="xCoord">
 					<label for="xCoordInput">X:</label>
-                    <input class="text coordinates x " type="text" name="x" value="<?php echo $coor['x']; ?>" maxlength="4" tabindex="7">
+                    <input class="text coordinates x " type="text" name="x" value="<?php echo $coor['x']; ?>" maxlength="4" tabindex="6">
 				</div>
 				<div class="yCoord">
 					<label for="yCoordInput">Y:</label>
-                    <input class="text coordinates y " type="text" name="y" value="<?php echo $coor['y']; ?>" maxlength="4" tabindex="6">
+                    <input class="text coordinates y " type="text" name="y" value="<?php echo $coor['y']; ?>" maxlength="4" tabindex="7">
 				</div>
 				<div class="clear"></div>
 			</div>
