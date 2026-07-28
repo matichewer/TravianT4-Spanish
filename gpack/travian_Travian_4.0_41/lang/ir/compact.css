@@ -542,11 +542,12 @@ div.plus #invite tbody td{padding:6px 0 3px;}div.plus #invite td.addRow{vertical
 div.plus #silverExchange .error{margin-bottom:15px;}div.reports table#report_surround td.report_content tbody.infos td{text-align:left;}
 div.reports .none{text-align:center;}div.reports .none2{color:#C0C0C0;font-weight:bold;}
 div.reports table#overview thead th.sent a{color:black;font-weight:normal;}div.reports table#overview tbody td{vertical-align:top;}
-div.reports table#overview td.sel{width:5%;padding:7px 5px 5px;text-align:center;}
+div.reports table#overview td.sel{width:4%;padding:7px 5px 5px;text-align:center;}
 div.reports table#overview td.sub .messageStatus,div.reports table#overview td.sub .iReport{float:left;}
-div.reports table#overview td.sub .iReport{margin-left:10px;}div.reports table#overview td.sub .reportInfoIcon{float:right;}
-div.reports table#overview td.sub div{padding-left:52px;padding-right:0px;}div.reports table#overview td.dist{text-align:right;}
-div.reports table#overview td.dat{width:23%;text-align:center;white-space:nowrap;padding-right:2px;padding-left:2px;}
+div.reports table#overview td.sub .iReport{margin-left:4px;}div.reports table#overview td.sub .reportInfoIcon{float:right;padding-left:0;}
+div.reports table#overview td.sub{padding-right:4px;}
+div.reports table#overview td.sub div{padding-left:28px;padding-right:0px;}div.reports table#overview td.dist{text-align:right;}
+div.reports table#overview td.dat{width:16%;text-align:center;white-space:nowrap;padding-right:2px;padding-left:2px;}
 div.reports table#overview tfoot th.buttons{text-align:left;}div.reports table#overview tfoot th.buttons input{vertical-align:middle;}
 div.reports table#overview tfoot th.navi{text-align:right;color:#C0C0C0;font-weight:bold;}
 div.reports table#report_surround thead th,div.reports table#report_surround thead td{text-align:left;}
