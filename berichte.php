@@ -2,6 +2,13 @@
 
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
+$reportFilter = 0;
+if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6'), true)) {
+	$reportFilter = (int)$_GET['t'];
+} elseif(isset($_GET['t'])) {
+	$reportFilter = 0;
+	unset($_GET['t']);
+}
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
 	header("Location: ".$_SERVER['PHP_SELF']);
@@ -50,6 +57,11 @@ include "Templates/html.tpl";
 					<div class="background-end">&nbsp;</div>
 					<div class="content"><a href="berichte.php?t=1"><span class="tabItem">Ataque</span></a></div>
 				</div>
+				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 6) { echo "active"; }else{ echo "normal"; } ?>">
+					<div class="background-start">&nbsp;</div>
+					<div class="background-end">&nbsp;</div>
+					<div class="content"><a href="berichte.php?t=6"><span class="tabItem">Espías</span></a></div>
+				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 5) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
@@ -90,20 +102,21 @@ if(isset($_GET['n1'],$_GET['del']) && $_GET['del'] == 1) {
 	$database->delNotice($_GET['n1'], $session->uid);
 	header("Location: berichte.php");
 }
-if(isset($_GET['t'])) {
-	include("Templates/Notice/t_".$_GET['t'].".tpl");
-}
-elseif(isset($_GET['id'])) {
+if(isset($_GET['id'])) {
 	if(!empty($message->readingNotice)) {
 		$noticeNeighbors = $database->getNoticeNeighbors(
 			$session->uid,
 			$session->alliance,
-			(int)$_GET['id']
+			(int)$_GET['id'],
+			$reportFilter
 		);
 		include("Templates/Notice/navigation.tpl");
 		$type = ($message->readingNotice['ntype'] == 5)? $message->readingNotice['archive'] : $message->readingNotice['ntype'];
 		include("Templates/Notice/".$type.".tpl");
 	}
+}
+elseif(isset($_GET['t'])) {
+	include("Templates/Notice/t_".$reportFilter.".tpl");
 } else {
 	include("Templates/Notice/all.tpl");
 }

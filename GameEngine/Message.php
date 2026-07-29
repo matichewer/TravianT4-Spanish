@@ -63,19 +63,22 @@
 				global $session, $database;
 				if(isset($get['t'])) {
 					if($get['t'] == 1) {
-						$type = array(8, 15, 16, 17);
+						$type = array(1, 2, 3, 4, 5, 6, 7);
 					}
 					if($get['t'] == 2) {
 						$type = array(10, 11, 12, 13);
 					}
 					if($get['t'] == 3) {
-						$type = array(1, 2, 3, 4, 5, 6, 7);
+						$type = array(9, 15, 16, 17, 18, 19, 20, 21);
 					}
 					if($get['t'] == 4) {
 						$type = array(0, 18, 19, 20, 21);
 					}
 					if($get['t'] == 5) {
-						$type = 9;
+						$type = 8;
+					}
+					if($get['t'] == 6) {
+						$type = 0;
 					}
 					if (!is_array($type)) { $type = array($type); }
 					$this->noticearray = $this->filter_by_value($database->getNotice($session->uid), "ntype", $type);

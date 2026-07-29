@@ -2,7 +2,7 @@
 <?php
 $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Refuerzo atacado","Refuerzo atacado","Refuerzo atacado","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Informe de exploración");
 $prefix = "".TB_PREFIX."ndata";
-$limit2 = "and (ntype = 0 or ntype = 9 or ntype >= 15)";
+$limit2 = "and (ntype = 9 or ntype >= 15)";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 $limit2 and del = 0 ORDER BY time DESC");
 $query = mysql_num_rows($sql);
 
@@ -208,7 +208,7 @@ else if (is_numeric($btype))
 	}
 }
 }
-    $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";
+    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=3\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }
     $date = $generator->procMtime($time);
     $outputList .= "</div><div class=\"clear\"></div></td>

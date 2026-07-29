@@ -205,7 +205,7 @@ else if (is_numeric($btype))
 	}
     }
 }
-    $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";
+    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=4\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }
     $date = $generator->procMtime($time);
     $outputList .= "</div><div class=\"clear\"></div></td>

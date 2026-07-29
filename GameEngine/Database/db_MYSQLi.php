@@ -2214,22 +2214,35 @@
 				return $row ? $row : false;
 			}
 
-			function getNoticeNeighbors($uid, $alliance, $id) {
+			function getNoticeNeighbors($uid, $alliance, $id, $filter = 0) {
 				$uid = (int)$uid;
 				$alliance = (int)$alliance;
 				$id = (int)$id;
+				$filter = (int)$filter;
 				$neighbors = array('previous' => 0, 'next' => 0);
 				if($uid <= 0 || $id <= 0) {
 					return $neighbors;
 				}
 
 				$accessCondition = "uid = $uid AND del = 0";
-				if($alliance > 0) {
+				if($alliance > 0 && $filter === 0) {
 					$accessCondition = "($accessCondition) OR (ally = $alliance"
 						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21))";
 				}
+				$filterConditions = array(
+					0 => "archive = 0",
+					1 => "archive = 0 AND ntype IN (1,2,3,4,5,6,7)",
+					2 => "archive = 0 AND ntype IN (10,11,12,13)",
+					3 => "archive = 0 AND ntype IN (9,15,16,17,18,19,20,21)",
+					4 => "archive = 1",
+					5 => "archive = 0 AND ntype = 8",
+					6 => "archive = 0 AND ntype = 0"
+				);
+				$filterCondition = isset($filterConditions[$filter])
+					? $filterConditions[$filter]
+					: $filterConditions[0];
 				$q = "SELECT id FROM " . TB_PREFIX . "ndata"
-					." WHERE $accessCondition ORDER BY time DESC, id DESC";
+					." WHERE ($accessCondition) AND $filterCondition ORDER BY time DESC, id DESC";
 				$result = mysqli_query($this->connection, $q);
 				$ids = array();
 				while($result && $row = mysqli_fetch_assoc($result)) {

@@ -188,7 +188,7 @@ if($dataarray[1]){
 	$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$name." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"reportInfo itemCategory itemCategory_".$typeArray[$dataarray[1]]."\"></div>";
     }
 }
-    $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";
+    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=1\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }
     $date = $generator->procMtime($time);
     $outputList .= "</div><div class=\"clear\"></div></td>

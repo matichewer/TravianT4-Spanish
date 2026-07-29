@@ -2,7 +2,8 @@
 <?php
 $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Informe de exploración");
 $prefix = "".TB_PREFIX."ndata";
-$limit2 = "and (ntype = 8)";
+$noticeTypeFilter = isset($noticeTypeFilter) ? (int)$noticeTypeFilter : 8;
+$limit2 = "and (ntype = ".$noticeTypeFilter.")";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 $limit2 and del = 0 ORDER BY time DESC");
 $query = mysql_num_rows($sql);
 
@@ -158,7 +159,7 @@ while($row = mysql_fetch_array($sql2)){
     $outputList .= "<tr".$rowClass."><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
     $outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$ntype\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
 
-    $outputList .= "<a href=\"berichte.php?id=".$id."\">".$topic." </a> ";
+    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=".(int)$_GET['t']."\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }
     $date = $generator->procMtime($time);
     $outputList .= "</div><div class=\"clear\"></div></td>
