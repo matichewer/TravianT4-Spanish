@@ -1,22 +1,13 @@
 <div class="footer">
-	<div class="paginator">
-		<?php if($noticeNeighbors['previous']) { ?>
-			<a class="previous" href="berichte.php?id=<?php echo $noticeNeighbors['previous']; ?>" title="Informe anterior">
-				<img src="img/x.gif" alt="Informe anterior">
-			</a>
-		<?php } else { ?>
-			<img src="img/x.gif" class="previous disabled" alt="No hay un informe anterior" title="No hay un informe anterior">
-		<?php } ?>
-		<span>Anterior</span>
-		<span>&nbsp;|&nbsp;</span>
-		<span>Siguiente</span>
-		<?php if($noticeNeighbors['next']) { ?>
-			<a class="next" href="berichte.php?id=<?php echo $noticeNeighbors['next']; ?>" title="Informe siguiente">
-				<img src="img/x.gif" alt="Informe siguiente">
-			</a>
-		<?php } else { ?>
-			<img src="img/x.gif" class="next disabled" alt="No hay un informe siguiente" title="No hay un informe siguiente">
-		<?php } ?>
+	<div style="float: left;">
+		<button type="button" value="Anterior"<?php if($noticeNeighbors['previous']) { ?> onclick="window.location.href = 'berichte.php?id=<?php echo $noticeNeighbors['previous']; ?>';"<?php } else { ?> disabled="disabled"<?php } ?>>
+			<div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">&laquo; Anterior</div></div>
+		</button>
+	</div>
+	<div style="float: right;">
+		<button type="button" value="Siguiente"<?php if($noticeNeighbors['next']) { ?> onclick="window.location.href = 'berichte.php?id=<?php echo $noticeNeighbors['next']; ?>';"<?php } else { ?> disabled="disabled"<?php } ?>>
+			<div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Siguiente &raquo;</div></div>
+		</button>
 	</div>
 	<div class="clear"></div>
 </div>
