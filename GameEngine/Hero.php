@@ -1,5 +1,21 @@
 <?php
 
+if(!function_exists('heroExperienceWithHelmet')){
+	function heroExperienceWithHelmet($database, $uid, $experience){
+		$experience = max(0, (float)$experience);
+		$helmet = $database->getEquippedHeroItem((int)$uid, 1);
+		if(is_array($helmet) && isset($helmet['type'])){
+			$bonuses = array(1 => 15, 2 => 20, 3 => 25);
+			$type = (int)$helmet['type'];
+			if(isset($bonuses[$type])){
+				$experience *= 1 + $bonuses[$type] / 100;
+			}
+		}
+
+		return (int)floor($experience);
+	}
+}
+
 if(!function_exists('heroAttributeLimit')){
 	function heroAttributeLimit(){
 		return 100;

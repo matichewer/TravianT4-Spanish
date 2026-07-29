@@ -202,7 +202,7 @@ else if (is_numeric($btype))
 	}
 	else
 	{
-		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"Plata (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"silver\"></div>";
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$dataarray[3]." de plata\" src=\"img/x.gif\" class=\"silver\"></div>";
 	}
 }
 }

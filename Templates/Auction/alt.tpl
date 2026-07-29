@@ -3,17 +3,17 @@
     
     	if($type==1){
         	$name = "Casco de la Atención";
-        	$title = "+15% más experiencia.";
+            $title = "+15% de experiencia obtenida.";
             $item = "1";
             $effect = "15";
 		}elseif($type==2){
         	$name = "Casco de la Iluminación";
-            $title = "+20% de experiencia obtenida en combate.";
+            $title = "+20% de experiencia obtenida.";
             $item = "2";
             $effect = "20";
 		}elseif($type==3){
         	$name = "Casco de la Sabiduría";
-        	$title = "+25% más experiencia.";
+            $title = "+25% de experiencia obtenida.";
             $item = "3";
             $effect = "25";
 		}

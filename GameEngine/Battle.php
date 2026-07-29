@@ -729,7 +729,8 @@ class Battle {
 			$database->modifyHero2('health', $damage, (int)$hero['uid'], 2);
 		}
 		if($experience > 0) {
-			$database->modifyHero2('experience', (int)$experience, (int)$hero['uid'], 1);
+			$experience = heroExperienceWithHelmet($database, (int)$hero['uid'], $experience);
+			$database->modifyHero2('experience', $experience, (int)$hero['uid'], 1);
 		}
 
 		return $outcome;
@@ -1421,10 +1422,10 @@ class Battle {
                 $result['casualties_attacker']['11'] = 1; 
 				$database->modifyHero2('dead', 1, $hero_id, 0);
 				$database->modifyHero2('health', 0, $hero_id, 0);
-				$database->modifyHero2('experience', $result[1], $hero_id, 1);
+				$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[1]), $hero_id, 1);
             }else{
 				$database->modifyHero2('health', $damage_health, $hero_id, 2);
-				$database->modifyHero2('experience', $result[1], $hero_id, 1);
+				$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[1]), $hero_id, 1);
             }
         }
 		
@@ -1437,12 +1438,12 @@ class Battle {
 				$result['deadherodef'] = 1;
 				$database->modifyHero2('dead', 1, $hero_id, 0);
 				$database->modifyHero2('health', 0, $hero_id, 0);
-				$database->modifyHero2('experience', $result[2], $hero_id, 1);
+				$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[2]), $hero_id, 1);
 				mysql_query("UPDATE " . TB_PREFIX . "units SET `hero` = 0 WHERE `vref`='".$defenderhero['wref']."'");
             }else{
 				$result['deadherodef'] = 0;
 				$database->modifyHero2('health', $damage_health, $hero_id, 2);
-				$database->modifyHero2('experience', $result[1], $hero_id, 1);
+				$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[1]), $hero_id, 1);
             }
         }
 
@@ -1459,12 +1460,12 @@ class Battle {
 						$result['deadheroref'][$defenders['id']] = 1;
 						$database->modifyHero2('dead', 1, $hero_id, 0);
 						$database->modifyHero2('health', 0, $hero_id, 0);
-						$database->modifyHero2('experience', $result[2], $hero_id, 1);
+						$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[2]), $hero_id, 1);
 						mysql_query("UPDATE " . TB_PREFIX . "units SET `hero` = 0 WHERE `vref`='".$defhero[$fromvillage]['wref']."'");
 					}else{
 						$result['deadheroref'][$defenders['id']] = 0;
 						$database->modifyHero2('health', $damage_health, $hero_id, 2);
-						$database->modifyHero2('experience', $result[1], $hero_id, 1);
+						$database->modifyHero2('experience', heroExperienceWithHelmet($database, $hero_id, $result[1]), $hero_id, 1);
 					}
 				}
 			}

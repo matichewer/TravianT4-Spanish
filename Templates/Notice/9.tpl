@@ -134,8 +134,8 @@ for($i=$start;$i<=$end;$i++) {
 				echo ' '.$technology->getUnitName($utype).' ('.$dataarray[3].'x)';
 							$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$technology->getUnitName($utype)." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"unit u".$utype."\"\"></div>";
 				}else{
-				echo '<img src="img/x.gif" class="silver" title="silver">';
-				echo ' Plata ('.$dataarray[3].'x)';
+				echo '<img src="img/x.gif" class="silver" title="Plata">';
+				echo ' '.$dataarray[3].' de plata';
 				}
             }else{
             	echo $dataarray[2];

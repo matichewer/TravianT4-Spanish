@@ -3560,7 +3560,7 @@ class Automation {
                     }
                     $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
-                    if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
+                    $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
                     $database->setMovementProc($data['moveid']);
                     $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);
@@ -3629,7 +3629,7 @@ class Automation {
                     }
                     $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
-                    if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
+                    $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
                     $database->setMovementProc($data['moveid']);
                     $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);
@@ -3662,7 +3662,7 @@ class Automation {
                 }
                 $health = round((3.007 / max(1,heroFightingStrength($getHero,$tribe))) * $sgh);
 
-                if($helmet['proc'] == 1 && $helmet['type'] <= 3) $exp += $exp * (10 + $helmet['type'] * 5) / 100;
+                $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                 $database->modifyHero2('experience', $exp, $ownerID, 1);
                 $database->setMovementProc($data['moveid']);
                 $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);

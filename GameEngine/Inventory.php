@@ -1,5 +1,6 @@
 <?php
 include "Data/hero_full.php";
+require_once __DIR__."/Hero.php";
 $hero_levels = $GLOBALS["hero_levels"];
 
 if(!function_exists('getHeroArmorBonuses')){
@@ -256,11 +257,11 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 		if($data['amount'] <= $itemData['num']){
 			$value = ($data['amount']*10);
 				if($data['amount'] < $itemData['num']){
-					$database->modifyHero2('experience', $value, $uid, 1);
+					$database->modifyHero2('experience', heroExperienceWithHelmet($database, $uid, $value), $uid, 1);
 					$database->editHeroNum($data['id'], $data['amount'], 0);
 				}else{
 					$database->editProcItem($data['id'], 1);
-					$database->modifyHero2('experience', $value, $uid, 1);
+					$database->modifyHero2('experience', heroExperienceWithHelmet($database, $uid, $value), $uid, 1);
 				}
 		}
 		header("Location: hero_inventory.php");
