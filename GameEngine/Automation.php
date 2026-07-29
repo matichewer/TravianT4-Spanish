@@ -648,7 +648,7 @@ class Automation {
 
     private function loyaltyRegeneration() {
         if(file_exists("GameEngine/Prevention/loyalty.txt")) {
-            unlink("GameEngine/Prevention/loyalty.txt");
+            @unlink("GameEngine/Prevention/loyalty.txt");
         }
         global $database;
         $ourFileHandle = fopen("GameEngine/Prevention/loyalty.txt", 'w');
@@ -703,13 +703,13 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/loyalty.txt")) {
-            unlink("GameEngine/Prevention/loyalty.txt");
+            @unlink("GameEngine/Prevention/loyalty.txt");
         }
     }
 
     private function clearDeleting() {
         if(file_exists("GameEngine/Prevention/cleardeleting.txt")) {
-            unlink("GameEngine/Prevention/cleardeleting.txt");
+            @unlink("GameEngine/Prevention/cleardeleting.txt");
         }
         global $database;
         $ourFileHandle = fopen("GameEngine/Prevention/cleardeleting.txt", 'w');
@@ -856,7 +856,7 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/cleardeleting.txt")) {
-            unlink("GameEngine/Prevention/cleardeleting.txt");
+            @unlink("GameEngine/Prevention/cleardeleting.txt");
         }
     }
 
@@ -1002,7 +1002,7 @@ class Automation {
 
     private function culturePoints() {
         if(file_exists("GameEngine/Prevention/culturepoints.txt")) {
-            unlink("GameEngine/Prevention/culturepoints.txt");
+            @unlink("GameEngine/Prevention/culturepoints.txt");
         }
         global $database;
         $ourFileHandle = @fopen("GameEngine/Prevention/culturepoints.txt", 'w');
@@ -1023,7 +1023,7 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/culturepoints.txt")) {
-            unlink("GameEngine/Prevention/culturepoints.txt");
+            @unlink("GameEngine/Prevention/culturepoints.txt");
         }
     }
 
@@ -1049,7 +1049,7 @@ class Automation {
 
     private function buildComplete($throughTime = null, $managePreventionFile = true) {
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
-            unlink("GameEngine/Prevention/build.txt");
+            @unlink("GameEngine/Prevention/build.txt");
         }
         global $database, $bid18, $bid10, $bid11, $bid38, $bid39;
         if($managePreventionFile) {
@@ -1166,7 +1166,7 @@ class Automation {
 				} */
         }
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
-            unlink("GameEngine/Prevention/build.txt");
+            @unlink("GameEngine/Prevention/build.txt");
         }
     }
 
@@ -1357,7 +1357,7 @@ class Automation {
 
     private function marketComplete() {
         if(file_exists("GameEngine/Prevention/market.txt")) {
-            unlink("GameEngine/Prevention/market.txt");
+            @unlink("GameEngine/Prevention/market.txt");
         }
         global $database, $generator;
         $time = time();
@@ -1406,7 +1406,7 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/market.txt")) {
-            unlink("GameEngine/Prevention/market.txt");
+            @unlink("GameEngine/Prevention/market.txt");
         }
     }
 
@@ -1446,7 +1446,7 @@ class Automation {
 
     private function sendunitsComplete() {
         if(file_exists("GameEngine/Prevention/sendunits.txt")) {
-            unlink("GameEngine/Prevention/sendunits.txt");
+            @unlink("GameEngine/Prevention/sendunits.txt");
         }
         global $bid23, $bid36, $database, $battle, $village, $technology, $logging, $session;
         $time = time();
@@ -3023,7 +3023,7 @@ class Automation {
 
         }
         if(file_exists("GameEngine/Prevention/sendunits.txt")) {
-            unlink("GameEngine/Prevention/sendunits.txt");
+            @unlink("GameEngine/Prevention/sendunits.txt");
         }
     }
 
@@ -3178,7 +3178,7 @@ class Automation {
 
     private function sendreinfunitsComplete() {
         if(file_exists("GameEngine/Prevention/sendreinfunits.txt")) {
-            unlink("GameEngine/Prevention/sendreinfunits.txt");
+            @unlink("GameEngine/Prevention/sendreinfunits.txt");
         }
         global $bid23, $database, $battle;
         $time = time();
@@ -3274,13 +3274,13 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/sendreinfunits.txt")) {
-            unlink("GameEngine/Prevention/sendreinfunits.txt");
+            @unlink("GameEngine/Prevention/sendreinfunits.txt");
         }
     }
 
     private function returnunitsComplete() {
         if(file_exists("GameEngine/Prevention/returnunits.txt")) {
-            unlink("GameEngine/Prevention/returnunits.txt");
+            @unlink("GameEngine/Prevention/returnunits.txt");
         }
         global $database;
         $time = time();
@@ -3342,13 +3342,13 @@ class Automation {
         }
         $this->pruneResource();
         if(file_exists("GameEngine/Prevention/returnunits.txt")) {
-            unlink("GameEngine/Prevention/returnunits.txt");
+            @unlink("GameEngine/Prevention/returnunits.txt");
         }
     }
 
     private function sendSettlersComplete() {
         if(file_exists("GameEngine/Prevention/settlers.txt")) {
-            unlink("GameEngine/Prevention/settlers.txt");
+            @unlink("GameEngine/Prevention/settlers.txt");
         }
         global $database, $building;
         $time = time();
@@ -3421,7 +3421,7 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/settlers.txt")) {
-            unlink("GameEngine/Prevention/settlers.txt");
+            @unlink("GameEngine/Prevention/settlers.txt");
         }
     }
 
@@ -3449,7 +3449,7 @@ class Automation {
 
     private function sendAdventuresComplete() {
         if(file_exists("GameEngine/Prevention/adventures.txt")) {
-            unlink("GameEngine/Prevention/adventures.txt");
+            @unlink("GameEngine/Prevention/adventures.txt");
         }
         global $database, $building, $session;
         $time = time();
@@ -3707,13 +3707,13 @@ class Automation {
         }
 
         if(file_exists("GameEngine/Prevention/adventures.txt")) {
-            unlink("GameEngine/Prevention/adventures.txt");
+            @unlink("GameEngine/Prevention/adventures.txt");
         }
     }
 
     private function researchComplete() {
         if(file_exists("GameEngine/Prevention/research.txt")) {
-            unlink("GameEngine/Prevention/research.txt");
+            @unlink("GameEngine/Prevention/research.txt");
         }
         global $database;
         $time = time();
@@ -3737,7 +3737,7 @@ class Automation {
             $database->query($q);
         }
         if(file_exists("GameEngine/Prevention/research.txt")) {
-            unlink("GameEngine/Prevention/research.txt");
+            @unlink("GameEngine/Prevention/research.txt");
         }
     }
 
@@ -4127,7 +4127,7 @@ class Automation {
 
     private function trainingComplete() {
         if(file_exists("GameEngine/Prevention/training.txt")) {
-            unlink("GameEngine/Prevention/training.txt");
+            @unlink("GameEngine/Prevention/training.txt");
         }
         global $database;
         $time = time();
@@ -4176,7 +4176,7 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/training.txt")) {
-            unlink("GameEngine/Prevention/training.txt");
+            @unlink("GameEngine/Prevention/training.txt");
         }
     }
 
@@ -4263,7 +4263,7 @@ class Automation {
 
     private function celebrationComplete() {
         if(file_exists("GameEngine/Prevention/celebration.txt")) {
-            unlink("GameEngine/Prevention/celebration.txt");
+            @unlink("GameEngine/Prevention/celebration.txt");
         }
         global $database;
         $ourFileHandle = fopen("GameEngine/Prevention/celebration.txt", 'w');
@@ -4282,13 +4282,13 @@ class Automation {
             $database->setCelCp($user, $cp);
         }
         if(file_exists("GameEngine/Prevention/celebration.txt")) {
-            unlink("GameEngine/Prevention/celebration.txt");
+            @unlink("GameEngine/Prevention/celebration.txt");
         }
     }
 
     private function demolitionComplete() {
         if(file_exists("GameEngine/Prevention/demolition.txt")) {
-            unlink("GameEngine/Prevention/demolition.txt");
+            @unlink("GameEngine/Prevention/demolition.txt");
         }
         global $building, $database;
         $ourFileHandle = fopen("GameEngine/Prevention/demolition.txt", 'w');
@@ -4344,13 +4344,13 @@ class Automation {
             }
         }
         if(file_exists("GameEngine/Prevention/demolition.txt")) {
-            unlink("GameEngine/Prevention/demolition.txt");
+            @unlink("GameEngine/Prevention/demolition.txt");
         }
     }
 
     private function updateHero() {
         if(file_exists("GameEngine/Prevention/updatehero.txt")) {
-            unlink("GameEngine/Prevention/updatehero.txt");
+            @unlink("GameEngine/Prevention/updatehero.txt");
         }
         global $database, $session;
         $time = time();
@@ -4393,7 +4393,7 @@ class Automation {
             $database->editTableField('units', 'hero', 1, 'vref', $data3['vref']);
         }
         if(file_exists("GameEngine/Prevention/updatehero.txt")) {
-            unlink("GameEngine/Prevention/updatehero.txt");
+            @unlink("GameEngine/Prevention/updatehero.txt");
         }
 
     }
@@ -4632,7 +4632,7 @@ class Automation {
 
     private function starvation() {
         if(file_exists("GameEngine/Prevention/starvation.txt")) {
-            unlink("GameEngine/Prevention/starvation.txt");
+            @unlink("GameEngine/Prevention/starvation.txt");
         }
         global $database;
         $ourFileHandle = @fopen("GameEngine/Prevention/starvation.txt", 'w');
