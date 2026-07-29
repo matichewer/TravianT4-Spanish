@@ -8,7 +8,7 @@
             $effect = "15";
 		}elseif($type==2){
         	$name = "Casco de la Iluminación";
-        	$title = "+20 más experiencia.";
+            $title = "+20% de experiencia obtenida en combate.";
             $item = "2";
             $effect = "20";
 		}elseif($type==3){
