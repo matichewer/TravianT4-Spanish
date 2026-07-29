@@ -95,6 +95,12 @@ if(isset($_GET['t'])) {
 }
 elseif(isset($_GET['id'])) {
 	if(!empty($message->readingNotice)) {
+		$noticeNeighbors = $database->getNoticeNeighbors(
+			$session->uid,
+			$session->alliance,
+			(int)$_GET['id']
+		);
+		include("Templates/Notice/navigation.tpl");
 		$type = ($message->readingNotice['ntype'] == 5)? $message->readingNotice['archive'] : $message->readingNotice['ntype'];
 		include("Templates/Notice/".$type.".tpl");
 	}

@@ -2213,6 +2213,35 @@
 				return $row ? $row : false;
 			}
 
+			function getNoticeNeighbors($uid, $alliance, $id) {
+				$uid = (int)$uid;
+				$alliance = (int)$alliance;
+				$id = (int)$id;
+				$neighbors = array('previous' => 0, 'next' => 0);
+				if($uid <= 0 || $id <= 0) {
+					return $neighbors;
+				}
+
+				$accessCondition = "uid = $uid AND del = 0";
+				if($alliance > 0) {
+					$accessCondition = "($accessCondition) OR (ally = $alliance"
+						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21))";
+				}
+				$q = "SELECT id FROM " . TB_PREFIX . "ndata"
+					." WHERE $accessCondition ORDER BY time DESC, id DESC";
+				$result = mysql_query($q, $this->connection);
+				$ids = array();
+				while($result && $row = mysql_fetch_assoc($result)) {
+					$ids[] = (int)$row['id'];
+				}
+				$position = array_search($id, $ids, true);
+				if($position !== false) {
+					$neighbors['previous'] = isset($ids[$position - 1]) ? $ids[$position - 1] : 0;
+					$neighbors['next'] = isset($ids[$position + 1]) ? $ids[$position + 1] : 0;
+				}
+				return $neighbors;
+			}
+
 			function getNotice5($uid) {
 				$q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid and viewed = 0 ORDER BY time DESC";
 				$result = mysql_query($q, $this->connection);
