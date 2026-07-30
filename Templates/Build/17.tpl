@@ -355,7 +355,9 @@ echo "<h4>Mercaderes entrantes</h4>";
     echo "<div class=\"at\">";
 
     echo $datetime[1]."</div>";
-    echo "</td></tr></tbody> <tr class=\"res\"> <th>Recursos</th> <td colspan=\"2\"><span class=\"f10\">";
+    $totalDeliveries = (int)$recieve['ref2'] > 0 ? (int)$recieve['ref2'] : max(1,(int)$recieve['send']);
+    $currentDelivery = max(1,$totalDeliveries-(int)$recieve['send']+1);
+    echo "</td></tr><tr><th>Viaje</th><td>".$currentDelivery." de ".$totalDeliveries."</td></tr></tbody> <tr class=\"res\"> <th>Recursos</th> <td colspan=\"2\"><span class=\"f10\">";
     echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$recieve['wood']
     ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$recieve['clay']
     ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$recieve['iron']
@@ -379,7 +381,9 @@ if(count($market->sending) > 0) {
         echo "<div class=\"at\">";
 
         echo $datetime[1]."</div>";
-        echo "</td> </tr> <tr class=\"res\"> <th>Recursos</th><td>";
+        $totalDeliveries = (int)$send['ref2'] > 0 ? (int)$send['ref2'] : max(1,(int)$send['send']);
+        $currentDelivery = max(1,$totalDeliveries-(int)$send['send']+1);
+        echo "</td></tr><tr><th>Viaje</th><td>".$currentDelivery." de ".$totalDeliveries."</td></tr> <tr class=\"res\"> <th>Recursos</th><td>";
         echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$send['wood']
         ." <img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$send['clay']
         ." <img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$send['iron'].
@@ -406,7 +410,9 @@ if(count($market->return) > 0) {
         echo $datetime[0]." ";
         }
         echo $datetime[1]."</div>";
-        echo "</td> </tr> <tr class=\"res\"> <th>Recursos</th><td>";
+        $totalDeliveries = (int)$return['ref2'] > 0 ? (int)$return['ref2'] : max(1,(int)$return['send']);
+        $currentDelivery = max(1,$totalDeliveries-(int)$return['send']+1);
+        echo "</td></tr><tr><th>Viaje</th><td>".$currentDelivery." de ".$totalDeliveries."</td></tr> <tr class=\"res\"> <th>Recursos</th><td>";
                 echo "<img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" /> ".$return['wood']."<img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" /> ".$return['clay']."<img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" /> ".$return['iron']."<img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" />".$return['crop']."</td></tr></tbody>";
 
         echo "</tbody></table>";

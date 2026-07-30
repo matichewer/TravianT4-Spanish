@@ -170,7 +170,7 @@ class Market {
 	        $resdata = implode(",",$resource);
 	        $timetaken = $generator->procDistanceTime($coor,$village->coor,$session->tribe,0);
 	        $reference = $database->sendResource($resource[0],$resource[1],$resource[2],$resource[3],$reqMerc,0);
-	        $movement = $reference ? $database->addMovement(0,$village->wid,$target,$reference,$resdata,time()+$timetaken,$sendCount) : false;
+	        $movement = $reference ? $database->addMovement(0,$village->wid,$target,$reference,$resdata,time()+$timetaken,$sendCount,0,0,0,0,$sendCount) : false;
 	        if(!$movement) {
 	            if($reference) {
 	                $database->sendResource($reference,0,0,0,0,1);

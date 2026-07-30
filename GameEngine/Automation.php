@@ -1401,7 +1401,8 @@ class Automation {
                 }
                 $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
                 $endtime = $travelTime + $data['endtime'];
-                $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop']);
+                $totalDeliveries = (int)$data['ref2'] > 0 ? (int)$data['ref2'] : max(1, (int)$data['send']);
+                $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], $totalDeliveries);
             }
 
             $q1 = "SELECT * FROM ".TB_PREFIX."movement where proc = 0 and sort_type = 2 and endtime <= $time";
@@ -1414,7 +1415,8 @@ class Automation {
                 if($data1['send'] > 1) {
                     $targettribe1 = $database->getUserField($database->getVillageField($data1['to'], "owner"), "tribe", 0);
                     $send = $data1['send'] - 1;
-                    $this->sendResource2($data1['wood'], $data1['clay'], $data1['iron'], $data1['crop'], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime']);
+                    $totalDeliveries = (int)$data1['ref2'] > 0 ? (int)$data1['ref2'] : max(1, (int)$data1['send']);
+                    $this->sendResource2($data1['wood'], $data1['clay'], $data1['iron'], $data1['crop'], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime'], $totalDeliveries);
                 }
             }
         } while($processed);
@@ -1423,7 +1425,7 @@ class Automation {
         }
     }
 
-    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null) {
+    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
         global $bid17, $bid28, $database, $generator, $logging;
         $availableWood = $database->getWoodAvailable($from);
         $availableClay = $database->getClayAvailable($from);
@@ -1457,7 +1459,8 @@ class Automation {
                             return false;
                         }
                         $departureTime = $departureTime === null ? time() : (int)$departureTime;
-                        if(!$database->addMovement(0, $from, $to, $reference, $resdata, $departureTime + $timetaken, $send)) {
+                        $totalDeliveries = $totalDeliveries === null ? max(1, (int)$send) : max(1, (int)$totalDeliveries);
+                        if(!$database->addMovement(0, $from, $to, $reference, $resdata, $departureTime + $timetaken, $send, 0, 0, 0, 0, $totalDeliveries)) {
                             $database->sendResource($reference, 0, 0, 0, 0, 1);
                             $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
                             return false;
