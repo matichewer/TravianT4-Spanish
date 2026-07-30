@@ -11,14 +11,25 @@ $allianceEventPlayerName = function($userId) use ($database) {
         ? 'Naturaleza'
         : $database->getUserField($userId, 'username', 0);
 };
-$allianceEventAlliance = function($userId) use ($database) {
-    $userAlliance = (int)$database->getUserField((int)$userId, 'alliance', 0);
-    if(!$userAlliance) {
+$allianceEventAlliance = function($attackerId, $defenderId) use ($database, $session) {
+    $attackerAlliance = (int)$database->getUserField((int)$attackerId, 'alliance', 0);
+    $defenderAlliance = (int)$database->getUserField((int)$defenderId, 'alliance', 0);
+    $ownAlliance = (int)$session->alliance;
+
+    if($attackerAlliance === $ownAlliance) {
+        $otherAlliance = $defenderAlliance;
+    } elseif($defenderAlliance === $ownAlliance) {
+        $otherAlliance = $attackerAlliance;
+    } else {
+        $otherAlliance = $defenderAlliance ?: $attackerAlliance;
+    }
+
+    if(!$otherAlliance) {
         return "-";
     }
 
-    return "<a href=\"allianz.php?aid=".$userAlliance."\">"
-        .$database->getAllianceName($userAlliance)
+    return "<a href=\"allianz.php?aid=".$otherAlliance."\">"
+        .$database->getAllianceName($otherAlliance)
         ."</a>";
 };
 echo "<h1>".$allianceinfo['tag']." - ".$allianceinfo['name']."</h1>";
@@ -86,7 +97,7 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
     $outputList .= $nn;
     $defenderId = isset($dataarray[30]) ? (int)$dataarray[30] : 0;
     $outputList .= $allianceEventPlayerName($defenderId);
-    $allyName = $allianceEventAlliance((int)$dataarray[0]);
+    $allyName = $allianceEventAlliance((int)$dataarray[0], $defenderId);
     
     $outputList .= "<td class=\"al\">".$allyName."</td>";
     $date = $generator->procMtime($time);
