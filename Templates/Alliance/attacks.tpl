@@ -11,9 +11,9 @@ $allianceEventPlayerName = function($userId) use ($database) {
         ? 'Naturaleza'
         : $database->getUserField($userId, 'username', 0);
 };
-$allianceEventAlliance = function($userId) use ($database, $session) {
+$allianceEventAlliance = function($userId) use ($database) {
     $userAlliance = (int)$database->getUserField((int)$userId, 'alliance', 0);
-    if(!$userAlliance || $userAlliance === (int)$session->alliance) {
+    if(!$userAlliance) {
         return "-";
     }
 
