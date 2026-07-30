@@ -10,7 +10,7 @@ $uprequire = $building->resourceRequired($id,$bid);
 
 
 	</a>
-	Aquí se muele tu grano para producir harina. Según su nivel, tu molino puede aumentar la producción de cereal hasta un 25 por ciento.</div>
+	Aquí se muele tu cereal para producir harina. Según su nivel, tu molino puede aumentar la producción de cereal hasta un 25 por ciento.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">

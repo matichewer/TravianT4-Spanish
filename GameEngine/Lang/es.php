@@ -81,13 +81,13 @@ define("B2_DESC","El barro se produce aqu&iacute;. Al incrementar el nivel aumen
 define("B3","Mina de Hierro");
 define("B3_DESC","Aqu&iacute; los mineros extraen el valioso hierro. Cuanto m&aacute;s se ampl&iacute;en las minas, m&aacute;s hierro se produce.");
 define("B4","Granja");
-define("B4_DESC","La comida de tu poblaci&oacute;n se produce aqu&iacute;. Incrementando el nivel de las granjas aumentas la producci&oacute;n de grano.");
+define("B4_DESC","La comida de tu poblaci&oacute;n se produce aqu&iacute;. Incrementando el nivel de las granjas aumentas la producci&oacute;n de cereal.");
 
 //DORF1
 define("WOOD","Madera");
 define("CLAY","Barro");
 define("IRON","Hierro");
-define("CROP","Grano");
+define("CROP","Cereal");
 define("LEVEL","Nivel");
 define("CROP_COM",CROP." consumido");
 define("PER_HR","por hora");
