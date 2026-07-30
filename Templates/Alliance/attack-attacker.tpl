@@ -41,9 +41,9 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
     $outputList .= $allianceEventPlayerName($dataarray[0]);
        
     $outputList .= $nn;
-    $defenderId = isset($dataarray[10]) ? (int)$dataarray[10] : 0;
+    $defenderId = isset($dataarray[30]) ? (int)$dataarray[30] : 0;
     $outputList .= $allianceEventPlayerName($defenderId);
-    $allyName = $allianceEventAlliance($defenderId);
+    $allyName = $allianceEventAlliance((int)$dataarray[0]);
     
     $outputList .= "<td class=\"al\">".$allyName."</td>";
     $date = $generator->procMtime($time);
