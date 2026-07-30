@@ -118,6 +118,10 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
         $resource = array($_POST['r1'],$_POST['r2'],$_POST['r3'],$_POST['r4']); 
         echo ceil((array_sum($resource)-0.1)/$market->maxcarry); ?></td>
 	</tr>
+	<tr>
+		<th>Envíos:</th>
+		<td><?php echo $marketSendCount; ?>x</td>
+	</tr>
 
 	<tr>
 		<td colspan="2">
