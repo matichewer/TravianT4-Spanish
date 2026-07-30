@@ -42,15 +42,9 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
     $outputList .= $allianceEventPlayerName($dataarray[0]);
        
     $outputList .= $nn;
-    $outputList .= $allianceEventPlayerName($dataarray[28]);
-    $getUserAlly = $database->getUserField($dataarray[0],'alliance',0);
-    $getAllyName = $database->getAllianceName($getUserAlly);
-    
-    if($getUserAlly==$session->alliance || !$getUserAlly){
-    	$allyName = "-";
-    }else{
-    	$allyName = "<a href=\"allianz.php?aid=".$getUserAlly."\">".$getAllyName."</a>";
-    }
+    $defenderId = isset($dataarray[10]) ? (int)$dataarray[10] : 0;
+    $outputList .= $allianceEventPlayerName($defenderId);
+    $allyName = $allianceEventAlliance((int)$dataarray[0]);
     
     $outputList .= "<td class=\"al\">".$allyName."</td>";
     $date = $generator->procMtime($time);
