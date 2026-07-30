@@ -2205,7 +2205,7 @@
 				$allianceCondition = "";
 				if($alliance > 0) {
 					$allianceCondition = " OR (ally = $alliance"
-						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21))";
+						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21,22,23,24))";
 				}
 				$q = "SELECT * FROM " . TB_PREFIX . "ndata"
 					." WHERE id = $id AND (uid = $uid$allianceCondition) LIMIT 1";
@@ -2227,7 +2227,7 @@
 				$accessCondition = "uid = $uid AND del = 0";
 				if($alliance > 0 && $filter === 0) {
 					$accessCondition = "($accessCondition) OR (ally = $alliance"
-						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21))";
+						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21,22,23,24))";
 				}
 				$filterConditions = array(
 					0 => "archive = 0",
@@ -2236,7 +2236,7 @@
 					3 => "archive = 0 AND ntype IN (9,15,16,17,18,19,20,21)",
 					4 => "archive = 1",
 					5 => "archive = 0 AND ntype = 8",
-					6 => "archive = 0 AND ntype = 0"
+					6 => "archive = 0 AND ntype IN (0,22,23,24)"
 				);
 				$filterCondition = isset($filterConditions[$filter])
 					? $filterConditions[$filter]

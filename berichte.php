@@ -112,6 +112,9 @@ if(isset($_GET['id'])) {
 		);
 		include("Templates/Notice/navigation.tpl");
 		$type = ($message->readingNotice['ntype'] == 5)? $message->readingNotice['archive'] : $message->readingNotice['ntype'];
+		if(in_array($type, array(22, 23, 24), true)) {
+			$type = 0;
+		}
 		include("Templates/Notice/".$type.".tpl");
 	}
 }

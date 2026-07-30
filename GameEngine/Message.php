@@ -78,7 +78,7 @@
 						$type = 8;
 					}
 					if($get['t'] == 6) {
-						$type = 0;
+						$type = array(0, 22, 23, 24);
 					}
 					if (!is_array($type)) { $type = array($type); }
 					$this->noticearray = $this->filter_by_value($database->getNotice($session->uid), "ntype", $type);

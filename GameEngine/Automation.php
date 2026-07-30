@@ -2926,7 +2926,8 @@ class Automation {
                     //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        $spyReportType = ($totaldead_att == 0 && $totaltraped_att == 0) ? 22 : 23;
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, $spyReportType, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                     } else {
                         if($totaldead_att == 0 && $totaltraped_att == 0) {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
@@ -2963,7 +2964,7 @@ class Automation {
                     $database->setMovementProc($data['moveid']);
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 24, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
                     } else {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
                         $database->addNotice($from['owner'], $to['wref'], $fromAlly, 3, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);

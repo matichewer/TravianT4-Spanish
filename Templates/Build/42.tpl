@@ -1,9 +1,9 @@
-<h1 class="titleInHeader">Taller <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
+<h1 class="titleInHeader">Gran taller <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 
     <div id="build" class="gid42">
     <div class="build_desc">
         <a href="#" onClick="return Travian.Game.iPopup(42,4);" class="build_logo">
-        <img class="building big white g42" src="img/x.gif" alt="Taller" title="Taller"></a>
+        <img class="building big white g42" src="img/x.gif" alt="Gran taller" title="Gran taller"></a>
         En el taller se construyen máquinas de guerra, como arietes y catapultas. Cuanto mayor sea su nivel, menor será el tiempo de construcción. Antes debes investigar estas unidades en la academia.</div>
 
 <?php if ($building->getTypeLevel(42) > 0) { ?>
