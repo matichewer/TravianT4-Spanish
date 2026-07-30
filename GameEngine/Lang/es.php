@@ -159,10 +159,10 @@ define("U10","Colono");
 //GERMAN UNITS
 define("U11","Luchador de porra");
 define("U12","Lancero");
-define("U13","Hachero");
+define("U13","Luchador de Hacha");
 define("U14","Emisario");
 define("U15","Paladín");
-define("U16","Jinete Germano");
+define("U16","Jinete Teutón");
 define("U17","Ariete");
 define("U18","Catapulta");
 define("U19","Cabecilla");

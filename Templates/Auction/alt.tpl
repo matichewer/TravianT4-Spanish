@@ -443,18 +443,18 @@
             $effect = "1500";
         }
         if($type==52){
-        	$name = "Hacha pequeña del hachero";
-			$title = "+500 a la fuerza del héroe. Por cada hachero: +3 ataque y +3 defensa";
+			$name = "Hacha pequeña del luchador de hacha";
+			$title = "+500 a la fuerza del héroe. Por cada luchador de hacha: +3 ataque y +3 defensa";
             $item = "52";
             $effect = "500";
 		}elseif($type==53){
-        	$name = "Hacha del hachero";
-			$title = "+1000 a la fuerza del héroe. Por cada hachero: +4 ataque y +4 defensa";
+			$name = "Hacha del luchador de hacha";
+			$title = "+1000 a la fuerza del héroe. Por cada luchador de hacha: +4 ataque y +4 defensa";
             $item = "53";
             $effect = "1000";
 		}elseif($type==54){
-        	$name = "Hacha de batalla del hachero";
-			$title = "+1500 a la fuerza del héroe. Por cada hachero: +5 ataque y +5 defensa";
+			$name = "Hacha de batalla del luchador de hacha";
+			$title = "+1500 a la fuerza del héroe. Por cada luchador de hacha: +5 ataque y +5 defensa";
             $item = "54";
             $effect = "1500";
 		}

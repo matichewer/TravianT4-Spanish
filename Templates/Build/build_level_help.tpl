@@ -75,7 +75,7 @@ if ($buildingHelpType === 'rally-point') {
 		$buildingHelpTitle = 'Ventajas de la Academia (Germanos)';
 		$buildingHelpItems = array(
 			1 => 'Permite investigar Lancero, Explorador y Paladín cuando también se cumplen los requisitos de sus otros edificios.',
-			3 => 'Permite investigar Hachero.',
+			3 => 'Permite investigar Luchador de Hacha.',
 			10 => 'Permite investigar Ariete.',
 			15 => 'Permite investigar Caballero germano y Catapulta.',
 			20 => 'Permite investigar Jefe germano.'

@@ -946,7 +946,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</td>
 
-	<td class="text" width="135">Hachero</td>
+	<td class="text" width="135">Luchador de Hacha</td>
 
 	<td width="25">60</td>
 
@@ -1030,7 +1030,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</td>
 
-	<td class="text" width="135">Jinete Germano</td>
+	<td class="text" width="135">Jinete Teutón</td>
 
 	<td width="25">150</td>
 

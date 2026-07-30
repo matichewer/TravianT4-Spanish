@@ -9,14 +9,14 @@
 							</td><td>
 								<img src="img/x.gif" class="unit u12" title="Lancero" alt="Lancero" />
 							</td><td>
-								<img src="img/x.gif" class="unit u13" title="Hachero" alt="Hachero" />
+								<img src="img/x.gif" class="unit u13" title="Luchador de Hacha" alt="Luchador de Hacha" />
 							</td><td>
 								<img src="img/x.gif" class="unit u14" title="Emisario" alt="Emisario" />
 							</td><td>
 								<img src="img/x.gif" class="unit u15" title="Paladín" alt="Paladín" />
 
 							</td><td>
-								<img src="img/x.gif" class="unit u16" title="Jinete Germano" alt="Jinete Germano" />
+								<img src="img/x.gif" class="unit u16" title="Jinete Teutón" alt="Jinete Teutón" />
 							</td><td>
 								<img src="img/x.gif" class="unit u17" title="Ariete" alt="Ariete" />
 							</td><td>
