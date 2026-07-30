@@ -34,7 +34,7 @@ $reinforcementIsNature = !empty($spyReinforcement['nature']);
 				<td class="uniticon<?php echo $isLast ? ' last' : ''; ?>"><img src="img/x.gif" class="unit u<?php echo $unit; ?>" title="<?php echo $unitName; ?>" alt="<?php echo $unitName; ?>" /></td>
 			<?php } ?>
 			<?php if($reinforcementHero > 0) { ?>
-				<td class="uniticon last"><img src="img/x.gif" class="unit uhero" title="<?php echo $technology->getUnitName(51); ?>" alt="<?php echo $technology->getUnitName(51); ?>" /></td>
+				<td class="uniticon last"><img src="img/x.gif" class="unit uhero" title="<?php echo U0; ?>" alt="<?php echo U0; ?>" /></td>
 			<?php } ?>
 		</tr>
 	</tbody>

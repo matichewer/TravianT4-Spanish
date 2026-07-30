@@ -35,7 +35,7 @@ $founder = $database->getVillage($village->wid);
 				<?php for($i=($session->tribe-1)*10+1;$i<=$session->tribe*10;$i++) {
 					echo "<td><img src=\"img/x.gif\" class=\"unit u".$i."\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
 				} 
-                echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(51)."\" alt=\"".$technology->getUnitName(51)."\" /></td>";
+                echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".U0."\" alt=\"".U0."\" /></td>";
                 ?>
 		</tr>
 		<tr>

@@ -29,7 +29,7 @@ for($i=$start;$i<=($start+9);$i++) {
 	echo "<td class=\"uniticon".$last."\"><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
 }
 if($dataarray[139]){
-	echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(51)."\" alt=\"".$technology->getUnitName(51)."\" /></td>";
+	echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".U0."\" alt=\"".U0."\" /></td>";
 }
 echo "</tr></tbody><tbody class=\"units\"><tr><th>Tropas</th>";
 for($i=129;$i<=138;$i++) {
@@ -67,7 +67,7 @@ for($i=$start;$i<=($start+9);$i++) {
 	echo "<td class=\"uniticon".$last."\"><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
 }
 if($dataarray[141]){
-	echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(51)."\" alt=\"".$technology->getUnitName(51)."\" /></td>";
+	echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".U0."\" alt=\"".U0."\" /></td>";
 }
 echo "</tr></tbody><tbody class=\"units\"><tr><th>".REPORT_TROOPS."</th>";
 for($i=131;$i<=140;$i++) {

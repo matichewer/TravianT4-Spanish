@@ -42,7 +42,7 @@ $unknownDefenderColumns = $unknownDefenderHasHero ? 11 : 10;
 				echo '<td class="uniticon'.$lastClass.'"><img src="img/x.gif" class="unit u'.$unitId.'" title="'.$technology->getUnitName($unitId).'" alt="'.$technology->getUnitName($unitId).'" /></td>';
 			}
 			if($unknownDefenderHasHero) {
-				echo '<td class="uniticon last"><img src="img/x.gif" class="unit uhero" title="'.$technology->getUnitName(51).'" alt="'.$technology->getUnitName(51).'" /></td>';
+				echo '<td class="uniticon last"><img src="img/x.gif" class="unit uhero" title="'.U0.'" alt="'.U0.'" /></td>';
 			}
 			?>
 		</tr>

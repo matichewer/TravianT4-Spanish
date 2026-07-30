@@ -63,7 +63,7 @@ $end = ($targettribe*10);
     for($i=$start;$i<=$end;$i++) {
         echo "<td class=\"uniticon\"><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
     }
-        echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".$technology->getUnitName(51)."\" alt=\"".$technology->getUnitName(51)."\" /></td>";
+        echo "<td class=\"uniticon last\"><img src=\"img/x.gif\" class=\"unit uhero\" title=\"".U0."\" alt=\"".U0."\" /></td>";
     echo "</tr></tbody><tbody class=\"units\"><tr><th>".REPORT_TROOPS."</th>";
     for($i=4;$i<=13;$i++) {
         if($dataarray[$i] == 0) {
