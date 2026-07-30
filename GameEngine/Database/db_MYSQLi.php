@@ -2775,6 +2775,13 @@
         		return mysqli_query($this->connection,$q);
         	}
 
+			function claimMovementProc($moveid) {
+				$moveid = (int) $moveid;
+				$q = "UPDATE " . TB_PREFIX . "movement SET proc = 1 WHERE moveid = $moveid AND proc = 0";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
         	/***************************
         	Function to retrieve used merchant
         	References: Village

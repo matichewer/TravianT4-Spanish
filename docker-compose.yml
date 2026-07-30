@@ -14,6 +14,19 @@ services:
       db:
         condition: service_healthy
 
+  market-worker:
+    build: ./docker
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php tools/market_worker.php; sleep 1; done"]
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: mariadb:10.6
     restart: unless-stopped

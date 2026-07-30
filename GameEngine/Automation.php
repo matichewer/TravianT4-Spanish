@@ -455,7 +455,11 @@ class Automation {
         );
     }
 
-    public function __construct() {
+    public function __construct($marketOnly = false) {
+        if($marketOnly) {
+            $this->marketComplete();
+            return;
+        }
         if(!file_exists("GameEngine/Prevention/cleardeleting.txt") or time() - filemtime("GameEngine/Prevention/cleardeleting.txt") > 50) {
             $this->clearDeleting();
         }
@@ -1348,7 +1352,6 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."route where timestamp < $time";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
-            $database->modifyResource($data['from'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 0);
             $targettribe = $database->getUserField($database->getVillageField($data['from'], "owner"), "tribe", 0);
             $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
             $database->editTradeRoute($data['id'], "timestamp", 86400, 1);
@@ -1363,54 +1366,64 @@ class Automation {
         $time = time();
         $ourFileHandle = @fopen("GameEngine/Prevention/market.txt", 'w');
         @fclose($ourFileHandle);
-        $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."send where ".TB_PREFIX."movement.ref = ".TB_PREFIX."send.id and ".TB_PREFIX."movement.proc = 0 and sort_type = 0 and endtime < $time";
-        $dataarray = $database->query_return($q);
-        foreach ($dataarray as $data) {
+        do {
+            $processed = false;
+            $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."send where ".TB_PREFIX."movement.ref = ".TB_PREFIX."send.id and ".TB_PREFIX."movement.proc = 0 and sort_type = 0 and endtime <= $time";
+            $dataarray = $database->query_return($q);
+            foreach ($dataarray as $data) {
+                if(!$database->claimMovementProc($data['moveid'])) {
+                    continue;
+                }
+                $processed = true;
 
-            if($data['wood'] >= $data['clay'] && $data['wood'] >= $data['iron'] && $data['wood'] >= $data['crop']) {
-                $sort_type = "10";
-            } elseif($data['clay'] >= $data['wood'] && $data['clay'] >= $data['iron'] && $data['clay'] >= $data['crop']) {
-                $sort_type = "11";
-            } elseif($data['iron'] >= $data['wood'] && $data['iron'] >= $data['clay'] && $data['iron'] >= $data['crop']) {
-                $sort_type = "12";
-            } elseif($data['crop'] >= $data['wood'] && $data['crop'] >= $data['clay'] && $data['crop'] >= $data['iron']) {
-                $sort_type = "13";
+                if($data['wood'] >= $data['clay'] && $data['wood'] >= $data['iron'] && $data['wood'] >= $data['crop']) {
+                    $sort_type = "10";
+                } elseif($data['clay'] >= $data['wood'] && $data['clay'] >= $data['iron'] && $data['clay'] >= $data['crop']) {
+                    $sort_type = "11";
+                } elseif($data['iron'] >= $data['wood'] && $data['iron'] >= $data['clay'] && $data['iron'] >= $data['crop']) {
+                    $sort_type = "12";
+                } else {
+                    $sort_type = "13";
+                }
+
+                $to = $database->getMInfo($data['to']);
+                $from = $database->getMInfo($data['from']);
+                $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
+                $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
+                $fromcoor = $database->getCoor($data['from']);
+                $tocoor = $database->getCoor($data['to']);
+                $senderTribe = $database->getUserField($from['owner'], "tribe", 0);
+                $travelTime = $this->procDistanceTime($fromcoor, $tocoor, $senderTribe, 0);
+                $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.'';
+                $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
+                if($from['owner'] != $to['owner']) {
+                    $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
+                }
+                $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
+                $endtime = $travelTime + $data['endtime'];
+                $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop']);
             }
 
-            $to = $database->getMInfo($data['to']);
-            $from = $database->getMInfo($data['from']);
-            $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
-            $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-            $fromcoor = $database->getCoor($data['from']);
-            $tocoor = $database->getCoor($data['to']);
-            $senderTribe = $database->getUserField($from['owner'], "tribe", 0);
-            $travelTime = $this->procDistanceTime($fromcoor, $tocoor, $senderTribe, 0);
-            $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.'';
-            $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
-            if($from['owner'] != $to['owner']) {
-                $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
+            $q1 = "SELECT * FROM ".TB_PREFIX."movement where proc = 0 and sort_type = 2 and endtime <= $time";
+            $dataarray1 = $database->query_return($q1);
+            foreach ($dataarray1 as $data1) {
+                if(!$database->claimMovementProc($data1['moveid'])) {
+                    continue;
+                }
+                $processed = true;
+                if($data1['send'] > 1) {
+                    $targettribe1 = $database->getUserField($database->getVillageField($data1['to'], "owner"), "tribe", 0);
+                    $send = $data1['send'] - 1;
+                    $this->sendResource2($data1['wood'], $data1['clay'], $data1['iron'], $data1['crop'], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime']);
+                }
             }
-            $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
-            $endtime = $travelTime + $data['endtime'];
-            $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop']);
-            $database->setMovementProc($data['moveid']);
-        }
-        $q1 = "SELECT * FROM ".TB_PREFIX."movement where proc = 0 and sort_type = 2 and endtime < $time";
-        $dataarray1 = $database->query_return($q1);
-        foreach ($dataarray1 as $data1) {
-            $database->setMovementProc($data1['moveid']);
-            if($data1['send'] > 1) {
-                $targettribe1 = $database->getUserField($database->getVillageField($data1['to'], "owner"), "tribe", 0);
-                $send = $data1['send'] - 1;
-                $this->sendResource2($data1['wood'], $data1['clay'], $data1['iron'], $data1['crop'], $data1['to'], $data1['from'], $targettribe1, $send);
-            }
-        }
+        } while($processed);
         if(file_exists("GameEngine/Prevention/market.txt")) {
             @unlink("GameEngine/Prevention/market.txt");
         }
     }
 
-    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send) {
+    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null) {
         global $bid17, $bid28, $database, $generator, $logging;
         $availableWood = $database->getWoodAvailable($from);
         $availableClay = $database->getClayAvailable($from);
@@ -1435,13 +1448,26 @@ class Automation {
                     $res = $resource[0] + $resource[1] + $resource[2] + $resource[3];
                     if($res != 0) {
                         $resdata = "".$resource[0].",".$resource[1].",".$resource[2].",".$resource[3]."";
+                        if(!$database->deductResourcesIfAvailable($from, $resource[0], $resource[1], $resource[2], $resource[3])) {
+                            return false;
+                        }
                         $reference = $database->sendResource($resource[0], $resource[1], $resource[2], $resource[3], $reqMerc, 0);
-                        $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 0);
-                        $database->addMovement(0, $from, $to, $reference, $resdata, time() + $timetaken, $send);
+                        if(!$reference) {
+                            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
+                            return false;
+                        }
+                        $departureTime = $departureTime === null ? time() : (int)$departureTime;
+                        if(!$database->addMovement(0, $from, $to, $reference, $resdata, $departureTime + $timetaken, $send)) {
+                            $database->sendResource($reference, 0, 0, 0, 0, 1);
+                            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
+                            return false;
+                        }
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
 
     private function sendunitsComplete() {
