@@ -1394,14 +1394,15 @@ class Automation {
                 $tocoor = $database->getCoor($data['to']);
                 $senderTribe = $database->getUserField($from['owner'], "tribe", 0);
                 $travelTime = $this->procDistanceTime($fromcoor, $tocoor, $senderTribe, 0);
-                $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.'';
+                $totalDeliveries = (int)$data['ref2'] > 0 ? (int)$data['ref2'] : max(1, (int)$data['send']);
+                $currentDelivery = max(1, $totalDeliveries - (int)$data['send'] + 1);
+                $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.','.$currentDelivery.','.$totalDeliveries.'';
                 $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
                 if($from['owner'] != $to['owner']) {
                     $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
                 }
                 $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
                 $endtime = $travelTime + $data['endtime'];
-                $totalDeliveries = (int)$data['ref2'] > 0 ? (int)$data['ref2'] : max(1, (int)$data['send']);
                 $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], $totalDeliveries);
             }
 

@@ -106,8 +106,14 @@
 									<div class="rArea">
 						<img class="r4" src="img/x.gif" title="<?php echo CROP; ?>">
 						<?php echo $dataarray[5]; ?></div>
-							</td>
+									</td>
 		</tr>
+		<?php if($reportTotalDeliveries > 1) { ?>
+		<tr>
+			<th>Viaje</th>
+			<td><?php echo $reportCurrentDelivery.' de '.$reportTotalDeliveries; ?></td>
+		</tr>
+		<?php } ?>
 		<tr>
 			<td class="empty" colspan="2"></td>
 		</tr>
