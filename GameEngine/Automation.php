@@ -4169,16 +4169,15 @@ class Automation {
     }
 
     private function trainingComplete() {
-        if(file_exists("GameEngine/Prevention/training.txt")) {
-            @unlink("GameEngine/Prevention/training.txt");
-        }
         global $database;
-        $time = time();
-        $ourFileHandle = fopen("GameEngine/Prevention/training.txt", 'w');
-        fclose($ourFileHandle);
-        $trainlist = $database->getTrainingList();
-        if(count($trainlist) > 0) {
-            foreach ($trainlist as $train) {
+        if(!$database->acquireTrainingCompletionLock(0)) {
+            return;
+        }
+        try {
+            $time = time();
+            $trainlist = $database->getTrainingList();
+            if(count($trainlist) > 0) {
+                foreach ($trainlist as $train) {
                 $timepast = $time - $train['timestamp2'];
                 $pop = $train['pop'];
                 $trained = 0;
@@ -4190,9 +4189,15 @@ class Automation {
                     $completedUnit = (int)$train['unit'];
                     if($train['unit'] > 60 && $train['unit'] != 99) {
                         $completedUnit -= 60;
-                        $database->modifyUnit($train['vref'], $completedUnit, $trained, 1);
-                    } else {
-                        $database->modifyUnit($train['vref'], $completedUnit, $trained, 1);
+                    }
+                    $completed = $database->completeTrainingBatch(
+                        $train['id'],
+                        $completedUnit,
+                        $trained,
+                        $trained * $train['eachtime']
+                    );
+                    if(!$completed) {
+                        continue;
                     }
                     if($trained > 0 && $completedUnit >= 10 && $completedUnit <= 50 && $completedUnit % 10 === 0) {
                         $owner = (int)$database->getVillageField($train['vref'],'owner');
@@ -4201,7 +4206,6 @@ class Automation {
                             $database->markFollowupQuestAchieved($owner,9);
                         }
                     }
-                    $database->updateTraining($train['id'], $trained, $trained * $train['eachtime']);
                 }
                 $new_amt = $train['amt'] - $trained;
                 if($new_amt == 0) {
@@ -4216,10 +4220,10 @@ class Automation {
 					$database->setVillageField($train['vref'], 'starv', $upkeep);
 					$database->setVillageField($train['vref'], 'starvupdate', $time);
 				} */
+                }
             }
-        }
-        if(file_exists("GameEngine/Prevention/training.txt")) {
-            @unlink("GameEngine/Prevention/training.txt");
+        } finally {
+            $database->releaseTrainingCompletionLock();
         }
     }
 

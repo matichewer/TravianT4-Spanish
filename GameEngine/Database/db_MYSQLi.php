@@ -481,6 +481,44 @@
 					return $row && (int)$row[0] === 1;
 				}
 
+				function acquireTrainingLock($vid, $timeout = 5) {
+						$vid = (int)$vid;
+						$timeout = max(0,min(10,(int)$timeout));
+						if($vid <= 0) {
+							return false;
+						}
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."training_".$vid);
+						$result = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',$timeout)");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
+				function releaseTrainingLock($vid) {
+						$vid = (int)$vid;
+						if($vid <= 0) {
+							return false;
+						}
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."training_".$vid);
+						$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
+				function acquireTrainingCompletionLock($timeout = 0) {
+						$timeout = max(0,min(10,(int)$timeout));
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."training_completion");
+						$result = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',$timeout)");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
+				function releaseTrainingCompletionLock() {
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."training_completion");
+						$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
 				function assignExpansionSlot($from, $target, $owner) {
 					$from = (int) $from;
 					$target = (int) $target;
@@ -3244,6 +3282,10 @@
 				global $village, $building, $session, $technology;
 
 		if(!$mode) {
+			if(!$this->acquireTrainingLock($vid,5)) {
+				return false;
+			}
+			try {
 			$barracks = array(1,2,3,11,12,13,14,21,22,31,32,33,34,41,42,43,44);
 			$greatbarracks = array(61,62,63,71,72,73,74,81,82,91,92,93,94,101,102,103,104);
 			$stables = array(4,5,6,15,16,23,24,25,26,35,36,45,46);
@@ -3284,10 +3326,14 @@
 			}else{
 					$q = "INSERT INTO " . TB_PREFIX . "training values (0,$vid,$unit,$amt,$pop,$time,$each,$time2)";
 			}
+				return mysqli_query($this->connection,$q);
+			} finally {
+				$this->releaseTrainingLock($vid);
+			}
 				} else {
 					$q = "DELETE FROM " . TB_PREFIX . "training where id = $vid";
+					return mysqli_query($this->connection,$q);
 				}
-				return mysqli_query($this->connection,$q);
 			}
 
 			function getHeroTrain($vid) {
@@ -3314,6 +3360,24 @@
 			function updateTraining($id, $trained, $each) {
 				$q = "UPDATE " . TB_PREFIX . "training set amt = amt - $trained, timestamp2 = timestamp2 + $each where id = $id";
 				return mysqli_query($this->connection,$q);
+			}
+
+			function completeTrainingBatch($id, $unit, $trained, $elapsed) {
+				$id = (int)$id;
+				$unit = (int)$unit;
+				$trained = (int)$trained;
+				$elapsed = (int)$elapsed;
+				if($id <= 0 || $trained <= 0 || $elapsed <= 0
+					|| !(($unit >= 1 && $unit <= 50) || $unit === 99)) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "training AS t "
+					."INNER JOIN " . TB_PREFIX . "units AS u ON u.vref = t.vref "
+					."SET u.u$unit = u.u$unit + $trained, "
+					."t.amt = t.amt - $trained, t.timestamp2 = t.timestamp2 + $elapsed "
+					."WHERE t.id = $id AND t.amt >= $trained";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 2;
 			}
 
         	function modifyUnit($vref, $unit, $amt, $mode) {

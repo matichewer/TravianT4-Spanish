@@ -39,7 +39,7 @@ if ($building->getTypeLevel(21) > 0) { ?>
 					</div>
 					<div class=\"details\">
 						<div class=\"tit\">
-							<a href=\"#\" onclick=\"return Travian.Game.iPopup($i,1);\"><img class=\"unit u$i\" src=\"img/x.gif\" alt=\"Paladin\"></a>
+							<a href=\"#\" onclick=\"return Travian.Game.iPopup($i,1);\"><img class=\"unit u$i\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($i)."\"></a>
 							<a href=\"#\" onclick=\"return Travian.Game.iPopup($i,1);\">".$technology->getUnitName($i)."</a>
 							<span class=\"furtherInfo\">(Disponibles: ".$village->unitarray['u'.$i].")</span>
 						</div>
@@ -70,7 +70,7 @@ if ($building->getTypeLevel(21) > 0) { ?>
 		</form>
 <?php
 	    } else {
-			echo "<b>Hay que investigar las unidades primero</b><br>\n";
+			echo "<b>El entrenamiento puede comenzar cuando el Taller esté terminado.</b><br>\n";
 		}
 
     $trainlist = $technology->getTrainingList(3);
@@ -101,9 +101,9 @@ if ($building->getTypeLevel(21) > 0) { ?>
 		if($time[0] != "hoy") {
 			echo "el ".$time[0]." a las ";
             	}
-		echo $time[1];
+		echo $time[1]."</td></tr>";
 		} ?>
-		</tr><tr class="next"><td colspan="3">La próxima unidad estará lista en <span id="timer2"><?php echo $NextFinished; ?></span> </td></tr>
+		<tr class="next"><td colspan="3">La próxima unidad estará lista en <span id="timer2"><?php echo $NextFinished; ?></span> </td></tr>
         </tbody></table>
     <?php }
 ?>  

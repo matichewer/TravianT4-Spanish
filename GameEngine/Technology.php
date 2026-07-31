@@ -179,7 +179,7 @@ class Technology {
 		}else{
 		$popcalc = $village->getProd("crop");
 		}
-		return min($woodcalc,$claycalc,$ironcalc,$cropcalc);
+		return max(0,min($woodcalc,$claycalc,$ironcalc,$cropcalc,$popcalc));
 	}
 	
     public function maxUnitPlus($unit,$great=false) {
@@ -490,6 +490,21 @@ class Technology {
 		$isExpansionUnit = ($unit%10 == 0 || ($unit%10 == 9 && $unit != 99));
 		$fieldType = isset($village->resarray['f'.$fieldId.'t']) ? (int)$village->resarray['f'.$fieldId.'t'] : 0;
 		$fieldLevel = isset($village->resarray['f'.$fieldId]) ? (int)$village->resarray['f'.$fieldId] : 0;
+		$expectedFieldType = 0;
+		if(in_array($unit,$footies,true)) {
+			$expectedFieldType = $great ? 29 : 19;
+		} elseif(in_array($unit,$calvary,true)) {
+			$expectedFieldType = $great ? 30 : 20;
+		} elseif(in_array($unit,$workshop,true)) {
+			$expectedFieldType = $great ? 42 : 21;
+		} elseif($isExpansionUnit) {
+			$expectedFieldType = $fieldType;
+		} elseif($unit === 99) {
+			$expectedFieldType = 36;
+		}
+		if($expectedFieldType === 0 || $fieldType !== $expectedFieldType || $fieldLevel < 1) {
+			return false;
+		}
 		if($isExpansionUnit && ($great || !in_array($fieldType,array(25,26),true) || $fieldLevel < 10)) {
 			return false;
 		}
