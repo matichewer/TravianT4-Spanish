@@ -50,6 +50,10 @@ define("LANG",$result['lang']);
 // Values: 1 (normal), 3 (3x speed) etc...
 define("SPEED", $result['speed']);
 
+// Balance de animales de los oasis. 1.0 conserva las cantidades originales.
+// Se aplica tanto a la poblacion inicial como a la regeneracion diaria y su tope.
+define("OASIS_ANIMAL_FACTOR", 0.50);
+
 // ***** World size
 // Defines world size. NOTICE: DO NOT EDIT!!
 define("WORLD_MAX", "100");

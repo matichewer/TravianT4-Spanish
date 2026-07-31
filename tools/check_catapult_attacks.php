@@ -20,6 +20,7 @@ class CatapultPersistenceDatabaseStub {
     public $fields = array();
     public $village = array('maxstore' => 2000, 'maxcrop' => 2000);
     public $queries = array();
+    public $artefacts = array();
 
     public function getResourceLevel($villageId) {
         return $this->fields;
@@ -48,6 +49,10 @@ class CatapultPersistenceDatabaseStub {
     public function query($sql) {
         $this->queries[] = $sql;
         return true;
+    }
+
+    public function getActiveArtefactsByType($villageId, $owner, $type) {
+        return isset($this->artefacts[$type]) ? $this->artefacts[$type] : array();
     }
 }
 
@@ -146,6 +151,9 @@ catapultAssert($automation->selectCatapultTargetSlot($fields, 1) === 1, 'selecci
 catapultAssert($automation->selectCatapultTargetSlot($fields, 15) === 20, 'selecciona un edificio explícito');
 catapultAssert($automation->selectCatapultTargetSlot($fields, 40) === 99, 'selecciona la Maravilla en la casilla 99');
 
+$wallOnly = array('f40' => 20, 'f40t' => 31);
+catapultAssert($automation->selectCatapultTargetSlot($wallOnly, 0) === 0, 'el objetivo aleatorio nunca selecciona la muralla');
+
 $validSlots = array(1, 20, 99);
 $randomTargetsAreValid = true;
 $missingTargetsAreValid = true;
@@ -173,6 +181,14 @@ $persistenceAutomation = $automationClass->newInstanceWithoutConstructor();
 $impactMethod = new ReflectionMethod('Automation', 'applyCatapultImpact');
 $impactMethod->setAccessible(true);
 $targetVillage = array('owner' => 77, 'capital' => 1);
+
+$database->fields['f23'] = 5;
+$database->fields['f23t'] = 14;
+$requiredForFive = $battle->calculateSiegeOutcome(0, 5, 0, 1, 1)['required'];
+$database->artefacts[1] = array(array('size' => 1));
+$impactMethod->invoke($persistenceAutomation, 900, 14, $requiredForFive, 0, 1, 0, $targetVillage);
+catapultAssert($database->fields['f23'] > 0, 'el artefacto del arquitecto aumenta la resistencia del edificio');
+$database->artefacts = array();
 
 $impactMethod->invoke($persistenceAutomation, 900, 15, 10000, 0, 1, 0, $targetVillage);
 catapultAssert(

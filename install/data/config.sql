@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%config` (
   `server_url` varchar(60) NOT NULL,
   `paypal_gold` int(1) NOT NULL DEFAULT '0',
   `medal_top` int(2) NOT NULL DEFAULT '10',
-  `medal_ally_top` int(2) NOT NULL DEFAULT '10'
+  `medal_ally_top` int(2) NOT NULL DEFAULT '10',
+  `oasis_animals_rebalanced` int(1) NOT NULL DEFAULT '1'
 
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 

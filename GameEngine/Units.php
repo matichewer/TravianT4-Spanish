@@ -298,14 +298,10 @@ class Units {
 			}
                   }else{
 
-                // Oases can only be raided (the radios in search.tpl are disabled
-                // client side, so anything else here is a tampered request), and
-                // only an oasis already held by a player can be reinforced.
+                // Oases accept normal attacks and raids. Only an oasis already
+                // held by a player can be reinforced.
                 $oasisConquered = (int)$database->getOasisField($id,"conqured");
                 $attackType = isset($post['c']) ? (int)$post['c'] : 0;
-                if($attackType === 3) {
-                    $form->addError("error","Los oasis solo pueden ser saqueados, no atacados normalmente.");
-                }
                 if($attackType === 2 && $oasisConquered === 0) {
                     $form->addError("error","No puedes reforzar un oasis sin ocupar.");
                 }
@@ -379,12 +375,9 @@ class Units {
                                 $form->addError("error","No puedes enviar una cantidad negativa de unidades.");
                                 //break;
                             }
-				// Same oasis rules as in loadUnits(): the stored order is checked
-				// again here so a hand crafted confirmation cannot bypass them.
+				// Recheck the reinforcement rule on confirmation so a hand-crafted
+				// request cannot reinforce an unoccupied oasis.
 				if($database->isVillageOases($data['to_vid']) != 0) {
-					if((int)$data['type'] === 3) {
-						$form->addError("error","Los oasis solo pueden ser saqueados, no atacados normalmente.");
-					}
 					if((int)$data['type'] === 2 && (int)$database->getOasisField($data['to_vid'],"conqured") === 0) {
 						$form->addError("error","No puedes reforzar un oasis sin ocupar.");
 					}
@@ -404,17 +397,17 @@ class Units {
 			 if($session->tribe == 1){ $u = ""; } elseif($session->tribe == 2){ $u = "1"; } elseif($session->tribe == 3){ $u = "2"; }elseif($session->tribe == 4){ $u = "3"; }else {$u = "4"; }
 
 
-		$database->modifyUnit($village->wid,$u."1",$data['u1'],0);
-		$database->modifyUnit($village->wid,$u."2",$data['u2'],0);
-		$database->modifyUnit($village->wid,$u."3",$data['u3'],0);
-		$database->modifyUnit($village->wid,$u."4",$data['u4'],0);
-		$database->modifyUnit($village->wid,$u."5",$data['u5'],0);
-		$database->modifyUnit($village->wid,$u."6",$data['u6'],0);
-		$database->modifyUnit($village->wid,$u."7",$data['u7'],0);
-		$database->modifyUnit($village->wid,$u."8",$data['u8'],0);
-		$database->modifyUnit($village->wid,$u."9",$data['u9'],0);
-		$database->modifyUnit($village->wid,$u.$session->tribe."0",$data['u10'],0);
-		$database->modifyUnit($village->wid,"hero",$data['u11'],0);
+		$unitDeductions = array('hero' => (int)$data['u11']);
+		for($position = 1; $position <= 10; $position++) {
+			$column = $position === 10 ? 'u'.((int)$session->tribe).'0' : 'u'.$u.$position;
+			$unitDeductions[$column] = (int)$data['u'.$position];
+		}
+		if(!$database->deductUnitsIfAvailable($village->wid,$unitDeductions)) {
+			$form->addError("error","Las unidades ya no están disponibles o el envío está vacío.");
+			$_SESSION['errorarray'] = $form->getErrors();
+			header("Location: a2b.php");
+			exit;
+		}
 	if($database->checkVilExist($data['to_vid'])){
 		$query1 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'vdata` WHERE `wref` = ' . $data['to_vid']);
 	}else{
@@ -471,7 +464,18 @@ class Units {
 		$abdata = $database->getABTech($village->wid);
 		$reference = $database->addAttack(($village->wid),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$post['ctar1'],$post['ctar2'],$post['spy'],$abdata['b1'],$abdata['b2'],$abdata['b3'],$abdata['b4'],$abdata['b5'],$abdata['b6'],$abdata['b7'],$abdata['b8']);
 
-		$database->addMovement(3,$village->wid,$data['to_vid'],$reference,$sentAt,($time+$sentAt));
+		$movementAdded = $reference > 0
+			&& $database->addMovement(3,$village->wid,$data['to_vid'],$reference,$sentAt,($time+$sentAt));
+		if(!$movementAdded) {
+			if($reference > 0) $database->removeAttack($reference);
+			foreach($unitDeductions as $column => $amount) {
+				if($amount > 0) $database->modifyUnit($village->wid,$column,$amount,1);
+			}
+			$form->addError("error","No se pudo crear el movimiento. Las unidades fueron devueltas.");
+			$_SESSION['errorarray'] = $form->getErrors();
+			header("Location: a2b.php");
+			exit;
+		}
    
 		$to_owner = $database->getVillageField($data['to_vid'],'owner');
 		if($post['del_protect'] == 1) {

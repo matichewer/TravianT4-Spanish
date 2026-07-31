@@ -519,6 +519,21 @@
 						return $row && (int)$row[0] === 1;
 				}
 
+				function acquireAttackResolutionLock($timeout = 0) {
+						$timeout = max(0,min(10,(int)$timeout));
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."attack_resolution");
+						$result = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',$timeout)");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
+				function releaseAttackResolutionLock() {
+						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."attack_resolution");
+						$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+						$row = $result ? mysqli_fetch_row($result) : false;
+						return $row && (int)$row[0] === 1;
+				}
+
 				function assignExpansionSlot($from, $target, $owner) {
 					$from = (int) $from;
 					$target = (int) $target;
@@ -3099,7 +3114,7 @@
         		return mysqli_query($this->connection,$q);
         	}
 
-        	function getUnit($vid) {
+			function getUnit($vid) {
 				$q = "SELECT * FROM " . TB_PREFIX . "units where vref = ".$vid."";
         		$result = mysqli_query($this->connection,$q);
         		if (!empty($result)) {
@@ -3142,6 +3157,27 @@
 					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value WHERE heroid = $heroid";
 				}
 				return mysqli_query($this->connection,$q);
+			}
+
+			function deductUnitsIfAvailable($vid, $units) {
+				$vid = (int)$vid;
+				$sets = array();
+				$checks = array();
+				foreach($units as $column => $amount) {
+					if(!preg_match('/^(u[1-5]?[0-9]|hero)$/',(string)$column)) return false;
+					$amount = max(0,(int)$amount);
+					if($amount === 0) continue;
+					$sets[] = "`$column` = `$column` - $amount";
+					$checks[] = "`$column` >= $amount";
+				}
+				if(empty($sets)) return false;
+				$q = "UPDATE ".TB_PREFIX."units SET ".implode(',',$sets)." WHERE vref = $vid AND ".implode(' AND ',$checks);
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function removeAttack($id) {
+				return mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = ".(int)$id." LIMIT 1");
 			}
 
 				function modifyHero2($column,$value,$uid,$mode) {
@@ -3969,6 +4005,15 @@ break;
 				return $this->mysqli_fetch_all($result);
 			}
 
+			function getActiveArtefactsByType($vref, $owner, $type) {
+				$vref = (int)$vref;
+				$owner = (int)$owner;
+				$type = (int)$type;
+				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE active = 1 AND type = $type AND ((size = 1 AND vref = $vref) OR (size > 1 AND owner = $owner))";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? $this->mysqli_fetch_all($result) : array();
+			}
+
 			function getOwnUniqueArtefactInfo($id, $type, $size) {
 				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $id AND type = $type AND size=$size";
 				$result = mysqli_query($this->connection,$q);
@@ -4025,6 +4070,12 @@ break;
                 return mysqli_query($this->connection,$q);
             }
 
+			private function oasisAnimalAmount($min, $max) {
+				$factor = defined('OASIS_ANIMAL_FACTOR') ? (float)OASIS_ANIMAL_FACTOR : 1.0;
+				$factor = max(0, $factor);
+				return max(0, (int)floor(rand((int)$min, (int)$max) * $factor));
+			}
+
 			function populateOasisUnitsLow() {
         		$q2 = "SELECT * FROM " . TB_PREFIX . "wdata where oasistype != 0";
         		$result2 = mysqli_query($this->connection, $q2);
@@ -4036,22 +4087,22 @@ break;
         				case 1:
         				case 2:
 							// Oasis Random populate
-							$UP35 = rand(5, 30);
-							$UP36 = rand(5, 30);
-							$UP37 = rand(0, 30);
+							$UP35 = $this->oasisAnimalAmount(5, 30);
+							$UP36 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(0, 30);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "' WHERE vref = '" . $wid . "'";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 3:
 							// Oasis Random populate
-							$UP35 = rand(5, 30);
-							$UP36 = rand(5, 30);
-							$UP37 = rand(1, 30);
-							$UP39 = rand(0, 10);
+							$UP35 = $this->oasisAnimalAmount(5, 30);
+							$UP36 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(1, 30);
+							$UP39 = $this->oasisAnimalAmount(0, 10);
 							$fil = rand(0,20);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4062,22 +4113,22 @@ break;
         				case 4:
         				case 5:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP35 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP35 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "' WHERE vref = '" . $wid . "'";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 6:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP35 = rand(1, 25);
-							$UP38 = rand(0, 15);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP35 = $this->oasisAnimalAmount(1, 25);
+							$UP38 = $this->oasisAnimalAmount(0, 15);
 							$fil = rand(0,20);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4088,22 +4139,22 @@ break;
         				case 7:
         				case 8:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP34 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP34 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "' WHERE vref = '" . $wid . "'";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 9:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP34 = rand(1, 25);
-							$UP37 = rand(0, 15);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP34 = $this->oasisAnimalAmount(1, 25);
+							$UP37 = $this->oasisAnimalAmount(0, 15);
 							$fil = rand(0,20);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4114,58 +4165,58 @@ break;
         				case 10:
         				case 11:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP33 = rand(5, 30);
-							$UP37 = rand(1, 25);
-							$UP39 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP33 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(1, 25);
+							$UP39 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "' WHERE vref = '" . $wid . "'";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 12:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP33 = rand(5, 30);
-							$UP38 = rand(1, 25);
-							$UP39 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP33 = $this->oasisAnimalAmount(5, 30);
+							$UP38 = $this->oasisAnimalAmount(1, 25);
+							$UP39 = $this->oasisAnimalAmount(0, 25);
 							$fil = rand(0,20);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u38 = u38 + '" . $UP38 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "'";
         					$result = mysqli_query($this->connection,$q);
-        					break;
+								break;
         			}
         		}
-        	}
+			}
 
 			function populateOasisUnitsLow2($wid) {
         			$basearray = $this->getMInfo($wid);
-					$max = rand(80, 120);
+							$max = $this->oasisAnimalAmount(80, 120);
         			//each Troop is a Set for oasis type like mountains have rats spiders and snakes fields tigers elphants clay wolves so on stonger one more not so less
         			switch($basearray['oasistype']) {
         				case 1:
         				case 2:
 							// Oasis Random populate
-							$UP35 = rand(5, 30);
-							$UP36 = rand(5, 30);
-							$UP37 = rand(0, 30);
+							$UP35 = $this->oasisAnimalAmount(5, 30);
+							$UP36 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(0, 30);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "' WHERE vref = '" . $wid . "' AND u35 <= ".$max." AND u36 <= ".$max." AND u37 <= ".$max."";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 3:
 							// Oasis Random populate
-							$UP35 = rand(5, 30);
-							$UP36 = rand(5, 30);
-							$UP37 = rand(1, 30);
-							$UP39 = rand(0, 10);
+							$UP35 = $this->oasisAnimalAmount(5, 30);
+							$UP36 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(1, 30);
+							$UP39 = $this->oasisAnimalAmount(0, 10);
 							$fil = rand(0,10);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4176,22 +4227,22 @@ break;
         				case 4:
         				case 5:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP35 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP35 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u35 <= ".$max."";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 6:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP35 = rand(1, 25);
-							$UP38 = rand(0, 15);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP35 = $this->oasisAnimalAmount(1, 25);
+							$UP38 = $this->oasisAnimalAmount(0, 15);
 							$fil = rand(0,10);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4202,22 +4253,22 @@ break;
         				case 7:
         				case 8:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP34 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP34 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u34 <= ".$max."";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 9:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP32 = rand(5, 30);
-							$UP34 = rand(1, 25);
-							$UP37 = rand(0, 15);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP32 = $this->oasisAnimalAmount(5, 30);
+							$UP34 = $this->oasisAnimalAmount(1, 25);
+							$UP37 = $this->oasisAnimalAmount(0, 15);
 							$fil = rand(0,10);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4228,23 +4279,23 @@ break;
         				case 10:
         				case 11:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP33 = rand(5, 30);
-							$UP37 = rand(1, 25);
-							$UP39 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP33 = $this->oasisAnimalAmount(5, 30);
+							$UP37 = $this->oasisAnimalAmount(1, 25);
+							$UP39 = $this->oasisAnimalAmount(0, 25);
 							//+25% lumber per hour
         					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u33 <= ".$max." AND u37 <= ".$max." AND u39 <= ".$max."";
         					$result = mysqli_query($this->connection,$q);
         					break;
         				case 12:
 							// Oasis Random populate
-							$UP31 = rand(5, 40);
-							$UP33 = rand(5, 30);
-							$UP38 = rand(1, 25);
-							$UP39 = rand(0, 25);
+							$UP31 = $this->oasisAnimalAmount(5, 40);
+							$UP33 = $this->oasisAnimalAmount(5, 30);
+							$UP38 = $this->oasisAnimalAmount(1, 25);
+							$UP39 = $this->oasisAnimalAmount(0, 25);
 							$fil = rand(0,10);
 							if($fil == 1){
-								$UP40 = rand(0, 31);
+							$UP40 = $this->oasisAnimalAmount(0, 31);
 							}else{
 								$UP40 = 0;
 							}
@@ -4253,6 +4304,14 @@ break;
         					$result = mysqli_query($this->connection,$q);
         					break;
         			}
+					$q = "UPDATE " . TB_PREFIX . "units SET "
+						."u31 = LEAST(u31,".$max."), u32 = LEAST(u32,".$max."), "
+						."u33 = LEAST(u33,".$max."), u34 = LEAST(u34,".$max."), "
+						."u35 = LEAST(u35,".$max."), u36 = LEAST(u36,".$max."), "
+						."u37 = LEAST(u37,".$max."), u38 = LEAST(u38,".$max."), "
+						."u39 = LEAST(u39,".$max."), u40 = LEAST(u40,".$max.") "
+						."WHERE vref = '".$wid."'";
+					mysqli_query($this->connection,$q);
         	}
 
 			public function hasBeginnerProtection($vid) {

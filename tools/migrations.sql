@@ -126,3 +126,28 @@ ALTER TABLE s1_ww_attacks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_gener
 -- Evita recorrer toda la tabla de movimientos por cada ataque entrante.
 ALTER TABLE s1_movement
   ADD INDEX IF NOT EXISTS evasion_return_window (`to`, sort_type, endtime, `from`);
+
+-- 2026-07-31 - Rebalanceo de animales en oasis
+-- En mundos existentes reduce una unica vez a la mitad los animales de oasis
+-- libres. El indicador vuelve idempotente esta migracion; mundos nuevos nacen
+-- con el indicador en 1 y usan directamente las cantidades reducidas del codigo.
+ALTER TABLE s1_config
+  ADD COLUMN IF NOT EXISTS oasis_animals_rebalanced int(1) NOT NULL DEFAULT 0;
+
+UPDATE s1_units AS u
+INNER JOIN s1_odata AS o ON o.wref = u.vref
+INNER JOIN s1_config AS c ON c.oasis_animals_rebalanced = 0
+SET
+  u.u31 = FLOOR(u.u31 * 0.50),
+  u.u32 = FLOOR(u.u32 * 0.50),
+  u.u33 = FLOOR(u.u33 * 0.50),
+  u.u34 = FLOOR(u.u34 * 0.50),
+  u.u35 = FLOOR(u.u35 * 0.50),
+  u.u36 = FLOOR(u.u36 * 0.50),
+  u.u37 = FLOOR(u.u37 * 0.50),
+  u.u38 = FLOOR(u.u38 * 0.50),
+  u.u39 = FLOOR(u.u39 * 0.50),
+  u.u40 = FLOOR(u.u40 * 0.50)
+WHERE o.conqured = 0;
+
+UPDATE s1_config SET oasis_animals_rebalanced = 1;

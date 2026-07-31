@@ -538,6 +538,9 @@ class Technology {
 					? round(($bid42[$building->getTypeLevel(42)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED)
 					: round(($bid21[$building->getTypeLevel(21)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
 			}
+			if(in_array($unit,array_merge($footies,$calvary,$workshop),true)) {
+				$each = round($each * $this->getTrainingArtefactFactor());
+			}
 			if(in_array($unit,$special,true)) {
 				$each = $this->getExpansionUnitTrainingTime($unit,$fieldId);
 			}
@@ -593,6 +596,21 @@ class Technology {
 				$database->releaseSettlementLock($session->uid);
 			}
 		}
+	}
+
+	public function getTrainingArtefactFactor() {
+		global $database, $session, $village;
+		if(!method_exists($database,'getActiveArtefactsByType')) {
+			return 1;
+		}
+		$factor = 1;
+		$artefacts = $database->getActiveArtefactsByType((int)$village->wid,(int)$session->uid,5);
+		foreach($artefacts as $artefact) {
+			$size = (int)$artefact['size'];
+			$candidate = $size === 2 ? 0.25 : 0.5;
+			$factor = min($factor,$candidate);
+		}
+		return $factor;
 	}
 	
 	public function meetRRequirement($tech) {

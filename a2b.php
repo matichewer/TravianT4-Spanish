@@ -28,8 +28,8 @@ $building->procBuild($_GET);
 if(isset($_GET['id'])) {
 	$id = $_GET['id'];
 }
-// Attack type radios in Templates/a2b/search.tpl: only oases restrict them
-// (raid only, and no reinforcement while the oasis is still unoccupied).
+// Attack type radios in Templates/a2b/search.tpl: unoccupied oases only
+// restrict reinforcement. Normal attacks and raids are both valid.
 $disabled = $disabledr = $checked = "";
 $reportdata = null;
 if(isset($_GET['bid'])) {
@@ -43,7 +43,6 @@ if(isset($_GET['bid'])) {
 			if($database->getOasisField($reporttarget,"conqured") == 0){$disabledr ="disabled=disabled";}else{
 				$disabledr ="";
 			}
-			$disabled ="disabled=disabled";
 			$checked  ="checked=checked";
 		}
 	} else {
@@ -63,7 +62,6 @@ if(isset($_GET['o'])) {
     if($too == 0){$disabledr ="disabled=disabled";}else{
     $disabledr ="";
     }
-    $disabled ="disabled=disabled";
     $checked  ="checked=checked";
 }
 	$process = $units->procUnits($_POST);

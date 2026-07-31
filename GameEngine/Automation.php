@@ -98,7 +98,8 @@ class Automation {
         $requestedType = (int)$requestedType;
         $occupied = array();
         $matching = array();
-        $slots = array_merge(range(1, 40), array(99));
+        // f40 is reserved for the wall; rams, not catapults, damage it.
+        $slots = array_merge(range(1, 39), array(99));
         foreach($slots as $slot) {
             $levelKey = 'f'.$slot;
             $typeKey = $levelKey.'t';
@@ -239,6 +240,19 @@ class Automation {
         if($slot >= 19 && (int)$stonemasonLevel > 0 && isset($bid34[(int)$stonemasonLevel]['attri'])) {
             $durability = max(1, (float)$bid34[(int)$stonemasonLevel]['attri'] / 100);
         }
+        if(method_exists($database,'getActiveArtefactsByType')) {
+            $artefacts = $database->getActiveArtefactsByType(
+                (int)$villageId,
+                isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
+                1
+            );
+            $artefactDurability = 1;
+            foreach($artefacts as $artefact) {
+                $size = (int)$artefact['size'];
+                $artefactDurability = max($artefactDurability,$size === 1 ? 4 : ($size === 2 ? 3 : 5));
+            }
+            $durability *= $artefactDurability;
+        }
         $outcome = $battle->calculateSiegeOutcome(
             $firingPower,
             $oldLevel,
@@ -294,6 +308,23 @@ class Automation {
         if((int)$breweryLevel > 0) {
             $firstTarget = 0;
             $secondTarget = 0;
+        }
+        global $database;
+        if(method_exists($database,'getActiveArtefactsByType')) {
+            $confusion = $database->getActiveArtefactsByType(
+                (int)$data['to'],
+                isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
+                7
+            );
+            foreach($confusion as $artefact) {
+                $unique = (int)$artefact['size'] === 3;
+                if($firstTarget !== 40 && ($unique || $firstTarget !== 27)) {
+                    $firstTarget = 0;
+                }
+                if($secondTarget !== 40 && ($unique || $secondTarget !== 27)) {
+                    $secondTarget = 0;
+                }
+            }
         }
 
         $targets = array($firstTarget);
@@ -1453,10 +1484,11 @@ class Automation {
     }
 
     private function sendunitsComplete() {
-        if(file_exists("GameEngine/Prevention/sendunits.txt")) {
-            @unlink("GameEngine/Prevention/sendunits.txt");
-        }
         global $bid23, $bid36, $database, $battle, $village, $technology, $logging, $session;
+        if(!$database->acquireAttackResolutionLock(0)) {
+            return;
+        }
+        try {
         $time = time();
         $ourFileHandle = @fopen("GameEngine/Prevention/sendunits.txt", 'w');
         @fclose($ourFileHandle);
@@ -2499,23 +2531,23 @@ class Automation {
                 if($type == '3' && !$isoasis) {
                     if($rams != '0') {
                         if(isset($empty)) {
-                            $info_ram = "".$ram_pic.", There is no wall to destroy.";
+                            $info_ram = "".$ram_pic.", No hay muralla que destruir.";
                         } else
 
                             if(isset($battlepart['wall_level_after']) && (int)$battlepart['wall_level_after'] === 0) {
-                                $info_ram = "".$ram_pic.", Wall destroyed.";
+                                $info_ram = "".$ram_pic.", Muralla destruida.";
                                 $database->setVillageLevel($data['to'], "f".$wallid."", '0');
                                 $database->setVillageLevel($data['to'], "f".$wallid."t", '0');
                                 $pop = $this->recountPop($data['to']);
 
                             } elseif($battlepart[8] == 0) {
 
-                                $info_ram = "".$ram_pic.", Wall was not damaged.";
+                                $info_ram = "".$ram_pic.", La muralla no sufrió daños.";
                             } else {
                                 $totallvl = isset($battlepart['wall_level_after'])
                                     ? max(0, (int)$battlepart['wall_level_after'])
                                     : $walllevel;
-                                $info_ram = "".$ram_pic.",Wall damaged from level <b>".$walllevel."</b> to level <b>".$totallvl."</b>.";
+                                $info_ram = "".$ram_pic.", Muralla dañada del nivel <b>".$walllevel."</b> al nivel <b>".$totallvl."</b>.";
                                 $database->setVillageLevel($data['to'], "f".$wallid."", $totallvl);
 
                             }
@@ -3065,8 +3097,8 @@ class Automation {
             unset($crop, $unitarrays, $getvillage, $village_upkeep);
 
         }
-        if(file_exists("GameEngine/Prevention/sendunits.txt")) {
-            @unlink("GameEngine/Prevention/sendunits.txt");
+        } finally {
+            $database->releaseAttackResolutionLock();
         }
     }
 
