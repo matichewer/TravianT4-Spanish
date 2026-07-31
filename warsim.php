@@ -154,13 +154,6 @@ if(count($target) > 0) {
 
 <script type="text/javascript">
 function validateSimulation() {
-	var isOasisSelected = document.querySelector('input[name="a2_v4"]').checked;
-	var isNormalAttack = document.querySelector('input[name="ktyp"][value="0"]').checked;
-
-	if(isOasisSelected && isNormalAttack) {
-		alert('Los oasis solo pueden ser saqueados, no atacados normalmente.');
-		return false;
-	}
 	return true;
 }
 

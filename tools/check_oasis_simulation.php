@@ -149,4 +149,11 @@ $form->valuearray = array();
 $battle->procSim($editedInput);
 oasisSimulationAssert($form->valuearray['a1_1'] === 25 && $form->valuearray['a2_31'] === 9, 'conserva las cantidades editadas al volver a simular');
 
+$normalAttackInput = $editedInput;
+$normalAttackInput['ktyp'] = 0;
+$_POST = array();
+$form->valuearray = array();
+$battle->procSim($normalAttackInput);
+oasisSimulationAssert(isset($_POST['result']), 'permite simular un ataque normal contra Naturaleza');
+
 echo "Oasis simulation checks passed.\n";
