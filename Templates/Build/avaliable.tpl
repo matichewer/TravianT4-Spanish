@@ -1,8 +1,4 @@
 ﻿<?php
-$normalA = $database->getOwnArtefactInfoByType($village->wid,6);  
-$largeA = $database->getOwnUniqueArtefactInfo($session->uid,6,2);
-
-
 $mainbuilding = $building->getTypeLevel(15);
 $cranny = $building->getTypeLevel(23);
 $granary = $building->getTypeLevel(11);
@@ -61,7 +57,7 @@ if($mainbuilding == 0 && !$database->getBuildList(15) && $id != 39  && $id != 40
 if(($cranny == 0 || $cranny >= 10) && !$database->getBuildList(23) && $mainbuilding >= 1 && $id != 39 && $id != 40) {
     include("avaliable/cranny.tpl");
 }
-if(($granary == 0 || $granary == 20) && !$database->getBuildList(11) && $mainbuilding >= 1 && $id != 39 && $id != 40 ) {
+if($building->canBuildAnotherOfType(11) && !$database->getBuildList(11) && $mainbuilding >= 1 && $id != 39 && $id != 40 ) {
     include("avaliable/granary.tpl");
 }
 if($wall == 0 && !$database->getBuildList(31) && !$database->getBuildList(32) && !$database->getBuildList(33)) {
@@ -81,15 +77,16 @@ if($wall == 0 && !$database->getBuildList(31) && !$database->getBuildList(32) &&
     include("avaliable/citywall.tpl");
     }
 }
-if(($warehouse == 0 || $warehouse == 20) && !$database->getBuildList(10) && $id != 39 && $id != 40) {
+if($building->canBuildAnotherOfType(10) && !$database->getBuildList(10) && $mainbuilding >= 1 && $id != 39 && $id != 40) {
 include("avaliable/warehouse.tpl");
 }
-if($mainbuilding >= 10 && !$database->getBuildList(38) && $village->capital == 0 && $largeA['owner'] == $session->uid || $normalA['vref'] == $village->wid ) {
+$storageArtefact = $building->hasStorageArtefact();
+if($mainbuilding >= 10 && $village->capital == 0 && $storageArtefact && $building->canBuildAnotherOfType(38) && !$database->getBuildList(38)) {
     include("avaliable/greatwarehouse.tpl");
 }
-if($mainbuilding >= 10 && !$database->getBuildList(39) && $village->capital == 0 && $largeA['owner'] == $session->uid || $normalA['vref'] == $village->wid ) {
+if($mainbuilding >= 10 && $village->capital == 0 && $storageArtefact && $building->canBuildAnotherOfType(39) && !$database->getBuildList(39)) {
     include("avaliable/greatgranary.tpl");
-}  
+}
 if(($trapper == 0 || $trapper == 20) && !$database->getBuildList(36) && $rallypoint >= 1 && $session->tribe == 3 && $id != 39 && $id != 40) {
 include("avaliable/trapper.tpl");
 }
@@ -296,10 +293,10 @@ if($session->tribe == 1 && $horsedrinkingtrough == 0 && $rallypoint >= 5 && $sta
 if($brewery == 0 && $village->capital == 1 && $rallypoint >= 5 && $granary >= 10 && ($rallypoint < 10 || $granary < 20) && $session->tribe == 2) {
     include("soon/brewery.tpl");
 }
-if($village->capital == 0) {
+if($village->capital == 0 && !($mainbuilding >= 10 && $storageArtefact)) {
     include("soon/greatwarehouse.tpl");
 }
-if($village->capital == 0) {
+if($village->capital == 0 && !($mainbuilding >= 10 && $storageArtefact)) {
     include("soon/greatgranary.tpl");
 } 
 if($greatbarracks == 0 && $barrack >= 15 && $barrack < 20 && $village->capital == 0) {

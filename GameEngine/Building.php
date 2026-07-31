@@ -434,7 +434,6 @@ class Building {
 			case 2:
 			case 3:
 			case 4:
-			case 11:
 			case 15:
 			case 16:
 			case 18:
@@ -448,7 +447,10 @@ class Building {
 				&& ($this->getTypeCount(23) == 0 || $this->getTypeLevel(23) >= 10);
 			break;
 			case 10:
-			return ($this->getTypeLevel(15) >= 1)? true : false;
+			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(10);
+			break;
+			case 11:
+			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(11);
 			break;
 			case 5:
 			if($this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5) { return true; } else { return false; }
@@ -520,11 +522,13 @@ class Building {
 			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(16) >= 1) { return true; } else { return false; }
 			break;
             case 38:
-            if($this->getTypeLevel(15) >= 10 && $village->capital == 0) { return true; } else { return false; }
+            return $this->getTypeLevel(15) >= 10 && $village->capital == 0
+                && $this->hasStorageArtefact() && $this->canBuildAnotherOfType(38);
             break;
             case 39:
-            if($this->getTypeLevel(15) >= 10 && $village->capital == 0) { return true; } else { return false; }
-            break;  
+            return $this->getTypeLevel(15) >= 10 && $village->capital == 0
+                && $this->hasStorageArtefact() && $this->canBuildAnotherOfType(39);
+            break;
 			case 40:
 			return false; //not implemented
 			break;
@@ -556,6 +560,51 @@ class Building {
 			default:
 				return true;
 		}
+	}
+
+	/**
+	 * El gran almacén y el gran granero exigen un artefacto de almacenamiento
+	 * (tipo 6): pequeño en esta misma aldea, o grande/único en la cuenta.
+	 */
+	public function hasStorageArtefact() {
+		global $database,$session,$village;
+		$inVillage = $database->getOwnArtefactInfoByType($village->wid,6);
+		if(is_array($inVillage) && !empty($inVillage['vref'])
+			&& (int)$inVillage['vref'] === (int)$village->wid) {
+			return true;
+		}
+		foreach(array(2,3) as $size) {
+			$account = $database->getOwnUniqueArtefactInfo($session->uid,6,$size);
+			if(is_array($account) && !empty($account['owner'])
+				&& (int)$account['owner'] === (int)$session->uid) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Los edificios que pueden repetirse (almacén, granero, gran almacén,
+	 * gran granero) sólo admiten uno nuevo cuando todos los que ya existen
+	 * llegaron al nivel máximo y no hay otro del mismo tipo en la cola.
+	 */
+	public function canBuildAnotherOfType($tid) {
+		global $village;
+		if($this->hasQueuedType($tid)) {
+			return false;
+		}
+		$dataarray = isset($GLOBALS['bid'.$tid]) ? $GLOBALS['bid'.$tid] : array();
+		$maxLevel = count($dataarray);
+		for($field = 1; $field <= 40; $field++) {
+			if(!isset($village->resarray['f'.$field.'t'])
+				|| (int)$village->resarray['f'.$field.'t'] !== (int)$tid) {
+				continue;
+			}
+			if((int)$village->resarray['f'.$field] < $maxLevel) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private function hasQueuedType($tid) {

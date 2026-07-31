@@ -119,7 +119,11 @@ class Automation {
         return (int)$candidates[array_rand($candidates)];
     }
 
-    private function catapultBuildingAttribute($buildingType, $level) {
+    /**
+     * Capacidad que aporta un edificio de almacenamiento en un nivel dado,
+     * ya escalada por STORAGE_MULTIPLIER igual que updateStore().
+     */
+    private function storageBuildingAttribute($buildingType, $level) {
         $buildingType = (int)$buildingType;
         $level = max(0, (int)$level);
         $dataName = 'bid'.$buildingType;
@@ -127,10 +131,22 @@ class Automation {
             || !isset($GLOBALS[$dataName][$level]['attri'])) {
             return 0;
         }
-        return (float)$GLOBALS[$dataName][$level]['attri'];
+        return (float)$GLOBALS[$dataName][$level]['attri'] * $this->storageMultiplier();
     }
 
-    private function updateCatapultCapacity($villageId, $buildingType, $oldLevel, $newLevel) {
+    private function storageMultiplier() {
+        return defined('STORAGE_MULTIPLIER') ? (float)STORAGE_MULTIPLIER : 1;
+    }
+
+    private function storageBase() {
+        return defined('STORAGE_BASE') ? (float)STORAGE_BASE : 800 * $this->storageMultiplier();
+    }
+
+    /**
+     * Aplica a maxstore/maxcrop el cambio de capacidad al pasar un almacén,
+     * granero, gran almacén o gran granero de un nivel a otro.
+     */
+    private function applyStorageCapacityDelta($villageId, $buildingType, $oldLevel, $newLevel) {
         global $database;
         $buildingType = (int)$buildingType;
         if(!in_array($buildingType, array(10, 11, 38, 39), true)) {
@@ -141,15 +157,17 @@ class Automation {
         if(!is_array($village)) {
             return;
         }
-        $difference = $this->catapultBuildingAttribute($buildingType, $newLevel)
-            - $this->catapultBuildingAttribute($buildingType, $oldLevel);
-        if(in_array($buildingType, array(10, 38), true)) {
-            $capacity = max(800, (float)$village['maxstore'] + $difference);
-            $database->setVillageField((int)$villageId, 'maxstore', $capacity);
-        } else {
-            $capacity = max(800, (float)$village['maxcrop'] + $difference);
-            $database->setVillageField((int)$villageId, 'maxcrop', $capacity);
+        $column = in_array($buildingType, array(10, 38), true) ? 'maxstore' : 'maxcrop';
+        $base = $this->storageBase();
+        $capacity = (float)$village[$column];
+        // la capacidad base sólo cuenta mientras la aldea no tenga ningún
+        // edificio de esta clase de almacenamiento, así que el primero la reemplaza
+        if((int)$oldLevel <= 0 && $capacity <= $base) {
+            $capacity = 0;
         }
+        $capacity += $this->storageBuildingAttribute($buildingType, $newLevel)
+            - $this->storageBuildingAttribute($buildingType, $oldLevel);
+        $database->setVillageField((int)$villageId, $column, max($base, $capacity));
     }
 
     private function refreshCatapultEmbassyCapacity($villageId) {
@@ -237,7 +255,7 @@ class Automation {
             if($slot >= 19 && $newLevel === 0) {
                 $database->setVillageLevel((int)$villageId, 'f'.$slot.'t', 0);
             }
-            $this->updateCatapultCapacity($villageId, $buildingType, $oldLevel, $newLevel);
+            $this->applyStorageCapacityDelta($villageId, $buildingType, $oldLevel, $newLevel);
             if($buildingType === 18) {
                 $this->refreshCatapultEmbassyCapacity($villageId);
             }
@@ -967,8 +985,8 @@ class Automation {
                 } else {
                     $iron = $getvillage['iron'];
                 }
-                if($getvillage['crop'] > $getvillage['maxstore']) {
-                    $crop = $getvillage['maxstore'];
+                if($getvillage['crop'] > $getvillage['maxcrop']) {
+                    $crop = $getvillage['maxcrop'];
                 } else {
                     $crop = $getvillage['crop'];
                 }
@@ -993,11 +1011,8 @@ class Automation {
                 } else {
                     $iron = $getvillage['iron'];
                 }
-                if($getvillage['crop'] < 0) {
-                    //$crop = 0;
-                } else {
-                    $crop = $getvillage['crop'];
-                }
+                // el cereal negativo se conserva: la hambruna lo resuelve starvation()
+                $crop = $getvillage['crop'];
                 $q = "UPDATE ".TB_PREFIX."vdata set wood = $wood, clay = $clay, iron = $iron, crop = $crop where wref = ".$getvillage['wref']."";
                 $database->query($q);
             }
@@ -1055,7 +1070,7 @@ class Automation {
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             @unlink("GameEngine/Prevention/build.txt");
         }
-        global $database, $bid18, $bid10, $bid11, $bid38, $bid39;
+        global $database, $bid18;
         if($managePreventionFile) {
             $ourFileHandle = @fopen("GameEngine/Prevention/build.txt", 'w');
             @fclose($ourFileHandle);
@@ -1094,44 +1109,7 @@ class Automation {
                     $database->query($q);
                 }
 
-                if($indi['type'] == 10) {
-                    $max = $database->getVillageField($indi['wid'], "maxstore");
-                    if($level == '1' && $max == 800) {
-                        $max -= 800;
-                    }
-                    $max -= $bid10[$level - 1]['attri'];
-                    $max += $bid10[$level]['attri'];
-                    $database->setVillageField($indi['wid'], "maxstore", $max);
-                }
-
-                if($indi['type'] == 11) {
-                    $max = $database->getVillageField($indi['wid'], "maxcrop");
-                    if($level == '1' && $max == 800) {
-                        $max -= 800;
-                    }
-                    $max -= $bid11[$level - 1]['attri'];
-                    $max += $bid11[$level]['attri'];
-                    $database->setVillageField($indi['wid'], "maxcrop", $max);
-                }
-                if($indi['type'] == 38) {
-                    $max = $database->getVillageField($indi['wid'], "maxstore");
-                    if($level == '1' && $max == 800) {
-                        $max -= 800;
-                    }
-                    $max -= $bid38[$level - 1]['attri'];
-                    $max += $bid38[$level]['attri'];
-                    $database->setVillageField($indi['wid'], "maxstore", $max);
-                }
-
-                if($indi['type'] == 39) {
-                    $max = $database->getVillageField($indi['wid'], "maxcrop");
-                    if($level == '1' && $max == 800) {
-                        $max -= 800;
-                    }
-                    $max -= $bid39[$level - 1]['attri'];
-                    $max += $bid39[$level]['attri'];
-                    $database->setVillageField($indi['wid'], "maxcrop", $max);
-                }
+                $this->applyStorageCapacityDelta($indi['wid'], $indi['type'], $level - 1, $level);
 
                 $q4 = "UPDATE ".TB_PREFIX."bdata set loopcon = 0 where loopcon = 1 and wid = ".$indi['wid'];
                 $database->query($q4);
@@ -4329,19 +4307,7 @@ class Automation {
             if($vil['timetofinish'] <= time()) {
                 $type = $database->getFieldType($vil['vref'], $vil['buildnumber']);
                 $level = $database->getFieldLevel($vil['vref'], $vil['buildnumber']);
-                $buildarray = $GLOBALS["bid".$type];
-                if($type == 10 || $type == 38) {
-                    $q = "UPDATE `".TB_PREFIX."vdata` SET `maxstore`=`maxstore`-".$buildarray[$level]['attri']."+".max(0, $buildarray[$level - 1]['attri'])." WHERE wref=".$vil['vref'];
-                    $database->query($q);
-                    $q = "UPDATE ".TB_PREFIX."vdata SET `maxstore`=".STORAGE_BASE." WHERE `maxstore`<= ".STORAGE_BASE." AND wref=".$vil['vref'];
-                    $database->query($q);
-                }
-                if($type == 11 || $type == 39) {
-                    $q = "UPDATE `".TB_PREFIX."vdata` SET `maxcrop`=`maxcrop`-".$buildarray[$level]['attri']."+".max(0, $buildarray[$level - 1]['attri'])." WHERE wref=".$vil['vref'];
-                    $database->query($q);
-                    $q = "UPDATE ".TB_PREFIX."vdata SET `maxcrop`=".STORAGE_BASE." WHERE `maxcrop`<=".STORAGE_BASE." AND wref=".$vil['vref'];
-                    $database->query($q);
-                }
+                $this->applyStorageCapacityDelta($vil['vref'], $type, $level, $level - 1);
                 if($type == 18) {
                     $allyleader = $database->getVillageField($data['to'], "owner");
                     $allyvillages = $database->getVillagesID2($allyleader);
