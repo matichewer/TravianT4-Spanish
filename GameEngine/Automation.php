@@ -168,7 +168,7 @@ class Automation {
         }
         $capacity += $this->storageBuildingAttribute($buildingType, $newLevel)
             - $this->storageBuildingAttribute($buildingType, $oldLevel);
-        $database->setVillageField((int)$villageId, $column, max($base, $capacity));
+        $database->setVillageCapacity((int)$villageId, $column, max($base, $capacity));
     }
 
     private function refreshCatapultEmbassyCapacity($villageId) {
@@ -1113,6 +1113,21 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."bdata where ".$timeCondition." and master = 0 ORDER BY timestamp ASC, id ASC";
         $array = $database->query_return($q);
         foreach ($array as $indi) {
+            if((int)$indi['type'] >= 1 && (int)$indi['type'] <= 4 && (int)$indi['level'] > 10
+                && (int)$database->getVillageField($indi['wid'],'capital') !== 1) {
+                $fieldData = $GLOBALS['bid'.(int)$indi['type']];
+                $cost = isset($fieldData[(int)$indi['level']]) ? $fieldData[(int)$indi['level']] : false;
+                if($cost) {
+                    $database->query("UPDATE ".TB_PREFIX."vdata SET "
+                        ."wood=LEAST(maxstore,wood+".(int)$cost['wood']."), "
+                        ."clay=LEAST(maxstore,clay+".(int)$cost['clay']."), "
+                        ."iron=LEAST(maxstore,iron+".(int)$cost['iron']."), "
+                        ."crop=LEAST(maxcrop,crop+".(int)$cost['crop'].") "
+                        ."WHERE wref=".(int)$indi['wid']);
+                }
+                $database->query("DELETE FROM ".TB_PREFIX."bdata WHERE id=".(int)$indi['id']);
+                continue;
+            }
             $q = "UPDATE ".TB_PREFIX."fdata set f".$indi['field']." = ".$indi['level'].", f".$indi['field']."t = ".$indi['type']." where vref = ".$indi['wid'];
             if($database->query($q)) {
                 $level = $database->getFieldLevel($indi['wid'], $indi['field']);
@@ -4685,14 +4700,11 @@ class Automation {
                         $time += ($master1['timestamp'] - time());
                     }
                 }
-                if($bdata == 0) {
-                    $database->updateBuildingWithMaster($master['id'], $time, 0);
-                } else {
-                    $database->updateBuildingWithMaster($master['id'], $time, 1);
-                }
-                $gold = $usergold - 1;
-                $database->updateUserField($owner, 'gold', $gold, 1);
-                $database->modifyResource($master['wid'], $buildwood, $buildclay, $buildiron, $buildcrop, 0);
+	                $loop = $bdata == 0 ? 0 : 1;
+	                if($database->activateMasterBuildingIfAffordable($master['id'],$master['wid'],$time,$loop,$buildwood,$buildclay,$buildiron,$buildcrop)) {
+	                    $gold = $usergold - 1;
+	                    $database->updateUserField($owner, 'gold', $gold, 1);
+	                }
             }
         }
     }
@@ -4821,6 +4833,8 @@ class Automation {
                 // get enforce
                 $enforcearray = $database->getEnforceVillage($starv['wref'], 0);
                 $maxcount = 0;
+                $maxtype = 0;
+                $killunits = 0;
                 if(count($enforcearray) == 0) {
                     // get units
                     $unitarray = $database->getUnit($starv['wref']);
@@ -4841,7 +4855,13 @@ class Automation {
                                 $enf = $enforce['id'];
                             }
                         }
-                    }
+					}
+				}
+                if($maxcount <= 0 || $maxtype <= 0) {
+                    $database->setVillageField($starv['wref'], 'starv', 0);
+                    $database->setVillageField($starv['wref'], 'starvupdate', 0);
+                    $database->setVillageField($starv['wref'], 'crop', max(0, (float)$database->getVillageField($starv['wref'], 'crop')));
+                    continue;
                 }
 
                 // counting
@@ -4944,7 +4964,10 @@ class Automation {
                 $crop = 800 * STORAGE_MULTIPLIER;
             }
 
-            mysql_query('UPDATE `'.TB_PREFIX.'vdata` SET `maxstore` = '.$ress.', `maxcrop` = '.$crop.' WHERE `wref` = '.$row['vref']) or die(mysql_error());
+            mysql_query('UPDATE `'.TB_PREFIX.'vdata` SET `maxstore` = '.$ress.', `maxcrop` = '.$crop
+                .', `wood` = LEAST(`wood`,'.$ress.'), `clay` = LEAST(`clay`,'.$ress.')'
+                .', `iron` = LEAST(`iron`,'.$ress.'), `crop` = LEAST(`crop`,'.$crop.')'
+                .' WHERE `wref` = '.$row['vref']) or die(mysql_error());
         }
     }
 

@@ -42,12 +42,30 @@
         		$q = "DELETE from " . TB_PREFIX . "enforcement where id = '$id'";
         		mysqli_query($this->connection,$q);
         	}
-        	function updateResource($vid, $what, $number) {
+			function updateResource($vid, $what, $number) {
 
-        		$q = "UPDATE " . TB_PREFIX . "vdata set " . $what . "=" . $number . " where wref = $vid";
-        		$result = mysqli_query($this->connection,$q);
-        		return mysqli_query($this->connection,$q);
-        	}
+				$q = "UPDATE " . TB_PREFIX . "vdata set " . $what . "=" . $number . " where wref = $vid";
+				return mysqli_query($this->connection,$q);
+			}
+
+			function accrueVillageResources($vid, $lastupdate, $newupdate, $wood, $clay, $iron, $crop) {
+				$vid = (int)$vid;
+				$lastupdate = max(0, (int)$lastupdate);
+				$newupdate = max($lastupdate, (int)$newupdate);
+				$wood = (float)$wood;
+				$clay = (float)$clay;
+				$iron = (float)$iron;
+				$crop = (float)$crop;
+				$q = "UPDATE " . TB_PREFIX . "vdata SET "
+					."wood = LEAST(maxstore, wood + ($wood)), "
+					."clay = LEAST(maxstore, clay + ($clay)), "
+					."iron = LEAST(maxstore, iron + ($iron)), "
+					."crop = LEAST(maxcrop, crop + ($crop)), "
+					."lastupdate = $newupdate "
+					."WHERE wref = $vid AND lastupdate = $lastupdate";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
 
         	function checkExist($ref, $mode) {
 
@@ -1030,10 +1048,23 @@
         		return $dbarray[$field];
         	}
 
-        	function setVillageField($ref, $field, $value) {
-        		$q = "UPDATE " . TB_PREFIX . "vdata set $field = '$value' where wref = $ref";
-        		return mysqli_query($this->connection,$q);
-        	}
+			function setVillageField($ref, $field, $value) {
+				$q = "UPDATE " . TB_PREFIX . "vdata set $field = '$value' where wref = $ref";
+				return mysqli_query($this->connection,$q);
+			}
+
+			function setVillageCapacity($ref, $field, $value) {
+				$ref = (int)$ref;
+				$value = max(0, (float)$value);
+				if($field === 'maxstore') {
+					$q = "UPDATE " . TB_PREFIX . "vdata SET maxstore=$value, wood=LEAST(wood,$value), clay=LEAST(clay,$value), iron=LEAST(iron,$value) WHERE wref=$ref";
+				} elseif($field === 'maxcrop') {
+					$q = "UPDATE " . TB_PREFIX . "vdata SET maxcrop=$value, crop=LEAST(crop,$value) WHERE wref=$ref";
+				} else {
+					return false;
+				}
+				return mysqli_query($this->connection,$q);
+			}
 
         	function setVillageLevel($ref, $field, $value) {
         		$q = "UPDATE " . TB_PREFIX . "fdata set " . $field . " = '" . $value . "' where vref = " . $ref . "";
@@ -2409,12 +2440,48 @@
         		$q = "SELECT * FROM " . TB_PREFIX . "ndata WHERE ally = $aid ORDER BY time DESC";
         	}
 
-        	function addBuilding($wid, $field, $type, $loop, $time, $master, $level) {
-                $x = "UPDATE " . TB_PREFIX . "fdata SET f" . $field . "t=" . $type . " WHERE vref=" . $wid;
-                mysqli_query($this->connection,$x) or die(mysqli_error());
-                $q = "INSERT into " . TB_PREFIX . "bdata values (0,$wid,$field,$type,$loop,$time,$master,$level)";
-                return mysqli_query($this->connection,$q);
-            }
+			function addBuilding($wid, $field, $type, $loop, $time, $master, $level) {
+	                $q = "INSERT into " . TB_PREFIX . "bdata values (0,$wid,$field,$type,$loop,$time,$master,$level)";
+	                if(!mysqli_query($this->connection,$q)) {
+					return false;
+	                }
+	                $jobId = mysqli_insert_id($this->connection);
+	                $x = "UPDATE " . TB_PREFIX . "fdata SET f" . $field . "t=" . $type . " WHERE vref=" . $wid;
+	                if(mysqli_query($this->connection,$x)) {
+					return true;
+	                }
+	                mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "bdata WHERE id=".(int)$jobId);
+	                return false;
+	            }
+
+			function addBuildingWithResources($wid, $field, $type, $loop, $time, $master, $level, $wood, $clay, $iron, $crop) {
+				$wid = (int)$wid;
+				$field = (int)$field;
+				$level = (int)$level;
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."build_".$wid);
+				$lockResult = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',2)");
+				$lockRow = $lockResult ? mysqli_fetch_row($lockResult) : false;
+				if(!$lockRow || (int)$lockRow[0] !== 1) {
+					return false;
+				}
+				try {
+					$duplicate = mysqli_query($this->connection,"SELECT id FROM ".TB_PREFIX."bdata WHERE wid=$wid AND field=$field AND level=$level LIMIT 1");
+					if($duplicate && mysqli_num_rows($duplicate) > 0) {
+						return false;
+					}
+					if(!$this->deductResourcesIfAvailable($wid,$wood,$clay,$iron,$crop)) {
+						return false;
+					}
+					if($this->addBuilding($wid,$field,$type,$loop,$time,$master,$level)) {
+						return true;
+					}
+					// MyISAM no ofrece rollback: compensar el descuento si falla la cola.
+					$this->modifyResource($wid,$wood,$clay,$iron,$crop,1);
+					return false;
+				} finally {
+					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+				}
+			}
 
         	function removeBuilding($d) {
                 global $building;
@@ -2654,6 +2721,32 @@
                 $q = "UPDATE " . TB_PREFIX . "bdata SET master = 0, timestamp = ".$time.",loopcon = ".$loop." WHERE id = ".$id."";
                 return mysqli_query($this->connection,$q);
             }
+
+			function activateMasterBuildingIfAffordable($id, $wid, $time, $loop, $wood, $clay, $iron, $crop) {
+				$id = (int)$id;
+				$wid = (int)$wid;
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."build_".$wid);
+				$lockResult = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',2)");
+				$lockRow = $lockResult ? mysqli_fetch_row($lockResult) : false;
+				if(!$lockRow || (int)$lockRow[0] !== 1) {
+					return false;
+				}
+				try {
+					$job = mysqli_query($this->connection,"SELECT id FROM ".TB_PREFIX."bdata WHERE id=$id AND wid=$wid AND master=1 LIMIT 1");
+					if(!$job || mysqli_num_rows($job) !== 1 || !$this->deductResourcesIfAvailable($wid,$wood,$clay,$iron,$crop)) {
+						return false;
+					}
+					$q = "UPDATE ".TB_PREFIX."bdata SET master=0,timestamp=".(int)$time.",loopcon=".(int)$loop." WHERE id=$id AND wid=$wid AND master=1";
+					$result = mysqli_query($this->connection,$q);
+					if($result && mysqli_affected_rows($this->connection) === 1) {
+						return true;
+					}
+					$this->modifyResource($wid,$wood,$clay,$iron,$crop,1);
+					return false;
+				} finally {
+					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+				}
+			}
 
 			function getVillageByName($name) {
 				$name = mysqli_real_escape_string($this->connection,(string)$name);

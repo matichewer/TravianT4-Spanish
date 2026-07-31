@@ -112,7 +112,7 @@ if ($followupSwitchStart === false || $followupClaimStart === false) {
         }
     }
 
-    foreach (array('$requirementMet', '(int)$dataarray[$questIndex] === 0', 'claimFollowupQuestResources') as $claimGuard) {
+    foreach (array('$requirementMet', '(int)$dataarray[$questIndex] !== 1', 'claimFollowupQuestResources') as $claimGuard) {
         if (strpos(substr($source, $followupSwitchStart, 6000), $claimGuard) === false) {
             $errors[] = 'Follow-up resource claims are missing guard: ' . $claimGuard;
         }

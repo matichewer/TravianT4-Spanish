@@ -1030,7 +1030,7 @@ Sin embargo, carecen de la disciplina militar de los Galos o los Romanos, lo que
 
 	</td>
 
-	<td class="text" width="135">Jinete Teutón</td>
+	<td class="text" width="135">Jinete germano</td>
 
 	<td width="25">150</td>
 

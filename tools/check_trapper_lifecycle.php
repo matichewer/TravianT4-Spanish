@@ -10,10 +10,17 @@
  * prueba las operaciones y las elimina incluso si una aserción falla.
  */
 
-define('SQL_SERVER','db');
-define('SQL_USER',getenv('TRAPPER_DB_USER') ?: 'travian');
-define('SQL_PASS',getenv('TRAPPER_DB_PASSWORD') ?: 'travian');
-define('SQL_DB',getenv('TRAPPER_DB_NAME') ?: 'travian_t4');
+$connectionSource = file_get_contents(dirname(__DIR__).'/config/connection.php');
+$readConnectionValue = function($name) use ($connectionSource) {
+	if(!preg_match('/define\(["\']'.preg_quote($name,'/').'["\']\s*,\s*["\']([^"\']*)["\']\s*\)/',$connectionSource,$match)) {
+		throw new RuntimeException('No se pudo leer '.$name.' desde config/connection.php');
+	}
+	return $match[1];
+};
+define('SQL_SERVER',getenv('TRAPPER_DB_HOST') ?: $readConnectionValue('SQL_SERVER'));
+define('SQL_USER',getenv('TRAPPER_DB_USER') ?: $readConnectionValue('SQL_USER'));
+define('SQL_PASS',getenv('TRAPPER_DB_PASSWORD') ?: $readConnectionValue('SQL_PASS'));
+define('SQL_DB',getenv('TRAPPER_DB_NAME') ?: $readConnectionValue('SQL_DB'));
 define('TB_PREFIX','trapper_audit_');
 
 require_once dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php';

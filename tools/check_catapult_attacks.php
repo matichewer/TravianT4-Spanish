@@ -38,6 +38,10 @@ class CatapultPersistenceDatabaseStub {
         $this->village[$field] = $value;
     }
 
+    public function setVillageCapacity($villageId, $field, $value) {
+        $this->village[$field] = $value;
+    }
+
     public function getVillageField($villageId, $field) {
         return $field === 'owner' ? 77 : 0;
     }

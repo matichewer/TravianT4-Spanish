@@ -1,5 +1,6 @@
 <?php include __DIR__ . "/report_data.tpl"; ?>
 <?php
+$targettribe = 0;
 if($dataarray[158] != 0 or $dataarray[159] != 0 or $dataarray[160] != 0 or $dataarray[161] != 0 or $dataarray[162] != 0 or $dataarray[163] != 0 or $dataarray[164] != 0 or $dataarray[165] != 0 or $dataarray[166] != 0 or $dataarray[167] != 0){
 $class = "units";
 }else{

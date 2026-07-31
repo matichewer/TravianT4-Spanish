@@ -61,7 +61,7 @@ function mysql_query($sql) {
         return 'fdata';
     }
     if(stripos($sql, 'UPDATE') === 0) {
-        if(preg_match('/`maxstore` = ([0-9.]+), `maxcrop` = ([0-9.]+) WHERE `wref` = (\d+)/', $sql, $m)) {
+        if(preg_match('/`maxstore` = ([0-9.]+), `maxcrop` = ([0-9.]+).* WHERE `wref` = (\d+)/', $sql, $m)) {
             $GLOBALS['sqlUpdates'][(int)$m[3]] = array((float)$m[1], (float)$m[2]);
         }
         return true;
@@ -102,6 +102,16 @@ class StorageDatabaseStub {
     }
     public function setVillageField($vid, $field, $value) {
         $this->villages[$vid][$field] = $value;
+    }
+    public function setVillageCapacity($vid, $field, $value) {
+        $this->villages[$vid][$field] = $value;
+        if($field === 'maxstore') {
+            foreach(array('wood','clay','iron') as $resource) {
+                $this->villages[$vid][$resource] = min($this->villages[$vid][$resource],$value);
+            }
+        } elseif($field === 'maxcrop') {
+            $this->villages[$vid]['crop'] = min($this->villages[$vid]['crop'],$value);
+        }
     }
     public function getResourceLevel($vid) {
         return isset($this->fields[$vid]) ? $this->fields[$vid] : array();

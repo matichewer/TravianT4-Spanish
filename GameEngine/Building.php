@@ -317,8 +317,7 @@ class Building {
 			}
 			if($session->access!=BANNED){
 			$level = $database->getResourceLevel($village->wid);
-			if($database->addBuilding($village->wid,$id,$village->resarray['f'.$id.'t'],$loop,$time+($loop==1?ceil(60/SPEED):0),0,$level['f'.$id] + 1 + count($database->getBuildingByField($village->wid,$id)))) {
-				$database->modifyResource($village->wid,$uprequire['wood'],$uprequire['clay'],$uprequire['iron'],$uprequire['crop'],0);
+			if($database->addBuildingWithResources($village->wid,$id,$village->resarray['f'.$id.'t'],$loop,$time+($loop==1?ceil(60/SPEED):0),0,$level['f'.$id] + 1 + count($database->getBuildingByField($village->wid,$id)),$uprequire['wood'],$uprequire['clay'],$uprequire['iron'],$uprequire['crop'])) {
 				$logging->addBuildLog($village->wid,$this->procResType($village->resarray['f'.$id.'t']),($village->resarray['f'.$id]+($loopsame>0?2:1)),0);
 				if($id >= 19) {
 					header("Location: dorf2.php");
@@ -412,9 +411,8 @@ class Building {
 			}
 			if($session->access!=BANNED){
 			$level = $database->getResourceLevel($village->wid);
-				if($database->addBuilding($village->wid,$id,$tid,$loop,$time,0,$level['f'.$id] + 1 + count($database->getBuildingByField($village->wid,$id)))) {
+				if($database->addBuildingWithResources($village->wid,$id,$tid,$loop,$time,0,$level['f'.$id] + 1 + count($database->getBuildingByField($village->wid,$id)),$uprequire['wood'],$uprequire['clay'],$uprequire['iron'],$uprequire['crop'])) {
 					$logging->addBuildLog($village->wid,$this->procResType($tid),($village->resarray['f'.$id]+1),1);
-					$database->modifyResource($village->wid,$uprequire['wood'],$uprequire['clay'],$uprequire['iron'],$uprequire['crop'],0);
 					header("Location: dorf2.php");
 				}
 			}else{
@@ -642,7 +640,7 @@ class Building {
 					return 3;
 				}
 				else {
-					if($village->awood-$wood > 0 && $village->aclay-$clay > 0 && $village->airon-$iron > 0 && $village->acrop-$crop >0){
+					if($village->awood-$wood >= 0 && $village->aclay-$clay >= 0 && $village->airon-$iron >= 0 && $village->acrop-$crop >= 0){
 						return 4;
 					}
 					else {
@@ -836,10 +834,23 @@ class Building {
 		foreach($this->buildArray as $jobs) {
 		if($jobs['wid']==$village->wid){
 		$wwvillage = $database->getResourceLevel($jobs['wid']);
-		if($wwvillage['f99t']!=40){
-			$level = $jobs['level'];
-			if($jobs['master'] == 0 && $jobs['type'] != 25 AND $jobs['type'] != 26 AND $jobs['type'] != 40) {
-				$resource = $this->resourceRequired($jobs['field'],$jobs['type']);
+			if($wwvillage['f99t']!=40){
+				$level = $jobs['level'];
+				if($jobs['master'] == 0 && $jobs['type'] != 25 AND $jobs['type'] != 26 AND $jobs['type'] != 40) {
+					if((int)$jobs['type'] >= 1 && (int)$jobs['type'] <= 4 && (int)$level > 10
+						&& (int)$database->getVillageField($jobs['wid'],'capital') !== 1) {
+						$fieldData = $GLOBALS['bid'.(int)$jobs['type']];
+						$cost = $fieldData[(int)$level];
+						$database->query("UPDATE ".TB_PREFIX."vdata SET "
+							."wood=LEAST(maxstore,wood+".(int)$cost['wood']."), "
+							."clay=LEAST(maxstore,clay+".(int)$cost['clay']."), "
+							."iron=LEAST(maxstore,iron+".(int)$cost['iron']."), "
+							."crop=LEAST(maxcrop,crop+".(int)$cost['crop'].") "
+							."WHERE wref=".(int)$jobs['wid']);
+						$database->query("DELETE FROM ".TB_PREFIX."bdata WHERE id=".(int)$jobs['id']);
+						continue;
+					}
+					$resource = $this->resourceRequired($jobs['field'],$jobs['type']);
 				$q = "UPDATE ".TB_PREFIX."fdata set f".$jobs['field']." = ".$jobs['level'].", f".$jobs['field']."t = ".$jobs['type']." where vref = ".$jobs['wid'];
 				if($database->query($q)) {
 					$database->modifyPop($jobs['wid'],$resource['pop'],0);

@@ -10,25 +10,70 @@ if($_POST AND $_GET['action'] == 'change_capital') {
   $query = mysql_query('SELECT * FROM `' . TB_PREFIX . 'users` WHERE `id` = ' . $session->uid);
   $data = mysql_fetch_assoc($query);
   if($data['password'] == md5($pass)) {
-    $query1 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'vdata` WHERE `owner` = ' . $session->uid . ' AND `capital` = 1');
-    $data1 = mysql_fetch_assoc($query1);
-    $query2 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'fdata` WHERE `vref` = ' . $data1['wref']);
-    $data2 = mysql_fetch_assoc($query2);
-    if($data2['vref'] != $village->wid) {
-      for($i = 1; $i<=18; ++$i) {
-        if($data2['f' . $i] > 10) {
-          $query2 = mysql_query('UPDATE `' . TB_PREFIX . 'fdata` SET `f' . $i . '` = 10 WHERE `vref` = ' . $data2['vref']) or die(mysql_error());
+    $uid = (int)$session->uid;
+    $newCapital = (int)$village->wid;
+    $lockName = mysql_real_escape_string(TB_PREFIX.'capital_'.$uid);
+    $lockResult = mysql_query("SELECT GET_LOCK('$lockName',2)");
+    $lockRow = $lockResult ? mysql_fetch_assoc($lockResult) : false;
+    if(!$lockRow || (int)reset($lockRow) !== 1) {
+      $error = '<b><font class="error">No se pudo bloquear el cambio de capital. Inténtalo nuevamente.</font></b><br />';
+    } else {
+      $query1 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'vdata` WHERE `owner` = '.$uid.' AND `capital` = 1 LIMIT 1');
+      $data1 = mysql_fetch_assoc($query1);
+      $oldCapital = $data1 ? (int)$data1['wref'] : 0;
+      if($oldCapital > 0 && $oldCapital !== $newCapital) {
+        $buildLockName = mysql_real_escape_string(TB_PREFIX.'build_'.$oldCapital);
+        $buildLockResult = mysql_query("SELECT GET_LOCK('$buildLockName',2)");
+        $buildLockRow = $buildLockResult ? mysql_fetch_assoc($buildLockResult) : false;
+        if(!$buildLockRow || (int)reset($buildLockRow) !== 1) {
+          $error = '<b><font class="error">No se pudo bloquear la cola de construcción. Inténtalo nuevamente.</font></b><br />';
+        } else {
+          $pending = mysql_query('SELECT `id` FROM `' . TB_PREFIX . 'bdata` WHERE `wid` = '.$oldCapital.' AND `field` BETWEEN 1 AND 18 AND `type` BETWEEN 1 AND 4 AND `level` > 10 LIMIT 1');
+          if($pending && mysql_num_rows($pending) > 0) {
+          $error = '<b><font class="error">Finaliza o cancela las mejoras de campos superiores al nivel 10 antes de cambiar la capital.</font></b><br />';
+          } else {
+            mysql_query('LOCK TABLES `' . TB_PREFIX . 'vdata` WRITE, `' . TB_PREFIX . 'fdata` WRITE');
+            $query2 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'fdata` WHERE `vref` = '.$oldCapital);
+            $data2 = mysql_fetch_assoc($query2);
+            $populationLoss = 0;
+            $fieldUpdates = array();
+            for($i = 1; $i <= 18; ++$i) {
+              $level = (int)$data2['f'.$i];
+              $type = (int)$data2['f'.$i.'t'];
+              if($level > 10 && $type >= 1 && $type <= 4) {
+                $fieldData = $GLOBALS['bid'.$type];
+                for($currentLevel = $level; $currentLevel > 10; --$currentLevel) {
+                  $populationLoss += (int)$fieldData[$currentLevel]['pop'];
+                }
+                $fieldUpdates[] = '`f'.$i.'` = 10';
+              }
+            }
+            for($i = 19; $i <= 40; ++$i) {
+              if((int)$data2['f'.$i.'t'] === 34) {
+                $level = (int)$data2['f'.$i];
+                for($currentLevel = $level; $currentLevel >= 1; --$currentLevel) {
+                  $populationLoss += (int)$bid34[$currentLevel]['pop'];
+                }
+                $fieldUpdates[] = '`f'.$i.'t` = 0';
+                $fieldUpdates[] = '`f'.$i.'` = 0';
+              }
+            }
+            if(!empty($fieldUpdates)) {
+              mysql_query('UPDATE `' . TB_PREFIX . 'fdata` SET '.implode(', ',$fieldUpdates).' WHERE `vref` = '.$oldCapital);
+            }
+            mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `pop` = GREATEST(2, `pop` - '.$populationLoss.') WHERE `wref` = '.$oldCapital);
+            mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `capital` = CASE WHEN `wref` = '.$newCapital.' THEN 1 ELSE 0 END WHERE `owner` = '.$uid);
+            mysql_query('UNLOCK TABLES');
+          }
+          mysql_query("SELECT RELEASE_LOCK('$buildLockName')");
         }
       }
-      
-      for($i=19; $i<=40; ++$i) {
-        if($data2['f' . $i . 't'] == 34) {
-          $query3 = mysql_query('UPDATE `' . TB_PREFIX . 'fdata` SET `f' . $i . 't` = 0, `f' . $i . '` = 0 WHERE `vref` = ' . $data2['vref']) or die(mysql_error());
-        }
-      }
-      
-      $query3 = mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `capital` = 0 WHERE `wref` = ' . $data1['wref']);
-      $query4 = mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `capital` = 1 WHERE `wref` = ' . $village->wid);
+      mysql_query("SELECT RELEASE_LOCK('$lockName')");
+    }
+    if(isset($error)) {
+      $_SESSION['error_p'] = $error;
+      $_SESSION['time_p'] = time();
+      print '<script>location.href="build.php?id=' . $building->getTypeField(26) . '&confirm=yes";</script>';
     }
     #print '<script language="javascript">location.href="build.php?id=' . $building->getTypeField(26) . '";</script>';
   } else {

@@ -162,7 +162,7 @@ define("U12","Lancero");
 define("U13","Luchador de Hacha");
 define("U14","Emisario");
 define("U15","Paladín");
-define("U16","Jinete Teutón");
+define("U16","Jinete germano");
 define("U17","Ariete");
 define("U18","Catapulta");
 define("U19","Cabecilla");

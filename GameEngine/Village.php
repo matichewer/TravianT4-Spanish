@@ -115,14 +115,22 @@ class Village {
 	
 	private function processProduction() {
 		global $database;
-		$timepast = time() - $this->infoarray['lastupdate'];
+		$now = time();
+		$timepast = max(0, $now - (int)$this->infoarray['lastupdate']);
 		$nwood = ($this->production['wood'] / 3600) * $timepast;
 		$nclay = ($this->production['clay'] / 3600) * $timepast;
 		$niron = ($this->production['iron'] / 3600) * $timepast;
 		$ncrop = ($this->production['crop'] / 3600) * $timepast;
 
-		$database->modifyResource($this->wid,$nwood,$nclay,$niron,$ncrop,1);
-		$database->updateVillage($this->wid);
+		$database->accrueVillageResources(
+			$this->wid,
+			$this->infoarray['lastupdate'],
+			$now,
+			$nwood,
+			$nclay,
+			$niron,
+			$ncrop
+		);
 		$this->LoadTown();
 	}
 	
