@@ -49,8 +49,8 @@ Ofrezco</th>
 	</td> 
 	<td class="al">
     <?php 
-    if($session->plus) {
-    echo "<input class=\"check\" type=\"checkbox\" tabindex=\"7\" name=\"ally\" value=\"1\" /> Solo alianza";
+    if((int)$session->alliance > 0) {
+    echo "<label><input class=\"check\" type=\"checkbox\" tabindex=\"7\" name=\"ally\" value=\"1\" /> Solo para miembros de mi alianza</label>";
     }
     ?> 
     </td>
@@ -66,7 +66,7 @@ Ofrezco</th>
 			<td>Oferta</td>
 			<th><img src="img/x.gif" class="ratio" title="Proporción"></th>
 			<td>Busco</td>
-            <?php if($session->plus){ ?><td>Solo alianza</td><?php } ?>
+            <?php if((int)$session->alliance > 0){ ?><td>Solo alianza</td><?php } ?>
 			<td>Mercaderes</td>
 			<td>Tiempo máx.</td>
 		</tr>
@@ -113,7 +113,7 @@ Ofrezco</th>
 	}
 	echo $offer['wamt'];		
 ?></td>
-			<?php if($session->plus){ ?><td class="al"><?php echo ($offer['alliance'] == 0)? 'No' : 'Sí'; ?></td><?php } ?>
+			<?php if((int)$session->alliance > 0){ ?><td class="al"><?php echo ($offer['alliance'] == 0)? 'No' : 'Sí'; ?></td><?php } ?>
 			<td class="tra"><?php echo $offer['merchant']; ?></td>
 			<td class="dur"><?php
         if($offer['maxtime'] != 0) {

@@ -209,7 +209,8 @@ class Market {
         }
 
         if($database->deductResourcesIfAvailable($village->wid,$resource[1],$resource[2],$resource[3],$resource[4])) {
-            $alliance = (isset($post['ally']) && $post['ally'] == 1 && $session->plus)? (int)$session->userinfo['alliance'] : 0;
+            $playerAlliance = (int)$session->userinfo['alliance'];
+            $alliance = (isset($post['ally']) && (string)$post['ally'] === '1' && $playerAlliance > 0) ? $playerAlliance : 0;
             $offerId = $database->addMarket($village->wid,$gtype,$gamt,$wtype,$wamt,$time,$alliance,$reqMerc,0);
             if(!$offerId) {
                 $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);
