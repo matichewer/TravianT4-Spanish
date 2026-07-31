@@ -1722,11 +1722,16 @@ class Automation {
                 $fromF = $database->getVillage($data['from']);
 
                 $cage = $database->getEquippedHeroItem($AttackerID, 9);
-				$cageID = $cage['id'];
+                if(!is_array($cage)) {
+                    $cage = array('id' => 0, 'type' => 0, 'num' => 0);
+                }
+                $cageID = (int)$cage['id'];
+                $cage['type'] = max(0, (int)$cage['type']);
+                $cage['num'] = max(0, (int)$cage['num']);
 
-				if($cageID != 0) {
-					// ignore
-                } else {
+                // Las jaulas solo capturan en oasis sin ocupar y en ataques reales:
+                // sobre un oasis conquistado o en un espionaje se resuelve la batalla normal.
+                if($cageID == 0 || (int)$toF['conqured'] != 0 || (int)$data['attack_type'] == 1) {
                     $cage['type'] = 0;
                 }
 
@@ -2957,11 +2962,26 @@ class Automation {
             } else {
                 $database->setMovementProc($data['moveid']);
                 $datar = "0,0,0,0,0";
-                $getHero = $database->getHeroData($AttackerID);
-                $speed = $getHero['speed'];
                 $AttackArrivalTime = $data['endtime'];
-                $endtime = $this->procDistanceTime($from, $to, $speed, 1) + $AttackArrivalTime;
+
+                // El regreso viaja a la velocidad de la unidad más lenta enviada, no a la del héroe.
+                $returnSpeeds = array();
+                for ($i = 1; $i <= 11; $i++) {
+                    if($data['t'.$i] <= 0) {
+                        continue;
+                    }
+                    if($i == 11) {
+                        $getHero = $database->getHeroData($AttackerID);
+                        $returnSpeeds[] = max(1, (int)$getHero['speed']);
+                    } else {
+                        $unitarray = $GLOBALS["u".(($owntribe - 1) * 10 + $i)];
+                        $returnSpeeds[] = max(1, (int)$unitarray['speed']);
+                    }
+                }
+                $endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1) + $AttackArrivalTime;
                 $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
+
+                $cagesBefore = $cage['type'];
                 $animals = 0;
                 for ($i = 31; $i <= 40; $i++) {
                     $animals += $Defender['u'.$i];
@@ -2993,29 +3013,43 @@ class Automation {
 					$database->editHeroType($cageID, $cage['type'], 2);
 					$database->editHeroNum2($cageID, $cage['num'], 2);
 				}
+                $total_captured = 0;
+                $capturedList = '';
                 for ($i = 1; $i <= 10; $i++) {
                     $total_captured += ${'captured'.$i};
+                    $capturedList .= ','.${'captured'.$i};
                 }
+
+                // Informe de captura para el atacante (el oasis está libre, no hay defensor al que avisar).
+                $oasiscoor = $database->getCoor($to['wref']);
+                $oasisLabel = '('.$oasiscoor['x'].'|'.$oasiscoor['y'].')';
+                if($total_captured > 0) {
+                    $cageTopic = 'Tu héroe capturó '.$total_captured.' animales en el oasis '.$oasisLabel;
+                } else {
+                    $cageTopic = 'Tu héroe no capturó animales en el oasis '.$oasisLabel;
+                }
+                $data_cage = $from['wref'].','.$from['owner'].','.$to['wref'].$capturedList
+                    .','.($cagesBefore - $cage['type']).','.$cage['type'].','.$animals;
+                $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
+                $database->addNotice($from['owner'], $to['wref'], $fromAlly, 25, addslashes($cageTopic), $data_cage, $AttackArrivalTime);
+
                 if($total_captured > 0) {
 
                     $speeds = array();
 
+                    //find slowest captured animal.
                     for ($i = 31; $i <= 40; $i++) {
                         $j = $i - 30;
-                        $database->modifyUnit($to['wref'], $i, ${'captured'.$j}, 0);
-                    }
-
-                    //find slowest unit.
-                    for ($i = 1; $i <= 10; $i++) {
-                        if($unitarray) {
-                            reset($unitarray);
+                        if(${'captured'.$j} <= 0) {
+                            continue;
                         }
-                        $unitarray = $GLOBALS["u".(30 + $i)];
-                        $speeds[] = $unitarray['speed'];
+                        $database->modifyUnit($to['wref'], $i, ${'captured'.$j}, 0);
+                        $unitarray = $GLOBALS["u".$i];
+                        $speeds[] = max(1, (int)$unitarray['speed']);
                     }
-                    $time = $this->procDistanceTime($from, $to, min($speeds), 1);
+                    $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1);
                     $reference = $database->addAttack($to['wref'], $captured1, $captured2, $captured3, $captured4, $captured5, $captured6, $captured7, $captured8, $captured9, $captured10, 0, 2, 0, 0, 0, 0);
-                    $database->addMovement(3, 0, $from['wref'], $reference, $datar, ($time + time()));
+                    $database->addMovement(3, 0, $from['wref'], $reference, $datar, ($time + $AttackArrivalTime));
 
                 }
             }
@@ -3217,7 +3251,7 @@ class Automation {
                     }
                 }
                 $to = $database->getMInfo($data['to']);
-                $targetally = $database->getUserField($from['owner'], 'alliance', 0);
+                $targetally = $database->getUserField($to['owner'], 'alliance', 0);
                 $unitssend_att = ''.$data['t1'].','.$data['t2'].','.$data['t3'].','.$data['t4'].','.$data['t5'].','.$data['t6'].','.$data['t7'].','.$data['t8'].','.$data['t9'].','.$data['t10'].','.$data['t11'].'';
                 $data_fail = '0,0,4,'.$unitssend_att.','.$to['wref'].','.$to['owner'];
                 $database->addNotice($to['owner'], $to['wref'], $targetally, 8, 'la naturaleza reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
@@ -3887,9 +3921,9 @@ class Automation {
                 $end = 30;
                 break;
             case 4:
+                // Ver Technology::getUpkeep: los animales sí consumen cereal en la aldea.
                 $start = 31;
                 $end = 40;
-                $nocrop = 1;
                 break;
             case 5:
                 $start = 41;

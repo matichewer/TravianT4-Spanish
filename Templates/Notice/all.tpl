@@ -1,5 +1,5 @@
 ﻿<?php
-$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Refuerzo atacado","Refuerzo atacado","Refuerzo atacado","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales");
+$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Refuerzo atacado","Refuerzo atacado","Refuerzo atacado","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales","Animales capturados");
 $prefix = "".TB_PREFIX."ndata";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 and del = 0 ORDER BY time DESC");
 $query = mysql_num_rows($sql); // Obtener el número de consultas de la base de datos
@@ -162,6 +162,7 @@ while($row = mysql_fetch_array($sql2)){
     }else{
 		$newtype = $type;
 		if($type >= 15 && $type <= 17) $newtype = $type - 11;
+		if($type == 25) $newtype = 1;
     	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$newtype\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
     }
 

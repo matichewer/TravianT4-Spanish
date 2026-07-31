@@ -2231,7 +2231,7 @@
 				}
 				$filterConditions = array(
 					0 => "archive = 0",
-					1 => "archive = 0 AND ntype IN (1,2,3,4,5,6,7)",
+					1 => "archive = 0 AND ntype IN (1,2,3,4,5,6,7,25)",
 					2 => "archive = 0 AND ntype IN (10,11,12,13)",
 					3 => "archive = 0 AND ntype IN (9,15,16,17,18,19,20,21)",
 					4 => "archive = 1",

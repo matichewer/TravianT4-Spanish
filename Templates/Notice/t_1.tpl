@@ -1,8 +1,8 @@
 ﻿
 <?php
-$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales");
+$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales","Animales capturados");
 $prefix = "".TB_PREFIX."ndata";
-$limit2 = "and (ntype=1 or ntype=2 or ntype=3 or ntype=4 or ntype=5 or ntype=6 or ntype=7)";
+$limit2 = "and (ntype=1 or ntype=2 or ntype=3 or ntype=4 or ntype=5 or ntype=6 or ntype=7 or ntype=25)";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive=0 $limit2 ORDER BY time DESC");
 $query = mysql_num_rows($sql);
 
@@ -164,7 +164,8 @@ while($row = mysql_fetch_array($sql2)){
     if($type==9){
     	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport21\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
     }else{
-    	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$type\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
+    	$newtype = ($type == 25) ? 1 : $type;
+    	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$newtype\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
     }
 
 if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){

@@ -63,7 +63,7 @@
 				global $session, $database;
 				if(isset($get['t'])) {
 					if($get['t'] == 1) {
-						$type = array(1, 2, 3, 4, 5, 6, 7);
+						$type = array(1, 2, 3, 4, 5, 6, 7, 25);
 					}
 					if($get['t'] == 2) {
 						$type = array(10, 11, 12, 13);

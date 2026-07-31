@@ -15,26 +15,40 @@ if ($units[$y]['sort_type']==3){
 	}
 
 	if($units[$y]['attack_type'] != 1){
+		// Los animales capturados con jaulas llegan como refuerzo de la naturaleza (from = 0),
+		// sin aldea de origen ni coordenadas.
+		$isNature = ((int)$units[$y]['from'] === 0);
+		if($isNature){
+			$actionType = "Animales capturados para ";
+		}
 		echo "<table class=\"troop_details ";
-        
+
         if($units[$y]['attack_type'] != 2){ echo "inRaid"; } else { echo "inReturn"; }
-        	echo"\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">
-                  <a href=\"karte.php?d=".$units[$y]['from']."&c=".$generator->getMapCheck($units[$y]['from'])."\">".$database->getVillageField($units[$y]['from'],"name")."</a></td>
+        	echo"\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">";
+        	if($isNature){
+        		echo TRIBE4;
+        	}else{
+        		echo "<a href=\"karte.php?d=".$units[$y]['from']."&c=".$generator->getMapCheck($units[$y]['from'])."\">".$database->getVillageField($units[$y]['from'],"name")."</a>";
+        	}
+        	echo "</td>
                   <td colspan=\"11\" class=\"troopHeadline\">";
                   echo "<a href=\"spieler.php?uid=".$database->getVillageField($units[$y]['to'],"owner")."\">";
                   echo $actionType ." ". $village->vname;
                   echo "</a></td></tr></thead><tbody class=\"units\">";
-                  $tribe = $database->getUserField($database->getVillageField($units[$y]['from'],"owner"),"tribe",0);
+                  $tribe = $isNature ? 4 : $database->getUserField($database->getVillageField($units[$y]['from'],"owner"),"tribe",0);
+                  if($tribe < 1 || $tribe > 5){ $tribe = 4; }
                   $start = ($tribe-1)*10+1;
                   $end = ($tribe*10);
-                  $coor = $database->getCoor($units[$y]['from']);
-                  echo "<tr><th class=\"coords\">
-					<span class=\"coordinates coordinatesAligned\">
+                  echo "<tr><th class=\"coords\">";
+                  if(!$isNature){
+                  	$coor = $database->getCoor($units[$y]['from']);
+                  	echo "<span class=\"coordinates coordinatesAligned\">
                     <span class=\"coordinateY\">(".$coor['y']."</span>
                     <span class=\"coordinatePipe\">|</span>
                     <span class=\"coordinateX\">".$coor['x'].")</span>
-                    </span>
-                    <span class=\"clear\">a</span></th>";
+                    </span>";
+                  }
+                  echo "<span class=\"clear\">".($isNature ? "" : "a")."</span></th>";
                   for($i=$start;$i<=$end;$i++) {
                     echo "<td><a href=\"#\" onclick=\"return Travian.Game.iPopup($i,1);\"><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></a></td>";
                   }
@@ -43,7 +57,16 @@ if ($units[$y]['sort_type']==3){
                   
                   
 
-if($village->resarray['f39'] >= 5){
+if($isNature){
+	// Son tus propios animales capturados: no hay nada que ocultar.
+	for($t=1;$t<=11;$t++){
+		if($units[$y]['t'.$t]){
+			echo "<td>".$units[$y]['t'.$t]."</td>";
+		}else{
+			echo "<td class=\"none\">0</td>";
+		}
+	}
+}elseif($village->resarray['f39'] >= 5){
 	for($t=1;$t<=11;$t++){
         if($units[$y]['t'.$t]){
         	if($t!=7 or $t!=8 or $t!=8){
