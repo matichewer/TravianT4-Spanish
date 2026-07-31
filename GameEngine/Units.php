@@ -329,7 +329,23 @@ class Units {
 	private function sendTroops($post) {
 		global $form, $database, $village, $generator, $session, $building, $battle;
 
-		$data = $database->getA2b($post['timestamp_checksum'], $post['timestamp']);
+		$confirmationKey = isset($post['timestamp_checksum']) && is_scalar($post['timestamp_checksum'])
+			? (string)$post['timestamp_checksum']
+			: '';
+		if(!preg_match('/^[A-Za-z0-9]{6}$/', $confirmationKey)) {
+			$confirmationKey = '';
+		}
+		$confirmationTimestamp = isset($post['timestamp']) && ctype_digit((string)$post['timestamp'])
+			? (int)$post['timestamp']
+			: 0;
+		$data = $confirmationKey !== '' && $confirmationTimestamp > 0
+			? $database->getA2b($confirmationKey, $confirmationTimestamp)
+			: null;
+
+		if(!$data) {
+			header("Location: build.php?id=39");
+			exit;
+		}
 
 
 
@@ -380,7 +396,12 @@ class Units {
 				} else {
 
 
-		 if($session->tribe == 1){ $u = ""; } elseif($session->tribe == 2){ $u = "1"; } elseif($session->tribe == 3){ $u = "2"; }elseif($session->tribe == 4){ $u = "3"; }else {$u = "4"; }
+		if(!$database->claimA2b($confirmationKey, $confirmationTimestamp)) {
+			header("Location: build.php?id=39");
+			exit;
+		}
+
+			 if($session->tribe == 1){ $u = ""; } elseif($session->tribe == 2){ $u = "1"; } elseif($session->tribe == 3){ $u = "2"; }elseif($session->tribe == 4){ $u = "3"; }else {$u = "4"; }
 
 
 		$database->modifyUnit($village->wid,$u."1",$data['u1'],0);

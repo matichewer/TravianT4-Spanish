@@ -56,7 +56,8 @@ if (($process['c'] == 3 || $process['c'] == 4) && $totalunits== 0) {
 $process['c'] = 1;
 }
 
-$id = $database->addA2b($ckey,time(),$process['0'],$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$process['c']);
+$confirmationTimestamp = time();
+$id = $database->addA2b($ckey,$confirmationTimestamp,$process['0'],$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$process['c']);
 
 if ($process['c']==1){
 $actionType = "Explorar ";
@@ -78,7 +79,7 @@ $end = ($tribe*10);
 
 <h1><?php echo $actionType." ".$process[1]; ?></h1>            
 
-<form method="post" action="a2b.php">
+<form method="post" action="a2b.php" onsubmit="var button=this.querySelector('#btn_ok'); if(button){button.disabled=true;}">
 
             <table id="short_info" cellpadding="1" cellspacing="1">
 
@@ -376,7 +377,7 @@ $end = ($tribe*10);
 
 </table>
 
-<input name="timestamp" value="<?php echo time(); ?>" type="hidden"> 
+<input name="timestamp" value="<?php echo $confirmationTimestamp; ?>" type="hidden">
 
 <input name="timestamp_checksum" value="<?php echo $ckey; ?>" type="hidden"> 
 

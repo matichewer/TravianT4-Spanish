@@ -2941,6 +2941,14 @@
 				return mysqli_query($this->connection,$q);
 			}
 
+			function claimA2b($ckey, $check) {
+				$ckey = $this->connection->real_escape_string((string)$ckey);
+				$check = (int)$check;
+				$q = "DELETE FROM " . TB_PREFIX . "a2b WHERE ckey = '$ckey' AND time_check = $check LIMIT 1";
+				$this->connection->query($q);
+				return $this->connection->affected_rows === 1;
+			}
+
 			function removeMarketMovementBySend($ref) {
 				$ref = (int) $ref;
 				$q = "DELETE FROM " . TB_PREFIX . "movement WHERE sort_type = 0 AND ref = $ref AND proc = 0";

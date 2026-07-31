@@ -2938,6 +2938,14 @@
 				return mysql_query($q, $this->connection);
 			}
 
+			function claimA2b($ckey, $check) {
+				$ckey = mysql_real_escape_string((string)$ckey);
+				$check = (int)$check;
+				$q = "DELETE FROM " . TB_PREFIX . "a2b WHERE ckey = '$ckey' AND time_check = $check LIMIT 1";
+				mysql_query($q);
+				return mysql_affected_rows() === 1;
+			}
+
 			function removeMarketMovementBySend($ref) {
 				$ref = (int) $ref;
 				$q = "DELETE FROM " . TB_PREFIX . "movement WHERE sort_type = 0 AND ref = $ref AND proc = 0";
