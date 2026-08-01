@@ -16,7 +16,9 @@
 				<?php echo WOOD; ?>:
 			</td>
 			<td class="num">
-				<?php echo $village->getProd("wood"); ?><?php if($session->bonus1 == 1){ echo ' <span class="bonus" style="color:#3a3;font-size:10px;" title="'.WOOD.' +25%">+25%</span>'; } ?>			</td>
+				<?php echo $village->getProd("wood"); ?>			</td>
+			<td class="per" style="text-align:left;width:38px;padding-left:3px;">
+				<?php if($session->bonus1 == 1){ echo '<span class="bonus" style="color:#3a3;font-size:10px;" title="'.WOOD.' +25%">+25%</span>'; } ?>			</td>
 		</tr>
 				<tr>
 			<td class="ico">
@@ -26,7 +28,9 @@
 				<?php echo CLAY; ?>:
 			</td>
 			<td class="num">
-				<?php echo $village->getProd("clay"); ?><?php if($session->bonus2 == 1){ echo ' <span class="bonus" style="color:#3a3;font-size:10px;" title="'.CLAY.' +25%">+25%</span>'; } ?>			</td>
+				<?php echo $village->getProd("clay"); ?>			</td>
+			<td class="per" style="text-align:left;width:38px;padding-left:3px;">
+				<?php if($session->bonus2 == 1){ echo '<span class="bonus" style="color:#3a3;font-size:10px;" title="'.CLAY.' +25%">+25%</span>'; } ?>			</td>
 		</tr>
 				<tr>
 			<td class="ico">
@@ -36,7 +40,9 @@
 				<?php echo IRON; ?>:
 			</td>
 			<td class="num">
-				<?php echo $village->getProd("iron"); ?><?php if($session->bonus3 == 1){ echo ' <span class="bonus" style="color:#3a3;font-size:10px;" title="'.IRON.' +25%">+25%</span>'; } ?>			</td>
+				<?php echo $village->getProd("iron"); ?>			</td>
+			<td class="per" style="text-align:left;width:38px;padding-left:3px;">
+				<?php if($session->bonus3 == 1){ echo '<span class="bonus" style="color:#3a3;font-size:10px;" title="'.IRON.' +25%">+25%</span>'; } ?>			</td>
 		</tr>
 				<tr>
 			<td class="ico">
@@ -46,9 +52,11 @@
 				<?php echo CROP; ?>:
 			</td>
 			<td class="num">
-				<?php echo $village->getProd("crop"); ?><?php if($session->bonus4 == 1){ echo ' <span class="bonus" style="color:#3a3;font-size:10px;" title="'.CROP.' +25%">+25%</span>'; } ?>			</td>
+				<?php echo $village->getProd("crop"); ?>			</td>
+			<td class="per" style="text-align:left;width:38px;padding-left:3px;">
+				<?php if($session->bonus4 == 1){ echo '<span class="bonus" style="color:#3a3;font-size:10px;" title="'.CROP.' +25%">+25%</span>'; } ?>			</td>
 		</tr>
 			</tbody>
 </table>
-	</div> 
+	</div>
 				</div>
