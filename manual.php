@@ -20,7 +20,9 @@ $manualGid = isset($_GET['gid']) && ctype_digit((string) $_GET['gid']) ? (int) $
 $manualUnitId = $manualType === 1 ? ($manualGid !== null ? $manualGid : $manualSection) : null;
 $isUnitManual = $manualUnitId !== null && $manualUnitId > 0;
 $manualTrainingDuration = null;
-if (in_array($manualUnitId, array(10,20,30), true)) {
+// Colonos y jefes: su duracion depende del nivel de la residencia/palacio, asi que
+// nunca puede quedar fija en la plantilla.
+if (in_array($manualUnitId, array(9,10,19,20,29,30), true)) {
 	require_once("GameEngine/Data/unitdata.php");
 	require_once("GameEngine/Data/buidata.php");
 	$manualUnitData = isset($GLOBALS['u'.$manualUnitId]) ? $GLOBALS['u'.$manualUnitId] : null;

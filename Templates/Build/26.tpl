@@ -1,11 +1,12 @@
-﻿<?php
-error_reporting(E_ALL);
+<?php
+// Sin error_reporting(E_ALL) local: php.ini oculta los avisos del código legacy y
+// activarlos acá los mostraba dentro de la página del palacio.
 if(time() - (int)($_SESSION['time_p'] ?? 0) > 5) {
   $_SESSION['time_p'] = 0;
   $_SESSION['error_p'] = '';
 }
 
-if($_POST AND $_GET['action'] == 'change_capital') {
+if(!empty($_POST) AND isset($_GET['action']) AND $_GET['action'] == 'change_capital') {
   $pass = mysql_escape_string($_POST['pass']);
   $query = mysql_query('SELECT * FROM `' . TB_PREFIX . 'users` WHERE `id` = ' . $session->uid);
   $data = mysql_fetch_assoc($query);

@@ -1,4 +1,4 @@
-﻿<h1 class="titleInHeader">Palacio <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
+<h1 class="titleInHeader">Palacio <span class="level">Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid26">
 <div class="build_desc">
 	<a href="#" onClick="return Travian.Game.iPopup(26,4, 'gid');" class="build_logo"> 
@@ -14,4 +14,11 @@ include('build_level_help.tpl');
 include("upgrade.tpl");
 include("26_menu.tpl"); 
 ?>
-Atacando con senadores, jefes o caudillos se puede reducir la lealtad de una aldea. Si llega a cero, la aldea pasa al imperio del atacante. La lealtad de esta aldea es:  <b><?php echo $database->getVillageField($village->wid, 'loyalty'); ?></b>%. <br></br><b>Esta aldea es la capital, no puede ser conquistada </b></div>
+<p>Atacando con senadores, jefes o caudillos se puede reducir la lealtad de una aldea. Si llega a cero, la aldea pasa al imperio del atacante. Mientras el palacio siga en pie la aldea no puede ser conquistada, y cada nivel acelera la recuperación de la lealtad.</p>
+<p>La lealtad de esta aldea es <b><?php echo (int)$database->getVillageField($village->wid, 'loyalty'); ?></b>%.</p>
+<?php if ($village->capital == 1) { ?>
+<p><b>Esta aldea es la capital: no puede ser conquistada.</b></p>
+<?php } else { ?>
+<p><b>Las capitales no pueden ser conquistadas.</b></p>
+<?php } ?>
+</div>

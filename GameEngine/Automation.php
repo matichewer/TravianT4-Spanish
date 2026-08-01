@@ -218,6 +218,8 @@ class Automation {
         $database->query("DELETE FROM ".TB_PREFIX."units WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."vdata WHERE wref = ".$villageId);
         $database->query("UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = ".$villageId);
+        // La residencia/palacio que la fundo tiene que recuperar el cupo de expansion.
+        $database->releaseExpansionSlots($villageId);
         $logging->VillageDestroyCatalog($villageId);
         return true;
     }
@@ -706,21 +708,49 @@ class Automation {
         global $database;
         $ourFileHandle = fopen("GameEngine/Prevention/loyalty.txt", 'w');
         fclose($ourFileHandle);
-        $array = array();
-        $q = "SELECT * FROM ".TB_PREFIX."vdata WHERE loyalty < 100";
-        $array = $database->query_return($q);
-        if(!empty($array)) {
-            foreach ($array as $loyalty) {
-                if($this->getTypeLevel(25, $loyalty['wref']) >= 1) {
-                    $value = $this->getTypeLevel(25, $loyalty['wref']);
-                } elseif($this->getTypeLevel(26, $loyalty['wref']) >= 1) {
-                    $value = $this->getTypeLevel(26, $loyalty['wref']);
-                } else {
-                    $value = 0;
+        // La lealtad se mide con `loyaltyupdate`, no con `lastupdate`: ese ultimo es el
+        // reloj de la produccion de recursos y solo avanza cuando el dueno abre la aldea,
+        // asi que reutilizarlo hacia que cada pasada volviera a sumar todo el tiempo
+        // transcurrido (una aldea de un jugador desconectado recuperaba el 100% de
+        // lealtad en la primera pasada posterior al ataque).
+        if($database->ensureLoyaltyClockColumn()) {
+            $now = time();
+            $array = $database->query_return("SELECT * FROM ".TB_PREFIX."vdata WHERE loyalty < 100");
+            if(!empty($array)) {
+                foreach ($array as $loyalty) {
+                    $villageId = (int)$loyalty['wref'];
+                    if($this->getTypeLevel(25, $villageId) >= 1) {
+                        $value = $this->getTypeLevel(25, $villageId);
+                    } elseif($this->getTypeLevel(26, $villageId) >= 1) {
+                        $value = $this->getTypeLevel(26, $villageId);
+                    } else {
+                        $value = 0;
+                    }
+                    $clock = (int)$loyalty['loyaltyupdate'];
+                    if($clock <= 0 || $clock > $now) {
+                        $database->query("UPDATE ".TB_PREFIX."vdata SET loyaltyupdate = $now WHERE wref = $villageId");
+                        continue;
+                    }
+                    $rate = $value * SPEED / 3600;
+                    if($rate <= 0) {
+                        // Sin residencia ni palacio no hay regeneracion, pero el reloj
+                        // sigue corriendo para no acumular tiempo pendiente.
+                        $database->query("UPDATE ".TB_PREFIX."vdata SET loyaltyupdate = $now WHERE wref = $villageId");
+                        continue;
+                    }
+                    $gain = (int)floor(($now - $clock) * $rate);
+                    if($gain < 1) {
+                        // Todavia no alcanza para un punto entero: se conserva el reloj
+                        // para que el tiempo restante no se pierda.
+                        continue;
+                    }
+                    $oldLoyalty = (int)$loyalty['loyalty'];
+                    $newloyalty = min(100, $oldLoyalty + $gain);
+                    $newClock = min($now, $clock + (int)floor($gain / $rate));
+                    $q = "UPDATE ".TB_PREFIX."vdata SET loyalty = $newloyalty, loyaltyupdate = $newClock"
+                        ." WHERE wref = $villageId AND loyalty = $oldLoyalty";
+                    $database->query($q);
                 }
-                $newloyalty = min(100, $loyalty['loyalty'] + $value * (time() - $loyalty['lastupdate']) * SPEED / (60 * 60));
-                $q = "UPDATE ".TB_PREFIX."vdata SET loyalty = $newloyalty WHERE wref = '".$loyalty['wref']."'";
-                $database->query($q);
             }
         }
         $array = array();
@@ -893,6 +923,7 @@ class Automation {
                     $database->query($q);
                     $q = "UPDATE ".TB_PREFIX."wdata set occupied = 0 where id = ".$village;
                     $database->query($q);
+                    $database->releaseExpansionSlots($village);
                 } else {
                     $q = "UPDATE ".TB_PREFIX."vdata set capital = 0, owner = 2 where id = ".$village;
                     $database->query($q);

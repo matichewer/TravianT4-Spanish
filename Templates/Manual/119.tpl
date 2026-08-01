@@ -34,7 +34,7 @@
 </tr>
 <tr>
 	<th>Duración del entrenamiento</th>
-	<td><img class="clock" src="img/x.gif" alt="duración" title="duración" /> 19:35:00</td>
+	<td><img class="clock" src="img/x.gif" alt="duración" title="duración" /> <?php echo isset($manualTrainingDuration) ? $manualTrainingDuration : '7:35:12'; ?></td>
 
 </tr>
 </tbody></table>

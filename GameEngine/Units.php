@@ -615,16 +615,7 @@ class Units {
 			if($database->getPendingSettlementCountByOwner($session->uid,0,$target) > 0) {
 				return false;
 			}
-			$residenceLevel = (int)$building->getTypeLevel(25);
-			$palaceLevel = (int)$building->getTypeLevel(26);
-			$unlockedSlots = $residenceLevel >= 20 ? 2 : ($residenceLevel >= 10 ? 1 : 0);
-			if($palaceLevel >= 20) {
-				$unlockedSlots = max($unlockedSlots,3);
-			} elseif($palaceLevel >= 15) {
-				$unlockedSlots = max($unlockedSlots,2);
-			} elseif($palaceLevel >= 10) {
-				$unlockedSlots = max($unlockedSlots,1);
-			}
+			$unlockedSlots = $database->getExpansionSlotLimit($village->wid);
 			$usedSlots = 0;
 			foreach(array('exp1','exp2','exp3') as $field) {
 				if((int)$database->getVillageField($village->wid,$field) > 0) {

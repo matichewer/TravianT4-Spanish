@@ -1,4 +1,4 @@
-﻿<h2>Residencia</h2>
+<h2>Residencia</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(25,4);" class="build_logo">
 		<img class="building big white g25" src="img/x.gif" alt="Residencia">

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 #################################################################################
 ##              -= YOU MAY NOT REMOVE OR CHANGE THIS NOTICE =-                 ##
@@ -24,7 +24,9 @@
 			if ($slots['settlers']>0 && $i%10==0 || $slots['chiefs']>0 && $i%10==9) {
 			       $maxunit = MIN($technology->maxUnit($i),($i%10==0?$slots['settlers']:$slots['chiefs']));
 			       $trainingTime = $technology->getExpansionUnitTrainingTime($i,$id);
-			       $popupTrainingTime = $i%10==0 ? ",".$trainingTime : "";
+			       // Colonos y jefes: el popup tiene que mostrar el tiempo real de esta
+			       // residencia, no el valor base de la unidad.
+			       $popupTrainingTime = $trainingTime > 0 ? ",".$trainingTime : "";
 
 echo "<div class=\"action first\">
                 	<div class=\"bigUnitSection\">
@@ -55,7 +57,7 @@ if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
 echo "&nbsp;&nbsp;<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".${'u'.$i}['wood']."&r2=".${'u'.$i}['clay']."&r3=".${'u'.$i}['iron']."&r4=".${'u'.$i}['crop']."'; return false;\">&nbsp;<img src=\"img/x.gif\" class=\"npc\" alt=\"npc\"></button>";
 }
 
-echo "</span><div class=\"clear\"></div></div><span class=\"value\"></span>
+echo "<div class=\"clear\"></div></div><span class=\"value\"></span>
                         <input type=\"text\" class=\"text\" name=\"t".$i."\" value=\"0\" maxlength=\"4\">
                         <span class=\"value\"> / </span>
 						<a href=\"#\" onClick=\"document.snd.t".$i.".value=".$maxunit."; return false;\">".$maxunit."</a>

@@ -490,10 +490,17 @@ class Building {
 			if($this->getTypeLevel(22) >= 10 && $this->getTypeLevel(15) >= 10) { return true; } else { return false; }
 			break;
 			case 25:
-			if($this->getTypeLevel(15) >= 5) { return true; } else { return false; }
+			// Una sola residencia por aldea y nunca junto a un palacio (ni construido
+			// ni en cola): la lista de construcciones ya lo oculta, esto lo valida.
+			return $this->getTypeLevel(15) >= 5
+				&& $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
+				&& $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26);
 			break;
 			case 26:
-			if($this->getTypeLevel(18) >= 1 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
+			return $this->getTypeLevel(18) >= 1 && $this->getTypeLevel(15) >= 5
+				&& $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
+				&& $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26)
+				&& !$this->hasPalaceInAnotherVillage();
 			break;
 			case 27:
 			if($this->getTypeLevel(15) >= 10) { return true; } else { return false; }
@@ -603,6 +610,17 @@ class Building {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Solo se permite un palacio por cuenta.
+	 */
+	private function hasPalaceInAnotherVillage() {
+		global $database,$session,$village;
+		if(!method_exists($database,'hasPalace')) {
+			return false;
+		}
+		return $database->hasPalace((int)$session->uid,(int)$village->wid);
 	}
 
 	private function hasQueuedType($tid) {

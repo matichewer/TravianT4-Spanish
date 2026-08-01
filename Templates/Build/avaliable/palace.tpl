@@ -1,4 +1,4 @@
-﻿<h2>Palacio</h2>
+<h2>Palacio</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(26,4);" class="build_logo">
 		<img class="building big white g26" src="img/x.gif" alt="Palacio">

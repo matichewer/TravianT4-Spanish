@@ -24,7 +24,9 @@
 			if ($slots['settlers']>0 && $i%10==0 || $slots['chiefs']>0 && $i%10==9) {
 			       $maxunit = MIN($technology->maxUnit($i),($i%10==0?$slots['settlers']:$slots['chiefs']));
 			       $trainingTime = $technology->getExpansionUnitTrainingTime($i,$id);
-			       $popupTrainingTime = $i%10==0 ? ",".$trainingTime : "";
+			       // Colonos y jefes: el popup tiene que mostrar el tiempo real de este
+			       // palacio, no el valor base de la unidad.
+			       $popupTrainingTime = $trainingTime > 0 ? ",".$trainingTime : "";
 
 echo "<div class=\"action first\">
                 	<div class=\"bigUnitSection\">

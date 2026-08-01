@@ -151,3 +151,14 @@ SET
 WHERE o.conqured = 0;
 
 UPDATE s1_config SET oasis_animals_rebalanced = 1;
+
+-- 2026-08-01 - Reloj propio para la regeneracion de lealtad
+-- `lastupdate` es el reloj de la produccion de recursos y solo avanza cuando el
+-- dueno abre esa aldea, asi que la regeneracion de lealtad volvia a sumar todo
+-- el tiempo transcurrido en cada pasada (una aldea atacada recuperaba 100% de
+-- lealtad en la primera pasada). `loyaltyupdate` es el reloj exclusivo de la
+-- lealtad y lo avanza unicamente la regeneracion.
+ALTER TABLE s1_vdata
+  ADD COLUMN IF NOT EXISTS loyaltyupdate int(11) unsigned NOT NULL DEFAULT 0;
+
+UPDATE s1_vdata SET loyaltyupdate = UNIX_TIMESTAMP() WHERE loyaltyupdate = 0;

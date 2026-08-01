@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $bid = $village->resarray['f'.$id.'t'];
 $bindicate = $building->canBuild($id,$village->resarray['f'.$id.'t']);
 if($bindicate == 1) {
@@ -9,6 +9,7 @@ if($bindicate == 1) {
 	echo "<p><span class=\"none\"><b>".$building->procResType($village->resarray['f'.$id.'t'])." ha sido demolido</b></span></p>";
 } else {
 	$loopsame = $building->isCurrent($id)?1:0;
+        $doublebuild = 0;
         if ($loopsame>0 && $building->isLoop($id)) {
             $doublebuild = 1;
         }

@@ -629,14 +629,20 @@
 						}
 					}
 
+					// El cupo libre no alcanza: la residencia/palacio de la aldea atacante
+					// tiene que habilitarlo. Ver db_MYSQLi.php.
 					$slot = 0;
+					$occupied = 0;
 					for($candidate = 1; $candidate <= 3; $candidate++) {
 						if((int)$source['exp'.$candidate] === 0) {
-							$slot = $candidate;
-							break;
+							if($slot === 0) {
+								$slot = $candidate;
+							}
+						} else {
+							$occupied++;
 						}
 					}
-					if($slot === 0) {
+					if($slot === 0 || $occupied >= $this->getExpansionSlotLimit($from)) {
 						$result['status'] = 'no_slot';
 						return $result;
 					}
@@ -672,10 +678,17 @@
 							return $eligibility;
 						}
 
+						// La lealtad baja ahora, asi que el reloj de regeneracion arranca
+						// ahora: sin esto la primera pasada sumaria todo el tiempo que la
+						// aldea estuvo con lealtad completa.
+						$loyaltyClock = $this->ensureLoyaltyClockColumn()
+							? ", loyaltyupdate = " . time()
+							: "";
+
 						$oldLoyalty = (int)$eligibility['loyalty'];
 						$newLoyalty = $oldLoyalty - $loyaltyDamage;
 						if($newLoyalty > 0) {
-							$query = "UPDATE " . TB_PREFIX . "vdata SET loyalty = $newLoyalty"
+							$query = "UPDATE " . TB_PREFIX . "vdata SET loyalty = $newLoyalty" . $loyaltyClock
 								. " WHERE wref = $target AND owner = $defenderOwner AND loyalty = $oldLoyalty";
 							$updated = mysql_query($query, $this->connection);
 							if(!$updated || mysql_affected_rows($this->connection) !== 1) {
@@ -695,7 +708,8 @@
 							. " INNER JOIN " . TB_PREFIX . "attacks AS attack ON attack.id = $attackId"
 							. " LEFT JOIN " . TB_PREFIX . "artefacts AS artefact ON artefact.vref = destination.wref"
 							. " SET source.exp$slot = $target, destination.owner = $attackerOwner,"
-							. " destination.loyalty = 33, fields.f40 = 0, fields.f40t = 0,"
+							. " destination.loyalty = 33" . ($loyaltyClock === "" ? "" : ", destination.loyaltyupdate = " . time()) . ","
+							. " fields.f40 = 0, fields.f40t = 0,"
 							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner"
 							. " WHERE source.wref = $from AND source.owner = $attackerOwner"
 							. " AND source.exp$slot = 0 AND destination.owner = $defenderOwner"
@@ -1744,6 +1758,98 @@
         		$q = "UPDATE " . TB_PREFIX . "vdata set lastupdate = $time where wref = $vid";
         		return mysql_query($q, $this->connection);
         	}
+
+			/**
+			 * Reloj exclusivo de la lealtad; ver db_MYSQLi.php.
+			 */
+			function ensureLoyaltyClockColumn() {
+				static $available = null;
+				if($available !== null) {
+					return $available;
+				}
+				$table = TB_PREFIX . "vdata";
+				$result = mysql_query("SHOW COLUMNS FROM `$table` LIKE 'loyaltyupdate'", $this->connection);
+				if($result && mysql_num_rows($result) > 0) {
+					$available = true;
+					return $available;
+				}
+				$added = mysql_query(
+					"ALTER TABLE `$table` ADD COLUMN IF NOT EXISTS `loyaltyupdate` int(11) unsigned NOT NULL DEFAULT 0",
+					$this->connection
+				);
+				if($added) {
+					mysql_query("UPDATE `$table` SET loyaltyupdate = " . time() . " WHERE loyaltyupdate = 0", $this->connection);
+				}
+				$available = (bool)$added;
+				return $available;
+			}
+
+			/**
+			 * Cupos de expansion que habilita la residencia/palacio; ver db_MYSQLi.php.
+			 */
+			function getExpansionSlotLimit($villageId) {
+				$villageId = (int)$villageId;
+				if($villageId <= 0) {
+					return 0;
+				}
+				$fields = $this->getResourceLevel($villageId);
+				if(!is_array($fields)) {
+					return 0;
+				}
+				$residence = 0;
+				$palace = 0;
+				for($field = 19; $field <= 40; $field++) {
+					if(!isset($fields['f'.$field.'t'])) {
+						continue;
+					}
+					$level = (int)$fields['f'.$field];
+					if((int)$fields['f'.$field.'t'] === 25) {
+						$residence = max($residence,$level);
+					} elseif((int)$fields['f'.$field.'t'] === 26) {
+						$palace = max($palace,$level);
+					}
+				}
+				$slots = $residence >= 20 ? 2 : ($residence >= 10 ? 1 : 0);
+				if($palace >= 20) {
+					$slots = max($slots,3);
+				} elseif($palace >= 15) {
+					$slots = max($slots,2);
+				} elseif($palace >= 10) {
+					$slots = max($slots,1);
+				}
+				return $slots;
+			}
+
+			function releaseExpansionSlots($villageId) {
+				$villageId = (int)$villageId;
+				if($villageId <= 0) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "vdata SET"
+					. " exp1 = IF(exp1 = $villageId,0,exp1),"
+					. " exp2 = IF(exp2 = $villageId,0,exp2),"
+					. " exp3 = IF(exp3 = $villageId,0,exp3)"
+					. " WHERE exp1 = $villageId OR exp2 = $villageId OR exp3 = $villageId";
+				return mysql_query($q, $this->connection);
+			}
+
+			function hasPalace($uid, $excludeVillage = 0) {
+				$uid = (int)$uid;
+				$excludeVillage = (int)$excludeVillage;
+				if($uid <= 0) {
+					return false;
+				}
+				$conditions = array();
+				for($field = 19; $field <= 40; $field++) {
+					$conditions[] = "fields.f".$field."t = 26";
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "fdata AS fields"
+					. " INNER JOIN " . TB_PREFIX . "vdata AS village ON village.wref = fields.vref"
+					. " WHERE village.owner = $uid AND village.wref <> $excludeVillage"
+					. " AND (" . implode(" OR ",$conditions) . ") LIMIT 1";
+				$result = mysql_query($q, $this->connection);
+				return $result && mysql_num_rows($result) > 0;
+			}
 
         	function updateOasis($vid) {
         		$time = time();
