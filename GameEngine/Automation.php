@@ -2846,7 +2846,7 @@ class Automation {
 
                     }
 
-                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.',0,0,0,0,0,'.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.','.$unitstraped_att;
+                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.',0,0,0,0,0,'.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
                     if(!empty($spyReinforcements)) {
                         $spyReinforcementJson = json_encode($spyReinforcements);
                         if($spyReinforcementJson !== false) {
@@ -2854,20 +2854,24 @@ class Automation {
                         }
                     }
                 } else {
-                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.','.$unitstraped_att;
+                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
                 }
 
                 // When all troops die, sends no info.
-                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).',0,,,0,'.$unitssend_deff[1].','.$unitsdead_deff[1].',0,'.$unitssend_deff[2].','.$unitsdead_deff[2].',0,'.$unitssend_deff[3].','.$unitsdead_deff[3].',0,'.$unitssend_deff[4].','.$unitsdead_deff[4].',0,'.$unitssend_deff[5].','.$unitsdead_deff[5].',,,'.$unitstraped_att.',no-defense-info-v1';
+                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).',0,,,0,'.$unitssend_deff[1].','.$unitsdead_deff[1].',0,'.$unitssend_deff[2].','.$unitsdead_deff[2].',0,'.$unitssend_deff[3].','.$unitsdead_deff[3].',0,'.$unitssend_deff[4].','.$unitsdead_deff[4].',0,'.$unitssend_deff[5].','.$unitsdead_deff[5].',,,trap-data-v1,'.$unitstraped_att.',no-defense-info-v1';
 
                 //Undetected and detected in here.
                 if($scout) {
+                    $spyDetected = $totaltraped_att > 0;
                     for ($i = 1; $i <= 11; $i++) {
                         if($battlepart['casualties_attacker'][$i]) {
-                            $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $spyDetected = true;
                             break;
                         }
+                    }
+                    if($spyDetected) {
+                        $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
+                        $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                     }
                 } else {
                     if($type == 3 && $totalsend_att - ($totaldead_att + $totaltraped_att) > 0) {

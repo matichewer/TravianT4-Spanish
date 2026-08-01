@@ -1,6 +1,16 @@
 <?php include __DIR__ . "/report_data.tpl"; ?>
 <?php
-if($dataarray[158] != 0 or $dataarray[159] != 0 or $dataarray[160] != 0 or $dataarray[161] != 0 or $dataarray[162] != 0 or $dataarray[163] != 0 or $dataarray[164] != 0 or $dataarray[165] != 0 or $dataarray[166] != 0 or $dataarray[167] != 0){
+$trapstart = $reportTrapStart !== null ? $reportTrapStart : 158;
+$hasPrisoners = $reportTrapStart !== null ? $reportHasPrisoners : false;
+if($reportTrapStart === null) {
+	for($i = $trapstart; $i <= $trapstart + 10; $i++) {
+		if(isset($dataarray[$i]) && (int)$dataarray[$i] !== 0) {
+			$hasPrisoners = true;
+			break;
+		}
+	}
+}
+if($hasPrisoners){
 $class = "units";
 }else{
 $class = "units last";
@@ -102,10 +112,10 @@ for($i=14;$i<=23;$i++) {
     	echo "<td class=\"unit last\">".$dataarray[24]."</td>";
     }
 	
-if($dataarray[158] != 0 or $dataarray[159] != 0 or $dataarray[160] != 0 or $dataarray[161] != 0 or $dataarray[162] != 0 or $dataarray[163] != 0 or $dataarray[164] != 0 or $dataarray[165] != 0 or $dataarray[166] != 0 or $dataarray[167] != 0){
+if($hasPrisoners){
 echo "</tr></tbody>";
 echo "<tbody class=\"units last\"><tr><th>".REPORT_PRISONERS."</th>";
-for($i=158;$i<=167;$i++) {
+for($i=$trapstart;$i<=$trapstart+9;$i++) {
 	if($dataarray[$i] == 0) {
     	echo "<td class=\"unit none\">0</td>";
     }
@@ -113,11 +123,11 @@ for($i=158;$i<=167;$i++) {
     	echo "<td class=\"unit\">".$dataarray[$i]."</td>";
     }
 }
-	if($dataarray[168] == 0) {
+	if($dataarray[$trapstart+10] == 0) {
     	echo "<td class=\"unit none last\">0</td>";
     }
     else {
-    	echo "<td class=\"unit last\">".$dataarray[168]."</td>";
+		echo "<td class=\"unit last\">".$dataarray[$trapstart+10]."</td>";
     }
 }
 
@@ -154,7 +164,8 @@ if ($dataarray[155]!='' and $dataarray[156]!=''){ //chief
     <?php echo $dataarray[158]; ?>
     </td></tr></tbody>
 <?php }
-$releaseInfo = isset($dataarray[170]) ? $dataarray[170] : '';
+$releaseInfoIndex = $trapstart + 11;
+$releaseInfo = isset($dataarray[$releaseInfoIndex]) ? $dataarray[$releaseInfoIndex] : '';
 if ($releaseInfo !== '') { //release prisoners
 ?>
     <tbody><tr><td class="empty" colspan="12"></td></tr></tbody>

@@ -18,16 +18,16 @@ foreach($dataarray as $reportField) {
 }
 $trap = $faild = false;
 if($dataarray[154] != '?'){ //if attack didn't fail
-$trapstart = 159;
+$trapstart = $reportTrapStart !== null ? $reportTrapStart : 159;
 }else{
 $faild = true;
-$trapstart = 158;
+$trapstart = $reportTrapStart !== null ? $reportTrapStart : 158;
 }
 if($noDefenseInformation) {
 	$faild = true;
 }
-for($i=$trapstart;$i<=$trapstart+9;$i++){
-if($dataarray[$i] != 0){ $trap = true; }
+for($i=$trapstart;$i<=$trapstart+10;$i++){
+if(isset($dataarray[$i]) && (int)$dataarray[$i] !== 0){ $trap = true; }
 }
 if($trap){
 $class = "units";

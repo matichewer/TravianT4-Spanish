@@ -457,11 +457,34 @@ try {
 	foreach(array(1,2,4,5,6,7) as $noticeType) {
 		$template = file_get_contents(dirname(__DIR__).'/Templates/Notice/'.$noticeType.'.tpl');
 		trapperAssert(
-			strpos($template,'isset($dataarray[170])') !== false
+			strpos($template,'$reportTrapStart') !== false
+			&& strpos($template,'$trapstart + 10') !== false
+			&& strpos($template,'$releaseInfoIndex = $trapstart + 11') !== false
 			&& strpos($template,'echo $releaseInfo') !== false,
-			'el reporte '.$noticeType.' lee la información de liberación correcta'
+			'el reporte '.$noticeType.' lee prisioneros, héroe y liberación desde el bloque marcado'
 		);
 	}
+	$spyTemplate = file_get_contents(dirname(__DIR__).'/Templates/Notice/0.tpl');
+	trapperAssert(
+		strpos($spyTemplate,'$reportTrapStart') !== false
+		&& strpos($spyTemplate,'$trapstart+10') !== false,
+		'el reporte de espionaje lee las once posiciones del bloque de prisioneros'
+	);
+	$failedTemplate = file_get_contents(dirname(__DIR__).'/Templates/Notice/3.tpl');
+	trapperAssert(
+		strpos($failedTemplate,'$reportTrapStart') !== false
+		&& strpos($failedTemplate,'$trapstart+10') !== false,
+		'el reporte de derrota total conserva la posición de cada prisionero'
+	);
+	$automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
+	trapperAssert(
+		substr_count($automationSource,'trap-data-v1') === 3,
+		'los informes nuevos delimitan explícitamente el bloque de prisioneros'
+	);
+	trapperAssert(
+		strpos($automationSource,'$spyDetected = $totaltraped_att > 0') !== false,
+		'capturar espías genera un informe para el defensor aunque no haya bajas'
+	);
 
 	echo "Trapper lifecycle regression passed.\n";
 } finally {
