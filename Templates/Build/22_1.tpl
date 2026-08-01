@@ -1,10 +1,7 @@
 ﻿<?php 
 $fail = $success = 0;
 $acares = $technology->grabAcademyRes();
-$r2=array('wood'=>700,'clay'=>620,'iron'=>1480,'crop'=>580,'time'=>7080);
-$r3=array('wood'=>1000,'clay'=>740,'iron'=>1880,'crop'=>640,'time'=>7560);
-$r4=array('wood'=>940,'clay'=>740,'iron'=>360,'crop'=>400,'time'=>5880);
-for($i==2;$i<=9;$i++) {
+for($i=2;$i<=9;$i++) {
 	if($technology->meetRRequirement($i) && !$technology->getTech($i) && !$technology->isResearch($i,1)) {
     	echo "<div class=\"build_details researches\">
         <div class=\"research\">
@@ -75,7 +72,7 @@ echo "<div class=\"clear\">&nbsp;</div></div></div>";
                 }
                 $success += 1;
     }
-    else {
+    else if(!$technology->meetRRequirement($i) && !$technology->getTech($i)) {
     $fail += 1;
     }
 }

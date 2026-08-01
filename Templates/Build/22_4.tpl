@@ -17,7 +17,7 @@ for($i=32;$i<=39;$i++) {
 					</div>
 					<div class=\"details\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\" title=\"Madera\" />".${'r'.$i}['wood']."|<img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\" title=\"Barro\" />".${'r'.$i}['clay']."|<img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\" title=\"Hierro\" />".${'r'.$i}['iron']."|<img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\" title=\"Cereal\" />".${'r'.$i}['crop']."|<img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\" title=\"\" />";
                     echo $generator->getTimeFormat(round(${'r'.$i}['time'] * ($bid22[$village->resarray['f'.$id]]['attri'] / 100)/SPEED));
-                    if($session->userinfo['gold'] >= 3 && $building->getTypeSzint(17) > 1) {
+                    if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) > 1) {
                    echo "|<a href=\"build.php?gid=17&t=3&r1=".${'r'.$i}['wood']."&r2=".${'r'.$i}['clay']."&r3=".${'r'.$i}['iron']."&r4=".${'r'.$i}['crop']."\" title=\"Intercambio NPC\"><img class=\"npc\" src=\"img/x.gif\" alt=\"Intercambio NPC\" title=\"Intercambio NPC\" /></a>";
                    }
                    if(${'r'.$i}['wood'] > $village->maxstore || ${'r'.$i}['clay'] > $village->maxstore || ${'r'.$i}['iron'] > $village->maxstore) {
@@ -34,7 +34,7 @@ for($i=32;$i<=39;$i++) {
                 }
                    else if(${'r'.$i}['wood'] > $village->awood || ${'r'.$i}['clay'] > $village->aclay || ${'r'.$i}['iron'] > $village->airon || ${'r'.$i}['crop'] > $village->acrop) {
                    	$time = $technology->calculateAvaliable($i);
-                    echo "<br><span class=\"none\">Recursos suficientes ".$time[0]." a las ".$time[1]."</span></div></td>";
+                    echo "<br><span class=\"none\">Recursos insuficientes ".$time[0]." a las ".$time[1]."</span></div></td>";
                     echo "<td class=\"none\">
 					<div class=\"none\">Recursos<br>insuficientes</div>
 				</td></tr>";
@@ -51,7 +51,7 @@ for($i=32;$i<=39;$i++) {
                 }
                 $success += 1;
     }
-    else {
+    else if(!$technology->meetRRequirement($i) && !$technology->getTech($i)) {
     $fail += 1;
     }
 }
@@ -65,6 +65,11 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 	echo "<p class=\"switch\"><a id=\"researchFutureLink\" href=\"#\" onclick=\"return $('researchFuture').toggle();\">Más</a></p>
 		<table id=\"researchFuture\" class=\"build_details hide\" cellspacing=\"1\" cellpadding=\"1\">
 			<thead><tr><td colspan=\"2\">Requisitos</td></tr><tbody>";
+     if(!$technology->meetRRequirement(32) && !$technology->getTech(32)) {
+     echo"<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u32\" title=\"".U32."\" alt=\"".U32."\" src=\"img/x.gif\"/>
+			<a onclick=\"return Popup(32, 1);\" href=\"#\">".U32."</a></div></td><td class=\"cond\"><a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a>
+			<span title=\"+1\">Nivel 1</span><br /><a href=\"#\" onclick=\"return Popup(19, 4);\">Cuartel </a><span title=\"+3\">Nivel 3</span>	</td></tr>";
+     }
      if(!$technology->meetRRequirement(33) && !$technology->getTech(33)) {
      echo"<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u33\" title=\"".U33."\" alt=\"".U33."\" src=\"img/x.gif\"/>
 			<a onclick=\"return Popup(33, 1);\" href=\"#\">".U33."</a></div></td><td class=\"cond\"><a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a>
@@ -88,7 +93,7 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 			<a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a><span title=\"+2\">Nivel 15</span><br /><a href=\"#\" onclick=\"return Popup(20, 4);\">
             Establo </a><span title=\"+3\">Nivel 10</span>	</td></tr>";
      }
-     if(!$technology->meetRRequirement(17) && !$technology->getTech(17)) {
+     if(!$technology->meetRRequirement(37) && !$technology->getTech(37)) {
      echo "
 			<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u37\" title=\"".U37."\" alt=\"".U37."\" src=\"img/x.gif\"/>
 			<a onclick=\"return Popup(37, 1);\" href=\"#\">".U37."</a></div></td><td class=\"cond\"><a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a>
@@ -101,7 +106,7 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 			</tr>";
      }
      if(!$technology->meetRRequirement(39) && !$technology->getTech(39)) {
-     echo "	<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u39\" title=\"".U33."\" alt=\"".U33."\" src=\"img/x.gif\"/>
+     echo "	<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u39\" title=\"".U39."\" alt=\"".U39."\" src=\"img/x.gif\"/>
 			<a onclick=\"return Popup(39, 1);\" href=\"#\">".U39."</a></div></td><td class=\"cond\">
 			<a href=\"#\" onclick=\"return Popup(16, 4);\">Plaza de reuniones </a><span title=\"+4\">Nivel 5</span><br /><a href=\"#\" onclick=\"return Popup(22, 4);\">
             Academia </a><span title=\"+17\">Nivel 20</span></td></tr>";

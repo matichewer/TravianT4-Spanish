@@ -17,10 +17,10 @@ include("upgrade.tpl");
 <div class="clear"></div>
 
 <?php
-	if ($building->getTypeLevel(22) > 0) {
-		include("22_".$session->tribe.".tpl");
+	if ($building->getTypeLevel(22) > 0 && (int)$session->tribe >= 1 && (int)$session->tribe <= 5) {
+		include("22_".(int)$session->tribe.".tpl");
 	} else {
-		echo "<p><b>No hay nuevos tipos de tropas disponibles para investigar/b><br></p>\n";
+		echo "<p><b>No hay nuevos tipos de tropas disponibles para investigar</b><br></p>\n";
 	}
 ?>
 

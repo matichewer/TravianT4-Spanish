@@ -21,7 +21,7 @@ for($i=42;$i<=49;$i++) {
                    echo "|<a href=\"build.php?gid=17&t=3&r1=".${'r'.$i}['wood']."&r2=".${'r'.$i}['clay']."&r3=".${'r'.$i}['iron']."&r4=".${'r'.$i}['crop']."\" title=\"Intercambio NPC\"><img class=\"npc\" src=\"img/x.gif\" alt=\"Intercambio NPC\" title=\"Intercambio NPC\" /></a>";
                    }
                    if(${'r'.$i}['wood'] > $village->maxstore || ${'r'.$i}['clay'] > $village->maxstore || ${'r'.$i}['iron'] > $village->maxstore) {
-                    echo "<br><span class=\"none\"></span></div></td>";
+                    echo "<br><span class=\"none\">Mejora el almacén</span></div></td>";
                     echo "<td class=\"none\">
 					<div class=\"none\">Mejora<br>el almacén</div>
 				</td></tr>";
@@ -34,7 +34,7 @@ for($i=42;$i<=49;$i++) {
                 }
                    else if(${'r'.$i}['wood'] > $village->awood || ${'r'.$i}['clay'] > $village->aclay || ${'r'.$i}['iron'] > $village->airon || ${'r'.$i}['crop'] > $village->acrop) {
                    	$time = $technology->calculateAvaliable($i);
-                    echo "<br><span class=\"none\">Recursos suficientes ".$time[0]." -> ".$time[1]."</span></div></td>";
+                    echo "<br><span class=\"none\">Recursos insuficientes ".$time[0]." -> ".$time[1]."</span></div></td>";
                     echo "<td class=\"none\">
 					<div class=\"none\">Recursos<br>insuficientes</div>
 				</td></tr>";
@@ -51,7 +51,7 @@ for($i=42;$i<=49;$i++) {
                 }
                 $success += 1;
     }
-    else {
+    else if(!$technology->meetRRequirement($i) && !$technology->getTech($i)) {
     $fail += 1;
     }
 }
@@ -65,14 +65,19 @@ echo "<td colspan=\"2\"><div class=\"none\" align=\"center\">No hay unidades par
 	echo "<p class=\"switch\"><a id=\"researchFutureLink\" href=\"#\" onclick=\"return $('researchFuture').toggle();\">más</a></p>
 		<table id=\"researchFuture\" class=\"build_details hide\" cellspacing=\"1\" cellpadding=\"1\">
 			<thead><tr><td colspan=\"2\">Requisitos</td></tr><tbody>";
+     if(!$technology->meetRRequirement(42) && !$technology->getTech(42)) {
+     echo"<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u42\" title=\"".U42."\" alt=\"".U42."\" src=\"img/x.gif\"/>
+			<a onclick=\"return Popup(42, 1);\" href=\"#\">".U42."</a></div></td><td class=\"cond\"><a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a>
+			<span title=\"+1\">Nivel 1</span><br /><a href=\"#\" onclick=\"return Popup(19, 4);\">Cuartel </a><span title=\"+3\">Nivel 3</span>	</td></tr>";
+     }
      if(!$technology->meetRRequirement(43) && !$technology->getTech(43)) {
-     echo"<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u43\" title=\"".U43."\" alt=\"".U33."\" src=\"img/x.gif\"/>
+     echo"<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u43\" title=\"".U43."\" alt=\"".U43."\" src=\"img/x.gif\"/>
 			<a onclick=\"return Popup(43, 1);\" href=\"#\">".U43."</a></div></td><td class=\"cond\"><a href=\"#\" onclick=\"return Popup(22, 4);\">Academia </a>
 			<span title=\"+2\">Nivel 3</span><br /><a href=\"#\" onclick=\"return Popup(12, 4);\">Herrería </a><span title=\"+1\">Nivel 1</span>	</td></tr>";
      }
      if(!$technology->meetRRequirement(44) && !$technology->getTech(44)) {
      echo "<tr><td class=\"desc\"><div class=\"tit\"><img class=\"unit u44\" title=\"".U44."\" alt=\"".U44."\" src=\"img/x.gif\"/>
-		 	<a onclick=\"return Popup(34, 1);\" href=\"#\">".U44."</a></div></td><td class=\"cond\">
+		 	<a onclick=\"return Popup(44, 1);\" href=\"#\">".U44."</a></div></td><td class=\"cond\">
             <a href=\"#\" onclick=\"return Popup(44, 5);\">Academia </a><span title=\"+2\">Nivel 1</span><br /><a href=\"#\" onclick=\"return Popup(15, 4);\">Edificio principal</a>
 			<span title=\"+3\">Nivel 5</span>	</td></tr>";
      }

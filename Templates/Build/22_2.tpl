@@ -75,7 +75,7 @@ echo "<div class=\"clear\">&nbsp;</div></div></div>";
                 }
                 $success += 1;
    }
-    else {
+    else if(!$technology->meetRRequirement($i) && !$technology->getTech($i)) {
     $fail += 1;
     }
 }
@@ -87,6 +87,11 @@ echo "<div class=\"build_details researches\"><div class=\"noResearchPossible\">
 if($fail > 0) { 
 	echo "<p class=\"switch\"><a class=\"openedClosedSwitch switchOpened\" id=\"researchFutureLink\" href=\"#\" onclick=\"return $('researchFuture').toggle();\">Más</a></p>
     <div id=\"researchFuture\" class=\"researches hide \">";
+     if(!$technology->meetRRequirement(12) && !$technology->getTech(12)) {
+     echo"<div class=\"research\"><div class=\"bigUnitSection\"><a href=\"#\" onclick=\"return Travian.Game.iPopup(12,1);\"><img class=\"unitSection u12Section\" src=\"img/x.gif\" alt=\"".U12."\"></a><a href=\"#\" class=\"zoom\" onclick=\"return Travian.Game.unitZoom(12);\"><img class=\"zoom\" src=\"img/x.gif\" alt=\"ampliar\"></a></div><div class=\"information\"><div class=\"title\"><a href=\"#\" onclick=\"return Travian.Game.iPopup(12,1);\"><img class=\"unit u12\" src=\"img/x.gif\" alt=\"".U12."\"></a><a href=\"#\" onclick=\"return Travian.Game.iPopup(12,1);\">".U12."</a></div><div class=\"costs\"><div class=\"showCosts\"><span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".${'r12'}['wood']."</span><span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".${'r12'}['clay']."</span><span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".${'r12'}['iron']."</span><span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".${'r12'}['crop']."</span><div class=\"clear\"></div><span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
+	 echo $generator->getTimeFormat(round(${'r12'}['time'] * ($bid22[$village->resarray['f'.$id]]['attri'] / 100)/SPEED));
+	 echo"</span><div class=\"clear\"></div></div></div><div class=\"contractLink\"><a href=\"#\">Academia</a><span class=\"level\"> Nivel 1</span>, <a href=\"#\">Cuartel</a><span class=\"level\"> Nivel 3</span></div></div><div class=\"clear\"></div></div><hr>";
+     }
      if(!$technology->meetRRequirement(13) && !$technology->getTech(13)) {
      echo"<div class=\"research\"><div class=\"bigUnitSection\"><a href=\"#\" onclick=\"return Travian.Game.iPopup(13,1);\"><img class=\"unitSection u13Section\" src=\"img/x.gif\" alt=\"Luchador de Hacha\"></a><a href=\"#\" class=\"zoom\" onclick=\"return Travian.Game.unitZoom(13);\"><img class=\"zoom\" src=\"img/x.gif\" alt=\"ampliar\"></a></div><div class=\"information\"><div class=\"title\"><a href=\"#\" onclick=\"return Travian.Game.iPopup(13,1);\"><img class=\"unit u13\" src=\"img/x.gif\" alt=\"Luchador de Hacha\"></a><a href=\"#\" onclick=\"return Travian.Game.iPopup(13,1);\">Luchador de Hacha</a></div><div class=\"costs\"><div class=\"showCosts\"><span class=\"resources r1 little_res\"><img class=\"r1\" src=\"img/x.gif\" alt=\"Madera\">".${'r13'}['wood']."</span><span class=\"resources r2 little_res\"><img class=\"r2\" src=\"img/x.gif\" alt=\"Barro\">".${'r13'}['clay']."</span><span class=\"resources r3 little_res\"><img class=\"r3\" src=\"img/x.gif\" alt=\"Hierro\">".${'r13'}['iron']."</span><span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".${'r13'}['crop']."</span><div class=\"clear\"></div><span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
 	 echo $generator->getTimeFormat(round(${'r13'}['time'] * ($bid22[$village->resarray['f'.$id]]['attri'] / 100)/SPEED));

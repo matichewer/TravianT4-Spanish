@@ -631,8 +631,8 @@ class Technology {
 			if($building->getTypeLevel(22) >= 5 && $building->getTypeLevel(20) >= 5) { return true; } else { return false; }
 			break;
 			case 6:
-			if($building->getTypeLevel(22) >= 5 && $building->getTypeLevel(20) >= 10) { return true; } else { return false; }
-			break;	
+			if($building->getTypeLevel(22) >= 15 && $building->getTypeLevel(20) >= 10) { return true; } else { return false; }
+			break;
 			case 9:
 			case 29:
 			if($building->getTypeLevel(22) >= 20 && $building->getTypeLevel(16) >= 10) { return true; } else { return false; }
@@ -645,7 +645,7 @@ class Technology {
 			case 13:
             case 33:
             case 43:
-			if($building->getTypeLevel(22) >= 3 && $building->getTypeLevel(11) >= 1) { return true; } else { return false; }
+			if($building->getTypeLevel(22) >= 3 && $building->getTypeLevel(12) >= 1) { return true; } else { return false; }
 			break;
 			case 14:
             case 34:
@@ -655,7 +655,7 @@ class Technology {
 			case 15:
             case 35:
             case 45:
-			if($building->getTypeLevel(22) >= 1 && $building->getTypeLevel(20) >= 3) { return true; } else { return false; }
+			if($building->getTypeLevel(22) >= 5 && $building->getTypeLevel(20) >= 5) { return true; } else { return false; }
 			break;
 			case 16:
 			case 26:
@@ -692,18 +692,46 @@ class Technology {
 	}
 	
 	private function researchTech($get) {
-		//global $database,$session,${'r'.$get['a']},$village,$logging;
-		global $database,$session,${'r'.$get['a']},$bid22,$building,$village,$logging;
-		if($this->meetRRequirement($get['a']) && $get['c'] == $session->mchecker) {
-			$data = ${'r'.$get['a']};
-			$time = time() + round(($data['time'] * ($bid22[$building->getTypeLevel(22)]['attri'] / 100))/SPEED);
-			//$time = time() + round($data['time']/SPEED);
-			$database->modifyResource($village->wid,$data['wood'],$data['clay'],$data['iron'],$data['crop'],0);
-			$database->addResearch($village->wid,"t".$get['a'],$time);
-			$logging->addTechLog($village->wid,"t".$get['a'],1);
+		global $database,$session,$bid22,$building,$village,$logging;
+
+		$fieldId = isset($get['id']) && is_scalar($get['id']) && ctype_digit((string)$get['id'])
+			? (int)$get['id']
+			: 0;
+		$redirect = "build.php?id=".($fieldId >= 1 && $fieldId <= 40 ? $fieldId : 1);
+		$tokenIsValid = isset($get['c']) && is_scalar($get['c'])
+			&& hash_equals((string)$session->mchecker,(string)$get['c']);
+		if(!$tokenIsValid) {
+			header("Location: ".$redirect);
+			return;
 		}
 		$session->changeChecker();
-		header("Location: build.php?id=".$get['id']);
+
+		$tech = isset($get['a']) && is_scalar($get['a']) && ctype_digit((string)$get['a'])
+			? (int)$get['a']
+			: 0;
+		$start = ($session->tribe-1)*10+1;
+		$end = $session->tribe*10;
+		$data = isset($GLOBALS['r'.$tech]) ? $GLOBALS['r'.$tech] : null;
+		$academyLevel = (int)$building->getTypeLevel(22);
+		if($tech < $start || $tech > $end || !is_array($data)
+			|| $academyLevel < 1 || !isset($bid22[$academyLevel]['attri'])
+			|| !$this->meetRRequirement($tech)
+			|| $this->getTech($tech)
+			|| $this->isResearch($tech,1)
+			|| count($this->grabAcademyRes()) > 0) {
+			header("Location: ".$redirect);
+			return;
+		}
+
+		$time = time() + max(1,(int)round(($data['time'] * ($bid22[$academyLevel]['attri'] / 100))/SPEED));
+		if($database->deductResourcesIfAvailable($village->wid,$data['wood'],$data['clay'],$data['iron'],$data['crop'])) {
+			if($database->addResearch($village->wid,"t".$tech,$time)) {
+				$logging->addTechLog($village->wid,"t".$tech,1);
+			} else {
+				$database->modifyResource($village->wid,$data['wood'],$data['clay'],$data['iron'],$data['crop'],1);
+			}
+		}
+		header("Location: ".$redirect);
 	}
 	
 	private function upgradeSword($get) {
@@ -742,11 +770,18 @@ class Technology {
 			$resarray['iron'] = ${'r'.$id}['iron'];
 			$resarray['crop'] = ${'r'.$id}['crop'];
 		}
-		$rwtime = ($resarray['wood']-$village->awood) / $village->getProd("wood") * 3600;
-		$rcltime = ($resarray['clay']-$village->aclay) / $village->getProd("clay") * 3600;
-		$ritime = ($resarray['iron']-$village->airon) / $village->getProd("iron") * 3600;
-		$rctime = ($resarray['crop']-$village->acrop) / $village->getProd("crop") * 3600;
-		$reqtime = max($rwtime,$rctime,$ritime,$rcltime);
+		$times = array();
+		foreach(array('wood','clay','iron','crop') as $res) {
+			$missing = $resarray[$res] - $village->{'a'.$res};
+			if($missing <= 0) {
+				$times[] = 0;
+				continue;
+			}
+			$prod = $village->getProd($res);
+			// Sin produccion (cereal negativo o cero) nunca se alcanza: se muestra a un mes vista.
+			$times[] = $prod > 0 ? $missing / $prod * 3600 : 30*24*3600;
+		}
+		$reqtime = max($times);
 		$reqtime += time();
 		return $generator->procMtime($reqtime);
 	}

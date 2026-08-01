@@ -73,7 +73,7 @@ echo "<div class=\"clear\">&nbsp;</div></div></div>";
                 }
                 $success +=1;
     }
-    else {
+    else if(!$technology->meetRRequirement($i) && !$technology->getTech($i)) {
     $fail += 1;
     }
 }
