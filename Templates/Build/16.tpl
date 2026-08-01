@@ -86,7 +86,7 @@ if(!empty($captivesHere) || !empty($ownCaptured)) {
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="release"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
 		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
-		echo '<button type="submit" class="build"><span class="button-contents">Liberar</span></button></form></td></tr>';
+		echo '<button type="submit" value="Liberar"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Liberar</div></div></button></form></td></tr>';
 	}
 	foreach($ownCaptured as $prisoner) {
 		$trapName = htmlspecialchars((string)$database->getVillageField((int)$prisoner['wref'],'name'),ENT_QUOTES,'UTF-8');
@@ -94,7 +94,7 @@ if(!empty($captivesHere) || !empty($ownCaptured)) {
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="disband"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
 		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
-		echo '<button type="submit" class="build"><span class="button-contents">Disolver</span></button></form></td></tr>';
+		echo '<button type="submit" value="Disolver"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Disolver</div></div></button></form></td></tr>';
 	}
 	echo '</tbody></table>';
 }
