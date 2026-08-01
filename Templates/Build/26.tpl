@@ -1,7 +1,7 @@
 ﻿<?php
 error_reporting(E_ALL);
-if(time() - $_SESSION['time_p'] > 5) {
-  $_SESSION['time_p'] = '';
+if(time() - (int)($_SESSION['time_p'] ?? 0) > 5) {
+  $_SESSION['time_p'] = 0;
   $_SESSION['error_p'] = '';
 }
 
