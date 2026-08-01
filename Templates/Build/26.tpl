@@ -118,13 +118,13 @@ if($data['wref'] == $village->wid) {
 <p class="none">Esta aldea es la capital</p>
 <?php 
 } else {
-  if($_GET['confirm'] == '') {
+  if(empty($_GET['confirm'])) {
     print '<p><a class="arrow" href="?id=' . $building->getTypeField(26) . '&confirm=yes">Convertir esta aldea en capital</a></p>';
   } else {
     print '<p>Introduce tu contraseña para convertir esta aldea en capital<br />
     <form method="post" action="build.php?id=' . $building->getTypeField(26) . '&action=change_capital">
      
-     Contraseña: <input type="password" name="pass" />' . $_SESSION['error_p'] . '<br />
+     Contraseña: <input type="password" name="pass" />' . ($_SESSION['error_p'] ?? '') . '<br />
      <button type="submit" value="ok" name="s1" id="btn_ok" value="ok" class="startTraining">
                     <div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Ok</div></div>
                     </button>

@@ -5,21 +5,19 @@
 <div class="list"> 
 	<ul>        
 <?php 
-    for($i=1;$i<=count($session->villages);$i++) { 
-    	if($session->plus){
-        		$aantal = count($database->getMovement2(3,$session->villages[$i-1],1));
-				$attack_coming = $database->getMovement2(3,$session->villages[$i-1],1);
-                if($attack_coming[$i-1]['attack_type'] == 2){
-					$aantal -= 1;
-                }
-				if($aantal > 0){
-					$village_attack = "attack ";
-					$village_title = "ataques a esta aldea: ".$aantal;
-				} else {
-					$village_attack = "";
-					$village_title = htmlspecialchars($returnVillageArray[$i-1]['name']);
-				}
-         }
+    for($i=1;$i<=count($session->villages);$i++) {
+        $villageId = $session->villages[$i-1];
+        $villageName = $database->getVillageField($villageId, 'name');
+        $village_attack = "";
+        $village_title = htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8');
+        if($session->plus){
+            $attack_coming = $database->getMovement2(3,$villageId,1);
+            $aantal = count($attack_coming);
+            if($aantal > 0){
+                $village_attack = "attack ";
+                $village_title = "ataques a esta aldea: ".$aantal;
+            }
+        }
     if($session->villages[$i-1] == $village->wid){ $select = "active"; $sid = "currentVillage"; }else{ $select = ""; $sid = ""; }
     $coorproc = $database->getCoor($session->villages[$i-1]);
     if(isset($_GET['id'])){
@@ -57,9 +55,8 @@
     }else{
     	$vill = "";
     }
-    $gid = $_GET['gid'];
-	echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
-    <a id=\"".$sid."\" title=\"".$database->getVillageField($session->villages[$i-1],'name')." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$session->villages[$i-1]."".$vill."\" class=\"".$select."\">".$database->getVillageField($session->villages[$i-1],'name')."<span class=\"villageCoords\" style=\"display:block;font-size:10px;line-height:10px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
+		echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
+	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."<span class=\"villageCoords\" style=\"display:block;font-size:10px;line-height:10px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
 	}
     	?>
 		
