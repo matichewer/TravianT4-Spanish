@@ -3430,7 +3430,11 @@
 					}
 
 					$awardedPoints = 4*($targetLevel-$currentLevel);
-					$q = "UPDATE ".TB_PREFIX."hero SET level = $targetLevel, points = points + $awardedPoints"
+					$time = time();
+					// Al subir de nivel el heroe recupera toda su vida (los heroes
+					// muertos siguen sumando niveles pero se curan al revivir).
+					$q = "UPDATE ".TB_PREFIX."hero SET level = $targetLevel, points = points + $awardedPoints,"
+						." health = IF(dead = 0, 100, health), lastupdate = IF(dead = 0, $time, lastupdate)"
 						." WHERE heroid = $heroid AND level = $currentLevel";
 					$result = mysqli_query($this->connection,$q);
 					return $result && mysqli_affected_rows($this->connection)===1;
