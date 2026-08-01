@@ -373,12 +373,16 @@ foreach($spanishFiles as $path) {
 		}
 		$source = file_get_contents($file->getPathname());
 		settlerAssert(
-			!preg_match('/\b(?:Teutón|Teutones)\b/iu',$source),
-			'Spanish player-facing text still uses Teutón/Teutones: '.$file->getPathname()
+			stripos($source,'Jinete germano') === false,
+			'Spanish player-facing text uses Jinete germano instead of Jinete Teutón: '.$file->getPathname()
 		);
 	}
 }
 $spanishLanguage = file_get_contents(dirname(__DIR__).'/GameEngine/Lang/es.php');
+settlerAssert(
+	strpos($spanishLanguage,'define("U16","Jinete Teutón");') !== false,
+	'The Spanish unit 16 label must be Jinete Teutón.'
+);
 settlerAssert(
 	strpos($spanishLanguage,'define("TRIBE2","Germanos");') !== false,
 	'The Spanish tribe 2 label must be Germanos.'
