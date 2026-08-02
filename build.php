@@ -115,17 +115,26 @@ if(isset($_GET['id'])) {
 		include("Templates/Build/avaliable.tpl");
 	}
 	else {
+		// Una pestaña inexistente (?s=5, ?t=1 en la residencia, un enlace viejo) dejaba
+		// la página sin contenido y con el warning del include a la vista. Si la
+		// plantilla de la pestaña no existe se cae a la vista principal del edificio.
+		$buildingType = $village->resarray['f'.$_GET['id'].'t'];
+		$buildingTemplate = "Templates/Build/".$buildingType.".tpl";
+		$tabTemplate = "";
 		if(isset($_GET['t'])) {
 			if($_GET['t'] == 1) {
 			$_SESSION['loadMarket'] = 1;
 			}
-			include("Templates/Build/".$village->resarray['f'.$_GET['id'].'t']."_".$_GET['t'].".tpl");
+			$tabTemplate = "Templates/Build/".$buildingType."_".$_GET['t'].".tpl";
 		} else
 		if(isset($_GET['s'])) {
-			include("Templates/Build/".$village->resarray['f'.$_GET['id'].'t']."_".$_GET['s'].".tpl");
+			$tabTemplate = "Templates/Build/".$buildingType."_".$_GET['s'].".tpl";
 		}
-		else {
-			include("Templates/Build/".$village->resarray['f'.$_GET['id'].'t'].".tpl");
+		if($tabTemplate !== "" && is_file($tabTemplate)) {
+			include($tabTemplate);
+		}
+		else if(is_file($buildingTemplate)) {
+			include($buildingTemplate);
 		}
 		if(isset($_GET['t']) && $_GET['t'] == 99 && $session->goldclub == 1) {
 
