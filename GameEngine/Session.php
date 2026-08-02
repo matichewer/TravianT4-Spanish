@@ -178,13 +178,19 @@ ob_start(); //this is enough
 
         		}
         		$pagearray = array("index.php", "anleitung.php", "tutorial.php", "login.php", "activate.php", "anmelden.php", "xaccount.php");
+        		// El `exit` corta aca la peticion. Sin el, PHP seguia ejecutando despues del
+        		// redirect: instanciaba el motor de juego sin sesion (Village/Building leian
+        		// datos nulos y llenaban la pagina de warnings) y ademas corria el cuerpo
+        		// completo de la pagina, devolviendo su contenido en el cuerpo del 302.
         		if(!$this->logged_in) {
         			if(!in_array($page, $pagearray) || $page == "logout.php") {
         				header("Location: login.php");
+        				exit;
         			}
         		} else {
         			if(in_array($page, $pagearray)) {
         				header("Location: dorf1.php");
+        				exit;
         			}
 
         		}
