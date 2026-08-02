@@ -13,10 +13,10 @@ class Village {
 	public $awood,$aclay,$airon,$acrop,$pop,$maxstore,$maxcrop;
 	public $wid,$vname,$capital;
 	public $resarray = array();
-	public $unitarray,$techarray,$unitall,$researching,$abarray = array();
+	public $unitarray = array(), $techarray = array(), $unitall = array(), $researching = array(), $abarray = array();
 	private $infoarray = array();
 	private $production = array();
-	private $oasisowned,$ocounter = array();
+	private $oasisowned = array(), $ocounter = array();
 	
 	function __construct() {
 		global $session;

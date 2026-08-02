@@ -10,7 +10,10 @@
 ################################################################################# 
 class Market { 
      
-    public $onsale,$onmarket,$sending,$recieving,$return = array(); 
+    // Una sola asignacion al final solo inicializa la ultima propiedad: el resto
+    // quedaba en null y disparaba warnings de count() al abrir el mercado por una
+    // pestaña que no carga los datos.
+    public $onsale = array(), $onmarket = array(), $sending = array(), $recieving = array(), $return = array();
     public $maxcarry,$merchant,$used; 
      
     public function procMarket($post) { 

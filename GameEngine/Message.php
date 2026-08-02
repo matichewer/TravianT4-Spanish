@@ -4,7 +4,7 @@
 
 	public $unread, $nunread = false;
 	public $note;
-	public $inbox, $inbox1, $sent, $sent1, $reading, $reply, $archived, $archived1, $noticearray, $notice, $readingNotice = array();
+	public $inbox = array(), $inbox1 = array(), $sent = array(), $sent1 = array(), $reading = array(), $reply = array(), $archived = array(), $archived1 = array(), $noticearray = array(), $notice = array(), $readingNotice = array();
 	private $totalMessage, $totalNotice;
 	private $allNotice = array();
 

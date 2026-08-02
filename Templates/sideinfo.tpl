@@ -2,7 +2,8 @@
 $hero = $database->getHeroData($session->uid);
 $userarray = $database->getUserArray($session->uid, 1);
 $adventureCount = $database->getAdventureCount($session->uid);
-$heroCanAdventure = $adventureCount > 0 && empty($hero['dead']) && !empty($village->unitarray['hero']);
+$heroVillageId = is_array($hero) ? (int)$hero['wref'] : 0;
+$heroCanAdventure = $adventureCount > 0 && empty($hero['dead']) && $heroVillageId > 0 && $database->getHUnit($heroVillageId);
 	if($session->tribe == 1){ $ttitle=TRIBE1; }
     elseif($session->tribe == 2){ $ttitle=TRIBE2; }
     elseif($session->tribe == 3){ $ttitle=TRIBE3; }

@@ -3,7 +3,7 @@
 class Units {
 	const TROOP_CANCEL_WINDOW = 90;
 
-	public $sending,$recieving,$return = array();
+	public $sending = array(), $recieving = array(), $return = array();
 
 	private function normalizeCatapultTarget($value, $allowSecondRandom = false) {
 		if(!is_scalar($value) || !is_numeric($value)) {
@@ -666,22 +666,28 @@ class Units {
 			$adventure = $database->getAdventure($session->uid,$target);
 			$hero = $database->getHeroData($session->uid);
 			$targetCoor = $database->getCoor($target);
+			$heroVillageId = is_array($hero) ? (int)$hero['wref'] : 0;
+			$heroVillage = $heroVillageId > 0 ? $database->getVillage($heroVillageId) : false;
+			$heroVillageFields = $heroVillageId > 0 ? $database->getResourceLevel($heroVillageId) : false;
+			$heroVillageCoor = $heroVillageId > 0 ? $database->getCoor($heroVillageId) : false;
 			if(!is_array($adventure) || (int)$adventure['end'] !== 0 || !is_array($hero) || (int)$hero['dead'] !== 0
-				|| (int)$hero['speed'] <= 0 || !$database->getHUnit($village->wid) || !is_array($targetCoor)) {
+				|| (int)$hero['speed'] <= 0 || !is_array($heroVillage) || (int)$heroVillage['owner'] !== (int)$session->uid
+				|| !is_array($heroVillageFields) || (int)$heroVillageFields['f39'] < 1
+				|| !$database->getHUnit($heroVillageId) || !is_array($heroVillageCoor) || !is_array($targetCoor)) {
 				$this->redirectToRallyPoint();
 			}
-			foreach($database->getMovement(9,$village->wid,0) as $movement) {
+			foreach($database->getMovement(9,$heroVillageId,0) as $movement) {
 				if((int)$movement['to'] === $target) {
 					$this->redirectToRallyPoint();
 				}
 			}
 
-			$travelTime = $generator->procDistanceTime($village->coor,$targetCoor,(int)$hero['speed'],1);
-			if($travelTime <= 0 || !$database->deductUnitIfAvailable($village->wid,'hero',1)) {
+			$travelTime = $generator->procDistanceTime($heroVillageCoor,$targetCoor,(int)$hero['speed'],1);
+			if($travelTime <= 0 || !$database->deductUnitIfAvailable($heroVillageId,'hero',1)) {
 				$this->redirectToRallyPoint();
 			}
-			if(!$database->addMovement(9,$village->wid,$target,0,0,time()+$travelTime)) {
-				$database->modifyUnit($village->wid,'hero',1,1);
+			if(!$database->addMovement(9,$heroVillageId,$target,0,0,time()+$travelTime)) {
+				$database->modifyUnit($heroVillageId,'hero',1,1);
 			}
 			$this->redirectToRallyPoint();
 		}
