@@ -1487,7 +1487,13 @@ class Automation {
         $availableClay = $database->getClayAvailable($from);
         $availableIron = $database->getIronAvailable($from);
         $availableCrop = $database->getCropAvailable($from);
-        if($availableWood >= $wtrans AND $availableClay >= $ctrans AND $availableIron >= $itrans AND $availableCrop >= $crtrans) {
+        // si no alcanza para el envio completo, se manda lo que haya disponible
+        // en vez de cancelar el resto de los envios pendientes
+        $wtrans = min((int)$wtrans, (int)floor($availableWood));
+        $ctrans = min((int)$ctrans, (int)floor($availableClay));
+        $itrans = min((int)$itrans, (int)floor($availableIron));
+        $crtrans = min((int)$crtrans, (int)floor($availableCrop));
+        if($wtrans > 0 OR $ctrans > 0 OR $itrans > 0 OR $crtrans > 0) {
             $merchant2 = ($this->getTypeLevel(17, $from) > 0) ? $this->getTypeLevel(17, $from) : 0;
             $used2 = $database->totalMerchantUsed($from);
             $merchantAvail2 = $merchant2 - $used2;
