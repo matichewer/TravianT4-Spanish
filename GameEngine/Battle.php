@@ -856,6 +856,7 @@ class Battle {
 		$defenderOwners = array();
 		$defenderScout = 0.0;
 		$defenderHeroes = array();
+		$countedHeroOwners = array();
 		$defenderPopulationLost = 0;
 		foreach($defenderSources as $source) {
 			$sourceUpgrades = $def_ab;
@@ -898,6 +899,15 @@ class Battle {
 			}
 			if((int)$type === 1 || empty($source['units']['hero'])) {
 				continue;
+			}
+			// Cada jugador tiene un solo héroe: si aparece a la vez en la aldea y en un
+			// refuerzo (datos viejos), solo cuenta una vez.
+			$heroOwner = (int)$source['owner'];
+			if($heroOwner > 0) {
+				if(isset($countedHeroOwners[$heroOwner])) {
+					continue;
+				}
+				$countedHeroOwners[$heroOwner] = true;
 			}
 			$hero = $source['local']
 				? $database->getHeroData3((int)$source['owner'])

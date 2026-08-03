@@ -1569,6 +1569,7 @@ class Automation {
             $dead['hero'] = 0;
             $DefenderHeroByTribe = array_fill(1, 5, 0);
             $DeadHeroByTribe = array_fill(1, 5, 0);
+            $countedHeroOwners = array();
             unset($empty);
             for($i = 1; $i <= 11; $i++) {
                 ${'dead'.$i} = 0;
@@ -1626,6 +1627,7 @@ class Automation {
                 $Defender = $database->getUnit($data['to']);
                 if(!empty($Defender['hero'])) {
                     $DefenderHeroByTribe[$targettribe] += (int)$Defender['hero'];
+                    $countedHeroOwners[(int)$DefenderID] = true;
                 }
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
@@ -1640,9 +1642,15 @@ class Automation {
                             $Defender['u'.$i] += $enforce['u'.$i];
                         }
                         $reinforcementHeroes = (int)$enforce['hero'];
+                        $reinforcementOwner = (int)$database->getVillageField($enforce['from'], "owner");
+                        // Cada jugador tiene un solo héroe: si los datos lo muestran a la vez
+                        // en la aldea y en un refuerzo, no se cuenta dos veces.
+                        if($reinforcementHeroes > 0 && isset($countedHeroOwners[$reinforcementOwner])) {
+                            $reinforcementHeroes = 0;
+                        }
                         $DefenderHeroRef += $reinforcementHeroes;
                         if($reinforcementHeroes > 0) {
-                            $reinforcementOwner = $database->getVillageField($enforce['from'], "owner");
+                            $countedHeroOwners[$reinforcementOwner] = true;
                             $reinforcementTribe = (int)$database->getUserField($reinforcementOwner, "tribe", 0);
                             if($reinforcementTribe >= 1 && $reinforcementTribe <= 5) {
                                 $DefenderHeroByTribe[$reinforcementTribe] += $reinforcementHeroes;
@@ -1824,6 +1832,9 @@ class Automation {
                 $Defender = $database->getUnit($data['to']);
                 if(!empty($Defender['hero']) && $targettribe >= 1 && $targettribe <= 5) {
                     $DefenderHeroByTribe[$targettribe] += (int)$Defender['hero'];
+                    if((int)$DefenderID > 0) {
+                        $countedHeroOwners[(int)$DefenderID] = true;
+                    }
                 }
                 $enforcementarray = $database->getEnforceVillage($data['to'], 0);
                 if(count($enforcementarray) > 0) {
@@ -1838,9 +1849,15 @@ class Automation {
                             $Defender['u'.$i] += $enforce['u'.$i];
                         }
                         $reinforcementHeroes = (int)$enforce['hero'];
+                        $reinforcementOwner = (int)$database->getVillageField($enforce['from'], "owner");
+                        // Cada jugador tiene un solo héroe: si los datos lo muestran a la vez
+                        // en la aldea y en un refuerzo, no se cuenta dos veces.
+                        if($reinforcementHeroes > 0 && isset($countedHeroOwners[$reinforcementOwner])) {
+                            $reinforcementHeroes = 0;
+                        }
                         $DefenderHeroRef += $reinforcementHeroes;
                         if($reinforcementHeroes > 0) {
-                            $reinforcementOwner = $database->getVillageField($enforce['from'], "owner");
+                            $countedHeroOwners[$reinforcementOwner] = true;
                             $reinforcementTribe = (int)$database->getUserField($reinforcementOwner, "tribe", 0);
                             if($reinforcementTribe >= 1 && $reinforcementTribe <= 5) {
                                 $DefenderHeroByTribe[$reinforcementTribe] += $reinforcementHeroes;
@@ -3345,28 +3362,30 @@ class Automation {
                 $from = $database->getMInfo($data['from']);
                 $toF = $database->getVillage($data['to']);
                 $fromF = $database->getVillage($data['from']);
-                $HeroTransfer = 0;
-
-                //check to see if we're only sending a hero between own villages and there's a Mansion at target village
+                // El héroe se guarda en un único sitio: en aldea propia vive en `units`,
+                // en aldea ajena vive en la fila de refuerzo. Escribirlo en los dos lados
+                // lo duplicaba (aparecía dos veces en el informe de batalla y defendía doble).
                 if($data['t11'] != 0) {
                     if($database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")) {
-                        $check = $database->getEnforce($data['to'], $data['from']);
                         //don't reinforce, addunit instead
                         $database->modifyUnit($data['to'], 'hero', 1, 1);
-                        $database->modifyEnforce($check['id'], 'hero', 1, 1);
                         $database->modifyHero2('wref', $data['to'], $database->getVillageField($data['from'], "owner"), 0);
-                        $HeroTransfer = 1;
                     } else {
                         $check = $database->getEnforce($data['to'], $data['from']);
-                        if($database->checkEnforce($data['to'], $data['from']) != 0) {
+                        if(isset($check['id'])) {
                             $database->modifyEnforce($check['id'], 'hero', 1, 1);
                         } else {
                             $database->addHeroEnforce($data);
                         }
-                        $HeroTransfer = 1;
                     }
                 }
-                if(!$HeroTransfer) {
+                // Las tropas que viajan junto al héroe también se guardan: antes se perdían
+                // porque el envío del héroe salteaba este bloque entero.
+                $troopsSent = 0;
+                for ($i = 1; $i <= 10; $i++) {
+                    $troopsSent += max(0, (int)$data['t'.$i]);
+                }
+                if($troopsSent > 0) {
                     //check if there is defence from town in to town
                     $check = $database->getEnforce($data['to'], $data['from']);
                     if(!isset($check['id'])) {
@@ -3439,6 +3458,14 @@ class Automation {
             $database->modifyUnit($data['to'], $u."9", $data['t9'], 1);
             $database->modifyUnit($data['to'], $tribe."0", $data['t10'], 1);
             $database->modifyUnit($data['to'], "hero", $data['t11'], 1);
+            // El héroe que vuelve pasa a vivir en esta aldea. Sin esto `hero.wref` seguía
+            // apuntando a la aldea anterior y las aventuras quedaban bloqueadas.
+            if((int)$data['t11'] > 0) {
+                $heroOwner = (int)$database->getVillageField($data['to'], "owner");
+                if($heroOwner > 0) {
+                    $database->modifyHero2('wref', (int)$data['to'], $heroOwner, 0);
+                }
+            }
             $database->setMovementProc($data['moveid']);
         }
 

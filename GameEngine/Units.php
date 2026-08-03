@@ -564,24 +564,34 @@ class Units {
 			$Gtribe = "";
 			if ($database->getUserField($to['owner'],'tribe',0) == '2'){ $Gtribe = "1"; } else if ($database->getUserField($to['owner'],'tribe',0) == '3'){ $Gtribe = "2"; } else if ($database->getUserField($to['owner'],'tribe',0) == '4'){ $Gtribe = "3"; }else if ($database->getUserField($to['owner'],'tribe',0) == '5'){ $Gtribe = "4"; }  
 
-					for($i=1; $i<10; $i++){
+					$backTribe = (int)$database->getUserField($to['owner'],'tribe',0);
+					for($i=1; $i<=10; $i++){
 						if(isset($post['t'.$i])){
-							if($i!=10){
-								if ($post['t'.$i] > $enforce['u'.$Gtribe.$i])
-								{
-									$form->addError("error","No puedes enviar más unidades de las que tienes");
-									break;
-								}
+							// 'u'.$Gtribe.$i solo da la columna correcta para i<10.
+							$unitColumn = $i === 10 ? 'u'.$backTribe.'0' : 'u'.$Gtribe.$i;
+							if ($post['t'.$i] > $enforce[$unitColumn])
+							{
+								$form->addError("error","No puedes enviar más unidades de las que tienes");
+								break;
+							}
 
-								if($post['t'.$i]<0)
-								{
-									$form->addError("error","No puedes enviar una cantidad negativa de unidades.");
-									break;
-								}
+							if($post['t'.$i]<0)
+							{
+								$form->addError("error","No puedes enviar una cantidad negativa de unidades.");
+								break;
 							}
 						} else {
 						$post['t'.$i.'']='0';
-						}											
+						}
+					}
+					// El héroe también se retira desde esta pantalla. Sin acotarlo aquí y sin
+					// descontarlo más abajo volvía a casa pero seguía contando como refuerzo.
+					$post['t11'] = isset($post['t11']) ? (int)$post['t11'] : 0;
+					if($post['t11'] < 0) {
+						$post['t11'] = 0;
+					}
+					if($post['t11'] > (int)$enforce['hero']) {
+						$post['t11'] = (int)$enforce['hero'];
 					}
 
 				if($form->returnErrors() > 0) {
@@ -597,6 +607,9 @@ class Units {
                     $j='1';
 					for($i=$start;$i<=$end;$i++){
 						$database->modifyEnforce($post['ckey'],$i,$post['t'.$j.''],0); $j++;
+					}
+					if($post['t11'] > 0){
+						$database->modifyEnforce($post['ckey'],'hero',$post['t11'],0);
 					}
 
 						//get cord 

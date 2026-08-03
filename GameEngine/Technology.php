@@ -790,12 +790,17 @@ class Technology {
 		global $database;
 		$enforce=$database->getEnforceArray($id,0);
 		$fail='0';
-					for($i=1; $i<50; $i++){
+					for($i=1; $i<=50; $i++){
 						if($enforce['u'.$i.'']>0){
 						$fail='1';
 						}
 					}
-			if($fail==0){ 
+			// Un refuerzo que solo trae al héroe también es un refuerzo: borrar la fila
+			// aquí hacía desaparecer al héroe de la aldea defensora.
+			if($enforce['hero']>0){
+			$fail='1';
+			}
+			if($fail==0){
 			$database->deleteReinf($id);
 			}
 
