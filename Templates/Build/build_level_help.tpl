@@ -144,10 +144,10 @@ if ($buildingHelpType === 'rally-point') {
 	);
 	$buildingHelpNote = 'Todos los niveles reducen progresivamente el tiempo de construcción.';
 	if (isset($bid15[$buildingHelpLevel]['attri'])) {
-		$buildingHelpCurrentValue = str_replace('.', ',', (string) round($bid15[$buildingHelpLevel]['attri'], 2));
+		$buildingHelpCurrentValue = round($bid15[$buildingHelpLevel]['attri']);
 		$buildingHelpNote = 'Tiempo actual: '.$buildingHelpCurrentValue.'% del tiempo base.';
 		if (isset($bid15[$buildingHelpLevel + 1]['attri'])) {
-			$buildingHelpNextValue = str_replace('.', ',', (string) round($bid15[$buildingHelpLevel + 1]['attri'], 2));
+			$buildingHelpNextValue = round($bid15[$buildingHelpLevel + 1]['attri']);
 			$buildingHelpNote .= ' En el próximo nivel será '.$buildingHelpNextValue.'%.';
 		}
 	}
