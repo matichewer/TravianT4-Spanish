@@ -935,11 +935,11 @@ class Battle {
 				? ($defenderScout >= $attackerScout ? 1.0 : pow($defenderScout / $attackerScout, 1.5))
 				: 1.0;
 			$result[1] = max(0, min(1, $scoutLosses));
+			// Las bajas alcanzan a todas las unidades enviadas, no solo a los espías:
+			// una exploración que lleva tropas normales (o que no lleva ningún espía)
+			// no puede volver intacta y traer el informe gratis.
 			foreach($attackerAmounts as $position => $amount) {
-				$unit = $attackerStart + $position - 1;
-				if(in_array($unit, $scouts, true)) {
-					$result['casualties_attacker'][$position] = (int)round($amount * $result[1]);
-				}
+				$result['casualties_attacker'][$position] = (int)round($amount * $result[1]);
 			}
 			return $result;
 		}

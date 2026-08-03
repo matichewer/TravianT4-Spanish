@@ -97,5 +97,31 @@ $end = ($targettribe*10);
 
 </table>
 
+<?php
+$reinforcementContextIndex = array_search('reinforcement-context-v1', $dataarray, true);
+if($reinforcementContextIndex !== false && isset($dataarray[$reinforcementContextIndex + 4])) {
+    $reinforcementAttackerOwner = (int)$dataarray[$reinforcementContextIndex + 1];
+    $reinforcementAttackerVillage = (int)$dataarray[$reinforcementContextIndex + 2];
+    $reinforcementWasScout = (int)$dataarray[$reinforcementContextIndex + 3] === 1;
+    $reinforcementWasDetected = (int)$dataarray[$reinforcementContextIndex + 4] === 1;
+?>
+<table cellspacing="0" cellpadding="0" id="attacker">
+	<thead>
+		<tr>
+			<td class="role">
+				<div class="boxes boxesColor red"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><div class="role"><?php echo REPORT_ATTACKER; ?></div></div></div>
+			</td>
+			<td class="troopHeadline" colspan="11">
+				<a href="spieler.php?uid=<?php echo $reinforcementAttackerOwner; ?>"><?php echo htmlspecialchars($database->getUserField($reinforcementAttackerOwner, "username", 0), ENT_QUOTES, 'UTF-8'); ?></a>
+				<?php echo REPORT_FROM_VIL; ?>
+				<a href="karte.php?d=<?php echo $reinforcementAttackerVillage."&amp;c=".$generator->getMapCheck($reinforcementAttackerVillage); ?>"><?php echo htmlspecialchars($database->getVillageField($reinforcementAttackerVillage, "name"), ENT_QUOTES, 'UTF-8'); ?></a>
+				<br />
+				<?php echo REPORT_ATTACK_TYPE; ?>: <?php echo $reinforcementWasScout ? REPORT_ATTACK_TYPE_SCOUT : REPORT_ATTACK_TYPE_NORMAL; ?><?php if($reinforcementWasScout) { ?> (<?php echo $reinforcementWasDetected ? REPORT_SPY_DETECTED : REPORT_SPY_UNDETECTED; ?>)<?php } ?>
+			</td>
+		</tr>
+	</thead>
+</table>
+<?php } ?>
+
 </td></tr></tbody></table>
 <div class="clear">&nbsp;</div>
