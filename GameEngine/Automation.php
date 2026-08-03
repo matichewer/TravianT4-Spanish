@@ -1705,6 +1705,7 @@ class Automation {
                         $chief_pic = $i;
                     }
                     if(in_array($i, $spys)) {
+                        $chiefs += $Attacker['u'.$i];
                         $spy_pic = $i;
                     }
                 }
@@ -1903,6 +1904,7 @@ class Automation {
                         $chief_pic = $i;
                     }
                     if(in_array($i, $spys)) {
+                        $chiefs += $Attacker['u'.$i];
                         $spy_pic = $i;
                     }
                 }
@@ -1970,15 +1972,14 @@ class Automation {
                 $Defender['hero'] = 0;
             }
             if($cage['type'] == 0 || $Attacker['hero'] == 0 || $isoasis == 0) {
-                // Espías defendiendo la aldea, sumando los de todas las tribus: $Defender
-                // ya incluye los refuerzos, así que un aliado de otra tribu también cuenta.
-                // Se recalcula en cada iteración del bucle de ataques: antes quedaba
-                // colgada del ataque anterior cuando la tribu no entraba en el if.
-                $def_spy = 0;
-                foreach(array(4, 14, 23, 34, 44) as $scoutUnit) {
-                    if(isset($Defender['u'.$scoutUnit])) {
-                        $def_spy += (int)$Defender['u'.$scoutUnit];
-                    }
+                if($targettribe == 1) {
+                    $def_spy = $Defender['u4'];
+                } elseif($targettribe == 2) {
+                    $def_spy = $Defender['u14'];
+                } elseif($targettribe == 3) {
+                    $def_spy = $Defender['u23'];
+                } elseif($targettribe == 5) {
+                    $def_spy = $Defender['u54'];
                 }
                 if(!$scout or $def_spy > 0) {
                     $capturedTroops = array_fill(1,11,0);
@@ -2228,19 +2229,25 @@ class Automation {
                         $totalsend_att = $data['t1'] + $data['t2'] + $data['t3'] + $data['t4'] + $data['t5'] + $data['t6'] + $data['t7'] + $data['t8'] + $data['t9'] + $data['t10'] + $data['t11'];
                         $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                         //NEED TO SEND A RAPPORTAGE!!!
-                        $reinforcementSpyDetected = $totaltraped_att > 0 || $totaldead_att > 0;
-                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1,reinforcement-context-v1,'.$from['owner'].','.$from['wref'].','.($scout ? 1 : 0).','.($reinforcementSpyDetected ? 1 : 0);
-                        //Notify the reinforcement owner on any real attack, and on a spy attempt only if it was actually detected (i.e. some defending spy, own or reinforced, fought back) - an undetected spy attempt stays invisible to everyone, as with a normal attack.
-                        if($reinforcementOwner > 0 && (int)$reinforcementOwner !== (int)$to['owner'] && (!$scout || $reinforcementSpyDetected)) {
-                            if($totalnotlife == 0) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
-                            } else if($totallife > $totalnotlife) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
-                            } else {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1';
+                        if($scout && $reinforcementOwner > 0) {
+                            if($totaldead_att > 0) {
+                                if($totaldead_att == $totalsend_att) {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                } else {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                }
                             }
-                        }
-                        if(!$scout) {
+                        } else if(!$scout) {
+                            if($reinforcementOwner > 0) {
+                                if($totalnotlife == 0) {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                } else if($totallife > $totalnotlife) {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                } else {
+                                    $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                }
+                            }
                             //delete reinf sting when its killed all.
                             if($wrong == '0') {
                                 $database->deleteReinf($enforce['id']);

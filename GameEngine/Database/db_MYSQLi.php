@@ -3190,13 +3190,6 @@
         	}
 
         	function addA2b($ckey, $timestamp, $to, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type) {
-        		// $type (y las cantidades) vienen de $_POST: se normalizan aquí porque
-        		// el resto del flujo de envío confía en la fila guardada.
-        		$ckey = mysqli_real_escape_string($this->connection, $ckey);
-        		$timestamp = (int)$timestamp; $to = (int)$to; $type = (int)$type;
-        		$t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3; $t4 = (int)$t4;
-        		$t5 = (int)$t5; $t6 = (int)$t6; $t7 = (int)$t7; $t8 = (int)$t8;
-        		$t9 = (int)$t9; $t10 = (int)$t10; $t11 = (int)$t11;
         		$q = "INSERT INTO " . TB_PREFIX . "a2b (ckey,time_check,to_vid,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,type) VALUES ('$ckey', '$timestamp', '$to', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9', '$t10', '$t11', '$type')";
         		mysqli_query($this->connection,$q);
         		return mysqli_insert_id($this->connection);
@@ -3264,12 +3257,6 @@
 			}
 
         	function addAttack($vid, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type, $ctar1, $ctar2, $spy) {
-        		// Todos los valores se interpolan sin comillas: se fuerzan a entero para
-        		// que ningún parámetro que venga de $_POST pueda inyectar SQL.
-        		$vid = (int)$vid; $t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3;
-        		$t4 = (int)$t4; $t5 = (int)$t5; $t6 = (int)$t6; $t7 = (int)$t7;
-        		$t8 = (int)$t8; $t9 = (int)$t9; $t10 = (int)$t10; $t11 = (int)$t11;
-        		$type = (int)$type; $ctar1 = (int)$ctar1; $ctar2 = (int)$ctar2; $spy = (int)$spy;
         		$q = "INSERT INTO " . TB_PREFIX . "attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy)";
         		mysqli_query($this->connection,$q);
         		return mysqli_insert_id($this->connection);

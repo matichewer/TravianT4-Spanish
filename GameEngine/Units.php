@@ -25,39 +25,6 @@ class Units {
 		return in_array($target, $allowedTargets, true) ? $target : 0;
 	}
 
-	// Posición (1-10) que ocupa el espía dentro de cada tribu. Los galos lo tienen
-	// en la tercera casilla (u23), el resto en la cuarta (u4, u14, u34, u44).
-	private function getTribeScoutPosition($tribe) {
-		$positions = array(1 => 4, 2 => 4, 3 => 3, 4 => 4, 5 => 4);
-		$tribe = (int)$tribe;
-		return isset($positions[$tribe]) ? $positions[$tribe] : 0;
-	}
-
-	// Una exploración solo puede llevar espías. Sin esta comprobación se podía
-	// espiar cualquier aldea gratis y sin ser detectado enviando una unidad
-	// cualquiera como exploración: las bajas del combate de espionaje solo se
-	// aplicaban a las casillas de espía, así que el resto volvía intacto.
-	private function scoutingSendError($tribe, $troops) {
-		$scoutPosition = $this->getTribeScoutPosition($tribe);
-		if($scoutPosition < 1) {
-			return "No puedes explorar con esta tribu.";
-		}
-		$scoutsSent = isset($troops[$scoutPosition]) ? (int)$troops[$scoutPosition] : 0;
-		$otherSent = isset($troops[11]) ? (int)$troops[11] : 0;
-		for($position = 1; $position <= 10; $position++) {
-			if($position !== $scoutPosition && isset($troops[$position])) {
-				$otherSent += (int)$troops[$position];
-			}
-		}
-		if($scoutsSent < 1) {
-			return "Para explorar tienes que enviar espías.";
-		}
-		if($otherSent > 0) {
-			return "En una exploración solo puedes enviar espías.";
-		}
-		return '';
-	}
-
 	public function procUnits($post) {
 		if(isset($post['c'])) {
 			switch($post['c']) {
@@ -294,17 +261,6 @@ class Units {
                             }
 					}
 
-					if((isset($post['c']) ? (int)$post['c'] : 0) === 1) {
-						$scoutTroops = array();
-						for($position = 1; $position <= 11; $position++) {
-							$scoutTroops[$position] = isset($post['t'.$position]) ? $post['t'.$position] : 0;
-						}
-						$scoutError = $this->scoutingSendError($session->tribe, $scoutTroops);
-						if($scoutError !== '') {
-							$form->addError("error",$scoutError);
-						}
-					}
-
                 if ($database->isVillageOases($id) == 0) {
 				// Solo los envíos hostiles (explorar/atacar/saquear) chocan con la
 				// protección de principiante; el refuerzo (c = 2) siempre se permite.
@@ -430,18 +386,6 @@ class Units {
 						$form->addError("error","No puedes reforzar un oasis sin ocupar.");
 					}
 				}
-				// Idem con la exploración: se revalida en la confirmación para que una
-				// petición armada a mano no pueda espiar sin enviar espías.
-				if((int)$data['type'] === 1) {
-					$scoutTroops = array();
-					for($position = 1; $position <= 11; $position++) {
-						$scoutTroops[$position] = isset($data['u'.$position]) ? $data['u'.$position] : 0;
-					}
-					$scoutError = $this->scoutingSendError($session->tribe, $scoutTroops);
-					if($scoutError !== '') {
-						$form->addError("error",$scoutError);
-					}
-				}
 				if($form->returnErrors() > 0) {
 					$_SESSION['errorarray'] = $form->getErrors();
 					$_SESSION['valuearray'] = $_POST;
@@ -520,9 +464,7 @@ class Units {
 		$post['ctar2'] = $hasCatapults && $building->getTypeLevel(16) >= 20
 			? $this->normalizeCatapultTarget(isset($post['ctar2']) ? $post['ctar2'] : 0, true)
 			: 0;
-        // El valor llega crudo desde $_POST y termina interpolado en el INSERT de
-        // addAttack: solo se aceptan las dos opciones reales (1 recursos, 2 defensas).
-        $post['spy'] = ((int)$data['type'] === 1 && isset($post['spy']) && (int)$post['spy'] === 2) ? 2 : (((int)$data['type'] === 1) ? 1 : 0);
+        if (isset($post['spy'])){$post['spy'] = $post['spy'];}else{ $post['spy'] = 0;} 
 		$abdata = $database->getABTech($village->wid);
 		$reference = $database->addAttack(($village->wid),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$post['ctar1'],$post['ctar2'],$post['spy'],$abdata['b1'],$abdata['b2'],$abdata['b3'],$abdata['b4'],$abdata['b5'],$abdata['b6'],$abdata['b7'],$abdata['b8']);
 
