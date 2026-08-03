@@ -185,7 +185,7 @@ $end = ($tribe*10);
                 </tbody>
 			<?php if ($process['c']==1){ ?>
                 <tbody class="options">
-                
+
                 <tr>
             <th>Opciones</th>
             <td colspan="11"><input class="radio" name="spy" value="1" checked="checked" type="radio">Explorar recursos y tropas<br>
@@ -193,7 +193,40 @@ $end = ($tribe*10);
         </tr>
     </tbody>
     <?php } ?>
-                
+<?php
+// Mudar la aldea natal solo tiene sentido si el héroe viaja a otra aldea propia.
+// El bono de recursos del héroe se produce en la aldea natal, así que el cambio
+// se ofrece acá y se aplica cuando el héroe llega.
+$heroData = $database->getHeroData($session->uid);
+$homeVillage = heroHomeVillage($heroData);
+$canMoveHome = $t11 > 0 && $process['c'] == 2 && $process['2'] == $session->uid
+	&& $process['0'] != $homeVillage;
+if($canMoveHome){
+	$homeName = $homeVillage > 0 ? $database->getVillageField($homeVillage,'name') : '';
+	$heroRates = heroResourceRates($heroData, SPEED);
+?>
+	<tbody class="options">
+		<tr>
+			<th>Aldea natal</th>
+			<td colspan="11">
+				<label><input class="checkbox" name="sethome" value="1" type="checkbox"> Convertir <b><?php echo stripslashes($process['1']); ?></b> en la aldea natal de mi héroe</label>
+				<div class="none" style="margin-top:4px">
+				<?php
+				if($homeName !== ''){
+					echo 'Ahora es <b>'.stripslashes($homeName).'</b>. ';
+				}
+				if(array_sum($heroRates) > 0){
+					echo 'Ahí se produce el bono de recursos del héroe.';
+				} else {
+					echo 'Tu héroe todavía no tiene puntos en producción de recursos.';
+				}
+				?>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+<?php } ?>
+
 
         <?php
         $catapultUnitId = $battle->getTribeCatapultUnit((int)$session->tribe);

@@ -117,7 +117,12 @@ ob_start();
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     <div class="attribute res" id="setResource">
 		<div class="changeResourcesHeadline">Distribuir la producción de recursos del héroe</div>
-		<p class="resourceProductionHelp">Aporte directo por hora: se suma tal cual a la aldea donde reside el héroe, sin porcentajes adicionales. El cambio reemplaza la distribución anterior y se aplica desde el cambio; no entrega recursos al instante.</p>
+		<p class="resourceProductionHelp">Aporte directo por hora: se suma tal cual a la <b>aldea natal</b><?php
+			$homeVillage = heroHomeVillage($hero);
+			if($homeVillage > 0){
+				echo ' (<b>'.stripslashes($database->getVillageField($homeVillage,'name')).'</b>)';
+			}
+		?>, sin porcentajes adicionales, y sigue produciendo aunque el héroe esté de aventura o reforzando. Para mudarla, mandá al héroe como refuerzo a otra aldea tuya y marcá la opción en la pantalla de confirmación. El cambio de distribución reemplaza la anterior y se aplica desde el cambio; no entrega recursos al instante.</p>
 		<div class="clear"></div>
 		<div class="resource">
 		  <input type="radio" onclick="window.location.href = '?product=r0';" name="resource" value="0" id="resourceHero0" <?php if($hero['r0']!=0){ echo $checked="checked"; } ?>>

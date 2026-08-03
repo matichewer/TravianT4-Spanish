@@ -3143,8 +3143,9 @@
 				return true;
 			}
 
-        	function addAttack($vid, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type, $ctar1, $ctar2, $spy) {
-        		$q = "INSERT INTO " . TB_PREFIX . "attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy)";
+        	function addAttack($vid, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type, $ctar1, $ctar2, $spy, $sethome = 0) {
+        		$sethome = (int)$sethome === 1 ? 1 : 0;
+        		$q = "INSERT INTO " . TB_PREFIX . "attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy,$sethome)";
         		mysql_query($q, $this->connection);
         		return mysql_insert_id($this->connection);
         	}
@@ -3517,17 +3518,6 @@
         		$result = mysql_query($q, $this->connection);
         		return mysql_fetch_assoc($result);
         	}
-
-			function checkEnforce($vid, $from) {
-				$q = "SELECT * from " . TB_PREFIX . "enforcement where `from` = $from and vref = $vid";
-        		$result = mysql_query($q, $this->connection);
-				if(!empty($result)) {
-					return mysql_insert_id($this->connection);
-				}else{
-					return true;
-				}
-			}
-
 
         	function addEnforce($data) {
         		$q = "INSERT into " . TB_PREFIX . "enforcement (vref,`from`) values (" . $data['to'] . "," . $data['from'] . ")";

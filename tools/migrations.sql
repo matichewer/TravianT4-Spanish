@@ -162,3 +162,16 @@ ALTER TABLE s1_vdata
   ADD COLUMN IF NOT EXISTS loyaltyupdate int(11) unsigned NOT NULL DEFAULT 0;
 
 UPDATE s1_vdata SET loyaltyupdate = UNIX_TIMESTAMP() WHERE loyaltyupdate = 0;
+
+-- 2026-08-03 - Aldea natal del heroe
+-- Antes `hero.wref` cumplia dos papeles a la vez: donde esta el heroe y donde se
+-- produce su bono de recursos. `home` separa la aldea natal, que solo cambia si
+-- el jugador lo pide al mandar al heroe a otra aldea propia; `sethome` es la
+-- marca que viaja con ese movimiento.
+ALTER TABLE s1_hero
+  ADD COLUMN IF NOT EXISTS home int(11) unsigned NOT NULL DEFAULT 0;
+
+UPDATE s1_hero SET home = wref WHERE home = 0;
+
+ALTER TABLE s1_attacks
+  ADD COLUMN IF NOT EXISTS sethome tinyint(1) unsigned NOT NULL DEFAULT 0;

@@ -97,9 +97,24 @@ if(!function_exists('heroResourceRates')){
 	}
 }
 
+if(!function_exists('heroHomeVillage')){
+	// La aldea natal es la que cobra el bono de recursos del héroe. Es un valor
+	// propio: solo cambia si el jugador lo pide al mandar al héroe a otra aldea
+	// suya, así que no se mueve sola cuando el héroe sale de aventura o refuerza.
+	// `wref` es el respaldo para los héroes creados antes de que existiera `home`.
+	function heroHomeVillage($hero){
+		if(!is_array($hero)){
+			return 0;
+		}
+		$home = isset($hero['home']) ? (int)$hero['home'] : 0;
+
+		return $home > 0 ? $home : (int)$hero['wref'];
+	}
+}
+
 if(!function_exists('heroVillageResourceBonus')){
 	function heroVillageResourceBonus($hero, $villageId, $speed){
-		if(!is_array($hero) || (int)$hero['dead']!==0 || (int)$hero['wref']!==(int)$villageId){
+		if(!is_array($hero) || (int)$hero['dead']!==0 || heroHomeVillage($hero)!==(int)$villageId){
 			return array('wood'=>0, 'clay'=>0, 'iron'=>0, 'crop'=>0);
 		}
 

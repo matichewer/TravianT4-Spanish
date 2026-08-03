@@ -3368,8 +3368,14 @@ class Automation {
                 if($data['t11'] != 0) {
                     if($database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")) {
                         //don't reinforce, addunit instead
+                        $heroOwner = $database->getVillageField($data['from'], "owner");
                         $database->modifyUnit($data['to'], 'hero', 1, 1);
-                        $database->modifyHero2('wref', $data['to'], $database->getVillageField($data['from'], "owner"), 0);
+                        $database->modifyHero2('wref', $data['to'], $heroOwner, 0);
+                        // La mudanza de aldea natal se pidió al despachar el movimiento y
+                        // recién se aplica ahora, cuando el héroe efectivamente llegó.
+                        if(!empty($data['sethome'])) {
+                            $database->modifyHero2('home', (int)$data['to'], $heroOwner, 0);
+                        }
                     } else {
                         $check = $database->getEnforce($data['to'], $data['from']);
                         if(isset($check['id'])) {
@@ -4527,6 +4533,10 @@ class Automation {
                 $getVil = $database->getMInfo($data3['vref']);
                 $database->modifyHero2('dead', 0, $getVil['owner'], 0);
                 $database->modifyHero2('health', 100, $getVil['owner'], 0);
+                // El héroe revive en la aldea donde se pagó el rescate, así que `hero.wref`
+                // tiene que seguirlo. Sin esto quedaba apuntando a donde murió y las
+                // aventuras seguían bloqueadas después de revivirlo.
+                $database->modifyHero2('wref', (int)$data3['vref'], $getVil['owner'], 0);
                 $database->editTableField('units', 'hero', 1, 'vref', $data3['vref']);
             }
         }
@@ -4535,6 +4545,15 @@ class Automation {
         foreach ($dataarray2 as $data3) {
             $database->editTableField('units', 'hero', 1, 'vref', $data3['vref']);
         }
+        // Si la aldea natal se perdió (conquistada, abandonada o borrada), el bono de
+        // recursos del héroe no tendría dónde caer: vuelve a la capital.
+        $database->query(
+            "UPDATE ".TB_PREFIX."hero h"
+            ." JOIN ".TB_PREFIX."vdata c ON c.owner = h.uid AND c.capital = 1"
+            ." LEFT JOIN ".TB_PREFIX."vdata v ON v.wref = h.home AND v.owner = h.uid"
+            ." SET h.home = c.wref"
+            ." WHERE v.wref IS NULL AND h.home <> c.wref"
+        );
         if(file_exists("GameEngine/Prevention/updatehero.txt")) {
             @unlink("GameEngine/Prevention/updatehero.txt");
         }

@@ -113,6 +113,7 @@ class Account {
 					$this->generateBase($_POST['kid'],$uid,$_POST['name']);
 					$database->modifyUnit($database->getVFH($uid), 'hero', 1, 1);
 					$database->modifyHero2('wref', $database->getVFH($uid), $uid, 0);
+					$database->modifyHero2('home', $database->getVFH($uid), $uid, 0);
 					for($s=1;$s<=3;$s++){
 						$database->addAdventure($database->getVFH($uid), $uid);
 					}
@@ -140,6 +141,7 @@ class Account {
 			$this->generateBase($dbarray['kid'],$uid,$dbarray['username']);
 			$database->modifyUnit($database->getVFH($uid), 'hero', 1, 1);
 			$database->modifyHero2('wref', $database->getVFH($uid), $uid, 0);
+			$database->modifyHero2('home', $database->getVFH($uid), $uid, 0);
 			for($s=1;$s<=3;$s++){
 				$database->addAdventure($database->getVFH($uid), $uid);
 			}

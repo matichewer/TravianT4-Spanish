@@ -120,10 +120,10 @@ ensureVillage($V_ALLY, $UID_ALLY);
 // Se invocan sólo las fases que interesan: el constructor de Automation hace
 // además barridos de mantenimiento sobre todo el mundo (borra cuentas inactivas).
 $auto = (new ReflectionClass('Automation'))->newInstanceWithoutConstructor();
-function runPhase($name) {
+function runPhase($name, $method = null) {
     global $auto;
     @unlink("GameEngine/Prevention/$name.txt");
-    $m = new ReflectionMethod('Automation', $name . 'Complete');
+    $m = new ReflectionMethod('Automation', $method === null ? $name . 'Complete' : $method);
     $m->setAccessible(true);
     $errors = array();
     set_error_handler(function($no, $str, $file, $line) use (&$errors) {
@@ -141,13 +141,14 @@ function resetWorld() {
     q("DELETE FROM {$P}attacks");
     q("DELETE FROM {$P}enforcement");
     q("UPDATE {$P}units SET hero = 0, u1 = 0, u2 = 0 WHERE vref IN ($V_A1,$V_A2,$V_ALLY)");
-    q("UPDATE {$P}hero SET wref = $V_A1, dead = 0, hide = 0 WHERE uid = $UID_A");
+    q("UPDATE {$P}hero SET wref = $V_A1, home = $V_A1, dead = 0, hide = 0 WHERE uid = $UID_A");
 }
 
-function sendReinf($from, $to, $t1, $hero) {
+function sendReinf($from, $to, $t1, $hero, $sethome = 0) {
     global $P, $conn;
-    q("INSERT INTO {$P}attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy)
-       VALUES ($to,$t1,0,0,0,0,0,0,0,0,0,$hero,2,0,0,0)");
+    $sethome = (int)$sethome;
+    q("INSERT INTO {$P}attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy,sethome)
+       VALUES ($to,$t1,0,0,0,0,0,0,0,0,0,$hero,2,0,0,0,$sethome)");
     $ref = mysqli_insert_id($conn);
     q("INSERT INTO {$P}movement (sort_type,`from`,`to`,ref,ref2,data,endtime,proc,send,wood,clay,iron,crop)
        VALUES (3,$from,$to,$ref,0,'0,0,0,0,0'," . (time() - 5) . ",0,1,0,0,0,0)");
@@ -276,6 +277,68 @@ foreach($database->getEnforceVillage($V_A2, 0) as $enf) {
 }
 say("  héroes contados: $heroes");
 check($heroes === 1, "un jugador aporta un solo héroe aunque los datos viejos lo dupliquen");
+
+// =========================================================================
+say("\n== H) revivir en la mansión deja units.hero y hero.wref de acuerdo ==");
+// hero.tpl ya fija wref al encargar el rescate, así que en el flujo normal esto
+// no se rompe. Acá se arranca con wref desincronizado a propósito para verificar
+// que el cierre del rescate deja el invariante sano igual.
+resetWorld();
+q("UPDATE {$P}hero SET dead = 1, health = 0, wref = $V_A1 WHERE uid = $UID_A");
+q("DELETE FROM {$P}training WHERE vref = $V_A2");
+q("INSERT INTO {$P}training (vref,unit,amt,pop,timestamp,eachtime,timestamp2)
+   VALUES ($V_A2,0,1,6," . (time() - 100) . "," . (time() - 5) . "," . (time() - 5) . ")");
+$errs = runPhase('updatehero', 'updateHero');
+$hero = one("SELECT wref, dead, health FROM {$P}hero WHERE uid = $UID_A");
+$u = one("SELECT hero FROM {$P}units WHERE vref = $V_A2");
+say("  hero.wref=" . (int)$hero['wref'] . " dead=" . (int)$hero['dead']
+    . "  units($V_A2).hero=" . (int)$u['hero']);
+check((int)$hero['dead'] === 0, "el héroe revive");
+check((int)$u['hero'] === 1, "el héroe aparece en la aldea donde se pagó el rescate");
+check((int)$hero['wref'] === $V_A2, "hero.wref sigue al héroe (si no, las aventuras quedan bloqueadas)");
+check(!$errs, "sin avisos de PHP" . ($errs ? ": " . implode(' | ', $errs) : ""));
+q("DELETE FROM {$P}training WHERE vref = $V_A2");
+
+// =========================================================================
+say("\n== I) la aldea natal no se muda sola al mover al héroe ==");
+resetWorld();
+sendReinf($V_A1, $V_A2, 0, 1, 0);
+$errs = runPhase('sendreinfunits');
+$hero = one("SELECT wref, home FROM {$P}hero WHERE uid = $UID_A");
+say("  hero.wref=" . (int)$hero['wref'] . "  hero.home=" . (int)$hero['home']);
+check((int)$hero['wref'] === $V_A2, "wref sigue al héroe");
+check((int)$hero['home'] === $V_A1, "la aldea natal queda donde estaba");
+check(!$errs, "sin avisos de PHP" . ($errs ? ": " . implode(' | ', $errs) : ""));
+
+say("\n== J) marcando la opción, la aldea natal se muda al llegar ==");
+resetWorld();
+sendReinf($V_A1, $V_A2, 0, 1, 1);
+$pending = one("SELECT wref, home FROM {$P}hero WHERE uid = $UID_A");
+check((int)$pending['home'] === $V_A1, "mientras el héroe viaja la aldea natal no cambia");
+$errs = runPhase('sendreinfunits');
+$hero = one("SELECT wref, home FROM {$P}hero WHERE uid = $UID_A");
+say("  hero.wref=" . (int)$hero['wref'] . "  hero.home=" . (int)$hero['home']);
+check((int)$hero['home'] === $V_A2, "la aldea natal se muda a la aldea destino");
+check(!$errs, "sin avisos de PHP" . ($errs ? ": " . implode(' | ', $errs) : ""));
+
+say("\n== K) el bono de recursos se produce en la aldea natal ==");
+resetWorld();
+q("UPDATE {$P}hero SET product = 10, r0 = 1, r1 = 0, r2 = 0, r3 = 0, r4 = 0, home = $V_A2 WHERE uid = $UID_A");
+$hero = $database->getHeroData($UID_A);
+$enHome  = heroVillageResourceBonus($hero, $V_A2, SPEED);
+$enWref  = heroVillageResourceBonus($hero, $V_A1, SPEED);
+say("  natal($V_A2)=" . array_sum($enHome) . "  donde está($V_A1)=" . array_sum($enWref));
+check(array_sum($enHome) > 0, "la aldea natal cobra el bono");
+check(array_sum($enWref) === 0, "la aldea donde está el héroe no lo cobra");
+
+say("\n== L) si la aldea natal se pierde, vuelve a la capital ==");
+q("UPDATE {$P}hero SET home = 999999 WHERE uid = $UID_A");
+q("UPDATE {$P}vdata SET capital = 1 WHERE wref = $V_A1");
+runPhase('updatehero', 'updateHero');
+$hero = one("SELECT home FROM {$P}hero WHERE uid = $UID_A");
+say("  hero.home=" . (int)$hero['home']);
+check((int)$hero['home'] === $V_A1, "la aldea natal huérfana vuelve a la capital");
+q("UPDATE {$P}hero SET product = 4, r0 = 1 WHERE uid = $UID_A");
 
 resetWorld();
 say("\n" . ($failures === 0 ? "TODO OK" : "$failures COMPROBACIONES FALLARON"));

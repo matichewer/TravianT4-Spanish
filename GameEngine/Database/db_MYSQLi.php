@@ -3263,14 +3263,15 @@
 				return true;
 			}
 
-        	function addAttack($vid, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type, $ctar1, $ctar2, $spy) {
+        	function addAttack($vid, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10, $t11, $type, $ctar1, $ctar2, $spy, $sethome = 0) {
         		// Todos los valores se interpolan sin comillas: se fuerzan a entero para
         		// que ningún parámetro que venga de $_POST pueda inyectar SQL.
         		$vid = (int)$vid; $t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3;
         		$t4 = (int)$t4; $t5 = (int)$t5; $t6 = (int)$t6; $t7 = (int)$t7;
         		$t8 = (int)$t8; $t9 = (int)$t9; $t10 = (int)$t10; $t11 = (int)$t11;
         		$type = (int)$type; $ctar1 = (int)$ctar1; $ctar2 = (int)$ctar2; $spy = (int)$spy;
-        		$q = "INSERT INTO " . TB_PREFIX . "attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy)";
+        		$sethome = (int)$sethome === 1 ? 1 : 0;
+        		$q = "INSERT INTO " . TB_PREFIX . "attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy,$sethome)";
         		mysqli_query($this->connection,$q);
         		return mysqli_insert_id($this->connection);
         	}
@@ -3717,17 +3718,6 @@
         		$result = mysqli_query($this->connection,$q);
         		return mysqli_fetch_assoc($result);
         	}
-
-			function checkEnforce($vid, $from) {
-				$q = "SELECT * from " . TB_PREFIX . "enforcement where `from` = $from and vref = $vid";
-        		$result = mysqli_query($this->connection,$q);
-				if(!empty($result)) {
-					return mysqli_insert_id($this->connection);
-				}else{
-					return true;
-				}
-			}
-
 
         	function addEnforce($data) {
         		$q = "INSERT into " . TB_PREFIX . "enforcement (vref,`from`) values (" . $data['to'] . "," . $data['from'] . ")";

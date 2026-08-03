@@ -87,8 +87,7 @@
 			$ctar1 = 0;
 			}
             $ctar2 = 0; 
-            $abdata = $database->getABTech($getFLData['wref']);
-            $reference = $database->addAttack(($getFLData['wref']),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$ctar1,$ctar2,0,$abdata['b1'],$abdata['b2'],$abdata['b3'],$abdata['b4'],$abdata['b5'],$abdata['b6'],$abdata['b7'],$abdata['b8']);
+            $reference = $database->addAttack(($getFLData['wref']),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$ctar1,$ctar2,0);
             $totalunits = $data['u1']+$data['u2']+$data['u3']+$data['u4']+$data['u5']+$data['u6']+$data['u7']+$data['u8']+$data['u9']+$data['u10']+$data['u11'];
 			$database->modifyUnit($getFLData['wref'], $uname2.'1', $data['u1'], 0);
 			$database->modifyUnit($getFLData['wref'], $uname2.'2', $data['u2'], 0);

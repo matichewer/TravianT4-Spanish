@@ -523,8 +523,14 @@ class Units {
         // El valor llega crudo desde $_POST y termina interpolado en el INSERT de
         // addAttack: solo se aceptan las dos opciones reales (1 recursos, 2 defensas).
         $post['spy'] = ((int)$data['type'] === 1 && isset($post['spy']) && (int)$post['spy'] === 2) ? 2 : (((int)$data['type'] === 1) ? 1 : 0);
-		$abdata = $database->getABTech($village->wid);
-		$reference = $database->addAttack(($village->wid),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$post['ctar1'],$post['ctar2'],$post['spy'],$abdata['b1'],$abdata['b2'],$abdata['b3'],$abdata['b4'],$abdata['b5'],$abdata['b6'],$abdata['b7'],$abdata['b8']);
+		// La aldea natal solo se puede mudar mandando al héroe como refuerzo a otra
+		// aldea propia, y el cambio se aplica recién cuando el héroe llega.
+		$sethome = isset($post['sethome']) && (int)$post['sethome'] === 1
+			&& (int)$data['u11'] > 0
+			&& (int)$data['type'] === 2
+			&& (int)$database->getVillageField($data['to_vid'],'owner') === (int)$session->uid
+			&& (int)$data['to_vid'] !== (int)$village->wid ? 1 : 0;
+		$reference = $database->addAttack(($village->wid),$data['u1'],$data['u2'],$data['u3'],$data['u4'],$data['u5'],$data['u6'],$data['u7'],$data['u8'],$data['u9'],$data['u10'],$data['u11'],$data['type'],$post['ctar1'],$post['ctar2'],$post['spy'],$sethome);
 
 		$movementAdded = $reference > 0
 			&& $database->addMovement(3,$village->wid,$data['to_vid'],$reference,$sentAt,($time+$sentAt));

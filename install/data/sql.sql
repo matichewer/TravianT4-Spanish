@@ -340,9 +340,10 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%attacks` (
   `t10` int(11) unsigned NOT NULL,
   `t11` int(11) unsigned NOT NULL,
   `attack_type` tinyint(1) NOT NULL,
-  `ctar1` int(11) unsigned NOT NULL, 
+  `ctar1` int(11) unsigned NOT NULL,
   `ctar2` int(11) unsigned NOT NULL,
-  `spy` int(11) unsigned NOT NULL, 
+  `spy` int(11) unsigned NOT NULL,
+  `sethome` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
@@ -885,6 +886,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%hero` (
   `heroid` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `uid` int(11) unsigned NOT NULL,
   `wref` int(11) unsigned NOT NULL,
+  `home` int(11) unsigned NOT NULL DEFAULT '0',
   `level` mediumint(3) unsigned NOT NULL,
   `speed` int(2) unsigned NOT NULL,
   `points` int(3) unsigned NOT NULL,
