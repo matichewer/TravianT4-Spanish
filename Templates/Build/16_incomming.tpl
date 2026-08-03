@@ -43,9 +43,9 @@ if ($units[$y]['sort_type']==3){
                   if(!$isNature){
                   	$coor = $database->getCoor($units[$y]['from']);
                   	echo "<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>";
                   }
                   echo "<span class=\"clear\">".($isNature ? "" : "a")."</span></th>";
@@ -128,9 +128,9 @@ $to = $database->getMInfo($units[$y]['vref']);
                   $coor = $database->getCoor($units[$y]['vref']);
                   echo "<tr><th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {
@@ -173,8 +173,6 @@ $to = $database->getMInfo($units[$y]['vref']);
     <td colspan="<?php echo $colspan; ?>">
     <div class="res">
     <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $dataarray['0']; ?></span>
-    <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $dataarray['0']; ?></span>
-
     <span class="resource" title="Barro"><img class="r2" src="img/x.gif" alt="Barro"><?php echo $dataarray['1']; ?></span>
     <span class="resource" title="Hierro"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo $dataarray['2']; ?></span>
     <span class="resource" title="Cereal"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo $dataarray['3']; ?></span>

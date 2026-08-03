@@ -3,7 +3,8 @@
 if(isset($_GET['t']) && $_GET['t'] == 99 && !isset($_GET['action'])) {
 
 if(isset($_GET['t']) && $_GET['t'] == 99 && isset($_POST['action']) && $_POST['action'] === 'addList'){
-	$database->createFarmList($_POST['did'], $session->uid, $_POST['name']);
+	// createFarmList valida internamente que `did` sea una aldea del usuario logueado.
+	$database->createFarmList((int)$_POST['did'], $session->uid, $_POST['name']);
 }
 
 $sql = mysql_query("SELECT * FROM ".TB_PREFIX."farmlist WHERE owner = $session->uid ORDER BY wref = $village->wid DESC");

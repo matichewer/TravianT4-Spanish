@@ -227,7 +227,7 @@ class Units {
 					}
 				}
 					$offset =($session->tribe - 1) * 10;
-					for($i=1; $i<10; $i++)
+					for($i=1; $i<=10; $i++)
 					{
 						if(isset($post['t'.$i]))
 						{
@@ -347,10 +347,14 @@ class Units {
 
 		 $Gtribe = "";
 		if ($session->tribe == '2'){ $Gtribe = "1"; } else if ($session->tribe == '3'){ $Gtribe = "2"; }else if ($session->tribe == '4'){ $Gtribe = "3"; }else if ($session->tribe == '5'){ $Gtribe = "4"; }
-				for($i=1; $i<10; $i++){
+				for($i=1; $i<=10; $i++){
 						if(isset($data['u'.$i])){
+							// La unidad de posicion 10 (colono/administrador) usa
+							// 'u{tribu}0' (u10, u20, u30...): la concatenacion
+							// 'u'.$Gtribe.$i solo da la columna correcta para i<10.
+							$unitColumn = $i === 10 ? 'u'.((int)$session->tribe).'0' : 'u'.$Gtribe.$i;
 
-                            if ($data['u'.$i] > $village->unitarray['u'.$Gtribe.$i])
+                            if ($data['u'.$i] > $village->unitarray[$unitColumn])
 							{
 								$form->addError("error","No puedes enviar más unidades de las que tienes");
 								break;
@@ -362,7 +366,7 @@ class Units {
 								break;
 							}
 
-						}												
+						}
 					}
                     if ($data['u11'] > $village->unitarray['hero'])
                             {

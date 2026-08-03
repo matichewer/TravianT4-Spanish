@@ -117,7 +117,8 @@ $units_type1 = $database->getMovement("3",$village->wid,0);
 $settlers = $database->getMovement("5",$village->wid,0);
 $adventures = $database->getMovement("9",$village->wid,0);
 $units_walking = count($units_type1);
-for($i=0;$i<$units_walking;$i++){
+$units_type1_total = count($units_type1);
+for($i=0;$i<$units_type1_total;$i++){
 if($units_type1[$i]['vref'] != $village->wid)
 		$units_walking -= 1;
 }

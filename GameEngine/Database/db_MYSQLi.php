@@ -4576,10 +4576,23 @@ break;
             }
 
 			function getRaidList($id) {
+				$id = (int)$id;
         		$q = "SELECT * FROM " . TB_PREFIX . "raidlist WHERE id = ".$id."";
         		$result = mysqli_query($this->connection,$q);
         		return mysqli_fetch_array($result);
         	}
+
+			// Devuelve el campo de la lista de saqueo solo si esa lista pertenece
+			// al `owner` indicado (evita leer/editar listas de otros jugadores).
+			function getRaidListForOwner($id, $owner) {
+				$id = (int)$id;
+				$owner = (int)$owner;
+				$q = "SELECT " . TB_PREFIX . "raidlist.* FROM " . TB_PREFIX . "raidlist"
+					." INNER JOIN " . TB_PREFIX . "farmlist ON " . TB_PREFIX . "farmlist.id = " . TB_PREFIX . "raidlist.lid"
+					." WHERE " . TB_PREFIX . "raidlist.id = $id AND " . TB_PREFIX . "farmlist.owner = $owner";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? mysqli_fetch_array($result) : false;
+			}
 
 			function getAllAuction() {
         		$q = "SELECT * FROM " . TB_PREFIX . "auction WHERE finish = 0";
@@ -4601,32 +4614,72 @@ break;
             }
 
 			function delFarmList($id, $owner) {
+				$id = (int)$id;
+				$owner = (int)$owner;
         		$q = "DELETE FROM " . TB_PREFIX . "farmlist where id = $id and owner = $owner";
         		return mysqli_query($this->connection,$q);
         	}
 
 
-			function delSlotFarm($id) {
-        		$q = "DELETE FROM " . TB_PREFIX . "raidlist where id = $id";
+			function delSlotFarm($id, $owner) {
+				$id = (int)$id;
+				$owner = (int)$owner;
+        		$q = "DELETE " . TB_PREFIX . "raidlist FROM " . TB_PREFIX . "raidlist"
+        			." INNER JOIN " . TB_PREFIX . "farmlist ON " . TB_PREFIX . "farmlist.id = " . TB_PREFIX . "raidlist.lid"
+        			." WHERE " . TB_PREFIX . "raidlist.id = $id AND " . TB_PREFIX . "farmlist.owner = $owner";
         		return mysqli_query($this->connection,$q);
         	}
 
 
+			// Solo crea la lista si `wref` es realmente una aldea del `owner`; evita
+			// que se pueda anclar una lista de granjas a la aldea de otro jugador.
 			function createFarmList($wref, $owner, $name) {
-        		$q = "INSERT INTO " . TB_PREFIX . "farmlist (`wref`, `owner`, `name`) VALUES ('$wref', '$owner', '$name')";
-        		return mysqli_query($this->connection,$q);
+				$wref = (int)$wref;
+				$owner = (int)$owner;
+				$name = $this->connection->real_escape_string((string)$name);
+        		$q = "INSERT INTO " . TB_PREFIX . "farmlist (`wref`, `owner`, `name`)"
+        			." SELECT wref, owner, '$name' FROM " . TB_PREFIX . "vdata WHERE wref = $wref AND owner = $owner";
+        		$result = mysqli_query($this->connection,$q);
+        		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
 
-			function addSlotFarm($lid, $towref, $x, $y, $distance, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10) {
-        		$q = "INSERT INTO " . TB_PREFIX . "raidlist (`lid`, `towref`, `x`, `y`, `distance`, `t1`, `t2`, `t3`, `t4`, `t5`, `t6`, `t7`, `t8`, `t9`, `t10`) VALUES ('$lid', '$towref', '$x', '$y', '$distance', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9', '$t10')";
-        		return mysqli_query($this->connection,$q);
+			// El INSERT ... SELECT solo agrega el campo si `lid` pertenece al `owner`,
+			// evitando que se agreguen objetivos a la lista de granjas de otro jugador.
+			function addSlotFarm($lid, $owner, $towref, $x, $y, $distance, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10) {
+				$lid = (int)$lid;
+				$owner = (int)$owner;
+				$towref = (int)$towref;
+				$x = (int)$x;
+				$y = (int)$y;
+				$distance = (float)$distance;
+				$t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3; $t4 = (int)$t4; $t5 = (int)$t5;
+				$t6 = (int)$t6; $t7 = (int)$t7; $t8 = (int)$t8; $t9 = (int)$t9; $t10 = (int)$t10;
+        		$q = "INSERT INTO " . TB_PREFIX . "raidlist (`lid`, `towref`, `x`, `y`, `distance`, `t1`, `t2`, `t3`, `t4`, `t5`, `t6`, `t7`, `t8`, `t9`, `t10`)"
+        			." SELECT id, $towref, $x, $y, $distance, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10 FROM " . TB_PREFIX . "farmlist WHERE id = $lid AND owner = $owner";
+        		$result = mysqli_query($this->connection,$q);
+        		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
 
-			function editSlotFarm($eid, $lid, $wref, $x, $y, $dist, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10) {
-
-				$q = "UPDATE " . TB_PREFIX . "raidlist set lid = '$lid', towref = '$wref', x = '$x', y = '$y', t1 = '$t1', t2 = '$t2', t3 = '$t3', t4 = '$t4', t5 = '$t5', t6 = '$t6', t7 = '$t7', t8 = '$t8', t9 = '$t9', t10 = '$t10' WHERE id = $eid";
-        		return mysqli_query($this->connection,$q);
-
+			// El UPDATE exige que tanto la lista de origen (la que ya tenia el campo)
+			// como la de destino (`lid` nuevo) pertenezcan al `owner` que hace el pedido.
+			function editSlotFarm($eid, $lid, $owner, $wref, $x, $y, $dist, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10) {
+				$eid = (int)$eid;
+				$lid = (int)$lid;
+				$owner = (int)$owner;
+				$wref = (int)$wref;
+				$x = (int)$x;
+				$y = (int)$y;
+				$t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3; $t4 = (int)$t4; $t5 = (int)$t5;
+				$t6 = (int)$t6; $t7 = (int)$t7; $t8 = (int)$t8; $t9 = (int)$t9; $t10 = (int)$t10;
+				$q = "UPDATE " . TB_PREFIX . "raidlist"
+					." INNER JOIN " . TB_PREFIX . "farmlist f_old ON f_old.id = " . TB_PREFIX . "raidlist.lid"
+					." INNER JOIN " . TB_PREFIX . "farmlist f_new ON f_new.id = $lid"
+					." SET " . TB_PREFIX . "raidlist.lid = $lid, " . TB_PREFIX . "raidlist.towref = $wref, " . TB_PREFIX . "raidlist.x = $x, " . TB_PREFIX . "raidlist.y = $y,"
+					." " . TB_PREFIX . "raidlist.t1 = $t1, " . TB_PREFIX . "raidlist.t2 = $t2, " . TB_PREFIX . "raidlist.t3 = $t3, " . TB_PREFIX . "raidlist.t4 = $t4, " . TB_PREFIX . "raidlist.t5 = $t5,"
+					." " . TB_PREFIX . "raidlist.t6 = $t6, " . TB_PREFIX . "raidlist.t7 = $t7, " . TB_PREFIX . "raidlist.t8 = $t8, " . TB_PREFIX . "raidlist.t9 = $t9, " . TB_PREFIX . "raidlist.t10 = $t10"
+					." WHERE " . TB_PREFIX . "raidlist.id = $eid AND f_old.owner = $owner AND f_new.owner = $owner";
+        		$result = mysqli_query($this->connection,$q);
+        		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
 
 			function getBerichte($uid) {
@@ -5090,6 +5143,7 @@ break;
         	}
 
 			function getFLData($id) {
+				$id = (int)$id;
         		$q = "SELECT * FROM " . TB_PREFIX . "farmlist where id = $id";
         		$result = mysqli_query($this->connection,$q);
 				return mysqli_fetch_array($result);

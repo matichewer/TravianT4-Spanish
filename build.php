@@ -147,11 +147,11 @@ if(isset($_GET['id'])) {
 				include("Templates/goldClub/farmlist_editraid.tpl");
 			}
 			if(isset($_GET['action'], $_GET['lid']) && $_GET['action'] == 'deleteList') {
-				$database->delFarmList($_GET['lid'], $session->uid);
+				$database->delFarmList((int)$_GET['lid'], $session->uid);
 				header("Location: build.php?id=39&t=99");
 				exit;
 			}elseif(isset($_GET['action'], $_GET['eid']) && $_GET['action'] == 'deleteSlot') {
-				$database->delSlotFarm($_GET['eid']);
+				$database->delSlotFarm((int)$_GET['eid'], $session->uid);
 				header("Location: build.php?id=39&t=99");
 				exit;
 			}

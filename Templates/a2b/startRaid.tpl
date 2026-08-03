@@ -1,9 +1,19 @@
 <?php
 
     $slots = $_POST['slot'];
-    $lid = $_POST['lid'];
-    $tribe = $_POST['tribe'];
+    $lid = (int)$_POST['lid'];
+    // La tribu se toma de la sesion (autoritativa) y no del POST: la aldea de
+    // la lista de granjas ya se valido como propia mas abajo, asi que su tribu
+    // siempre coincide con la del usuario logueado.
+    $tribe = (int)$session->tribe;
     $getFLData = $database->getFLData($lid);
+    // La lista de granjas debe pertenecer al usuario logueado: sin esta
+    // verificacion cualquiera podia disparar un saqueo usando la aldea y las
+    // tropas de otro jugador con solo adivinar su `lid`.
+    if(!is_array($getFLData) || (int)$getFLData['owner'] !== (int)$session->uid) {
+        header("Location: build.php?id=39&t=99");
+        exit;
+    }
     $sql = "SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = ".$lid." order by id asc";
 	$array = $database->query_return($sql);
     foreach($array as $row){
@@ -60,7 +70,7 @@
 			$fastertroops = 1;
 			}
 			$time = round($generator->procDistanceTime($from,$to,min($speeds),1)/$fastertroops);
-			$foolartefact = $database->getFoolArtefactInfo(2,$village->wid,$seesion->uid);
+			$foolartefact = $database->getFoolArtefactInfo(2,$village->wid,$session->uid);
 			if(count($foolartefact) > 0){
 			foreach($foolartefact as $arte){
 			if($arte['bad_effect'] == 1){

@@ -1,5 +1,14 @@
 <?php
-    
+
+$requestedLid = isset($_GET['lid']) && is_numeric($_GET['lid']) ? (int)$_GET['lid'] : 0;
+if($requestedLid > 0) {
+    $requestedListData = $database->getFLData($requestedLid);
+    if(!is_array($requestedListData) || (int)$requestedListData['owner'] !== (int)$session->uid) {
+        // No es una lista propia: no mostramos sus objetivos guardados.
+        $requestedLid = 0;
+    }
+}
+
 if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_POST['lid']) {
 
     $troops = $_POST['t1']+$_POST['t2']+$_POST['t3']+$_POST['t4']+$_POST['t5']+$_POST['t6']+$_POST['t7']+$_POST['t8']+$_POST['t9']+$_POST['t10']."";
@@ -38,9 +47,10 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
                }
             
         $distance = getDistance($coor['x'], $coor['y'], $_POST['x'], $_POST['y']);
-            
-        $database->addSlotFarm($_POST['lid'], $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
-        
+
+        // addSlotFarm valida internamente que `lid` sea una lista del usuario logueado.
+        $database->addSlotFarm($_POST['lid'], $session->uid, $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
+
         header("Location: build.php?id=39&t=99");
 }
 }
@@ -128,7 +138,7 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
         }
     }
 
-    var lid = <?php echo $_GET['lid']; ?>;targets[lid] = {};
+    var lid = <?php echo $requestedLid; ?>;targets[lid] = {};
 
 </script>
 
@@ -138,11 +148,11 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
 <?php echo $errormsg; ?>
 </b></font>
     
-    <form action="build.php?id=39&t=99&action=showSlot&lid=<?php echo $_GET['lid']; ?>" method="post">
+    <form action="build.php?id=39&t=99&action=showSlot&lid=<?php echo $requestedLid; ?>" method="post">
         <div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
-        
+
         <input type="hidden" name="action" value="addSlot">
-        <input type="hidden" name="lid" value="<?php echo $_GET['lid']; ?>">
+        <input type="hidden" name="lid" value="<?php echo $requestedLid; ?>">
         
             
             <table cellpadding="1" cellspacing="1" class="transparent">
@@ -159,7 +169,7 @@ $lname = $row["name"];
 $lowner = $row["owner"];
 $lwref = $row["wref"];
 $lvname = $database->getVillageField($row["wref"], 'name');
-    if($_GET['lid']==$lid){
+    if($requestedLid === (int)$lid){
         $selected = 'selected=""';
         }else{ $selected = ''; }
     echo '<option value="'.$lid.'" '.$selected.'>'.$lvname.' - '.$lname.'</option>';
@@ -187,7 +197,7 @@ $lvname = $database->getVillageField($row["wref"], 'name');
                             <label class="lastTargets" for="last_targets">Últimos objetivos:</label>
 							<select name="target_id">
 <?php
-$getwref = "SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = ".$_GET['lid']."";
+$getwref = "SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = ".$requestedLid;
 $arraywref = $database->query_return($getwref);
 	echo '<option value="">Selecciona una aldea</option>';
 if(mysql_num_rows(mysql_query($getwref)) != 0){

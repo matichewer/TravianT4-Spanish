@@ -36,7 +36,7 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
             $coor = $database->getCoor($to['wref']);
             
             if($isoasis){
-            	echo " (".$coor['y']."|".$coor['x'].")";
+            	echo " (".$coor['x']."|".$coor['y'].")";
                 }
             ?></td>
 		</tr>
@@ -50,9 +50,9 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
                   $coor = $database->getCoor($village->wid);
                   echo "<tr><th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {
@@ -130,9 +130,9 @@ $timer += 1;
                   
                   echo "<tr><th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {
@@ -188,7 +188,7 @@ $timer += 1;
     <thead>
         <tr>
             <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to']); ?>">Fundación de nueva aldea (<?php echo $coor['y']."|".$coor['x']; ?>)</a></td>
+            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to']); ?>">Fundación de nueva aldea (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
         </tr>
     </thead>
     <tbody class="units">
@@ -199,9 +199,9 @@ $timer += 1;
                   
                   echo "<tr><th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {

@@ -1,12 +1,18 @@
 <?php
-if(isset($_GET['action'],$_GET['eid']) && $_GET['action'] === 'editSlot' && $_GET['eid']) {
-$eiddata = $database->getRaidList($_GET['eid']);
+// El slot solo se carga/edita si pertenece a una lista de granjas del usuario
+// logueado (getRaidListForOwner hace el join con farmlist.owner).
+$requestedEid = isset($_GET['eid']) && is_numeric($_GET['eid']) ? (int)$_GET['eid'] : 0;
+$eiddata = $requestedEid > 0 ? $database->getRaidListForOwner($requestedEid, $session->uid) : false;
+
+$lid2 = 0;
+if(is_array($eiddata)) {
 $x = $eiddata['x'];
 $y = $eiddata['y'];
 $t1 = $eiddata['t1'];$t2 = $eiddata['t2'];$t3 = $eiddata['t3'];$t4 = $eiddata['t4'];$t5 = $eiddata['t5'];$t6 = $eiddata['t6'];$t7 = $eiddata['t7'];$t8 = $eiddata['t8'];$t9 = $eiddata['t9'];$t10 = $eiddata['t10'];
+$lid2 = (int)$eiddata['lid'];
 }
 
-if(isset($_POST['action'],$_POST['eid']) && $_POST['action'] === 'editSlot' && $_POST['eid']) {
+if(is_array($eiddata) && isset($_POST['action'],$_POST['eid']) && $_POST['action'] === 'editSlot' && $_POST['eid']) {
 
     $troops = "".$_POST['t1']+$_POST['t2']+$_POST['t3']+$_POST['t4']+$_POST['t5']+$_POST['t6']+$_POST['t7']+$_POST['t8']+$_POST['t9']+$_POST['t10']."";
 
@@ -43,9 +49,11 @@ if(isset($_POST['action'],$_POST['eid']) && $_POST['action'] === 'editSlot' && $
    				return round($dist, 1);
    			}
             $distance = getDistance($coor['x'], $coor['y'], $_POST['x'], $_POST['y']);
-            
-		$database->editSlotFarm($_GET['eid'], $_POST['lid'], $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
-        
+
+		// editSlotFarm valida internamente que tanto la lista actual como la
+		// nueva (`lid`) pertenezcan al usuario logueado.
+		$database->editSlotFarm($requestedEid, $_POST['lid'], $session->uid, $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
+
         header("Location: build.php?id=39&t=99");
 }
 }
@@ -135,7 +143,7 @@ if(isset($_POST['action'],$_POST['eid']) && $_POST['action'] === 'editSlot' && $
 		}
 	}
 
-	var lid = <?php echo $_GET['lid']; ?>;targets[lid] = {};
+	var lid = <?php echo $lid2; ?>;targets[lid] = {};
 
 </script>
 
@@ -145,20 +153,16 @@ if(isset($_POST['action'],$_POST['eid']) && $_POST['action'] === 'editSlot' && $
 <?php echo $errormsg; ?>
 </b></font>
 	
-	<form id="edit_form" action="build.php?id=39&t=99&action=showSlot&eid=<?php echo $_GET['eid']; ?>" method="post">
+	<form id="edit_form" action="build.php?id=39&t=99&action=showSlot&eid=<?php echo $requestedEid; ?>" method="post">
 		<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
 
-<?php
-$getlid = $database->getRaidList($_GET["eid"]);
-$lid2 = $getlid['lid'];
-?>
 		<input type="hidden" name="action" value="editSlot">
-		<input type="hidden" name="eid" value="<?php echo $_GET['eid']; ?>">
+		<input type="hidden" name="eid" value="<?php echo $requestedEid; ?>">
         <input type="hidden" name="lid" value="<?php echo $lid2; ?>">
-			
+
 			<table cellpadding="1" cellspacing="1" class="transparent">
 				<tbody><tr>
-					<th>Nombre de la lista:</th><?php echo $_GET["lid"]; ?>
+					<th>Nombre de la lista:</th>
 					<td>
 						<select onchange="getTargetsByLid();" id="lid" name="lid">
 <?php
@@ -196,9 +200,8 @@ $lvname = $database->getVillageField($row["wref"], 'name');
 							<label class="lastTargets" for="last_targets">Últimos objetivos:</label>
 							<select name="target_id">
 <?php
-$select_raidlist = "SELECT * FROM ".TB_PREFIX."raidlist WHERE id = ".$_GET['eid']."";
-$raidlist = mysql_fetch_array(mysql_query($select_raidlist));
-$getwref = "SELECT * FROM ".TB_PREFIX."raidlist WHERE id = ".$raidlist['lid']."";
+// Lista los demas objetivos guardados en la MISMA lista de granjas que este slot.
+$getwref = "SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = ".$lid2;
 $arraywref = $database->query_return($getwref);
 	echo '<option value="">Selecciona una aldea</option>';
 if(mysql_num_rows(mysql_query($getwref)) != 0){
@@ -235,7 +238,7 @@ $vill[$towref] = 1;
 				{
 					onOkay: function(dialog, contentElement)
 					{
-						window.location.href = 'build.php?id=39&t=99&action=deleteSlot&eid=<?php echo $_GET['eid']; ?>'}
+						window.location.href = 'build.php?id=39&t=99&action=deleteSlot&eid=<?php echo $requestedEid; ?>'}
 				});
 				return false;
 			})()">
