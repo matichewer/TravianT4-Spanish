@@ -20,7 +20,7 @@ docker compose down                   # stop, keep dbdata volume
 - Game: <http://localhost:8080/> · Installer: <http://localhost:8080/install/> · Admin: <http://localhost:8080/Admin/>
 - MariaDB from host: `127.0.0.1:3308` (db `travian_t4`, user `travian`). Inside Docker the app connects to host `db` port `3306`.
 - `reset_server.sh` wipes and reinstalls the game world from scratch (destructive).
-- There is **no test framework and no linter**. `test.php`/`test22.php` are ad-hoc scratch scripts; `tools/check_quest_rewards.php` is a one-off checker. Verify changes by loading pages in the running container.
+- There is **no test framework and no linter**, but `tools/check_*.php` are standalone regression checkers: each one runs with `docker compose exec -T web php /var/www/html/tools/<name>.php` and exits non-zero on failure. Run them all after touching game logic, and add one alongside any non-trivial fix. Also verify changes by loading pages in the running container.
 
 ## First-time setup / DB schema
 
@@ -59,7 +59,7 @@ When adding logic, follow this pattern (`global $database, $session, ...`) rathe
 `GameEngine/Lang/{es,en,de,ru,fa}.php` each define UI text as `define()` constants plus a `$lang` array. `es.php` (Spanish) is the active target locale; translation from the English original is an **ongoing effort** — player-facing pages are done, the Admin panel is the main remaining English area. Use neutral/LatAm Spanish, not peninsular terms.
 
 ### Admin panel
-The **live** admin panel is `Admin/admin.php` → `Admin/Templates/`. `Admin/tpl/` and `Templates/Admin/` are dead copies — don't edit those expecting changes to show.
+The **live** admin panel is `Admin/admin.php` → `Admin/Templates/`. The old duplicate entry points (`Admin/index.php`, `Admin/tpl/`, `Templates/Admin/`, …) were removed; if you find another copy, it is dead.
 
 ## Conventions & gotchas
 
