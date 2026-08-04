@@ -3284,13 +3284,16 @@
 				return mysql_query("DELETE FROM ".TB_PREFIX."attacks WHERE id = ".(int)$id." LIMIT 1",$this->connection);
 			}
 
+			// Mismo reinicio del reloj de regeneración que en el driver MySQLi, para que los
+			// dos no se separen si alguien cambia DB_TYPE.
 			function modifyHero2($column,$value,$uid,$mode) {
+				$clock = $column === 'health' ? ", lastupdate = ".time() : "";
 				if(!$mode){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $value WHERE uid = $uid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = $value$clock WHERE uid = $uid";
 				} elseif($mode==1){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value WHERE uid = $uid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value$clock WHERE uid = $uid";
 				} elseif($mode==2){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value WHERE uid = $uid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value$clock WHERE uid = $uid";
 				}
 				return mysql_query($q, $this->connection);
 			}

@@ -3469,13 +3469,19 @@
 				return mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = ".(int)$id." LIMIT 1");
 			}
 
+				// Todo cambio de vida reinicia el reloj de regeneración. `updateHero` solo
+				// tocaba `lastupdate` cuando el héroe ya estaba herido, así que uno que pasó
+				// días al 100% arrastraba un reloj viejo y la primera herida se curaba entera
+				// en la siguiente pasada. Se hace acá porque es por donde pasan todas las
+				// fuentes de daño y de cura: batalla, aventuras, vendas y rescate.
 				function modifyHero2($column,$value,$uid,$mode) {
+					$clock = $column === 'health' ? ", lastupdate = ".time() : "";
 					if(!$mode){
-						$q = "UPDATE ".TB_PREFIX."hero SET $column = $value WHERE uid = $uid";
+						$q = "UPDATE ".TB_PREFIX."hero SET $column = $value$clock WHERE uid = $uid";
 				} elseif($mode==1){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value WHERE uid = $uid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value$clock WHERE uid = $uid";
 				} elseif($mode==2){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value WHERE uid = $uid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value$clock WHERE uid = $uid";
 				}
 					return mysqli_query($this->connection,$q);
 				}
