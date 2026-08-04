@@ -213,6 +213,11 @@ class SettlerFoundingDatabaseStub {
 	public $questAchievements = array();
 	public $refunds = array();
 	public $movementAllowed = true;
+	public $expansionSlots = 3;
+
+	public function getExpansionSlotLimit($wid) {
+		return $this->expansionSlots;
+	}
 
 	public function getMInfo($target) {
 		return array('occupied' => 0, 'oasistype' => 0, 'fieldtype' => 3, 'x' => 10, 'y' => 11);
@@ -321,6 +326,15 @@ settlerAssert(
 );
 
 $database = new SettlerFoundingDatabaseStub();
+$database->expansionSlots = 0;
+settlerAssert(
+	$foundingMethod->invoke($units,900) === false
+		&& empty($database->resourceDeductions)
+		&& empty($database->movements),
+	'Sin plazas de expansión desbloqueadas no se puede fundar ni se cobran recursos.'
+);
+
+$database = new SettlerFoundingDatabaseStub();
 $database->movementAllowed = false;
 settlerAssert(
 	$foundingMethod->invoke($units,900) === false
@@ -358,8 +372,9 @@ foreach($expansionTrainingTemplates as $templateName) {
 $manualSource = file_get_contents(dirname(__DIR__).'/manual.php');
 settlerAssert(
 	strpos($manualSource,"\$bid25[10]['attri']") !== false
-		&& strpos($manualSource,"array(10,20,30)") !== false,
-	'The standalone settler manual must apply server speed and the minimum valid expansion-building level.'
+		&& strpos($manualSource,'/ SPEED') !== false
+		&& strpos($manualSource,"array(9,10,19,20,29,30)") !== false,
+	'The standalone settler manual must apply server speed and the minimum valid expansion-building level to settlers and chiefs alike.'
 );
 
 $spanishFiles = array(dirname(__DIR__).'/GameEngine/Lang/es.php',dirname(__DIR__).'/Templates');
