@@ -83,7 +83,7 @@ heroAttributeAssert(
 	'Focused resource options are missing positive hourly labels'
 );
 foreach(array(
-	'Como tienes <?php echo $productPoints; ?> puntos en Recursos',
+	'Como tienes <?php echo $productPoints; ?> puntos en <b>Recursos</b>',
 	'el héroe produce <?php echo $allResourceRate; ?> de cada recurso',
 	'o <?php echo $focusedResourceRate; ?> de un recurso específico',
 	'Este extra de producción se otorga a la aldea natal del héroe',
