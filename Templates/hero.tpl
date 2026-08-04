@@ -285,7 +285,11 @@ if(!$checkT){
 
 <?php
 $heroid = $hero['heroid'];
-if(isset($_GET['revive']) && $_GET['revive'] == 1 && $village->awood > $hero_t[$hero['level']]['wood'] && $village->aclay > $hero_t[$hero['level']]['clay'] && $village->airon > $hero_t[$hero['level']]['iron'] && $village->acrop > $hero_t[$hero['level']]['crop']){
+// El botón se muestra con los recursos justos (>=), así que acá se compara igual: con
+// `>` estricto el clic no hacía nada y tampoco avisaba. Se exige además que el héroe
+// esté muerto y que no haya otro rescate ya encargado, porque entrar a mano por
+// `?revive=1` cobraba los recursos de nuevo.
+if(isset($_GET['revive']) && $_GET['revive'] == 1 && (int)$hero['dead'] !== 0 && !$database->getHeroTrain($hero['wref']) && $village->awood >= $hero_t[$hero['level']]['wood'] && $village->aclay >= $hero_t[$hero['level']]['clay'] && $village->airon >= $hero_t[$hero['level']]['iron'] && $village->acrop >= $hero_t[$hero['level']]['crop']){
 	if($tribe==1){
 		$each = (time() + ($hero_t1[$hero['level']]['time']/SPEED*1.5));
 	}elseif($tribe==2){
