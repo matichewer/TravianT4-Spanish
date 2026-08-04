@@ -187,7 +187,7 @@ ob_start();
 				</div>
 			</div>
 <?php }else{ ?>
-<div class="attributesHeadline"> El héroe revivirá en esta aldea </div>
+<div class="attributesHeadline reviveHeadline">El héroe revivirá en esta aldea</div>
 <div class="clear"></div>
     <?php
     $vRes = ($village->awood+$village->aclay+$village->airon+$village->acrop);

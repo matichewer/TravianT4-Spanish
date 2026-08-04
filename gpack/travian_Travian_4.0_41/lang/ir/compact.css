@@ -896,6 +896,7 @@ div.hero_inventory #hero_body_content #shoes{position:absolute;left:133px;top:35
 div.hero_inventory #hero_body_content #bag{position:absolute;left:215px;top:310px;}
 div.hero_inventory #hero_inventory{width:269px;float:right;}.ie6 div.hero_inventory #hero_inventory .boxes{background:none;}
 .ie6 div.hero_inventory #hero_inventory{background-color:#E5E5E5;}div.hero_inventory .attributesHeadline{font-weight:bold;float:left;text-align:left;width:100px;margin-bottom:8px;}
+div.hero_inventory .reviveHeadline{width:auto;white-space:nowrap;}
 div.hero_inventory #hero_inventory .boxes-contents{padding:4px 0;}div.hero_inventory .pointsHeadline{float:right;font-weight:bold;width:70px;text-align:center;margin-bottom:8px;}
 div.hero_inventory .availableAttributePoints{float:left;margin:-3px 0 6px 12px;padding:3px 8px;color:#3f5f00;background-color:#f1f8df;border:1px solid #9bc43d;border-radius:3px;}
 div.hero_inventory .changeResourcesHeadline{margin-bottom:6px;}div.hero_inventory .heroStatus{padding-bottom:6px;}
