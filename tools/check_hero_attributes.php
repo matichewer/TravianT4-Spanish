@@ -82,6 +82,12 @@ heroAttributeAssert(
 	substr_count($heroTemplate,'<span class="current">+<?php echo $focusedResourceRate; ?>/h</span>')===4,
 	'Focused resource options are missing positive hourly labels'
 );
+heroAttributeAssert(
+	strpos($heroTemplate,'<div class="element attribName">Aldea natal</div>')!==false
+	&& strpos($heroTemplate,"heroHomeVillage(\$hero)")!==false
+	&& strpos($heroTemplate,"getVillageField(\$heroHomeVillageId,'name')")!==false,
+	'Hero home village is missing from the attribute summary'
+);
 foreach(array(
 	'Como tienes <?php echo $productPoints; ?> puntos en <b>Recursos</b>',
 	'el héroe produce <?php echo $allResourceRate; ?> de cada recurso',

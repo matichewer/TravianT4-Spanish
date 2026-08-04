@@ -27,6 +27,8 @@ $selectedResourceRate = $resourceRates['wood'];
 if(!empty($hero['r2'])){ $selectedResourceRate = $resourceRates['clay']; }
 elseif(!empty($hero['r3'])){ $selectedResourceRate = $resourceRates['iron']; }
 elseif(!empty($hero['r4'])){ $selectedResourceRate = $resourceRates['crop']; }
+$heroHomeVillageId = heroHomeVillage($hero);
+$heroHomeVillageName = $heroHomeVillageId > 0 ? $database->getVillageField($heroHomeVillageId,'name') : '';
 $maximumHeroLevel = count($hero_levels)-1;
 $displayHeroLevel = max(0,min($maximumHeroLevel,(int)$hero['level']));
 if($displayHeroLevel>=$maximumHeroLevel){
@@ -272,6 +274,11 @@ if(!$checkT){
     	<span class="currect"><?php echo $hero['speed']*INCREASE_SPEED; ?></span> Casillas por hora
     </div>
     <div class="clear"></div>
+</div>
+<div class="attribute homeVillage">
+	<div class="element attribName">Aldea natal</div>
+	<div class="element power"><?php echo $heroHomeVillageName !== '' ? htmlspecialchars(stripslashes($heroHomeVillageName),ENT_QUOTES,'UTF-8') : 'Sin aldea natal'; ?></div>
+	<div class="clear"></div>
 </div>
 
 		</div>
