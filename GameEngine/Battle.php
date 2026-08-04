@@ -703,6 +703,18 @@ class Battle {
 			: 0;
 	}
 
+	// Que un héroe caiga depende solo del porcentaje de bajas de su bando, así que se
+	// puede saber antes de tocar la base de datos. Eso permite contar los héroes
+	// muertos de los dos lados antes de repartir la experiencia.
+	private function battleHeroDies($hero, $losses) {
+		if(!is_array($hero) || empty($hero['uid'])) {
+			return false;
+		}
+		$damage = max(0, min(100, (int)round(100 * $losses)));
+		$health = max(0, min(100, (float)$hero['health']));
+		return $damage > 90 || $damage >= $health;
+	}
+
 	private function battleHeroOutcome($hero, $losses, $experience) {
 		global $database;
 		$outcome = array('dead' => 0, 'damage' => 0);
@@ -711,8 +723,7 @@ class Battle {
 		}
 
 		$damage = max(0, min(100, (int)round(100 * $losses)));
-		$health = max(0, min(100, (float)$hero['health']));
-		$dead = $damage > 90 || $damage >= $health;
+		$dead = $this->battleHeroDies($hero, $losses);
 		$outcome['dead'] = $dead ? 1 : 0;
 		$outcome['damage'] = $damage;
 
@@ -1016,12 +1027,21 @@ class Battle {
 			}
 		}
 
+		// Un héroe caído vale 6 de población para el rival. Las dos muertes se resuelven
+		// antes de repartir experiencia: si no, el atacante nunca cobraba los 6 del héroe
+		// defensor, porque esas bajas se calculaban después de darle su experiencia.
+		if($this->battleHeroDies($attackerHero, $result[1])) {
+			$attackerPopulationLost += 6;
+		}
+		foreach($defenderHeroes as $defenderHero) {
+			if($this->battleHeroDies($defenderHero['data'], $result[2])) {
+				$defenderPopulationLost += 6;
+			}
+		}
+
 		if(is_array($attackerHero)) {
 			$attackerOutcome = $this->battleHeroOutcome($attackerHero, $result[1], $defenderPopulationLost);
 			$result['casualties_attacker'][11] = $attackerOutcome['dead'];
-			if($attackerOutcome['dead']) {
-				$attackerPopulationLost += 6;
-			}
 		}
 
 		$heroExperience = count($defenderHeroes) > 0
