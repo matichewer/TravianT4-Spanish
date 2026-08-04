@@ -89,7 +89,8 @@ heroAttributeAssert(
 	'Hero home village is missing from the attribute summary'
 );
 foreach(array(
-	'Como tienes <?php echo $productPoints; ?> puntos en <b>Recursos</b>',
+	'<div class="changeResourcesHeadline"><b>Recursos</b></div>',
+	'Como tienes <?php echo $productPoints; ?> puntos en Recursos',
 	'el héroe produce <?php echo $allResourceRate; ?> de cada recurso',
 	'o <?php echo $focusedResourceRate; ?> de un recurso específico',
 	'Este extra de producción se otorga a la aldea natal del héroe',
