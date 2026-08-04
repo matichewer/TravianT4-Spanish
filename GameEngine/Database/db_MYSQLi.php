@@ -1006,6 +1006,32 @@
 				return $array;
 			}
 
+			// Aldeas propias con nombre y coordenadas en una sola consulta (selector de destino del mercado)
+			function getOwnVillagesWithCoor($uid) {
+				$uid = (int) $uid;
+				$q = "SELECT v.wref, v.name, w.x, w.y FROM " . TB_PREFIX . "vdata v
+					JOIN " . TB_PREFIX . "wdata w ON w.id = v.wref
+					WHERE v.owner = $uid ORDER BY v.capital DESC, v.pop DESC";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? $this->mysqli_fetch_all($result) : array();
+			}
+
+			// Aldeas del resto de la alianza con nombre, coordenadas y dueño
+			function getAllianceVillagesWithCoor($aid, $excludeUid = 0) {
+				$aid = (int) $aid;
+				$excludeUid = (int) $excludeUid;
+				if($aid <= 0) {
+					return array();
+				}
+				$exclude = $excludeUid > 0 ? " AND u.id != $excludeUid" : "";
+				$q = "SELECT v.wref, v.name, w.x, w.y, u.username FROM " . TB_PREFIX . "vdata v
+					JOIN " . TB_PREFIX . "wdata w ON w.id = v.wref
+					JOIN " . TB_PREFIX . "users u ON u.id = v.owner
+					WHERE u.alliance = $aid$exclude ORDER BY u.username ASC, v.capital DESC, v.pop DESC";
+				$result = mysqli_query($this->connection,$q);
+				return $result ? $this->mysqli_fetch_all($result) : array();
+			}
+
         	function getVillage($vid) {
         		$q = "SELECT * FROM " . TB_PREFIX . "vdata where wref = $vid";
         		$result = mysqli_query($this->connection,$q);

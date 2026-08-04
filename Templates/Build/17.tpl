@@ -199,6 +199,47 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 	</tr></table> 
 
 <div class="destination"><div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
+<?php
+// Selector rapido de destino: aldeas propias + aldeas de la alianza.
+// Solo completa los campos x/y del formulario, el envio sigue el mismo flujo de siempre.
+$marketOwnVillages = $database->getOwnVillagesWithCoor($session->uid);
+$marketAllyVillages = (int)$session->alliance > 0 ? $database->getAllianceVillagesWithCoor($session->alliance,$session->uid) : array();
+$marketOwnOptions = '';
+foreach($marketOwnVillages as $marketOption) {
+	if((int)$marketOption['wref'] == (int)$village->wid) {
+		continue;
+	}
+	$marketOwnOptions .= '<option value="'.(int)$marketOption['x'].'|'.(int)$marketOption['y'].'">'
+		.htmlspecialchars((string)$marketOption['name'],ENT_QUOTES,'UTF-8')
+		.' ('.(int)$marketOption['x'].'|'.(int)$marketOption['y'].')</option>';
+}
+$marketAllyOptions = '';
+foreach($marketAllyVillages as $marketOption) {
+	$marketAllyOptions .= '<option value="'.(int)$marketOption['x'].'|'.(int)$marketOption['y'].'">'
+		.htmlspecialchars((string)$marketOption['username'],ENT_QUOTES,'UTF-8').': '
+		.htmlspecialchars((string)$marketOption['name'],ENT_QUOTES,'UTF-8')
+		.' ('.(int)$marketOption['x'].'|'.(int)$marketOption['y'].')</option>';
+}
+if($marketOwnOptions !== '' || $marketAllyOptions !== '') {
+?>
+<table cellpadding="0" cellspacing="0" class="transparent compact">
+				<tbody>
+					<tr>
+						<td>
+							<span>Destino rápido:</span>
+							<select id="marketQuickTarget" style="display:block;width:100%;margin-top:2px;">
+								<option value="">-- Elegir aldea --</option>
+<?php if($marketOwnOptions !== '') { ?>
+								<optgroup label="Mis aldeas"><?php echo $marketOwnOptions; ?></optgroup>
+<?php } if($marketAllyOptions !== '') { ?>
+								<optgroup label="Alianza"><?php echo $marketAllyOptions; ?></optgroup>
+<?php } ?>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+<?php } ?>
 <table cellpadding="0" cellspacing="0" class="transparent compact">
 				<tbody>
 					<tr>
@@ -313,6 +354,26 @@ if($marketFormType === 'check'){
 		merchantRes[resNr] = res_max(parseInt(inputRes), currentRes , merchantMax , 0);
 		$('r' + resNr).value = merchantRes[resNr];
 	}
+	(function()
+	{
+		var quickTarget = document.getElementById('marketQuickTarget');
+		if (!quickTarget)
+		{
+			return;
+		}
+		quickTarget.onchange = function()
+		{
+			if (!this.value)
+			{
+				return;
+			}
+			var coords = this.value.split('|');
+			var form = document.snd;
+			form.x.value = coords[0];
+			form.y.value = coords[1];
+			form.dname.value = '';
+		};
+	})();
 	function res_max(_merchantRes, _actualRes , _merchantMax , _carry)
 	{
 		var res = Number(_merchantRes) + _carry;
