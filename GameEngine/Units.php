@@ -757,10 +757,12 @@ class Units {
 				|| !$database->getHUnit($heroVillageId) || !is_array($heroVillageCoor) || !is_array($targetCoor)) {
 				$this->redirectToRallyPoint();
 			}
-			foreach($database->getMovement(9,$heroVillageId,0) as $movement) {
-				if((int)$movement['to'] === $target) {
-					$this->redirectToRallyPoint();
-				}
+			// Un jugador tiene un solo héroe, así que solo puede haber una aventura en
+			// curso. Mirar únicamente los movimientos de esta aldea hacia este destino
+			// dejaba lanzar una segunda aventura si el héroe figuraba a la vez en dos
+			// aldeas, y llegaban dos informes por una sola salida.
+			if($database->heroAdventureInProgress((int)$session->uid)) {
+				$this->redirectToRallyPoint();
 			}
 
 			$travelTime = $generator->procDistanceTime($heroVillageCoor,$targetCoor,(int)$hero['speed'],1);

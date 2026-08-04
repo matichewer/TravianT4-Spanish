@@ -3676,6 +3676,20 @@
         		return mysqli_query($this->connection,$q);
         	}
 
+			// ¿El héroe de este jugador ya está en una aventura? Se mira por dueño y no
+			// por aldea: el héroe sale de donde esté y sigue siendo el mismo héroe.
+			function heroAdventureInProgress($uid) {
+				$uid = (int) $uid;
+				if($uid <= 0) {
+					return false;
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "movement m"
+					. " JOIN " . TB_PREFIX . "vdata v ON v.wref = m.`from`"
+					. " WHERE m.sort_type = 9 AND m.proc = 0 AND v.owner = $uid LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_num_rows($result) > 0;
+			}
+
 			function deductUnitIfAvailable($vref, $unit, $amt) {
 				$vref = (int) $vref;
 				$amt = (int) $amt;

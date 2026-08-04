@@ -340,6 +340,19 @@ say("  hero.home=" . (int)$hero['home']);
 check((int)$hero['home'] === $V_A1, "la aldea natal huérfana vuelve a la capital");
 q("UPDATE {$P}hero SET product = 4, r0 = 1 WHERE uid = $UID_A");
 
+// =========================================================================
+say("\n== M) una sola aventura a la vez, salga de la aldea que salga ==");
+resetWorld();
+check($database->heroAdventureInProgress($UID_A) === false, "sin aventuras en curso no bloquea");
+// Aventura en vuelo desde la segunda aldea.
+q("INSERT INTO {$P}movement (sort_type,`from`,`to`,ref,ref2,data,endtime,proc,send,wood,clay,iron,crop)
+   VALUES (9,$V_A2,123456,0,0,'0'," . (time() + 3600) . ",0,0,0,0,0,0)");
+check($database->heroAdventureInProgress($UID_A) === true, "detecta la aventura aunque salga de otra aldea");
+check($database->heroAdventureInProgress($UID_ALLY) === false, "no confunde la aventura de otro jugador");
+q("UPDATE {$P}movement SET proc = 1 WHERE sort_type = 9");
+check($database->heroAdventureInProgress($UID_A) === false, "una aventura ya procesada deja de bloquear");
+q("DELETE FROM {$P}movement WHERE sort_type = 9");
+
 resetWorld();
 say("\n" . ($failures === 0 ? "TODO OK" : "$failures COMPROBACIONES FALLARON"));
 exit($failures === 0 ? 0 : 1);
