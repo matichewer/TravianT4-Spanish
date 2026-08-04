@@ -1576,7 +1576,6 @@ class Automation {
                 ${'traped'.$i} = 0;
             }
             //set base things
-            //$battle->resolveConflict($data);
             $tocoor = $database->getCoor($data['from']);
             $fromcoor = $database->getCoor($data['to']);
             $isoasis = $database->isVillageOases($data['to']);
@@ -2315,12 +2314,6 @@ class Automation {
                 $database->modifyAttack($data['ref'], 10, $traped10);
                 $database->modifyAttack($data['ref'], 11, $traped11);
                 $unitstraped_att = ''.$traped1.','.$traped2.','.$traped3.','.$traped4.','.$traped5.','.$traped6.','.$traped7.','.$traped8.','.$traped9.','.$traped10.','.$traped11.'';
-                if($herosend_att > 0) {
-                    $unitsdead_att_check = $unitsdead_att.','.$dead11;
-                } else {
-                    $unitsdead_att_check = $unitsdead_att;
-                }
-
 
                 //top 10 attack and defence update
                 $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
