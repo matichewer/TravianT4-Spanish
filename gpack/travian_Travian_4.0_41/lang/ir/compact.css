@@ -895,10 +895,9 @@ div.hero_inventory #hero_body_content #horse{position:absolute;left:30px;top:300
 div.hero_inventory #hero_body_content #shoes{position:absolute;left:133px;top:350px;}
 div.hero_inventory #hero_body_content #bag{position:absolute;left:215px;top:310px;}
 div.hero_inventory #hero_inventory{width:269px;float:right;}.ie6 div.hero_inventory #hero_inventory .boxes{background:none;}
-.ie6 div.hero_inventory #hero_inventory{background-color:#E5E5E5;}div.hero_inventory .attributesHeadline{font-weight:bold;float:left;text-align:left;width:300px;margin-bottom:8px;}
+.ie6 div.hero_inventory #hero_inventory{background-color:#E5E5E5;}div.hero_inventory .attributesHeadline{font-weight:bold;float:left;text-align:left;width:100px;margin-bottom:8px;}
 div.hero_inventory #hero_inventory .boxes-contents{padding:4px 0;}div.hero_inventory .pointsHeadline{float:right;font-weight:bold;width:70px;text-align:center;margin-bottom:8px;}
-div.hero_inventory .availableAttributePoints{margin:0 15px 10px;padding:6px 9px;color:#666;background-color:#f4f4f4;border:1px solid #c8c8c8;border-radius:3px;}
-div.hero_inventory .availableAttributePoints.hasPoints{color:#3f5f00;background-color:#f1f8df;border-color:#9bc43d;}
+div.hero_inventory .availableAttributePoints{float:left;margin:-3px 0 6px 12px;padding:3px 8px;color:#3f5f00;background-color:#f1f8df;border:1px solid #9bc43d;border-radius:3px;}
 div.hero_inventory .changeResourcesHeadline{margin-bottom:6px;}div.hero_inventory .heroStatus{padding-bottom:6px;}
 div.hero_inventory .boxes .headline{padding-bottom:3px;}div.hero_inventory #hero_body_content .content div.draggable{width:60px;height:60px;}
 div.hero_inventory .attribute .element{float:left;margin:0 8px 6px 0;}div.hero_inventory .attribute .attribName{width:145px;white-space:nowrap;}

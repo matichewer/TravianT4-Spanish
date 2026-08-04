@@ -89,9 +89,8 @@ heroAttributeAssert(
 	'Hero home village is missing from the attribute summary'
 );
 heroAttributeAssert(
-	strpos($heroTemplate,"availableAttributePoints<?php echo \$canSpendPoint ? ' hasPoints' : ''; ?>")!==false
-	&& strpos($heroTemplate,'puntos disponibles</strong> para asignar')!==false
-	&& strpos($heroTemplate,'<div class="pointsHeadline">Asignados</div>')!==false,
+	strpos($heroTemplate,'<?php if($canSpendPoint){ ?><div class="availableAttributePoints">Puntos disponibles para asignar:')!==false
+	&& strpos($heroTemplate,'<div class="pointsHeadline">Puntos</div>')!==false,
 	'Available hero attribute points are not clearly identified'
 );
 foreach(array(
