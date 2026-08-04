@@ -40,13 +40,6 @@ if(!function_exists('getHeroWeaponPowerBonus')){
 	}
 }
 
-if(!function_exists('getHeroHorseSpeedBonus')){
-	function getHeroHorseSpeedBonus($type){
-		$bonuses = array(103 => 7, 104 => 10, 105 => 13);
-		return isset($bonuses[(int)$type]) ? $bonuses[(int)$type] : 0;
-	}
-}
-
 if(!function_exists('getHeroEquipmentDefinition')){
 	function getHeroEquipmentDefinition($btype){
 		$definitions = array(

@@ -31,6 +31,11 @@ $heroHomeVillageId = heroHomeVillage($hero);
 $heroHomeVillageData = $heroHomeVillageId > 0 ? $database->getVillage($heroHomeVillageId) : false;
 $heroHomeVillageIsValid = is_array($heroHomeVillageData) && (int)$heroHomeVillageData['owner']===(int)$session->uid;
 $heroHomeVillageName = $heroHomeVillageIsValid ? $heroHomeVillageData['name'] : '';
+$equippedHorse = $database->getEquippedHeroItem((int)$session->uid,6);
+$horseSpeedBonus = is_array($equippedHorse) ? getHeroHorseSpeedBonus((int)$equippedHorse['type']) : 0;
+$heroBaseSpeed = max(7,(int)$hero['speed']-$horseSpeedBonus);
+$heroSpeedMultiplier = max(1,(int)INCREASE_SPEED);
+$heroDisplayedSpeed = (int)$hero['speed']*$heroSpeedMultiplier;
 $maximumHeroLevel = count($hero_levels)-1;
 $displayHeroLevel = max(0,min($maximumHeroLevel,(int)$hero['level']));
 if($displayHeroLevel>=$maximumHeroLevel){
@@ -271,10 +276,10 @@ if(!$checkT){
 			</div>
 			<div class="clear"></div>
 </div>
-<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad: <?php echo $hero['speed']*INCREASE_SPEED; ?> casillas por hora</font>">
+<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad base: <?php echo $heroBaseSpeed; ?> casillas por hora<br>Caballo: +<?php echo $horseSpeedBonus; ?> casillas por hora<br>Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?><br>Total: <?php echo $heroDisplayedSpeed; ?> casillas por hora</font>">
 	<div class="element attribName">Velocidad</div>
     <div class="element power">
-    	<span class="currect"><?php echo $hero['speed']*INCREASE_SPEED; ?></span> Casillas por hora
+		<span class="currect"><?php echo $heroDisplayedSpeed; ?></span> Casillas por hora
     </div>
     <div class="clear"></div>
 </div>

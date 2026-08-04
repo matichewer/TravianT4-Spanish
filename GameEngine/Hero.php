@@ -1,5 +1,12 @@
 <?php
 
+if(!function_exists('getHeroHorseSpeedBonus')){
+	function getHeroHorseSpeedBonus($type){
+		$bonuses = array(103 => 7, 104 => 10, 105 => 13);
+		return isset($bonuses[(int)$type]) ? $bonuses[(int)$type] : 0;
+	}
+}
+
 if(!function_exists('heroExperienceWithHelmet')){
 	function heroExperienceWithHelmet($database, $uid, $experience){
 		$experience = max(0, (float)$experience);
