@@ -171,7 +171,7 @@ if(!function_exists('equipHeroBagItem')){
 	function equipHeroBagItem($database, $uid, $item, $amount){
 		$btype = isset($item['btype']) ? (int)$item['btype'] : 0;
 		$amount = (int)$amount;
-		if($btype<7 || $btype>9 || !isOwnedHeroItem($item, $uid, $btype) || (int)$item['proc']!==0 || $amount<1 || $amount>(int)$item['num']-(int)$item['type']){
+		if($btype<7 || $btype>9 || !isOwnedHeroItem($item, $uid, $btype) || $amount<1 || $amount>(int)$item['num']-(int)$item['type']){
 			return false;
 		}
 
@@ -181,7 +181,14 @@ if(!function_exists('equipHeroBagItem')){
 		}
 
 		$currentId = (int)$inventory['bag'];
-		if($currentId>0 && $currentId!==(int)$item['id']){
+		// Recargar el mismo objeto suma a lo que ya lleva la bolsa. Un objeto marcado
+		// como equipado que no sea el de la bolsa es una fila inconsistente: no se toca.
+		$isBagItem = $currentId>0 && $currentId===(int)$item['id'];
+		if((int)$item['proc']!==0 && !$isBagItem){
+			return false;
+		}
+
+		if($currentId>0 && !$isBagItem){
 			$currentItem = $database->getItemData($currentId);
 			if(isOwnedHeroItem($currentItem, $uid) && (int)$currentItem['btype']>=7 && (int)$currentItem['btype']<=9){
 				$database->editHeroType($currentId, 0, 2);
@@ -232,7 +239,13 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	$itemId = isset($data['id']) ? (int)$data['id'] : 0;
 	$itemData = $itemId>0 ? $database->getItemData($itemId) : false;
 
-	if(!isOwnedHeroItem($itemData, $uid) || (int)$itemData['proc']!==0){
+	// proc=1 en un consumible normal significa "ya gastado" y no se puede volver a usar.
+	// En los objetos de bolsa (7-9) significa "cargado", y recargarlos es legítimo:
+	// equipHeroBagItem valida que sea el que está realmente en la bolsa.
+	$isBagConsumable = isOwnedHeroItem($itemData, $uid)
+		&& (int)$itemData['btype']>=7 && (int)$itemData['btype']<=9;
+
+	if(!isOwnedHeroItem($itemData, $uid) || ((int)$itemData['proc']!==0 && !$isBagConsumable)){
 		$data['btype'] = 0;
 	}else{
 		$data['id'] = $itemId;

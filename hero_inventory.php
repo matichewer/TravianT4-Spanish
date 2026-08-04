@@ -213,7 +213,9 @@ include "Templates/Auction/alt.tpl";
 		if ($var > 0) {
 	$amount = '('.$var.') ';
 	$outputList .= "<div id=\"inventory_".$inv."\" class=\"inventory draggable\">";
-	$outputList .= "<div id=\"item_".$id."\" title=\"".$amount."".$name."||".$deadTitle."".$title."\" class=\"item item_".($btype+105)."".$dis."\" style=\"position:relative;left:0px;top:0px;\">";
+	// El id lleva prefijo propio: cuando el objeto está cargado en la bolsa, el slot ya
+	// dibuja otro div con id "item_<id>" y $() devolvería ese en lugar de este.
+	$outputList .= "<div id=\"inv_item_".$id."\" title=\"".$amount."".$name."||".$deadTitle."".$title."\" class=\"item item_".($btype+105)."".$dis."\" style=\"position:relative;left:0px;top:0px;\">";
 	$outputList .= "<div class=\"amount\">".$var."</div>";
 	$outputList .= "</div>";
 	$outputList .= '</div>';
@@ -270,23 +272,36 @@ for($i=$inv;$i<=12;$i++){
 			var $this = this;
 			
 <?php
-$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."heroitems WHERE proc = 0 AND uid = $session->uid");
+// Los objetos de bolsa cargados (proc = 1) siguen mostrando el resto en la grilla, así
+// que también necesitan handler para poder cargar más. Debe coincidir con lo que dibuja
+// el bucle de arriba: prefijo "inv_item_" y la cantidad que queda sin cargar.
+$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."heroitems WHERE (proc = 0 OR (btype >= 7 AND btype <= 9 AND num > type)) AND uid = $session->uid");
 
-while($row2 = mysql_fetch_array($sql2)){ 
+while($row2 = mysql_fetch_array($sql2)){
 $id = $row2["id"];$num = $row2["num"];$btype = $row2["btype"];$type = $row2["type"];
+	if($btype >= 7 && $btype <= 9){
+		$element = "inv_item_".$id;
+		$bindAmount = $num - $type;
+		if($bindAmount <= 0){
+			continue;
+		}
+	}else{
+		$element = "item_".$id;
+		$bindAmount = $num;
+	}
 	if($btype<=10 or $btype==11 or $btype==13){
 		if($hero['dead']==0){
-			if($num==1 && $btype!=13){
+			if($bindAmount==1 && $btype!=13){
 ?>
-	$this.bindItem($('item_<?php echo $id; ?>'), <?php echo $id; ?>, <?php echo $num; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, true);
+	$this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, true);
 <?php		}else{ ?>
-	$this.bindItem($('item_<?php echo $id; ?>'), <?php echo $id; ?>, <?php echo $num; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
+	$this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
 <?php
 			}
 		}
 	}else{
 ?>
-$this.bindItem($('item_<?php echo $id; ?>'), <?php echo $id; ?>, <?php echo $num; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
+$this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
 <?php
 	}
 }

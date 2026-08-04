@@ -559,11 +559,11 @@
         
 	}elseif($btype==7){
     	$name = " Venda pequeña";
-		$title = "Cura 1 unidad cada una, máx 25%. Apilable";
+		$title = "Revive 1 unidad cada una, hasta un 25% de las tropas enviadas al ataque. Solo funciona si el héroe va en el ataque y sobrevive. Apilable";
 		$item = "112";
 	}elseif($btype==8){
     	$name = "Venda";
-		$title = "Cura 1 unidad cada una, máx 33%. Apilable";
+		$title = "Revive 1 unidad cada una, hasta un 33% de las tropas enviadas al ataque. Solo funciona si el héroe va en el ataque y sobrevive. Apilable";
 		$item = "113";
 	}elseif($btype==9){
     	$name = "Jaula";

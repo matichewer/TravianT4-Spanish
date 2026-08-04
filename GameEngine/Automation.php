@@ -2327,8 +2327,21 @@ class Automation {
                 $totalattackdead += $totaldead_att;
                 if($totaldead_att > 0 && $dead11 == 0 && $Attacker['hero'] > 0) {
 
+                    // Estado por ataque: el foreach reutiliza el scope, y sin este reset un
+                    // ataque sin venda heredaba $totalheal y $heal* del ataque anterior de la
+                    // tanda y volvía a revivir esas mismas tropas, ahora para otro jugador.
+                    $totalheal = 0;
+                    for ($i = 1; $i <= 10; $i++) {
+                        ${'heal'.$i} = 0;
+                    }
+
                     $smallbandage = $database->getEquippedHeroItem($AttackerID, 7);
-					$smallbandageID = $smallbandage['id'];
+                    if(!is_array($smallbandage)) {
+                        $smallbandage = array('id' => 0, 'type' => 0, 'num' => 0);
+                    }
+                    $smallbandageID = (int)$smallbandage['id'];
+                    $smallbandage['num'] = max(0, (int)$smallbandage['num']);
+                    $smallbandage['type'] = min($smallbandage['num'], max(0, (int)$smallbandage['type']));
 
                     if($smallbandageID != 0) {
                         $healmax = floor($totalsend_att / 4);
@@ -2365,9 +2378,17 @@ class Automation {
                     }
 
                     $bandage = $database->getEquippedHeroItem($AttackerID, 8);
-                    $bandageID = $bandage['id'];
+                    if(!is_array($bandage)) {
+                        $bandage = array('id' => 0, 'type' => 0, 'num' => 0);
+                    }
+                    $bandageID = (int)$bandage['id'];
+                    $bandage['num'] = max(0, (int)$bandage['num']);
+                    $bandage['type'] = min($bandage['num'], max(0, (int)$bandage['type']));
 
-                    if($bandageID != 0) {
+                    // Solo cabe un objeto en la bolsa, así que en la práctica una de las dos
+                    // ramas queda vacía. Con datos inconsistentes (ambas marcadas proc = 1) el
+                    // reset de abajo descartaba lo que ya había curado la venda pequeña.
+                    if($bandageID != 0 && $totalheal == 0) {
                         $healmax = floor($totalsend_att / 100 * 33);
                         $totalheal = 0;
                         for ($i = 1; $i <= 10; $i++) {
@@ -2405,23 +2426,24 @@ class Automation {
                         $speeds = array();
 
                         //find slowest unit.
-                        $tribeunit = ($targettribe - 1) * 10;
+                        // Las tropas revividas son las del atacante: la velocidad sale de su
+                        // tribu, no de la del defensor.
+                        $tribeunit = ($owntribe - 1) * 10;
                         for ($i = 1; $i <= 10; $i++) {
                             if(${'heal'.$i} > 0) {
-                                if($unitarray) {
-                                    reset($unitarray);
-                                }
                                 $unitarray = $GLOBALS["u".($tribeunit + $i)];
-                                $speeds[] = $unitarray['speed'];
+                                $speeds[] = max(1, (int)$unitarray['speed']);
                             }
                         }
-                        $time = $this->procDistanceTime($from, $to, min($speeds), 1);
+                        $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1);
                         if($time < (86400 / HEAL_SPEED)) {
                             $time = 86400 / HEAL_SPEED;
                         }
-                        $reference = $database->addAttack($to['wref'], $heal1, $heal2, $heal3, $heal4, $heal5, $heal6, $heal7, $heal8, $heal9, $heal10, 0, 3, 0, 0, 0, 0);
+                        // Vuelven desde la aldea atacada hacia la propia, igual que cualquier
+                        // regreso, y contando desde la hora de la batalla y no desde la del cron.
+                        $reference = $database->addAttack($from['wref'], $heal1, $heal2, $heal3, $heal4, $heal5, $heal6, $heal7, $heal8, $heal9, $heal10, 0, 3, 0, 0, 0, 0);
                         $datar = "0,0,0,0,0";
-                        $database->addMovement(4, $from['wref'], $from['wref'], $reference, $datar, ($time + time()));
+                        $database->addMovement(4, $to['wref'], $from['wref'], $reference, $datar, ($time + $AttackArrivalTime));
                     }
                 }
                 for ($i = 1; $i <= 50; $i++) {

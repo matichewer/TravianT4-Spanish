@@ -175,4 +175,31 @@ check(!unequipHeroBagItem($db, 7, 71), 'stale bag id removed current item');
 check(unequipHeroBagItem($db, 7, 72), 'bag removal failed');
 check($db->inventory['bag']===0 && $db->items[72]['proc']===0 && $db->items[72]['type']===0, 'bag removal did not clear all state');
 
+// Recarga de la bolsa: se puede sumar al objeto ya cargado sin sacarlo primero.
+$bandages = item(81, 8, 0, 7, 20);
+$spare = item(82, 8, 0, 7, 5);
+$db = new FakeEquipmentDatabase(array(81 => $bandages, 82 => $spare));
+check(equipHeroBagItem($db, 7, $bandages, 5), 'reload: initial equip failed');
+check($db->items[81]['type']===5, 'reload: initial amount is wrong');
+
+check(equipHeroBagItem($db, 7, $db->getItemData(81), 7), 'reload: topping up the bag failed');
+check($db->items[81]['type']===12, 'reload: amount was replaced instead of added');
+check($db->inventory['bag']===81 && $db->items[81]['proc']===1, 'reload: bag state changed while topping up');
+
+check(!equipHeroBagItem($db, 7, $db->getItemData(81), 9), 'reload: accepted more than the remaining stack');
+check($db->items[81]['type']===12, 'reload: rejected top-up still changed the amount');
+check(equipHeroBagItem($db, 7, $db->getItemData(81), 8), 'reload: exact remainder was rejected');
+check($db->items[81]['type']===20, 'reload: exact remainder produced a wrong amount');
+
+// Una fila marcada como cargada que no es la de la bolsa es estado inconsistente: se ignora.
+$db->items[82]['proc'] = 1;
+check(!equipHeroBagItem($db, 7, $db->getItemData(82), 1), 'reload: accepted an item that is not in the bag');
+check($db->inventory['bag']===81 && $db->items[82]['type']===0, 'reload: inconsistent item altered the bag');
+
+// Cambiar de objeto sigue vaciando el anterior.
+$db->items[82]['proc'] = 0;
+check(equipHeroBagItem($db, 7, $db->getItemData(82), 2), 'reload: replacement after top-ups failed');
+check($db->items[81]['proc']===0 && $db->items[81]['type']===0, 'reload: replaced item kept its load');
+check($db->inventory['bag']===82 && $db->items[82]['type']===2, 'reload: replacement state is inconsistent');
+
 echo "Hero equipment regression: OK\n";
