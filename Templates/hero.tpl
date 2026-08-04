@@ -43,8 +43,11 @@ ob_start();
 <div id="attributes"><div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     	<div class="attribute headline">
 			<div class="attributesHeadline">Atributos</div>
-			<div class="pointsHeadline">Puntos</div>
+			<div class="pointsHeadline">Asignados</div>
 			<div class="clear"></div>
+		</div>
+		<div class="availableAttributePoints<?php echo $canSpendPoint ? ' hasPoints' : ''; ?>">
+			<?php if($canSpendPoint){ ?>Tienes <strong><?php echo (int)$hero['points']; ?> puntos disponibles</strong> para asignar. Usa el botón <strong>+</strong> junto a un atributo.<?php }else{ ?>Puntos disponibles para asignar: <strong>0</strong><?php } ?>
 		</div>
 			<div class="clear"></div>
 			<?php if($hero['itempower']==0){ ?>
@@ -255,7 +258,6 @@ if(!$checkT){
 			</div>
             
 			<div class="element add"></div>
-			<div class="element points"><?php echo intval($hero['points']); ?></div>
 			<div class="clear"></div>
 		</div>
 
