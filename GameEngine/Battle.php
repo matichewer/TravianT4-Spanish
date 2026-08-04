@@ -916,12 +916,14 @@ class Battle {
 			if($heroTribe < 1 || $heroTribe > 3) {
 				$heroTribe = (int)$def_tribe;
 			}
+			// El héroe tiene una sola fuerza de lucha: al defender vale igual contra
+			// infantería que contra caballería. Antes se sumaba a un solo lado según
+			// llevara o no caballo, así que un héroe montado no defendía nada frente
+			// a un ataque de infantería (y uno a pie, nada frente a caballería). El
+			// caballo solo decide si el héroe ataca como caballería, no cómo defiende.
 			$heroStrength = $this->battleHeroStrength($hero, $heroTribe);
-			if($this->battleHeroIsMounted($hero['uid'])) {
-				$defenderOwners[$ownerKey]['cavalry'] += $heroStrength;
-			} else {
-				$defenderOwners[$ownerKey]['infantry'] += $heroStrength;
-			}
+			$defenderOwners[$ownerKey]['infantry'] += $heroStrength;
+			$defenderOwners[$ownerKey]['cavalry'] += $heroStrength;
 			$defenderOwners[$ownerKey]['bonus'] = max(
 				$defenderOwners[$ownerKey]['bonus'],
 				$this->battleHeroBonus($hero['defBonus'])

@@ -85,8 +85,14 @@ heroAttributeAssert(
 heroAttributeAssert(
 	strpos($heroTemplate,'<div class="element attribName">Aldea natal</div>')!==false
 	&& strpos($heroTemplate,"heroHomeVillage(\$hero)")!==false
-	&& strpos($heroTemplate,"getVillageField(\$heroHomeVillageId,'name')")!==false,
+	&& strpos($heroTemplate,'$database->getVillage($heroHomeVillageId)')!==false,
 	'Hero home village is missing from the attribute summary'
+);
+heroAttributeAssert(
+	strpos($heroTemplate,'El héroe revivirá en <b><?php echo $heroHomeVillageName')!==false
+	&& strpos($heroTemplate,'deductResourcesIfAvailable($heroHomeVillageId')!==false
+	&& strpos($heroTemplate,'trainHero($heroHomeVillageId, $each, 0)')!==false,
+	'Hero revival is not tied to the home village'
 );
 heroAttributeAssert(
 	strpos($heroTemplate,'<?php if($canSpendPoint){ ?><div class="availableAttributePoints">Puntos disponibles para asignar:')!==false

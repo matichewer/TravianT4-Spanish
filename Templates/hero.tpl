@@ -28,7 +28,9 @@ if(!empty($hero['r2'])){ $selectedResourceRate = $resourceRates['clay']; }
 elseif(!empty($hero['r3'])){ $selectedResourceRate = $resourceRates['iron']; }
 elseif(!empty($hero['r4'])){ $selectedResourceRate = $resourceRates['crop']; }
 $heroHomeVillageId = heroHomeVillage($hero);
-$heroHomeVillageName = $heroHomeVillageId > 0 ? $database->getVillageField($heroHomeVillageId,'name') : '';
+$heroHomeVillageData = $heroHomeVillageId > 0 ? $database->getVillage($heroHomeVillageId) : false;
+$heroHomeVillageIsValid = is_array($heroHomeVillageData) && (int)$heroHomeVillageData['owner']===(int)$session->uid;
+$heroHomeVillageName = $heroHomeVillageIsValid ? $heroHomeVillageData['name'] : '';
 $maximumHeroLevel = count($hero_levels)-1;
 $displayHeroLevel = max(0,min($maximumHeroLevel,(int)$hero['level']));
 if($displayHeroLevel>=$maximumHeroLevel){
@@ -187,7 +189,7 @@ ob_start();
 				</div>
 			</div>
 <?php }else{ ?>
-<div class="attributesHeadline reviveHeadline">El héroe revivirá en esta aldea</div>
+<div class="attributesHeadline reviveHeadline">El héroe revivirá en <b><?php echo $heroHomeVillageName !== '' ? htmlspecialchars(stripslashes($heroHomeVillageName),ENT_QUOTES,'UTF-8') : 'su aldea natal'; ?></b></div>
 <div class="clear"></div>
     <?php
     $vRes = ($village->awood+$village->aclay+$village->airon+$village->acrop);
@@ -195,7 +197,7 @@ ob_start();
 $checkT = $database->getHeroTrain($hero['wref']);
 
 if(!$checkT){
-    if($village->awood < $hero_t[$hero['level']]['wood'] || $village->aclay < $hero_t[$hero['level']]['clay'] || $village->airon < $hero_t[$hero['level']]['iron'] || $village->acrop < $hero_t[$hero['level']]['crop']){
+	if(!$heroHomeVillageIsValid || $heroHomeVillageData['wood'] < $hero_t[$hero['level']]['wood'] || $heroHomeVillageData['clay'] < $hero_t[$hero['level']]['clay'] || $heroHomeVillageData['iron'] < $hero_t[$hero['level']]['iron'] || $heroHomeVillageData['crop'] < $hero_t[$hero['level']]['crop']){
     	echo '<span class="none">No hay suficientes recursos para revivir al héroe</span>';
     }else{
         echo "<span class=\"regeneratebtn\"><button type=\"submit\" value=\"Revive\" onclick=\"window.location.href = 'hero_inventory.php?revive=1'; return false;\" name=\"save\" id=\"save\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div></div><div class=\"button-contents\">Revivir</div></div></button></span>";
@@ -291,7 +293,7 @@ $heroid = $hero['heroid'];
 // `>` estricto el clic no hacía nada y tampoco avisaba. Se exige además que el héroe
 // esté muerto y que no haya otro rescate ya encargado, porque entrar a mano por
 // `?revive=1` cobraba los recursos de nuevo.
-if(isset($_GET['revive']) && $_GET['revive'] == 1 && (int)$hero['dead'] !== 0 && !$database->getHeroTrain($hero['wref']) && $village->awood >= $hero_t[$hero['level']]['wood'] && $village->aclay >= $hero_t[$hero['level']]['clay'] && $village->airon >= $hero_t[$hero['level']]['iron'] && $village->acrop >= $hero_t[$hero['level']]['crop']){
+if(isset($_GET['revive']) && $_GET['revive'] == 1 && (int)$hero['dead'] !== 0 && $heroHomeVillageIsValid && !$database->getHeroTrain($hero['wref']) && $database->deductResourcesIfAvailable($heroHomeVillageId,$hero_t[$hero['level']]['wood'],$hero_t[$hero['level']]['clay'],$hero_t[$hero['level']]['iron'],$hero_t[$hero['level']]['crop'])){
 	if($tribe==1){
 		$each = (time() + ($hero_t1[$hero['level']]['time']/SPEED*1.5));
 	}elseif($tribe==2){
@@ -299,9 +301,8 @@ if(isset($_GET['revive']) && $_GET['revive'] == 1 && (int)$hero['dead'] !== 0 &&
 	}elseif($tribe==3){
 		$each = (time() + ($hero_t3[$hero['level']]['time']/SPEED*1.5));
 	}
-	$database->trainHero($village->wid, $each, 0);
-	$database->modifyResource($village->wid,$hero_t[$hero['level']]['wood'],$hero_t[$hero['level']]['clay'],$hero_t[$hero['level']]['iron'],$hero_t[$hero['level']]['crop'],0);
-    $database->modifyHero2('wref', $village->wid, $session->uid, 0);
+	$database->trainHero($heroHomeVillageId, $each, 0);
+    $database->modifyHero2('wref', $heroHomeVillageId, $session->uid, 0);
     header("Location: hero_inventory.php");
 }
 if(isset($_GET['add'])){

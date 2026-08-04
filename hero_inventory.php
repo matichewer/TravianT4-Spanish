@@ -3,6 +3,15 @@ include("GameEngine/Village.php");
 include("GameEngine/Inventory.php");
 $start = $generator->pageLoadTimeStart();
 
+if(isset($_GET['newdid'])){
+	$newVillageId = (int)$_GET['newdid'];
+	if(in_array($newVillageId,array_map('intval',$session->villages),true)){
+		$_SESSION['wid'] = $newVillageId;
+	}
+	header("Location: hero_inventory.php");
+	exit;
+}
+
 if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
 	&& isset($_POST['a']) && $_POST['a'] === 'heroHiding'){
 	$tokenIsValid = isset($_POST['c']) && is_scalar($_POST['c'])
