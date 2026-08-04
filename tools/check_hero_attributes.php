@@ -82,7 +82,13 @@ heroAttributeAssert(
 	substr_count($heroTemplate,'<span class="current">+<?php echo $focusedResourceRate; ?>/h</span>')===4,
 	'Focused resource options are missing positive hourly labels'
 );
-foreach(array('Aporte directo por hora','se suma tal cual','sin porcentajes','desde el cambio','no entrega recursos al instante','reemplaza') as $explanationPart){
+foreach(array(
+	'Como tienes <?php echo $productPoints; ?> puntos en Recursos',
+	'el héroe produce <?php echo $allResourceRate; ?> de cada recurso',
+	'o <?php echo $focusedResourceRate; ?> de un recurso específico',
+	'Este extra de producción se otorga a la aldea natal del héroe',
+	'Puedes cambiar la aldea natal del héroe enviándolo entre tus aldeas'
+) as $explanationPart){
 	heroAttributeAssert(
 		strpos($heroTemplate,$explanationPart)!==false,
 		'Hero resource distribution explanation is incomplete'
