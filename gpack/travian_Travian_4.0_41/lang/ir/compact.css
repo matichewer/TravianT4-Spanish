@@ -899,9 +899,9 @@ div.hero_inventory #hero_inventory{width:269px;float:right;}.ie6 div.hero_invent
 div.hero_inventory #hero_inventory .boxes-contents{padding:4px 0;}div.hero_inventory .pointsHeadline{float:right;font-weight:bold;width:70px;text-align:center;margin-bottom:8px;}
 div.hero_inventory .changeResourcesHeadline{margin-bottom:6px;}div.hero_inventory .heroStatus{padding-bottom:6px;}
 div.hero_inventory .boxes .headline{padding-bottom:3px;}div.hero_inventory #hero_body_content .content div.draggable{width:60px;height:60px;}
-div.hero_inventory .attribute .element{float:left;margin:0 8px 6px 0;}div.hero_inventory .attribute .attribName{width:115px;}
-div.hero_inventory .attribute .power{width:45px;}div.hero_inventory .attribute.speed .power{width:277px;}
-div.hero_inventory .attribute .progress{width:232px;}.ie6 div.hero_inventory .attribute .progress{font-size:0;}
+div.hero_inventory .attribute .element{float:left;margin:0 8px 6px 0;}div.hero_inventory .attribute .attribName{width:145px;white-space:nowrap;}
+div.hero_inventory .attribute .power{width:45px;}div.hero_inventory .attribute.speed .power,div.hero_inventory .attribute.homeVillage .power{width:277px;white-space:nowrap;}
+div.hero_inventory .attribute .progress{width:202px;}.ie6 div.hero_inventory .attribute .progress{font-size:0;}
 div.hero_inventory .attribute .add{width:16px;}.ie6 div.hero_inventory .attribute .add{height:16px;position:relative;}
 div.hero_inventory .attribute .setPoint{height:16px;width:16px;display:inline-block;background-image:url(../../img/a/plus.gif);background-position:top left;}
 div.hero_inventory .attribute .hidden{display:none;}div.hero_inventory .attribute .points{width:50px;text-align:center;}
