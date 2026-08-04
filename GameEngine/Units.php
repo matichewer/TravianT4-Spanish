@@ -142,6 +142,48 @@ class Units {
 		exit;
 	}
 
+	// Una aventura es un movimiento más: se puede abortar dentro de la misma ventana
+	// de 90 segundos y el héroe tarda en volver lo que llevaba viajando.
+	public function cancelAdventure($post) {
+		global $database, $village, $session;
+
+		$status = 'invalid';
+		$tokenIsValid = isset($post['c']) && is_string($post['c']) && hash_equals((string) $session->mchecker, $post['c']);
+		$moveid = isset($post['moveid']) && ctype_digit((string) $post['moveid']) ? (int) $post['moveid'] : 0;
+
+		if($tokenIsValid && $moveid > 0) {
+			$movement = $database->getOutgoingAdventure($moveid, $village->wid, $session->uid);
+			if($movement) {
+				$now = time();
+				$sentAt = ctype_digit((string) $movement['data']) ? (int) $movement['data'] : 0;
+				$elapsed = $now - $sentAt;
+
+				if($sentAt > 0 && $elapsed >= 0 && $elapsed <= self::TROOP_CANCEL_WINDOW && (int) $movement['endtime'] > $now) {
+					$returnEndtime = $now + max(1, $elapsed);
+					// El regreso viaja como cualquier vuelta de tropas: una fila de attacks
+					// con el héroe en t11, que es lo que devuelve la unidad a la aldea y le
+					// reapunta hero.wref cuando llega.
+					$reference = $database->addAttack($village->wid,0,0,0,0,0,0,0,0,0,0,1,3,0,0,0);
+					if($reference > 0) {
+						$cancelled = $database->cancelAdventureMovement($moveid, $village->wid, $sentAt, $now, $returnEndtime, $reference);
+						if(!$cancelled) {
+							$database->removeAttack($reference);
+						}
+						$status = $cancelled ? 'adventure' : 'failed';
+					} else {
+						$status = 'failed';
+					}
+				} else {
+					$status = 'expired';
+				}
+			}
+		}
+
+		$_SESSION['movement_cancel_status'] = $status;
+		header("Location: build.php?id=39");
+		exit;
+	}
+
 	public function managePrisoners($post) {
 		global $database, $village, $session;
 
@@ -769,7 +811,10 @@ class Units {
 			if($travelTime <= 0 || !$database->deductUnitIfAvailable($heroVillageId,'hero',1)) {
 				$this->redirectToRallyPoint();
 			}
-			if(!$database->addMovement(9,$heroVillageId,$target,0,0,time()+$travelTime)) {
+			// El momento de salida va en `data`, igual que en los envíos de tropas: es
+			// lo que después permite cancelar la aventura dentro de la misma ventana.
+			$sentAt = time();
+			if(!$database->addMovement(9,$heroVillageId,$target,0,$sentAt,$sentAt+$travelTime)) {
 				$database->modifyUnit($heroVillageId,'hero',1,1);
 			}
 			$this->redirectToRallyPoint();

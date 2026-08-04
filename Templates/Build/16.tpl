@@ -17,6 +17,8 @@ if(isset($_SESSION['movement_cancel_status'])) {
 	unset($_SESSION['movement_cancel_status']);
 	if($cancelStatus === 'success') {
 		echo '<p class="notice">El movimiento fue cancelado. Las tropas están regresando.</p>';
+	} elseif($cancelStatus === 'adventure') {
+		echo '<p class="notice">La aventura fue cancelada. Tu héroe está regresando.</p>';
 	} elseif($cancelStatus === 'expired') {
 		echo '<p class="error">El movimiento ya no se puede cancelar. El plazo es de 90 segundos.</p>';
 	} else {
