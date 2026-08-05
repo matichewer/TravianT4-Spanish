@@ -175,3 +175,14 @@ UPDATE s1_hero SET home = wref WHERE home = 0;
 
 ALTER TABLE s1_attacks
   ADD COLUMN IF NOT EXISTS sethome tinyint(1) unsigned NOT NULL DEFAULT 0;
+
+-- 2026-08-05 - Bonos del slot de pies del heroe (botas y espuelas)
+-- Hasta ahora equipar espuelas (types 100-102) o botas de regeneracion (94-96) no
+-- escribia nada en el heroe: `applyHeroEquipmentBonusChange` no tenia rama para
+-- btype 5. Los heroes que ya las tenian puestas quedaron con el bono sin sumar, y
+-- el codigo nuevo se lo resta igual al desequiparlas (un heroe con corcel +
+-- espuelas bajaria de 20 a 15, y uno con botas de regeneracion quedaria en 0).
+-- No hay cambio de esquema: hay que reconciliar los datos una vez, despues del
+-- deploy, con el script idempotente
+--   docker compose exec -T web php /var/www/html/tools/fix_hero_footwear_bonuses.php --apply
+-- que recalcula speed y autoregen a partir de los objetos equipados.
