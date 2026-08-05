@@ -410,6 +410,7 @@ define("REPORT_PER_HOURS","por hora");
 define("REPORT_PRISONERS","Prisioneros");
 define("REPORT_RECEIVER","Destinatario");
 define("REPORT_REINF","Refuerzo");
+define("REPORT_NATURE_REINF","Naturaleza (animales capturados)");
 define("REPORT_RESOURCES","Recursos");
 define("REPORT_SENDER","Remitente");
 define("REPORT_SEND_REINF_TO","enviar refuerzos a la aldea");

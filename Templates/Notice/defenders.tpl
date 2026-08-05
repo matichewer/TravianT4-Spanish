@@ -26,10 +26,23 @@ if(!empty($reportDefenderParties) && !empty($reportViewerIsDefender)) {
 					<td class="role"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><div class="role"><?php echo REPORT_DEFENDER; ?></div></div></div></td>
 					<td class="troopHeadline" colspan="<?php echo $partyHasHero ? 11 : 10; ?>">
 					<?php
-					if(!$partyIsVillageOwner) {
+					// Los animales enjaulados defienden como un refuerzo con `from = 0`, así
+					// que no tienen jugador ni aldea a los que enlazar. Sin esto el bloque
+					// salía como "Refuerzo:" y nada más.
+					$partyIsNature = $defenderParty['uid'] <= 0 && $defenderParty['wref'] <= 0;
+					$partyPlainLabel = '';
+					if($partyIsNature) {
+						$partyPlainLabel = REPORT_NATURE_REINF;
+					} elseif($partyName === '') {
+						$partyPlainLabel = $partyIsVillageOwner ? REPORT_DEFENDER : REPORT_REINF;
+					}
+					// El prefijo sólo va si después viene algo que lo acompañe.
+					if(!$partyIsVillageOwner && $partyPlainLabel !== REPORT_REINF) {
 						echo REPORT_REINF.': ';
 					}
-					if($partyName !== '') {
+					if($partyPlainLabel !== '') {
+						echo htmlspecialchars($partyPlainLabel, ENT_QUOTES, 'UTF-8');
+					} else {
 						echo '<a href="spieler.php?uid='.$defenderParty['uid'].'">'
 							.htmlspecialchars(stripslashes($partyName), ENT_QUOTES, 'UTF-8').'</a>';
 						if($partyVillage !== '') {
@@ -37,8 +50,6 @@ if(!empty($reportDefenderParties) && !empty($reportViewerIsDefender)) {
 								.'&amp;c='.$generator->getMapCheck($defenderParty['wref']).'">'
 								.htmlspecialchars(stripslashes($partyVillage), ENT_QUOTES, 'UTF-8').'</a>';
 						}
-					} elseif($partyIsVillageOwner) {
-						echo REPORT_DEFENDER;
 					}
 					?>
 					</td>

@@ -76,9 +76,10 @@ $V_DEF    = 797; // aldea atacada
 $V_REINF  = 2;   // segunda aldea del defensor, de donde sale el refuerzo
 $V_ATT    = 3;   // aldea del atacante
 
-$DEF_TROOPS   = 10; // legionarios propios en la aldea atacada
-$REINF_TROOPS = 6;  // legionarios que llegan como refuerzo
-$ATT_TROOPS   = 30; // hacheros del atacante
+$DEF_TROOPS    = 10; // legionarios propios en la aldea atacada
+$REINF_TROOPS  = 6;  // legionarios que llegan como refuerzo
+$NATURE_TROOPS = 4;  // ratas enjauladas defendiendo, sin jugador ni aldea de origen
+$ATT_TROOPS    = 30; // hacheros del atacante
 
 $auto = (new ReflectionClass('Automation'))->newInstanceWithoutConstructor();
 function runPhase($name, $method = null) {
@@ -108,6 +109,8 @@ q("UPDATE {$P}units SET u13 = $ATT_TROOPS WHERE vref = $V_ATT");
 q("UPDATE {$P}hero SET dead = 1, hide = 1 WHERE uid IN ($UID_DEF,$UID_ATT)");
 // Refuerzo romano del propio defensor, desde su segunda aldea: misma tribu que el dueño.
 q("INSERT INTO {$P}enforcement (vref,`from`,u1) VALUES ($V_DEF,$V_REINF,$REINF_TROOPS)");
+// Animales enjaulados: defienden como un refuerzo con `from = 0`, sin jugador ni aldea.
+q("INSERT INTO {$P}enforcement (vref,`from`,u31) VALUES ($V_DEF,0,$NATURE_TROOPS)");
 
 $arrival = time() - 5;
 q("INSERT INTO {$P}attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy)
@@ -160,15 +163,30 @@ function decodeParties($data) {
 }
 
 $parties = decodeParties($defReport['data']);
-check(count($parties) === 2, "el informe del defensor trae los 2 bandos por separado (trae " . count($parties) . ")");
-if(count($parties) !== 2) {
+check(count($parties) === 3, "el informe del defensor trae los 3 bandos por separado (trae " . count($parties) . ")");
+if(count($parties) !== 3) {
     say("  data: " . $defReport['data']);
     say("\n$failures COMPROBACIONES FALLARON");
     exit(1);
 }
 
-$owner = $parties[0];
-$reinf = $parties[1];
+// Se buscan por aldea de origen, no por posición, para que el orden no ate la prueba.
+function partyByVillage($parties, $wref) {
+    foreach($parties as $party) {
+        if($party['wref'] === $wref) { return $party; }
+    }
+    return null;
+}
+$owner  = partyByVillage($parties, $V_DEF);
+$reinf  = partyByVillage($parties, $V_REINF);
+$nature = partyByVillage($parties, 0);
+check($owner !== null && $reinf !== null && $nature !== null,
+    "cada bando aparece con su aldea de origen (o sin ninguna, para la naturaleza)");
+if($owner === null || $reinf === null || $nature === null) {
+    say("  data: " . $defReport['data']);
+    say("\n$failures COMPROBACIONES FALLARON");
+    exit(1);
+}
 say("  dueño   : uid={$owner['uid']} aldea={$owner['wref']} tribu={$owner['tribe']} envió={$owner['sent'][1]} bajas={$owner['dead'][1]}");
 say("  refuerzo: uid={$reinf['uid']} aldea={$reinf['wref']} tribu={$reinf['tribe']} envió={$reinf['sent'][1]} bajas={$reinf['dead'][1]}");
 
@@ -193,6 +211,11 @@ check($aggregatedSent === $owner['sent'][1] + $reinf['sent'][1],
     "la suma de los bandos coincide con el bloque agregado por tribu ($aggregatedSent)");
 check($aggregatedDead === $owner['dead'][1] + $reinf['dead'][1],
     "las bajas de los bandos coinciden con las del bloque agregado ($aggregatedDead)");
+
+check($nature['uid'] === 0 && $nature['wref'] === 0 && $nature['tribe'] === 4,
+    "los animales enjaulados quedan como un bando propio, sin jugador ni aldea");
+check($nature['sent'][1] === $NATURE_TROOPS && $nature['dead'][1] > 0,
+    "los animales enjaulados aportan sus tropas y sus bajas ({$nature['dead'][1]}/{$NATURE_TROOPS})");
 
 check(strpos($attReport['data'], 'defenders-v1') === false,
     "el informe del atacante no lleva el desglose por jugador");

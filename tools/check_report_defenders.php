@@ -18,6 +18,7 @@ chdir($root);
 
 if(!defined('REPORT_DEFENDER')) { define('REPORT_DEFENDER', 'Defensor'); }
 if(!defined('REPORT_REINF')) { define('REPORT_REINF', 'Refuerzo'); }
+if(!defined('REPORT_NATURE_REINF')) { define('REPORT_NATURE_REINF', 'Naturaleza (animales capturados)'); }
 if(!defined('REPORT_FROM_VIL')) { define('REPORT_FROM_VIL', 'de la aldea'); }
 if(!defined('REPORT_TROOPS')) { define('REPORT_TROOPS', 'Tropas'); }
 if(!defined('REPORT_CASUALTIES')) { define('REPORT_CASUALTIES', 'Bajas'); }
@@ -237,6 +238,36 @@ $renderedOld = reportDefendersRender($parsedOld);
 reportDefendersAssert(
 	strpos($renderedOld['html'], REPORT_REINF) !== false,
 	'un informe viejo se sigue dibujando con el desglose por tribu'
+);
+
+// ------------------------------------------------------- refuerzo de naturaleza
+// Los animales enjaulados defienden como un refuerzo sin jugador ni aldea (`from = 0`).
+$natureParty = $newDefenderParty->invoke($automation, 0, 0, 4);
+$natureParty['sent'][1] = 4;
+$natureParty['dead'][1] = 4;
+$naturePayload = $encodeDefenderParties->invoke($automation, array($ownerParty, $natureParty));
+$parsedNature = reportDefendersParse(
+	reportDefendersCsv($OWNER_UID, $OWNER_WREF, $naturePayload),
+	$OWNER_UID
+);
+$renderedNature = reportDefendersRender($parsedNature);
+
+reportDefendersAssert(
+	$renderedNature['errors'] === array(),
+	'el refuerzo de naturaleza se dibuja sin avisos de PHP: '.implode(' | ', $renderedNature['errors'])
+);
+reportDefendersAssert(
+	strpos($renderedNature['html'], REPORT_NATURE_REINF) !== false,
+	'un refuerzo sin jugador se identifica como naturaleza'
+);
+reportDefendersAssert(
+	strpos($renderedNature['html'], 'spieler.php?uid=0') === false
+		&& strpos($renderedNature['html'], 'karte.php?d=0') === false,
+	'la naturaleza no queda enlazada a un jugador ni a una aldea inexistentes'
+);
+reportDefendersAssert(
+	!preg_match('#'.preg_quote(REPORT_REINF, '#').':\s*</td>#', $renderedNature['html']),
+	'ningún bloque queda con la etiqueta de refuerzo y nada detrás'
 );
 
 echo "check_report_defenders: todo OK\n";

@@ -529,6 +529,7 @@ define("REPORT_WARSIM","combat simulator");
 define("REPORT_ATK_AGAIN","return on the attack");
 define("REPORT_TROOPS","Troops");
 define("REPORT_REINF","Reinforecment");
+define("REPORT_NATURE_REINF","Nature (captured animals)");
 define("REPORT_CASUALTIES","Casualties");
 define("REPORT_PRISONERS","Prisoners");
 define("REPORT_INFORMATION","information");

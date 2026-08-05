@@ -319,6 +319,7 @@ define("REPORT_WARSIM","شبیه ساز جنگی");
 define("REPORT_ATK_AGAIN","تکرار حمله");
 define("REPORT_TROOPS","لشکریان");
 define("REPORT_REINF","نیروی کمکی");
+define("REPORT_NATURE_REINF","Nature (captured animals)");
 define("REPORT_CASUALTIES","تلفات");
 define("REPORT_INFORMATION","اطلاعات");
 define("REPORT_BOUNTY","غنائم");
