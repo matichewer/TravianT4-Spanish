@@ -1569,6 +1569,7 @@ class Automation {
             $dead['hero'] = 0;
             $DefenderHeroByTribe = array_fill(1, 5, 0);
             $DeadHeroByTribe = array_fill(1, 5, 0);
+            $defenderParties = array();
             $countedHeroOwners = array();
             unset($empty);
             for($i = 1; $i <= 11; $i++) {
@@ -2162,11 +2163,17 @@ class Automation {
                 $unitlist = $database->query_return($q);
                 $start = ($targettribe - 1) * 10 + 1;
                 $end = ($targettribe * 10);
+                // Las tropas del dueño de la aldea van aparte de las de cada refuerzo: el
+                // bloque agregado por tribu las mezcla, así que sumado no se sabe de quién
+                // era cada cosa.
+                $ownerParty = $this->newDefenderParty($DefenderID, $data['to'], $targettribe);
                 //FIX
                 for ($i = $start; $i <= $end; $i++) {
                     if($unitlist) {
                         $localLoss = (int)round($battlepart[2] * $unitlist[0]['u'.$i]);
                         $dead[$i] += $localLoss;
+                        $ownerParty['sent'][$i - $start + 1] = max(0, (int)$unitlist[0]['u'.$i]);
+                        $ownerParty['dead'][$i - $start + 1] = $localLoss;
                         if($localLoss > 0) {
                             $database->modifyUnit($data['to'], $i, $localLoss, 0);
                         }
@@ -2176,10 +2183,15 @@ class Automation {
                     $localHeroLoss = (int)$battlepart['deadherodef'];
                     $dead['hero'] += $localHeroLoss;
                     $DeadHeroByTribe[$targettribe] += $localHeroLoss;
+                    // $Defender['hero'] ya viene en 0 si el héroe está escondido, así que un
+                    // héroe oculto tampoco aparece en el desglose.
+                    $ownerParty['sent'][11] = max(0, (int)$Defender['hero']);
+                    $ownerParty['dead'][11] = $localHeroLoss;
                     if($localHeroLoss > 0) {
                         $database->modifyUnit($data['to'], 'hero', $localHeroLoss, 0);
                     }
                 }
+                $defenderParties[] = $ownerParty;
 
 
                 //kill other defence in village
@@ -2197,6 +2209,7 @@ class Automation {
                         }
                         $start = ($tribe - 1) * 10 + 1;
                         $reinforcementDead = array_fill($start, 10, 0);
+                        $reinforcementParty = $this->newDefenderParty($reinforcementOwner, $enforce['from'], $tribe);
 
                         if($tribe == 1) {
                             $rom = '1';
@@ -2216,6 +2229,8 @@ class Automation {
                                     $database->modifyEnforce($enforce['id'], $i, $reinforcementDead[$i], 0);
                                 }
                                 $dead[$i] += $reinforcementDead[$i];
+                                $reinforcementParty['sent'][$i - $start + 1] = max(0, (int)$enforce['u'.$i]);
+                                $reinforcementParty['dead'][$i - $start + 1] = $reinforcementDead[$i];
                                 if($reinforcementDead[$i] != $enforce['u'.$i]) {
                                     $wrong = '1';
                                 }
@@ -2224,6 +2239,9 @@ class Automation {
                         $reinforcementHeroLoss = !empty($enforce['hero']) && isset($battlepart['deadheroref'][$enforce['id']])
                             ? (int)$battlepart['deadheroref'][$enforce['id']]
                             : 0;
+                        $reinforcementParty['sent'][11] = max(0, (int)$enforce['hero']);
+                        $reinforcementParty['dead'][11] = $reinforcementHeroLoss;
+                        $defenderParties[] = $reinforcementParty;
                         if($reinforcementHeroLoss > 0) {
                             $database->modifyEnforce($enforce['id'], "hero", $reinforcementHeroLoss, 0);
                         }
@@ -2998,20 +3016,27 @@ class Automation {
                         }
                     }
                     $data2 = $data2.','.addslashes($info_trap).',,';
+                    // El desglose por jugador solo va en el informe del defensor: el atacante
+                    // sigue viendo los bloques agrupados por tribu, sin saber qué aliado
+                    // reforzó ni con cuánto.
+                    $defenderPartyData = $this->encodeDefenderParties($defenderParties);
+                    $data2def = $defenderPartyData !== ''
+                        ? $data2.',defenders-v1,'.$defenderPartyData
+                        : $data2;
                     if($totaldead_def == 0) {
                         $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                         if($totalsend_def == 0) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 7, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 7, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
                         } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 4, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 4, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
                         }
 
                     } else {
                         $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                         if($totalsend_def > $totaldead_def) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 5, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 5, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
                         } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 6, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 6, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
                         }
                     }
                 }
@@ -3280,6 +3305,40 @@ class Automation {
                 11 => max(0,(int)$prisoner['t11'])
             )
         );
+    }
+
+    // Un "party" es cada bando que defendió por separado: el dueño de la aldea y cada
+    // refuerzo. Las posiciones 1..11 son el tramo de unidades de su tribu más el héroe.
+    private function newDefenderParty($owner, $villageId, $tribe) {
+        return array(
+            'uid' => max(0, (int)$owner),
+            'wref' => max(0, (int)$villageId),
+            'tribe' => max(0, (int)$tribe),
+            'sent' => array_fill(1, 11, 0),
+            'dead' => array_fill(1, 11, 0)
+        );
+    }
+
+    // El informe se guarda como CSV, así que el desglose viaja en un solo campo: los
+    // bandos se separan con "|" y sus valores con ";". Nunca lleva nombres, solo ids,
+    // para que una aldea con coma en el nombre no parta el informe en dos.
+    private function encodeDefenderParties($parties) {
+        $groups = array();
+        foreach($parties as $party) {
+            if(array_sum($party['sent']) <= 0) {
+                continue;
+            }
+            $fields = array((int)$party['uid'], (int)$party['wref'], (int)$party['tribe']);
+            for($position = 1; $position <= 11; $position++) {
+                $fields[] = max(0, (int)$party['sent'][$position]);
+            }
+            for($position = 1; $position <= 11; $position++) {
+                $fields[] = max(0, (int)$party['dead'][$position]);
+            }
+            $groups[] = implode(';', $fields);
+        }
+
+        return implode('|', $groups);
     }
 
     private function buildSpyReinforcementSnapshot($enforcement) {

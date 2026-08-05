@@ -215,17 +215,7 @@ if ($releaseInfo !== '') { //release prisoners
 </table>
 
 <?php
-$targettribe = $dataarray['33'];
-$ddd = '36';
-include "Templates/Notice/tribe_".$targettribe.".tpl";
-for($s=1;$s<=5;$s++){
-	if($s != $targettribe){
-    	if($dataarray[$ddd]==1){
-    		include "Templates/Notice/tribe_".$s.".tpl";
-        }
-    }
-    $ddd += '23';
-}
+include "Templates/Notice/defenders.tpl";
 ?>	
 </td></tr></tbody></table>
 <div class="clear">&nbsp;</div>
