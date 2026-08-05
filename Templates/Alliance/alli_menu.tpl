@@ -14,7 +14,7 @@
 				<div title="" class="container <?php if(isset($_GET['s']) && $_GET['s'] == 3) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="allianz.php?s=3"><span class="tabItem">Ataques</span></a></div>
+					<div class="content"><a href="allianz.php?s=3"><span class="tabItem">Eventos</span></a></div>
 				</div>
 				<div title="" class="container <?php if(isset($_GET['s']) && $_GET['s'] == 2) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
