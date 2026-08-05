@@ -481,8 +481,11 @@ try {
 		substr_count($automationSource,'trap-data-v1') === 3,
 		'los informes nuevos delimitan explícitamente el bloque de prisioneros'
 	);
+	// La detección pasó a decidirse en spyAttemptDetected(), pero los espías capturados
+	// en trampas la siguen disparando aunque no haya ninguna baja. El comportamiento en
+	// sí lo cubre tools/check_spy_detection.php.
 	trapperAssert(
-		strpos($automationSource,'$spyDetected = $totaltraped_att > 0') !== false,
+		strpos($automationSource,'$spyDetected = $this->spyAttemptDetected($def_spy, $totaltraped_att, $totaldead_att)') !== false,
 		'capturar espías genera un informe para el defensor aunque no haya bajas'
 	);
 
