@@ -99,7 +99,7 @@ heroAttributeAssert(
 	&& strpos($heroTemplate,'<div class="pointsHeadline">Puntos</div>')!==false,
 	'Available hero attribute points are not clearly identified'
 );
-foreach(array('Velocidad base: <?php echo $heroBaseSpeed; ?>','Caballo: +<?php echo $horseSpeedBonus; ?>','Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?>','Total: <?php echo $heroDisplayedSpeed; ?>') as $speedPart){
+foreach(array('Velocidad base: <?php echo $heroBaseSpeed; ?>','Caballo: +<?php echo $horseSpeedBonus; ?>','Espuelas: +<?php echo $spurSpeedBonus; ?>','Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?>','Total: <?php echo $heroDisplayedSpeed; ?>') as $speedPart){
 	heroAttributeAssert(strpos($heroTemplate,$speedPart)!==false,'Hero speed tooltip breakdown is incomplete');
 }
 foreach(array(

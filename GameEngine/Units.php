@@ -235,6 +235,7 @@ class Units {
 			return false;
 		}
 		$speeds = array();
+		$bootsBonus = 0;
 		for($position = 1; $position <= 10; $position++) {
 			if((int)$prisoner['t'.$position] > 0) {
 				$unit = $GLOBALS['u'.(($tribe - 1) * 10 + $position)];
@@ -244,13 +245,14 @@ class Units {
 		if((int)$prisoner['t11'] > 0) {
 			$hero = $database->getHeroData($owner);
 			$speeds[] = is_array($hero) && !empty($hero['speed']) ? max(1, (float)$hero['speed']) : 6;
+			$bootsBonus = heroEquippedBootsSpeedBonus($database, $owner);
 		}
 		if(empty($speeds)) {
 			return false;
 		}
 		$trapCoordinates = $database->getCoor((int)$prisoner['wref']);
 		$homeCoordinates = $database->getCoor((int)$prisoner['from']);
-		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1));
+		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus));
 		$troops = array();
 		for($i = 1; $i <= 11; $i++) {
 			$troops[$i] = max(0,(int)$prisoner['t'.$i]);
@@ -543,14 +545,16 @@ class Units {
                 }
 			}
 		}
+		$bootsBonus = 0;
 		if (isset($data['u11'])) {
 			if($data['u11'] != '' && $data['u11'] > 0){
 				$heroarray = $database->getHeroData($session->uid);
 				$speeds[] = max(1, (int)$heroarray['speed']);
+				$bootsBonus = heroEquippedBootsSpeedBonus($database, $session->uid);
 			}
 		}
 
-		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1);
+		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus);
 		$sentAt = time();
 		$catapultUnit = $battle->getTribeCatapultUnit((int)$session->tribe);
 		$hasCatapults = $catapultUnit > 0
@@ -674,8 +678,10 @@ class Units {
 						if( $post['t'.$i] != '' && $post['t'.$i] > 0){
                         if($unitarray) { reset($unitarray); }
                         $unitarray = $GLOBALS["u".(($session->tribe-1)*10+$i)];
+							// El refuerzo puede ser de otro jugador: el héroe que vuelve es el
+							// del dueño de las tropas, no el de quien está mirando la aldea.
 							if($post['t11'] != '' && $post['t11'] > 0){
-								$heroarray = $database->getHeroData($session->uid);
+								$heroarray = $database->getHeroData($to['owner']);
 								$speeds[] = $heroarray['speed'];
 							}else{
 								$speeds[] = $unitarray['speed'];
@@ -687,7 +693,10 @@ class Units {
 						$post['t'.$i.'']='0';
 					}
 				}
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1);
+				$bootsBonus = ($post['t11'] != '' && $post['t11'] > 0)
+					? heroEquippedBootsSpeedBonus($database, $to['owner'])
+					: 0;
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);
 				$reference = $database->addAttack($enforce['from'],$post['t1'],$post['t2'],$post['t3'],$post['t4'],$post['t5'],$post['t6'],$post['t7'],$post['t8'],$post['t9'],$post['t10'],$post['t11'],2,0,0,0,0);
 				$database->addMovement(4,$village->wid,$enforce['from'],$reference,0,($time+time()));
 				$technology->checkReinf($post['ckey']);
@@ -807,7 +816,13 @@ class Units {
 				$this->redirectToRallyPoint();
 			}
 
-			$travelTime = $generator->procDistanceTime($heroVillageCoor,$targetCoor,(int)$hero['speed'],1);
+			$travelTime = $generator->procDistanceTime(
+				$heroVillageCoor,
+				$targetCoor,
+				(int)$hero['speed'],
+				1,
+				heroEquippedBootsSpeedBonus($database, $session->uid)
+			);
 			if($travelTime <= 0 || !$database->deductUnitIfAvailable($heroVillageId,'hero',1)) {
 				$this->redirectToRallyPoint();
 			}

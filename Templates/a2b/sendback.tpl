@@ -56,22 +56,24 @@ if ($enforce['hero']>0){ $colspan = 11; }else{ $colspan = 10; }
             $start = ($att_tribe-1)*10+1;
             $end = ($att_tribe*10);
 			$speeds = array();
+			$bootsBonus = 0;
 				//find slowest unit.
 				for($i=$start;$i<=$end;$i++){
-					if (isset($enforce['u'.$i])){ 
-						if($enforce['u'.$i]!='' && $enforce['u'.$i]>0){ 
+					if (isset($enforce['u'.$i])){
+						if($enforce['u'.$i]!='' && $enforce['u'.$i]>0){
 							//$speeds[] = $unitspeeds[$i-2];
                             $speeds[] = ${'u'.$i}['speed'];
 						}
 					}
-                    if (isset($enforce['hero'])){ 
-						if($enforce['hero']!='' && $enforce['hero']>0){ 
+                    if (isset($enforce['hero'])){
+						if($enforce['hero']!='' && $enforce['hero']>0){
                             $herodetail = $database->getHeroData($to['owner']);
 							$speeds[] = $herodetail['speed'];
+							$bootsBonus = heroEquippedBootsSpeedBonus($database, $to['owner']);
 						}
 					}
 				}
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1);
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);
 
 			?>
    <tbody class="infos">

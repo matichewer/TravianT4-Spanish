@@ -376,6 +376,7 @@ if($canMoveHome){
 
             <?php
             $speeds = array();
+			$bootsBonus = 0;
                 //find slowest unit.
                 for($i=1;$i<=11;$i++){
                     if (isset($process['t'.$i])){
@@ -385,12 +386,13 @@ if($canMoveHome){
 							}else{
 								$herodetail = $database->getHeroData($session->uid);
 								$speeds[] = $herodetail['speed'];
+								$bootsBonus = heroEquippedBootsSpeedBonus($database, $session->uid);
 							}
                         }
                     }
                 }
 
-                $time = $generator->procDistanceTime($from,$to,min($speeds),1);
+                $time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus);
 
             ?>
 

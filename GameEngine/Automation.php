@@ -2599,6 +2599,9 @@ class Automation {
                     7, 7, 6, 9, 10, 9, 4, 3, 4, 5);
 
                 $speeds = array();
+                // Las botas de mercenario del héroe también aceleran el regreso, pero
+                // solo si el héroe sobrevivió y vuelve con la tropa.
+                $bootsBonus = 0;
 
                 //find slowest unit.
                 for ($i = 1; $i <= 11; $i++) {
@@ -2610,6 +2613,7 @@ class Automation {
                             $getVillage = $database->getVillage($data['vref']);
                             $heroarray = $database->getHeroData($getVillage['owner']);
                             $speeds[] = max(1, (int)$heroarray['speed']);
+                            $bootsBonus = heroEquippedBootsSpeedBonus($database, $getVillage['owner']);
                         } else {
                             if($unitarray) {
                                 reset($unitarray);
@@ -3043,7 +3047,7 @@ class Automation {
 
                 // If the dead units not equal the ammount sent they will return and report
                 if($totalsend_att - ($totaldead_att + $totaltraped_att) > 0) {
-                    $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1) + $AttackArrivalTime;
+                    $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus) + $AttackArrivalTime;
                     //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
@@ -3103,6 +3107,7 @@ class Automation {
 
                 // El regreso viaja a la velocidad de la unidad más lenta enviada, no a la del héroe.
                 $returnSpeeds = array();
+                $returnBootsBonus = 0;
                 for ($i = 1; $i <= 11; $i++) {
                     if($data['t'.$i] <= 0) {
                         continue;
@@ -3110,12 +3115,13 @@ class Automation {
                     if($i == 11) {
                         $getHero = $database->getHeroData($AttackerID);
                         $returnSpeeds[] = max(1, (int)$getHero['speed']);
+                        $returnBootsBonus = heroEquippedBootsSpeedBonus($database, $AttackerID);
                     } else {
                         $unitarray = $GLOBALS["u".(($owntribe - 1) * 10 + $i)];
                         $returnSpeeds[] = max(1, (int)$unitarray['speed']);
                     }
                 }
-                $endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1) + $AttackArrivalTime;
+                $endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1, $returnBootsBonus) + $AttackArrivalTime;
                 $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
 
                 $cagesBefore = $cage['type'];
@@ -3266,10 +3272,12 @@ class Automation {
                 $speeds[] = $unit['speed'];
             }
         }
+        $bootsBonus = 0;
         if($survivors[11] > 0) {
             $hero = $database->getHeroData($owner);
             if(is_array($hero) && !empty($hero['speed'])) {
                 $speeds[] = $hero['speed'];
+                $bootsBonus = heroEquippedBootsSpeedBonus($database, $owner);
             }
         }
         if(empty($speeds)) {
@@ -3279,7 +3287,8 @@ class Automation {
             array('x' => $homeCoordinates['x'], 'y' => $homeCoordinates['y']),
             array('x' => $trapCoordinates['x'], 'y' => $trapCoordinates['y']),
             min($speeds),
-            1
+            1,
+            $bootsBonus
         );
         $start = time();
         return $database->returnPrisonersAtomic(
@@ -3856,7 +3865,7 @@ class Automation {
                         $AttackArrivalTime = $data['endtime'];
                         $speeds = array();
                         $speeds[] = $getHero['speed'];
-                        $endtime = $this->procDistanceTime($from, $to, min($speeds), 1) + $AttackArrivalTime;
+                        $endtime = $this->procDistanceTime($from, $to, min($speeds), 1, heroEquippedBootsSpeedBonus($database, $ownerID)) + $AttackArrivalTime;
                         $database->addMovement(4, $data['to'], $data['from'], $ref, '0,0,0,0,0', $endtime);
                     }
                 } else {
@@ -3888,7 +3897,7 @@ class Automation {
                         $AttackArrivalTime = $data['endtime'];
                         $speeds = array();
                         $speeds[] = $getHero['speed'];
-                        $endtime = $this->procDistanceTime($from, $to, min($speeds), 1) + $AttackArrivalTime;
+                        $endtime = $this->procDistanceTime($from, $to, min($speeds), 1, heroEquippedBootsSpeedBonus($database, $ownerID)) + $AttackArrivalTime;
                         $database->addMovement(4, $data['to'], $data['from'], $ref, '0,0,0,0,0', $endtime);
                     }
                 }
@@ -3927,7 +3936,7 @@ class Automation {
                     $AttackArrivalTime = $data['endtime'];
                     $speeds = array();
                     $speeds[] = $getHero['speed'];
-                    $endtime = $this->procDistanceTime($from, $to, min($speeds), 1) + $AttackArrivalTime;
+                    $endtime = $this->procDistanceTime($from, $to, min($speeds), 1, heroEquippedBootsSpeedBonus($database, $ownerID)) + $AttackArrivalTime;
                     $database->addMovement(4, $data['to'], $data['from'], $ref, '0,0,0,0,0', $endtime);
 
                     $ref = $database->addAttack($from['wref'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0);
@@ -4424,7 +4433,10 @@ class Automation {
         }
     }
 
-    private function procDistanceTime($coor, $thiscoor, $ref, $mode) {
+    // $bootsBonus: porcentaje de las botas de mercenario del héroe que viaja en el
+    // movimiento. Se suma a lo que ya haga la Plaza de Torneos, que tiene su propio
+    // umbral y su propia fórmula.
+    private function procDistanceTime($coor, $thiscoor, $ref, $mode, $bootsBonus = 0) {
         global $bid14, $database, $generator;
         $resarray = $database->getResourceLevel($generator->getBaseID($coor['x'], $coor['y']));
         $ts_attri = 0;
@@ -4462,7 +4474,9 @@ class Automation {
             }
         }
 
-        return round(($distance / $speed) * 3600 / INCREASE_SPEED);
+        $effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
+
+        return round(($effectiveDistance / $speed) * 3600 / INCREASE_SPEED);
 
     }
 

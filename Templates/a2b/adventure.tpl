@@ -15,7 +15,7 @@ if(!is_array($eigen) || !is_array($adventureRecord) || (int)$adventureRecord['en
 $from = array('x'=>$eigen['x'], 'y'=>$eigen['y']);
 $to = array('x'=>$adventure['x'], 'y'=>$adventure['y']);
 $speed = $herodetail['speed'];
-$time = $generator->procDistanceTime($from,$to,$speed,1);
+$time = $generator->procDistanceTime($from,$to,$speed,1,heroEquippedBootsSpeedBonus($database,$session->uid));
 $founder = $heroVillage;
 ?>
 

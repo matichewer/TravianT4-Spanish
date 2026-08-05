@@ -127,6 +127,9 @@ foreach($definitions as $btype => $definition){
 		check($db->hero['itempower']===500 && $db->hero['autoregen']===10, 'armor bonuses accumulated during replacement');
 	}elseif($btype===4){
 		check($db->hero['itempower']===1500, 'weapon power accumulated during replacement');
+	}elseif($btype===5){
+		check($db->hero['autoregen']===30, 'boots regeneration accumulated during replacement');
+		check($db->hero['speed']===7, 'regeneration boots changed hero speed');
 	}elseif($btype===6){
 		check($db->hero['speed']===20, 'horse speed accumulated during replacement');
 	}
@@ -143,10 +146,38 @@ foreach($definitions as $btype => $definition){
 		check($db->hero['itempower']===0 && $db->hero['autoregen']===10, 'armor bonuses remained after removal');
 	}elseif($btype===4){
 		check($db->hero['itempower']===0, 'weapon power remained after removal');
+	}elseif($btype===5){
+		check($db->hero['autoregen']===10, 'boots regeneration remained after removal');
 	}elseif($btype===6){
 		check($db->hero['speed']===7, 'horse speed remained after removal');
 	}
 }
+
+// Espuelas y caballo escriben los dos en `speed` desde slots distintos: sacar uno no
+// puede llevarse el bono del otro.
+$sharpSpurs = item(301, 5, 102);
+$smallSpurs = item(302, 5, 100);
+$warHorse = item(303, 6, 105);
+$db = new FakeEquipmentDatabase(array(301 => $sharpSpurs, 302 => $smallSpurs, 303 => $warHorse));
+check(equipHeroItem($db, 7, $sharpSpurs), 'spurs: equip failed');
+check($db->hero['speed']===12, 'spurs did not add hero speed');
+check($db->hero['autoregen']===10, 'spurs changed health regeneration');
+check(equipHeroItem($db, 7, $warHorse), 'spurs: horse equip failed');
+check($db->hero['speed']===25, 'spurs and horse speed did not stack');
+check(equipHeroItem($db, 7, $smallSpurs), 'spurs: replacement failed');
+check($db->hero['speed']===23, 'spur replacement swapped more than the spur bonus');
+check(unequipHeroItem($db, 7, 6, 303), 'spurs: horse removal failed');
+check($db->hero['speed']===10, 'horse removal discarded the spur bonus');
+check(unequipHeroItem($db, 7, 5, 302), 'spurs: removal failed');
+check($db->hero['speed']===7, 'spur bonus remained after removal');
+
+// Las botas de mercenario no guardan nada en el héroe: su bono depende de la
+// distancia y se lee del objeto equipado al calcular cada movimiento.
+$archonBoots = item(304, 5, 99);
+$db = new FakeEquipmentDatabase(array(304 => $archonBoots));
+check(equipHeroItem($db, 7, $archonBoots), 'mercenary boots: equip failed');
+check($db->hero['speed']===7 && $db->hero['autoregen']===10, 'mercenary boots changed stored hero stats');
+check(getHeroBootsArmySpeedBonus(99)===75, 'mercenary boots bonus is incorrect');
 
 $armor = item(201, 2, 88);
 $weapon = item(202, 4, 18);

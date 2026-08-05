@@ -84,6 +84,16 @@ if(!function_exists('applyHeroEquipmentBonusChange')){
 			$newBonus = is_array($newItem) ? getHeroWeaponPowerBonus((int)$newItem['type']) : 0;
 			$itemPower = max(0, (int)$heroData['itempower']-$oldBonus)+$newBonus;
 			$database->modifyHero2('itempower', $itemPower, $uid, 0);
+		}elseif((int)$btype===5){
+			// El bono de las botas de mercenario no se guarda: depende de la distancia
+			// del viaje, así que se lee del objeto equipado al calcular cada movimiento.
+			$empty = array('autoregen' => 0, 'armyspeed' => 0, 'speed' => 0);
+			$oldBonuses = is_array($oldItem) ? getHeroShoesBonuses((int)$oldItem['type']) : $empty;
+			$newBonuses = is_array($newItem) ? getHeroShoesBonuses((int)$newItem['type']) : $empty;
+			$autoRegen = max(0, (int)$heroData['autoregen']-$oldBonuses['autoregen'])+$newBonuses['autoregen'];
+			$speed = max(7, (int)$heroData['speed']-$oldBonuses['speed'])+$newBonuses['speed'];
+			$database->modifyHero2('autoregen', $autoRegen, $uid, 0);
+			$database->modifyHero2('speed', $speed, $uid, 0);
 		}elseif((int)$btype===6){
 			$oldBonus = is_array($oldItem) ? getHeroHorseSpeedBonus((int)$oldItem['type']) : 0;
 			$newBonus = is_array($newItem) ? getHeroHorseSpeedBonus((int)$newItem['type']) : 0;

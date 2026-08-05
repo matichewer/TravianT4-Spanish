@@ -7,6 +7,82 @@ if(!function_exists('getHeroHorseSpeedBonus')){
 	}
 }
 
+if(!function_exists('getHeroShoesBonuses')){
+	// El slot de pies (btype 5) mezcla tres familias de objetos que no comparten
+	// efecto: botas de regeneración (94-96) suman salud por día, botas de mercenario
+	// (97-99) aceleran al ejército en los trayectos largos y espuelas (100-102)
+	// suman casillas por hora al héroe. Solo se puede llevar uno a la vez.
+	function getHeroShoesBonuses($type){
+		$autoRegen = array(94 => 10, 95 => 15, 96 => 20);
+		$armySpeed = array(97 => 25, 98 => 50, 99 => 75);
+		$heroSpeed = array(100 => 3, 101 => 4, 102 => 5);
+		$type = (int)$type;
+
+		return array(
+			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0,
+			'armyspeed' => isset($armySpeed[$type]) ? $armySpeed[$type] : 0,
+			'speed' => isset($heroSpeed[$type]) ? $heroSpeed[$type] : 0
+		);
+	}
+}
+
+if(!function_exists('getHeroSpurSpeedBonus')){
+	function getHeroSpurSpeedBonus($type){
+		$bonuses = getHeroShoesBonuses($type);
+
+		return $bonuses['speed'];
+	}
+}
+
+if(!function_exists('getHeroBootsArmySpeedBonus')){
+	function getHeroBootsArmySpeedBonus($type){
+		$bonuses = getHeroShoesBonuses($type);
+
+		return $bonuses['armyspeed'];
+	}
+}
+
+if(!function_exists('heroBootsDistanceThreshold')){
+	// Las botas prometen su bono "en distancias > 20 casillas". Es un umbral propio
+	// del objeto: no se toca con TS_THRESHOLD, que ajusta la Plaza de Torneos.
+	function heroBootsDistanceThreshold(){
+		return 20;
+	}
+}
+
+if(!function_exists('heroEquippedBootsSpeedBonus')){
+	// Bono de las botas de mercenario que lleva puestas el héroe de $uid. Devuelve 0
+	// si el slot de pies está vacío o si lo que hay ahí es otra cosa (regeneración,
+	// espuelas), que no aceleran al ejército.
+	function heroEquippedBootsSpeedBonus($database, $uid){
+		$uid = (int)$uid;
+		if($uid<=0){
+			return 0;
+		}
+		$shoes = $database->getEquippedHeroItem($uid, 5);
+
+		return is_array($shoes) ? getHeroBootsArmySpeedBonus((int)$shoes['type']) : 0;
+	}
+}
+
+if(!function_exists('heroBootsTravelDistance')){
+	// Las botas solo aceleran el tramo que excede el umbral, así que el bono se
+	// aplica acortando la distancia efectiva en vez de subir la velocidad: el
+	// resultado equivale a T/v + (D-T)/(v*(1+bono/100)), o sea el primer tramo tarda
+	// lo mismo que sin botas. (La Plaza de Torneos usa una aproximación distinta y
+	// más vieja en procDistanceTime; no se la toca desde acá.)
+	function heroBootsTravelDistance($distance, $bonus){
+		$distance = max(0, (float)$distance);
+		$bonus = max(0, (float)$bonus);
+		$threshold = heroBootsDistanceThreshold();
+		if($bonus<=0 || $distance<=$threshold){
+			return $distance;
+		}
+
+		return $threshold+($distance-$threshold)/(1+$bonus/100);
+	}
+}
+
 if(!function_exists('heroExperienceWithHelmet')){
 	function heroExperienceWithHelmet($database, $uid, $experience){
 		$experience = max(0, (float)$experience);

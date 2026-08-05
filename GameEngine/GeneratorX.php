@@ -9,6 +9,8 @@
 ##                                                                             ##
 #################################################################################
 
+require_once __DIR__."/Hero.php";
+
 class GeneratorX {
 	
 	public function generateRandID(){
@@ -35,7 +37,10 @@ class GeneratorX {
 	   return substr($encode,0,$length);
    }
    
-   public function procDistanceTime($coor,$thiscoor,$ref,$mode) {
+   // $bootsBonus es el porcentaje de las botas de mercenario del héroe que viaja con
+   // el ejército; solo se pasa cuando el héroe va en el movimiento y solo cuenta en
+   // los modos que llevan velocidad real de tropas ($mode = 1).
+   public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0) {
 		global $bid28,$bid14,$building;
 		$xdistance = ABS($thiscoor['x'] - $coor['x']);
 		if($xdistance > WORLD_MAX) {
@@ -69,7 +74,8 @@ class GeneratorX {
 					//$speed = $distance <= TS_THRESHOLD ? $speed : $speed * ( ( TS_THRESHOLD + ( $distance - TS_THRESHOLD ) * $bid14[$this->getsort_typeLevel(14,$resarray)]['attri'] / 100 ) / $distance ) ;
 			}
 		}
-		return round(($distance/$speed) * 3600 / INCREASE_SPEED);
+		$effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
+		return round(($effectiveDistance/$speed) * 3600 / INCREASE_SPEED);
 	}
    
    public function getTimeFormat($time) {

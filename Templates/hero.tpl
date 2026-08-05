@@ -33,7 +33,16 @@ $heroHomeVillageIsValid = is_array($heroHomeVillageData) && (int)$heroHomeVillag
 $heroHomeVillageName = $heroHomeVillageIsValid ? $heroHomeVillageData['name'] : '';
 $equippedHorse = $database->getEquippedHeroItem((int)$session->uid,6);
 $horseSpeedBonus = is_array($equippedHorse) ? getHeroHorseSpeedBonus((int)$equippedHorse['type']) : 0;
-$heroBaseSpeed = max(7,(int)$hero['speed']-$horseSpeedBonus);
+$equippedShoes = $database->getEquippedHeroItem((int)$session->uid,5);
+$shoesBonuses = is_array($equippedShoes)
+	? getHeroShoesBonuses((int)$equippedShoes['type'])
+	: array('autoregen'=>0,'armyspeed'=>0,'speed'=>0);
+$spurSpeedBonus = $shoesBonuses['speed'];
+// El bono de las botas de mercenario no entra en la suma de casillas por hora: solo
+// acorta el tramo de viaje que pasa el umbral, así que se muestra aparte.
+$bootsArmySpeedBonus = $shoesBonuses['armyspeed'];
+$bootsDistanceThreshold = heroBootsDistanceThreshold();
+$heroBaseSpeed = max(7,(int)$hero['speed']-$horseSpeedBonus-$spurSpeedBonus);
 $heroSpeedMultiplier = max(1,(int)INCREASE_SPEED);
 $heroDisplayedSpeed = (int)$hero['speed']*$heroSpeedMultiplier;
 $maximumHeroLevel = count($hero_levels)-1;
@@ -276,7 +285,7 @@ if(!$checkT){
 			</div>
 			<div class="clear"></div>
 </div>
-<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad base: <?php echo $heroBaseSpeed; ?> casillas por hora<br>Caballo: +<?php echo $horseSpeedBonus; ?> casillas por hora<br>Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?><br>Total: <?php echo $heroDisplayedSpeed; ?> casillas por hora</font>">
+<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad base: <?php echo $heroBaseSpeed; ?> casillas por hora<br>Caballo: +<?php echo $horseSpeedBonus; ?> casillas por hora<br>Espuelas: +<?php echo $spurSpeedBonus; ?> casillas por hora<br>Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?><br>Total: <?php echo $heroDisplayedSpeed; ?> casillas por hora<?php if($bootsArmySpeedBonus>0){ ?><br>Botas: +<?php echo $bootsArmySpeedBonus; ?>% al ejército más allá de las <?php echo $bootsDistanceThreshold; ?> casillas<?php } ?></font>">
 	<div class="element attribName">Velocidad</div>
     <div class="element power">
 		<span class="currect"><?php echo $heroDisplayedSpeed; ?></span> Casillas por hora

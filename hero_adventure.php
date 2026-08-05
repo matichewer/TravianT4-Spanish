@@ -91,7 +91,7 @@ $coor = $database->getCoor($row['wref']);
 $from = array('x'=>$eigen['x'], 'y'=>$eigen['y']);
 $to = array('x'=>$coor['x'], 'y'=>$coor['y']);
 $speed = $herodetail['speed'];
-$time = $generator->procDistanceTime($from,$to,$speed,1);
+$time = $generator->procDistanceTime($from,$to,$speed,1,heroEquippedBootsSpeedBonus($database,$session->uid));
 
 $isoasis = $database->isVillageOases($row['wref']);
 if($isoasis){
