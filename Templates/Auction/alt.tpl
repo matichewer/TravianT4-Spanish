@@ -542,17 +542,17 @@
 	}elseif($btype==6){
     	if($type==103){
         	$name = "Pura sangre";
-			$title = "La velocidad del héroe es 14";
+			$title = "velocidad del héroe +7";
             $item = "103";
             $effect = "14";
 		}elseif($type==104){
         	$name = "Pura sangre";
-			$title = "La velocidad del héroe es 17";
+			$title = "velocidad del héroe +10";
             $item = "104";
             $effect = "17";
 		}elseif($type==105){
         	$name = "Corcel de guerra";
-			$title = "La velocidad del héroe es 20";
+			$title = "velocidad del héroe +13";
             $item = "105";
             $effect = "20";
 		}

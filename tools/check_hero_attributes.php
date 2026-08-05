@@ -102,6 +102,28 @@ heroAttributeAssert(
 foreach(array('Velocidad base: <?php echo $heroBaseSpeed; ?>','Caballo: +<?php echo $horseSpeedBonus; ?>','Espuelas: +<?php echo $spurSpeedBonus; ?>','Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?>','Total: <?php echo $heroDisplayedSpeed; ?>') as $speedPart){
 	heroAttributeAssert(strpos($heroTemplate,$speedPart)!==false,'Hero speed tooltip breakdown is incomplete');
 }
+// El tooltip de un objeto describe lo que ese objeto aporta, no la velocidad final del
+// héroe: el caballo y las espuelas se suman entre sí, así que un total fijo sería falso.
+$itemTemplate = file_get_contents(dirname(__DIR__).'/Templates/Auction/alt.tpl');
+heroAttributeAssert($itemTemplate!==false,'Could not read hero item template');
+foreach(array(103,104,105) as $horseType){
+	heroAttributeAssert(
+		strpos($itemTemplate,'$title = "velocidad del héroe +'.getHeroHorseSpeedBonus($horseType).'";')!==false,
+		'Horse tooltip does not announce the speed it contributes'
+	);
+}
+foreach(array(100,101,102) as $spurType){
+	$spurBonuses = getHeroShoesBonuses($spurType);
+	heroAttributeAssert(
+		strpos($itemTemplate,'$title = "velocidad del héroe +'.$spurBonuses['speed'].'";')!==false,
+		'Spur tooltip does not announce the speed it contributes'
+	);
+}
+heroAttributeAssert(
+	strpos($itemTemplate,'La velocidad del héroe es')===false,
+	'A hero item tooltip still states a fixed final hero speed'
+);
+
 foreach(array(
 	'<div class="changeResourcesHeadline"><b>Recursos</b></div>',
 	'Como tienes <?php echo $productPoints; ?> puntos en Recursos',
