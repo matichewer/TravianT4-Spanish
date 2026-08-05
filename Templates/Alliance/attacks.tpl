@@ -35,7 +35,7 @@ $allianceEventAlliance = function($attackerId, $defenderId) use ($database, $ses
 // Paginacion compartida por las tres vistas de la pestana (todos / atacante /
 // defensor). Antes cada una cortaba en un LIMIT 20 fijo y no habia forma de
 // llegar a nada mas viejo que la fila 20.
-$allianceEventsPerPage = 25;
+$allianceEventsPerPage = 20;
 $allianceEventsPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if($allianceEventsPage < 1) { $allianceEventsPage = 1; }
 $allianceEventsOffset = 0;
