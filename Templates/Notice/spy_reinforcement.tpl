@@ -1,27 +1,20 @@
 <?php
+// Bloque de refuerzos de un informe de espionaje: un cuadro por tribu con el total de
+// tropas ajenas que defienden la aldea. A propósito no dice de qué jugador ni de qué
+// aldea vienen — el espía cuenta lo que hay, no averigua quién lo mandó.
 $reinforcementTribe = (int)$spyReinforcement['tribe'];
 $reinforcementStart = ($reinforcementTribe - 1) * 10 + 1;
 $reinforcementHero = (int)$spyReinforcement['hero'];
-$reinforcementFrom = (int)$spyReinforcement['from'];
-$reinforcementOwner = (int)$spyReinforcement['owner'];
 $reinforcementIsNature = !empty($spyReinforcement['nature']);
+$reinforcementLabel = $reinforcementIsNature
+	? REPORT_NATURE_REINF
+	: constant('TRIBE'.$reinforcementTribe);
 ?>
 <table cellpadding="0" cellspacing="0">
 	<thead>
 		<tr>
 			<td class="role"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><div class="role">Refuerzo</div></div></div></td>
-			<td class="troopHeadline" colspan="<?php echo $reinforcementHero > 0 ? 11 : 10; ?>">
-			<?php if($reinforcementIsNature) { ?>
-				Naturaleza (animales capturados)
-			<?php } else {
-				$reinforcementPlayerName = htmlspecialchars($database->getUserField($reinforcementOwner, 'username', 0), ENT_QUOTES, 'UTF-8');
-				$reinforcementVillageName = htmlspecialchars($database->getVillageField($reinforcementFrom, 'name'), ENT_QUOTES, 'UTF-8');
-			?>
-				<a href="spieler.php?uid=<?php echo $reinforcementOwner; ?>"><?php echo $reinforcementPlayerName; ?></a>
-				<?php echo REPORT_FROM_VIL; ?>
-				<a href="karte.php?d=<?php echo $reinforcementFrom; ?>&amp;c=<?php echo $generator->getMapCheck($reinforcementFrom); ?>"><?php echo $reinforcementVillageName; ?></a>
-			<?php } ?>
-			</td>
+			<td class="troopHeadline" colspan="<?php echo $reinforcementHero > 0 ? 11 : 10; ?>"><?php echo htmlspecialchars($reinforcementLabel, ENT_QUOTES, 'UTF-8'); ?></td>
 		</tr>
 	</thead>
 	<tbody class="units">

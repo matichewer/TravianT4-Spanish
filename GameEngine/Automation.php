@@ -3389,9 +3389,10 @@ class Automation {
             return null;
         }
 
+        // El informe guarda sólo tribu y cantidad: quién mandó el refuerzo y desde qué
+        // aldea no se almacenan, así que el espionaje no puede delatar al aliado ni
+        // siquiera si algún día alguien vuelca los datos crudos del informe.
         return array(
-            'from' => $from,
-            'owner' => $owner,
             'tribe' => $tribe,
             'units' => $units,
             'hero' => max(0, (int)$enforcement['hero']),

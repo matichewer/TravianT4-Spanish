@@ -16,6 +16,36 @@ foreach($dataarray as $reportField) {
 	}
 	break;
 }
+// El espía ve cuánta defensa ajena hay en la aldea, pero no quién la mandó: se suman
+// todos los refuerzos por tribu y se pierde el jugador y la aldea de origen. Los animales
+// enjaulados llegan como refuerzo de la naturaleza (tribu 4) y quedan en su propio bloque.
+$spyReinforcementGroups = array();
+foreach($spyReinforcements as $spyReinforcement) {
+	$reinforcementTribe = isset($spyReinforcement['tribe']) ? (int)$spyReinforcement['tribe'] : 0;
+	if($reinforcementTribe < 1 || $reinforcementTribe > 5 || !isset($spyReinforcement['units'])) {
+		continue;
+	}
+	if(!isset($spyReinforcementGroups[$reinforcementTribe])) {
+		$spyReinforcementGroups[$reinforcementTribe] = array(
+			'tribe' => $reinforcementTribe,
+			'units' => array_fill(0, 10, 0),
+			'hero' => 0,
+			'nature' => false
+		);
+	}
+	for($position = 0; $position < 10; $position++) {
+		$spyReinforcementGroups[$reinforcementTribe]['units'][$position] += isset($spyReinforcement['units'][$position])
+			? max(0, (int)$spyReinforcement['units'][$position])
+			: 0;
+	}
+	$spyReinforcementGroups[$reinforcementTribe]['hero'] += isset($spyReinforcement['hero'])
+		? max(0, (int)$spyReinforcement['hero'])
+		: 0;
+	if(!empty($spyReinforcement['nature']) || $reinforcementTribe === 4) {
+		$spyReinforcementGroups[$reinforcementTribe]['nature'] = true;
+	}
+}
+ksort($spyReinforcementGroups);
 $trap = $faild = false;
 if($dataarray[154] != '?'){ //if attack didn't fail
 $trapstart = $reportTrapStart !== null ? $reportTrapStart : 159;
@@ -241,25 +271,18 @@ include "Templates/Notice/unknown_defender.tpl";
 }
 if(!$faild) {
 $ddd = '36';
-if(!empty($spyReinforcements)) {
-	foreach($spyReinforcements as $spyReinforcement) {
-		$reinforcementTribe = (int)$spyReinforcement['tribe'];
-		if($reinforcementTribe < 1 || $reinforcementTribe > 5 || !isset($spyReinforcement['units'])) {
-			continue;
-		}
+if(!empty($spyReinforcementGroups)) {
+	foreach($spyReinforcementGroups as $reinforcementTribe => $spyReinforcementGroup) {
 		$reportUnitsStart = 37 + (($reinforcementTribe - 1) * 23);
 		for($position = 0; $position < 10; $position++) {
-			$reinforcementAmount = isset($spyReinforcement['units'][$position])
-				? (int)$spyReinforcement['units'][$position]
-				: 0;
 			$dataarray[$reportUnitsStart + $position] = max(
 				0,
-				(int)$dataarray[$reportUnitsStart + $position] - $reinforcementAmount
+				(int)$dataarray[$reportUnitsStart + $position] - $spyReinforcementGroup['units'][$position]
 			);
 		}
 		$dataarray[$reportUnitsStart + 10] = max(
 			0,
-			(int)$dataarray[$reportUnitsStart + 10] - (int)$spyReinforcement['hero']
+			(int)$dataarray[$reportUnitsStart + 10] - $spyReinforcementGroup['hero']
 		);
 	}
 	for($tribe = 1; $tribe <= 5; $tribe++) {
@@ -277,14 +300,8 @@ for($s=1;$s<=5;$s++){
     }
     $ddd += '23';
 }
-foreach($spyReinforcements as $spyReinforcement) {
-	if(
-		isset($spyReinforcement['tribe'], $spyReinforcement['units'], $spyReinforcement['hero'])
-		&& (int)$spyReinforcement['tribe'] >= 1
-		&& (int)$spyReinforcement['tribe'] <= 5
-	) {
-		include "Templates/Notice/spy_reinforcement.tpl";
-	}
+foreach($spyReinforcementGroups as $spyReinforcement) {
+	include "Templates/Notice/spy_reinforcement.tpl";
 }
 }
 ?>	
