@@ -32,6 +32,62 @@ $allianceEventAlliance = function($attackerId, $defenderId) use ($database, $ses
         .$database->getAllianceName($otherAlliance)
         ."</a>";
 };
+// Paginacion compartida por las tres vistas de la pestana (todos / atacante /
+// defensor). Antes cada una cortaba en un LIMIT 20 fijo y no habia forma de
+// llegar a nada mas viejo que la fila 20.
+$allianceEventsPerPage = 50;
+$allianceEventsPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if($allianceEventsPage < 1) { $allianceEventsPage = 1; }
+$allianceEventsOffset = 0;
+// Cuenta los eventos de la vista, ajusta la pagina pedida al rango real y deja
+// listo el offset del LIMIT. Devuelve la ultima pagina.
+$allianceEventPages = function($ntypeFilter) use ($session, $allianceEventsPerPage, &$allianceEventsPage, &$allianceEventsOffset) {
+    $prefix = "".TB_PREFIX."ndata";
+    $count = mysql_fetch_array(mysql_query("SELECT COUNT(*) AS total FROM $prefix WHERE ally = ".(int)$session->alliance." AND $ntypeFilter"));
+    $lastPage = (int)ceil((int)$count['total'] / $allianceEventsPerPage);
+    if($lastPage < 1) { $lastPage = 1; }
+    if($allianceEventsPage > $lastPage) { $allianceEventsPage = $lastPage; }
+    $allianceEventsOffset = ($allianceEventsPage - 1) * $allianceEventsPerPage;
+    return $lastPage;
+};
+$allianceEventPaginator = function($lastPage) use (&$allianceEventsPage) {
+    if($lastPage < 2) { return ''; }
+    $page = $allianceEventsPage;
+    $url = function($target) {
+        $link = "allianz.php?s=3";
+        if(isset($_GET['f'])) { $link .= "&f=".(int)$_GET['f']; }
+        if(isset($_GET['aid'])) { $link .= "&aid=".(int)$_GET['aid']; }
+        return $link."&page=".(int)$target;
+    };
+    $arrow = function($target, $class, $label) use ($url) {
+        if($target < 1) {
+            return '<img alt="'.$label.'" src="img/x.gif" class="'.$class.' disabled"> ';
+        }
+        return '<a class="'.$class.'" href="'.$url($target).'"><img alt="'.$label.'" src="img/x.gif"></a> ';
+    };
+    $out = '<div class="paginator">';
+    $out .= $arrow($page > 1 ? 1 : 0, 'first', 'Primera');
+    $out .= $arrow($page > 1 ? $page - 1 : 0, 'previous', 'Anterior');
+    // Ventana de numeros: primera, las vecinas de la actual y la ultima.
+    $numbers = array(1, $page - 1, $page, $page + 1, $lastPage);
+    $numbers = array_filter($numbers, function($p) use ($lastPage) { return $p >= 1 && $p <= $lastPage; });
+    $numbers = array_unique($numbers);
+    sort($numbers);
+    $previousNumber = 0;
+    foreach($numbers as $number) {
+        if($previousNumber && $number > $previousNumber + 1) { $out .= '... '; }
+        if($number == $page) {
+            $out .= '<span class="number currentPage">'.$number.'</span> ';
+        } else {
+            $out .= '<a class="number" href="'.$url($number).'">'.$number.'</a> ';
+        }
+        $previousNumber = $number;
+    }
+    $out .= $arrow($page < $lastPage ? $page + 1 : 0, 'next', 'Siguiente');
+    $out .= $arrow($page < $lastPage ? $lastPage : 0, 'last', 'Ultima');
+    $out .= '</div><div class="clear"></div>';
+    return $out;
+};
 echo "<h1>".$allianceinfo['tag']." - ".$allianceinfo['name']."</h1>";
 include("alli_menu.tpl"); 
 ?>
@@ -54,7 +110,8 @@ include("alli_menu.tpl");
     }else{
 $prefix = "".TB_PREFIX."ndata";
 $limit = "ntype!=8 AND ntype!=9 AND ntype!=10 AND ntype!=11 AND ntype!=12 AND ntype!=13 AND ntype!=14 AND ntype!=15 AND ntype!=16 AND ntype!=17";
-$sql = mysql_query("SELECT * FROM $prefix WHERE ally = $session->alliance AND $limit ORDER BY time DESC LIMIT 20");
+$lastPage = $allianceEventPages($limit);
+$sql = mysql_query("SELECT * FROM $prefix WHERE ally = $session->alliance AND $limit ORDER BY time DESC LIMIT $allianceEventsOffset, $allianceEventsPerPage");
 $query = mysql_num_rows($sql);
 $outputList = '';
 $name = 1;
@@ -121,4 +178,5 @@ if($ntype==4 || $ntype==5 || $ntype==6 || $ntype==7){
 <?php echo $outputList; ?>
 </tbody>
 </table>
+<?php echo $allianceEventPaginator($lastPage); ?>
 <?php } ?>
