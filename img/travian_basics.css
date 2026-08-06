@@ -16,16 +16,22 @@
 	line-height: 1.45;
 }
 
-body.troopStatsClean #mid {
-	width: calc(100% - 40px);
-	max-width: 1400px;
+body.troopStatsClean,
+body.troopStatsClean #wrapper {
+	background-color: #fff;
+	background-image: none;
+}
+
+body.troopStatsClean #staticElements {
+	display: none;
 }
 
 body.troopStatsClean #contentOuterContainer {
+	left: 50%;
 	float: none;
-	width: calc(100% - 80px);
-	max-width: 1200px;
-	margin: 0 auto;
+	width: 100vw;
+	max-width: none;
+	margin-left: -50vw;
 }
 
 body.troopStatsClean #contentOuterContainer .contentTitle,
@@ -35,12 +41,14 @@ body.troopStatsClean #contentOuterContainer .contentFooter {
 	background-color: #fff;
 }
 
-body.troopStatsClean #contentOuterContainer .contentTitle {
-	border-radius: 7px 7px 0 0;
+body.troopStatsClean #contentOuterContainer .contentContainer {
+	min-height: calc(100vh - 190px);
+	padding: 0;
 }
 
-body.troopStatsClean #contentOuterContainer .contentFooter {
-	border-radius: 0 0 7px 7px;
+body.troopStatsClean #content {
+	padding-right: 40px;
+	padding-left: 40px;
 }
 
 .troopStatsBack {
