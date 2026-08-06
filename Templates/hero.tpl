@@ -31,9 +31,9 @@ $heroHomeVillageId = heroHomeVillage($hero);
 $heroHomeVillageData = $heroHomeVillageId > 0 ? $database->getVillage($heroHomeVillageId) : false;
 $heroHomeVillageIsValid = is_array($heroHomeVillageData) && (int)$heroHomeVillageData['owner']===(int)$session->uid;
 $heroHomeVillageName = $heroHomeVillageIsValid ? $heroHomeVillageData['name'] : '';
-$equippedHorse = $database->getEquippedHeroItem((int)$session->uid,6);
+$equippedHorse = heroEquippedItem($database,(int)$session->uid,6);
 $horseSpeedBonus = is_array($equippedHorse) ? getHeroHorseSpeedBonus((int)$equippedHorse['type']) : 0;
-$equippedShoes = $database->getEquippedHeroItem((int)$session->uid,5);
+$equippedShoes = heroEquippedItem($database,(int)$session->uid,5);
 $shoesBonuses = is_array($equippedShoes)
 	? getHeroShoesBonuses((int)$equippedShoes['type'])
 	: array('autoregen'=>0,'armyspeed'=>0,'speed'=>0);
@@ -285,7 +285,7 @@ if(!$checkT){
 			</div>
 			<div class="clear"></div>
 </div>
-<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad base: <?php echo $heroBaseSpeed; ?> casillas por hora<br>Caballo: +<?php echo $horseSpeedBonus; ?> casillas por hora<br>Espuelas: +<?php echo $spurSpeedBonus; ?> casillas por hora<br>Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?><br>Total: <?php echo $heroDisplayedSpeed; ?> casillas por hora<?php if($bootsArmySpeedBonus>0){ ?><br>Botas: +<?php echo $bootsArmySpeedBonus; ?>% al ejército más allá de las <?php echo $bootsDistanceThreshold; ?> casillas<?php } ?></font>">
+<div class="attribute speed tooltip" title="La velocidad de tu héroe determina cuántas casillas recorre por hora.<br><font color='#5dcbfb'>Velocidad base: <?php echo $heroBaseSpeed; ?> casillas por hora<?php if($horseSpeedBonus>0){ ?><br>Caballo: +<?php echo $horseSpeedBonus; ?> casillas por hora<?php } ?><?php if($spurSpeedBonus>0){ ?><br>Espuelas: +<?php echo $spurSpeedBonus; ?> casillas por hora<?php } ?><br>Velocidad del servidor: ×<?php echo $heroSpeedMultiplier; ?><br>Total: <?php echo $heroDisplayedSpeed; ?> casillas por hora<?php if($bootsArmySpeedBonus>0){ ?><br>Botas: +<?php echo $bootsArmySpeedBonus; ?>% al ejército más allá de las <?php echo $bootsDistanceThreshold; ?> casillas<?php } ?></font>">
 	<div class="element attribName">Velocidad</div>
     <div class="element power">
 		<span class="currect"><?php echo $heroDisplayedSpeed; ?></span> Casillas por hora

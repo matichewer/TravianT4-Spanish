@@ -42,16 +42,15 @@ if(!function_exists('getHeroWeaponPowerBonus')){
 
 if(!function_exists('getHeroEquipmentDefinition')){
 	function getHeroEquipmentDefinition($btype){
-		$definitions = array(
-			1 => array('slot' => 'helmet', 'face' => 'helmet'),
-			2 => array('slot' => 'body', 'face' => null),
-			3 => array('slot' => 'leftHand', 'face' => 'leftHand'),
-			4 => array('slot' => 'rightHand', 'face' => 'rightHand'),
-			5 => array('slot' => 'shoes', 'face' => 'foot'),
-			6 => array('slot' => 'horse', 'face' => 'horse')
-		);
+		// El slot sale de heroEquipmentSlot() para que no haya dos mapas de btype a
+		// columna de `heroinventory` que se puedan desincronizar.
+		$slot = heroEquipmentSlot($btype);
+		if($slot===false){
+			return false;
+		}
+		$faces = array(1 => 'helmet', 2 => null, 3 => 'leftHand', 4 => 'rightHand', 5 => 'foot', 6 => 'horse');
 
-		return isset($definitions[(int)$btype]) ? $definitions[(int)$btype] : false;
+		return array('slot' => $slot, 'face' => $faces[(int)$btype]);
 	}
 }
 

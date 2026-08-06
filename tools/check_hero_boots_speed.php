@@ -47,35 +47,89 @@ bootsAssert(abs(heroBootsTravelDistance(30, 25)-28.0)<0.000001, 'The 25 percent 
 bootsAssert(abs(heroBootsTravelDistance(30, 50)-26.666666666667)<0.000001, 'The 50 percent boots bonus is incorrect');
 bootsAssert(abs(heroBootsTravelDistance(120, 75)-77.142857142857)<0.000001, 'The 75 percent boots bonus is incorrect');
 
-// El bono se lee del objeto que está en el slot de pies, que también puede tener
-// botas de regeneración o espuelas: esas no aceleran a nadie.
+// El bono sale del objeto que ocupa el slot de pies según `heroinventory`, que es la
+// fuente de verdad. Un objeto suelto en la grilla no puede aportar nada, ni siquiera
+// si su fila quedó marcada con proc = 1.
 class FakeBootsDatabase
 {
-	public $shoes;
+	public $inventories;
+	public $items;
 
-	public function __construct($shoes)
+	public function __construct($inventories, $items)
 	{
-		$this->shoes = $shoes;
+		$this->inventories = $inventories;
+		$this->items = $items;
+	}
+
+	public function getHeroInventory($uid)
+	{
+		return isset($this->inventories[(int)$uid]) ? $this->inventories[(int)$uid] : false;
+	}
+
+	public function getItemData($id)
+	{
+		return isset($this->items[(int)$id]) ? $this->items[(int)$id] : false;
 	}
 
 	public function getEquippedHeroItem($uid, $btype)
 	{
-		return ((int)$btype===5 && isset($this->shoes[(int)$uid])) ? $this->shoes[(int)$uid] : false;
+		foreach($this->items as $item){
+			if((int)$item['uid']===(int)$uid && (int)$item['btype']===(int)$btype && (int)$item['proc']===1){
+				return $item;
+			}
+		}
+
+		return false;
 	}
 }
 
-$database = new FakeBootsDatabase(array(
-	1 => array('type' => 97),
-	2 => array('type' => 99),
-	3 => array('type' => 94),
-	4 => array('type' => 102)
-));
+function bootsItem($id, $uid, $type, $proc, $btype=5)
+{
+	return array('id'=>$id, 'uid'=>$uid, 'btype'=>$btype, 'type'=>$type, 'proc'=>$proc);
+}
+
+$database = new FakeBootsDatabase(
+	array(
+		1 => array('shoes' => 11),
+		2 => array('shoes' => 21),
+		3 => array('shoes' => 31),
+		4 => array('shoes' => 41),
+		5 => array('shoes' => 0),
+		6 => array('shoes' => 61),
+		7 => array('shoes' => 71),
+		8 => array('shoes' => 81)
+	),
+	array(
+		11 => bootsItem(11, 1, 97, 1),
+		21 => bootsItem(21, 2, 99, 1),
+		31 => bootsItem(31, 3, 94, 1),
+		41 => bootsItem(41, 4, 102, 1),
+		// uid 5 no tiene nada puesto, pero tiene unas botas sueltas en la grilla.
+		51 => bootsItem(51, 5, 99, 0),
+		// uid 6 lleva botas de regeneración y dejó unas de mercenario sueltas cuya
+		// fila quedó marcada como equipada: el slot manda, no el flag.
+		61 => bootsItem(61, 6, 94, 1),
+		62 => bootsItem(62, 6, 99, 1),
+		// uid 7 apunta a un objeto de otro dueño y uid 8 a uno de otro tipo.
+		71 => bootsItem(71, 99, 99, 1),
+		81 => bootsItem(81, 8, 105, 1, 6)
+	)
+);
 bootsAssert(heroEquippedBootsSpeedBonus($database, 1)===25, 'Equipped mercenary boots were not read');
 bootsAssert(heroEquippedBootsSpeedBonus($database, 2)===75, 'Equipped archon boots were not read');
 bootsAssert(heroEquippedBootsSpeedBonus($database, 3)===0, 'Regeneration boots were treated as mercenary boots');
 bootsAssert(heroEquippedBootsSpeedBonus($database, 4)===0, 'Spurs were treated as mercenary boots');
-bootsAssert(heroEquippedBootsSpeedBonus($database, 5)===0, 'An empty shoes slot produced a bonus');
+bootsAssert(heroEquippedBootsSpeedBonus($database, 5)===0, 'Boots sitting in the inventory grid produced a bonus');
+bootsAssert(heroEquippedBootsSpeedBonus($database, 6)===0, 'An unequipped item with a stale proc flag produced a bonus');
+bootsAssert(heroEquippedBootsSpeedBonus($database, 7)===0, 'Another user\'s boots produced a bonus');
+bootsAssert(heroEquippedBootsSpeedBonus($database, 8)===0, 'A horse in the shoes slot produced a boots bonus');
 bootsAssert(heroEquippedBootsSpeedBonus($database, 0)===0, 'A missing user produced a bonus');
+
+// El slot manda también para leer el objeto en sí.
+bootsAssert(heroEquippedItem($database, 6, 5)['id']===61, 'The shoes slot did not resolve to the item it points at');
+bootsAssert(heroEquippedItem($database, 5, 5)===false, 'An empty shoes slot resolved to an item');
+bootsAssert(heroEquipmentSlot(5)==='shoes' && heroEquipmentSlot(6)==='horse', 'Equipment slots are mislabelled');
+bootsAssert(heroEquipmentSlot(7)===false, 'Bag items were treated as an equipment slot');
 
 // procDistanceTime completo. Se carga GeneratorX con lo mínimo que usa el modo 1.
 if(!defined('WORLD_MAX')){ define('WORLD_MAX', 200); }
@@ -149,6 +203,20 @@ bootsAssert(
 bootsAssert(
 	strpos($heroTemplate, 'Botas: +<?php echo $bootsArmySpeedBonus; ?>%')!==false,
 	'The hero tooltip does not mention the mercenary boots bonus'
+);
+// Caballo y espuelas comparten renglón conceptual con las botas: listar los tres a la
+// vez hace creer que cuenta algo que no está puesto (botas y espuelas ni siquiera
+// pueden convivir, van al mismo slot). Cada línea aparece solo si aporta.
+foreach(array('$horseSpeedBonus', '$spurSpeedBonus', '$bootsArmySpeedBonus') as $bonusVariable){
+	bootsAssert(
+		strpos($heroTemplate, '<?php if('.$bonusVariable.'>0){ ?>')!==false,
+		"The hero tooltip shows the $bonusVariable line even when it contributes nothing"
+	);
+}
+bootsAssert(
+	strpos($heroTemplate, 'heroEquippedItem($database,(int)$session->uid,5)')!==false
+	&& strpos($heroTemplate, 'heroEquippedItem($database,(int)$session->uid,6)')!==false,
+	'The hero tooltip does not resolve equipment through the inventory slot'
 );
 
 echo "Hero boots and spurs regression: OK\n";

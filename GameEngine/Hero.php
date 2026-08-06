@@ -50,16 +50,54 @@ if(!function_exists('heroBootsDistanceThreshold')){
 	}
 }
 
+if(!function_exists('heroEquipmentSlot')){
+	// Columna de `heroinventory` en la que vive cada tipo de objeto equipable.
+	function heroEquipmentSlot($btype){
+		$slots = array(1=>'helmet', 2=>'body', 3=>'leftHand', 4=>'rightHand', 5=>'shoes', 6=>'horse');
+		$btype = (int)$btype;
+
+		return isset($slots[$btype]) ? $slots[$btype] : false;
+	}
+}
+
+if(!function_exists('heroEquippedItem')){
+	// Qué objeto lleva puesto el héroe en un slot. La fuente de verdad es
+	// `heroinventory`, no el flag `proc` de la fila del objeto: los dos se escriben
+	// juntos al equipar pero sin transacción, y una fila con `proc = 1` que quedara
+	// huérfana daría un bono fantasma imposible de ver, porque la grilla del
+	// inventario lista `proc = 0`. Resolver por el slot y validar dueño y tipo hace
+	// que solo lo realmente equipado pueda tener efecto.
+	function heroEquippedItem($database, $uid, $btype){
+		$uid = (int)$uid;
+		$btype = (int)$btype;
+		$slot = heroEquipmentSlot($btype);
+		if($uid<=0 || $slot===false){
+			return false;
+		}
+		// Los dobles de prueba de los checkers solo implementan la consulta vieja; la
+		// clase real expone las dos, así que en el juego siempre corre el camino de
+		// arriba.
+		if(!method_exists($database, 'getHeroInventory') || !method_exists($database, 'getItemData')){
+			return method_exists($database, 'getEquippedHeroItem')
+				? $database->getEquippedHeroItem($uid, $btype)
+				: false;
+		}
+		$inventory = $database->getHeroInventory($uid);
+		if(!is_array($inventory) || empty($inventory[$slot])){
+			return false;
+		}
+		$item = $database->getItemData((int)$inventory[$slot]);
+
+		return (is_array($item) && (int)$item['uid']===$uid && (int)$item['btype']===$btype) ? $item : false;
+	}
+}
+
 if(!function_exists('heroEquippedBootsSpeedBonus')){
 	// Bono de las botas de mercenario que lleva puestas el héroe de $uid. Devuelve 0
 	// si el slot de pies está vacío o si lo que hay ahí es otra cosa (regeneración,
 	// espuelas), que no aceleran al ejército.
 	function heroEquippedBootsSpeedBonus($database, $uid){
-		$uid = (int)$uid;
-		if($uid<=0){
-			return 0;
-		}
-		$shoes = $database->getEquippedHeroItem($uid, 5);
+		$shoes = heroEquippedItem($database, $uid, 5);
 
 		return is_array($shoes) ? getHeroBootsArmySpeedBonus((int)$shoes['type']) : 0;
 	}
@@ -86,7 +124,7 @@ if(!function_exists('heroBootsTravelDistance')){
 if(!function_exists('heroExperienceWithHelmet')){
 	function heroExperienceWithHelmet($database, $uid, $experience){
 		$experience = max(0, (float)$experience);
-		$helmet = $database->getEquippedHeroItem((int)$uid, 1);
+		$helmet = heroEquippedItem($database, $uid, 1);
 		if(is_array($helmet) && isset($helmet['type'])){
 			$bonuses = array(1 => 15, 2 => 20, 3 => 25);
 			$type = (int)$helmet['type'];

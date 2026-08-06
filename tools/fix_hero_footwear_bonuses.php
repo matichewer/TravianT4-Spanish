@@ -46,19 +46,19 @@ foreach($rows as $row){
 	$speed = $baseSpeed;
 	$autoRegen = $baseAutoRegen;
 
-	$horse = $database->getEquippedHeroItem($uid, 6);
+	$horse = heroEquippedItem($database, $uid, 6);
 	if(is_array($horse)){
 		$speed += getHeroHorseSpeedBonus((int)$horse['type']);
 	}
 
-	$shoes = $database->getEquippedHeroItem($uid, 5);
+	$shoes = heroEquippedItem($database, $uid, 5);
 	if(is_array($shoes)){
 		$shoesBonuses = getHeroShoesBonuses((int)$shoes['type']);
 		$speed += $shoesBonuses['speed'];
 		$autoRegen += $shoesBonuses['autoregen'];
 	}
 
-	$armor = $database->getEquippedHeroItem($uid, 2);
+	$armor = heroEquippedItem($database, $uid, 2);
 	if(is_array($armor)){
 		$armorBonuses = getHeroArmorBonuses((int)$armor['type']);
 		$autoRegen += $armorBonuses['autoregen'];
