@@ -1,5 +1,36 @@
 @CHARSET "UTF-8";
 
+.troopStatsIntro {
+	line-height: 1.45;
+}
+
+.troopStatsTableWrapper {
+	overflow-x: auto;
+	margin-bottom: 18px;
+}
+
+table.troopStatsTable {
+	width: 100%;
+	min-width: 760px;
+	table-layout: auto;
+}
+
+table.troopStatsTable th,
+table.troopStatsTable td {
+	text-align: center;
+	white-space: nowrap;
+}
+
+table.troopStatsTable .troopStatsUnit {
+	min-width: 135px;
+	text-align: left;
+}
+
+table.troopStatsTable td.troopStatsUnit img.unit {
+	margin-right: 4px;
+	vertical-align: middle;
+}
+
 /* ------------------- New CSS styles ------------------- */
 /* ------------------------------------------------------ */
 
