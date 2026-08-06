@@ -12,6 +12,21 @@
 	text-decoration: underline;
 }
 
+body.helpPage #content.universal {
+	display: flex;
+	flex-direction: column;
+	min-height: 430px;
+	box-sizing: border-box;
+}
+
+body.helpPage .helpInfoBlock:hover {
+	background-color: transparent;
+}
+
+body.helpPage .helpCredits {
+	margin-top: auto;
+}
+
 .troopStatsIntro {
 	line-height: 1.45;
 }

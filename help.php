@@ -3,7 +3,7 @@
 include("GameEngine/Village.php");
 include "Templates/html.tpl";
 ?>
-<body class="v35 webkit chrome plus">
+<body class="v35 webkit chrome plus helpPage">
 	<div id="wrapper">
 		<img id="staticElements" src="img/x.gif" alt="" />
 		<div id="logoutContainer">
@@ -33,9 +33,9 @@ include "Templates/html.tpl";
 
 <div class="helpInfoBlock">
 	<div class="helpHeadLine">Enlaces útiles</div>
-	<div class="helpText"><a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas: compara las unidades romanas, germanas y galas.</a></div>
+	<div class="helpText"><a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas</a></div>
 </div>
-<div class="helpInfoBlock helpInfoLinkLess">
+<div class="helpInfoBlock helpInfoLinkLess helpCredits">
 	<div class="helpHeadLine"><?php echo $lang['HELP1']['Partie_7']; ?></div>
 	<div class="helpText" style="font-size: 16px; line-height: 24px;">
 		<div><?php echo $lang['HELP1']['Testers_7']; ?></div>
