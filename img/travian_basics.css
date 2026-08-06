@@ -45,8 +45,8 @@ body.troopStatsClean #staticElements {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	height: 105px;
-	padding: 0 48px;
+	height: 88px;
+	padding: 0 24px;
 	box-sizing: border-box;
 }
 
@@ -79,14 +79,14 @@ body.troopStatsClean #contentOuterContainer .contentTitle {
 }
 
 body.troopStatsClean #contentOuterContainer .contentContainer {
-	min-height: calc(100vh - 105px);
+	min-height: calc(100vh - 88px);
 	padding: 0;
 }
 
 body.troopStatsClean #content {
-	padding-top: 22px;
-	padding-right: 40px;
-	padding-left: 40px;
+	padding-top: 12px;
+	padding-right: 24px;
+	padding-left: 24px;
 }
 
 .troopStatsBack {
@@ -118,7 +118,7 @@ body.troopStatsClean #content {
 
 table.troopStatsTable {
 	width: 100%;
-	min-width: 1000px;
+	min-width: 820px;
 	table-layout: auto;
 }
 
@@ -126,6 +126,16 @@ table.troopStatsTable th,
 table.troopStatsTable td {
 	text-align: center;
 	white-space: nowrap;
+	padding-right: 4px;
+	padding-left: 4px;
+}
+
+table.troopStatsTable tbody tr:nth-child(odd) td {
+	background-color: #fafafa;
+}
+
+table.troopStatsTable tbody tr:nth-child(even) td {
+	background-color: #f1f1f1;
 }
 
 table.troopStatsTable .troopStatsUnit {

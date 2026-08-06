@@ -61,7 +61,7 @@ include "Templates/html.tpl";
 										$troopStatsUnitName = constant('U'.$troopStatsUnitId);
 									?>
 										<tr>
-											<td class="troopStatsUnit"><img class="unit u<?php echo $troopStatsUnitId; ?>" src="img/x.gif" alt="<?php echo htmlspecialchars($troopStatsUnitName, ENT_QUOTES, 'UTF-8'); ?>" /> <?php echo htmlspecialchars($troopStatsUnitName, ENT_QUOTES, 'UTF-8'); ?></td>
+											<td class="troopStatsUnit"><img class="unit u<?php echo $troopStatsUnitId; ?>" src="img/x.gif" alt="<?php echo htmlspecialchars(html_entity_decode($troopStatsUnitName, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?>" /> <?php echo $troopStatsUnitName; ?></td>
 											<td><?php echo $troopStatsUnit['atk']; ?></td>
 											<td><?php echo $troopStatsUnit['di']; ?></td>
 											<td><?php echo $troopStatsUnit['dc']; ?></td>
