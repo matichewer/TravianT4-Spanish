@@ -1140,7 +1140,7 @@ class Automation {
 
         foreach ($array as $indi) {
             if($indi['lastupdate'] < $time) {
-                $cp = $database->getVSumField($indi['id'], 'cp');
+                $cp = accountCulturePointsPerDay($database, $indi['id']);
                 $newupdate = time();
                 $q = "UPDATE ".TB_PREFIX."users set cp = cp + $cp, lastupdate = $newupdate where id = '".$indi['id']."'";
                 $database->query($q);

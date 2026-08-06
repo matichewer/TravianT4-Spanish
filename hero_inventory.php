@@ -266,12 +266,25 @@ for($i=$inv;$i<=12;$i++){
     <input type="hidden" name="btype" value="<?php echo isset($_POST['btype']) ? (int)$_POST['btype'] : ''; ?>">
     <input type="hidden" name="type" value="<?php echo isset($_POST['type']) ? (int)$_POST['type'] : ''; ?>">
 </form>
+<?php
+// Los diálogos de confirmación tienen que anunciar lo mismo que después acredita
+// Inventory.php. Los dos consumibles dependen del casco puesto: el rollo, del bono de
+// experiencia, y la obra de arte, de la producción diaria, que incluye el casco de
+// cultura.
+$currentCulturePoints = (int)$database->getUserField($session->uid, 'cp', 0);
+$cultureDailyProduction = accountCulturePointsPerDay($database, (int)$session->uid);
+$equippedHelmet = heroEquippedItem($database, (int)$session->uid, 1);
+$helmetExperienceBonus = is_array($equippedHelmet)
+	? getHeroHelmetBonuses((int)$equippedHelmet['type'])['experience']
+	: 0;
+$scrollExperience = heroExperienceWithHelmet($database, (int)$session->uid, 10);
+?>
 <script type="text/javascript">
 	Travian.Game.Hero.Inventory = new (new Class(
 	{
-		b10: '<p><div style="color:#F90">Experiencia actual del héroe: <?php echo $hero['experience']; ?><br>Experiencia obtenida: 10<br>Experiencia después de usarlo: <?php echo ($hero['experience']+10); ?><br></div>',
-		
-		b15: '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Puntos de cultura actuales:</th><td><?php echo $database->getUserField($session->uid, 'cp',0); ?></td></tr><tr class="rowUseValue"><th>Puntos de cultura obtenidos al usar la obra de arte:</th><td class="displayUseValue"><?php echo $database->getVSumField($session->uid, 'cp'); ?></td></tr><tr class="rowAfterUse"><th>Puntos de cultura después de usar la obra de arte:</th><td class="displayAfterUse"><?php echo ($database->getUserField($session->uid, 'cp',0)+$database->getVSumField($session->uid, 'cp')); ?></td></tr></tbody></table>',
+		b10: '<p><div style="color:#F90">Experiencia actual del héroe: <?php echo $hero['experience']; ?><br>Experiencia obtenida: <?php echo $scrollExperience; ?><br>Experiencia después de usarlo: <?php echo ($hero['experience']+$scrollExperience); ?><br></div>',
+
+		b15: '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Puntos de cultura actuales:</th><td><?php echo $currentCulturePoints; ?></td></tr><tr class="rowUseValue"><th>Puntos de cultura obtenidos al usar la obra de arte:</th><td class="displayUseValue"><?php echo $cultureDailyProduction; ?></td></tr><tr class="rowAfterUse"><th>Puntos de cultura después de usar la obra de arte:</th><td class="displayAfterUse"><?php echo ($currentCulturePoints+$cultureDailyProduction); ?></td></tr></tbody></table>',
 		
 		alreadyOpen: false,
 		lastTouchActivation: 0,
@@ -401,16 +414,20 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 			}else{
 				if(btype == 10){
 					exp_a = '<?php echo $hero['experience']; ?>';
-					exp_b = amount*10;
+					// El bono del casco se aplica sobre el total, no por rollo: hacerlo
+					// por unidad trunca de más (3 rollos con +15% son 34, no 3x11).
+					exp_b = Math.floor(amount*10*(100+<?php echo (int)$helmetExperienceBonus; ?>)/100);
 					exp_total = <?php echo $hero['experience']; ?>+exp_b;
 					html = $this.textMulti;
 					html += '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Experiencia actual del héroe:</th><td>'+exp_a+'</td></tr><tr class="rowUseValue"><th>Experiencia obtenida al usar los pergaminos:</th><td class="displayUseValue">'+exp_b+'</td></tr><tr class="rowAfterUse"><th>Experiencia del héroe después de usarlos:</th><td class="displayAfterUse">'+exp_total+'</td></tr></tbody></table>';
 
 				}else
 				if(btype == 15){
-					cp = '<?php echo $database->getUserField($session->uid, 'cp',0); ?>';
-					cp_b = (cp*amount);
-					cp_total = <?php echo $database->getUserField($session->uid, 'cp',0); ?>+cp_b;
+					// Cada obra de arte concede un día de producción, no los PC que el
+					// jugador ya tiene acumulados, que es lo que se mostraba acá.
+					cp = <?php echo $currentCulturePoints; ?>;
+					cp_b = <?php echo $cultureDailyProduction; ?>*amount;
+					cp_total = cp+cp_b;
 					html = $this.textMulti;
 					html += '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Puntos de cultura actuales:</th><td>'+cp+'</td></tr><tr class="rowUseValue"><th>Puntos de cultura obtenidos al usar las obras de arte:</th><td class="displayUseValue">'+cp_b+'</td></tr><tr class="rowAfterUse"><th>Puntos de cultura después de usarlas:</th><td class="displayAfterUse">'+cp_total+'</td></tr></tbody></table>';
 					

@@ -20,7 +20,10 @@ class FakeHelmetDatabase
 		$this->items = $items;
 	}
 
+	public $villageCulturePoints = 250;
+
 	public function getHeroInventory($uid){ return $this->inventory; }
+	public function getVSumField($uid, $field){ return $this->villageCulturePoints; }
 	public function getItemData($id){ return isset($this->items[$id]) ? $this->items[$id] : false; }
 	public function getHeroData($uid){ return $this->hero; }
 	public function editProcItem($id, $mode){ $this->items[$id]['proc'] = (int)$mode; return true; }
@@ -106,6 +109,41 @@ foreach(array(1, 7, 10, 13) as $type){
 	$db = withHelmet($type);
 	check((int)$db->hero['autoregen']===10, "el casco $type cambió la regeneración");
 }
+
+// --- Puntos de cultura (types 7-9) --------------------------------------------
+
+$expected = array(7 => 100, 8 => 400, 9 => 800);
+foreach($expected as $type => $bonus){
+	$db = withHelmet($type);
+	check(heroHelmetCulturePoints($db, 7)===$bonus,
+		"el casco $type aportó ".heroHelmetCulturePoints($db, 7)." PC en vez de $bonus");
+	check(accountCulturePointsPerDay($db, 7)===250+$bonus,
+		"la producción diaria con el casco $type no sumó el bono");
+
+	// A diferencia de la regeneración, el bono no se guarda en ninguna columna.
+	check((int)$db->hero['autoregen']===10, "el casco $type tocó la regeneración");
+
+	check(unequipHeroItem($db, 7, 1, 1), "no se pudo sacar el casco $type");
+	check(heroHelmetCulturePoints($db, 7)===0, "sacar el casco $type dejó PC fantasma");
+	check(accountCulturePointsPerDay($db, 7)===250, "la producción diaria quedó inflada");
+}
+
+// Un héroe muerto no aporta cultura, igual que no regenera ni produce recursos.
+$db = withHelmet(9);
+check(accountCulturePointsPerDay($db, 7)===1050, 'el casco del Cónsul no sumó estando vivo');
+$db->hero['dead'] = 1;
+check(heroHelmetCulturePoints($db, 7)===0, 'un héroe muerto siguió aportando cultura');
+check(accountCulturePointsPerDay($db, 7)===250, 'un héroe muerto infló la producción diaria');
+
+// Un casco de otra familia no aporta cultura.
+foreach(array(1, 4, 10, 13) as $type){
+	$db = withHelmet($type);
+	check(heroHelmetCulturePoints($db, 7)===0, "el casco $type aportó cultura");
+}
+
+$db = new FakeHelmetDatabase();
+check(heroHelmetCulturePoints($db, 7)===0, 'sin casco apareció cultura');
+check(accountCulturePointsPerDay($db, 7)===250, 'sin casco cambió la producción diaria');
 
 // --- Botín de aventura --------------------------------------------------------
 

@@ -29,8 +29,10 @@ $cultureQuestVisible = QUEST == true && $cultureQuestArray['fquest'] != "1,1,1,1
 $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 
 // vdata.cp holds the culture points a village yields per day; GameEngine/Automation.php
-// credits the sum of all the owner's villages once every 24 hours.
-$cultureDailyProduction = (int)$database->getVSumField($cultureOwnerId, 'cp');
+// credits the sum of all the owner's villages, plus the hero's culture helmet, once
+// every 24 hours.
+$cultureDailyProduction = accountCulturePointsPerDay($database, $cultureOwnerId);
+$cultureHelmetProduction = heroHelmetCulturePoints($database, $cultureOwnerId);
 ?>
 <div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass . $cultureQuestClass . $cultureProtectionClass; ?>">
 	<div class="cultureProgressHeader">
@@ -40,6 +42,7 @@ $cultureDailyProduction = (int)$database->getVSumField($cultureOwnerId, 'cp');
 				<strong>Cómo funcionan los puntos de cultura</strong>
 				<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel completado aumenta la producción de PC. La producción de todas tus aldeas se suma y se acredita una vez cada 24 horas.</span>
 				<span class="cultureProgressTooltipLine"><b>Ayuntamiento:</b> una celebración pequeña entrega 500 PC y una grande 2000 PC cuando finaliza.</span>
+				<span class="cultureProgressTooltipLine"><b>Casco del héroe:</b> el Casco del Gladiador, del Tribuno y del Cónsul suman 100, 400 y 800 PC a la producción diaria mientras el héroe esté vivo.</span>
 				<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden inmediatamente tantos PC como tu producción diaria total.</span>
 				<span class="cultureProgressTooltipFoot">Los PC pertenecen a toda la cuenta y permiten fundar o conquistar más aldeas. Con Plus, el desglose por aldea está en Resumen de aldeas → Puntos de cultura.</span>
 			</span>
@@ -64,5 +67,5 @@ $cultureDailyProduction = (int)$database->getVSumField($cultureOwnerId, 'cp');
 		<div class="cultureProgressBarFill" style="width:<?php echo number_format($cultureStatus['progressPercent'], 2, '.', ''); ?>%;"></div>
 	</div>
 <?php } ?>
-	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día</div>
+	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta<?php if($cultureHelmetProduction > 0) { echo ', incluidos '.number_format($cultureHelmetProduction, 0, ',', '.').' PC del casco del héroe'; } ?>">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día</div>
 </div>

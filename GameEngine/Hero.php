@@ -123,17 +123,59 @@ if(!function_exists('heroBootsTravelDistance')){
 if(!function_exists('getHeroHelmetBonuses')){
 	// El slot de cabeza (btype 1) mezcla cinco familias que no comparten efecto: cascos
 	// de experiencia (1-3), de regeneración (4-6), de cultura (7-9), de establo (10-12)
-	// y de cuartel (13-15). Solo se puede llevar uno a la vez. Las tres últimas familias
+	// y de cuartel (13-15). Solo se puede llevar uno a la vez. Las dos últimas familias
 	// todavía no tienen efecto implementado en ningún lado.
 	function getHeroHelmetBonuses($type){
 		$experience = array(1 => 15, 2 => 20, 3 => 25);
 		$autoRegen = array(4 => 10, 5 => 15, 6 => 20);
+		$culture = array(7 => 100, 8 => 400, 9 => 800);
 		$type = (int)$type;
 
 		return array(
 			'experience' => isset($experience[$type]) ? $experience[$type] : 0,
-			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0
+			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0,
+			'culture' => isset($culture[$type]) ? $culture[$type] : 0
 		);
+	}
+}
+
+if(!function_exists('heroHelmetCulturePoints')){
+	// Puntos de cultura por día que aporta el casco puesto. A diferencia de la
+	// regeneración, no se guarda en ninguna columna: se lee del objeto equipado cada
+	// vez que se acredita el día, igual que el bono de experiencia.
+	//
+	// Un héroe muerto no aporta nada, que es como el resto del motor trata su equipo:
+	// updateHero() tampoco lo regenera y heroVillageResourceBonus() le corta los
+	// recursos.
+	function heroHelmetCulturePoints($database, $uid){
+		$uid = (int)$uid;
+		if($uid<=0 || !method_exists($database, 'getHeroData')){
+			return 0;
+		}
+		$hero = $database->getHeroData($uid);
+		if(!is_array($hero) || (int)$hero['dead']!==0){
+			return 0;
+		}
+		$helmet = heroEquippedItem($database, $uid, 1);
+		if(!is_array($helmet)){
+			return 0;
+		}
+		$bonuses = getHeroHelmetBonuses((int)$helmet['type']);
+
+		return $bonuses['culture'];
+	}
+}
+
+if(!function_exists('accountCulturePointsPerDay')){
+	// Producción diaria de PC de toda la cuenta: la suma de las aldeas más el casco de
+	// cultura. Vive acá porque el casco es lo que la hace distinta de un getVSumField,
+	// y tiene que ser una sola definición: la usan el crédito diario, el panel de
+	// cultura y las obras de arte, que conceden justamente un día de producción.
+	function accountCulturePointsPerDay($database, $uid){
+		$uid = (int)$uid;
+		$villages = (int)$database->getVSumField($uid, 'cp');
+
+		return $villages+heroHelmetCulturePoints($database, $uid);
 	}
 }
 

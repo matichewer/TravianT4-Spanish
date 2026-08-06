@@ -353,7 +353,10 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 
 	elseif($data['btype']==15){
 		if($data['amount'] <= $itemData['num']){
-			$value = ($data['amount']*$database->getVSumField($uid, 'cp'));
+			// La obra de arte concede un día de producción, y desde que el casco de
+			// cultura cuenta como producción diaria tiene que entrar acá también: si no,
+			// el número que promete el diálogo del inventario no es el que se acredita.
+			$value = ($data['amount']*accountCulturePointsPerDay($database, $uid));
 			if($data['amount'] < $itemData['num']){
 				$database->updateUserField($uid, 'cp', $value, 2);
 				$database->editHeroNum($data['id'], $data['amount'], 0);
