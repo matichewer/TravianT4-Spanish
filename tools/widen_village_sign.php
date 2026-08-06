@@ -1,0 +1,85 @@
+<?php
+/**
+ * Regenera las imágenes del cartel de aldeas (#villageList) a un ancho distinto
+ * del original de 172px, estirando dos bandas lisas del pergamino y dejando
+ * intactos los clavos, el nudo central, las esquinas y los bordes de madera.
+ *
+ * Uso (desde el host):
+ *   git checkout gpack/travian_Travian_4.0_41/img/layout/signVillages*-rtl.png
+ *   docker compose exec -T web php /var/www/html/tools/widen_village_sign.php 196
+ *
+ * El primer paso es obligatorio: el script sólo sabe recortar el arte original
+ * de 172px, así que hay que restaurarlo antes de volver a ensancharlo.
+ *
+ * Después de correrlo hay que ajustar a mano en
+ * gpack/travian_Travian_4.0_41/lang/ir/compact1.css:
+ *   #villageList{width}, #villageList .foot{width}  -> ancho nuevo
+ *   #villageList .head a{width}                     -> ancho nuevo - 47
+ *   #villageList ul a{width}                        -> ancho nuevo - 36
+ *   #villageList ul li.attack a{width}              -> ancho nuevo - 38
+ * y subir el cache-buster de compact.css en Templates/html.tpl.
+ */
+
+const SRC_WIDTH = 172;
+const IMG_DIR = __DIR__ . "/../gpack/travian_Travian_4.0_41/img/layout/";
+const FILES = ["signVillagesTop-rtl.png", "signVillagesMiddle-rtl.png", "signVillagesBottom-rtl.png"];
+
+$newWidth = isset($argv[1]) ? (int)$argv[1] : 196;
+if ($newWidth < SRC_WIDTH || $newWidth % 2 !== 0) {
+    fwrite(STDERR, "El ancho nuevo debe ser par y >= " . SRC_WIDTH . "\n");
+    exit(1);
+}
+$grow = ($newWidth - SRC_WIDTH) / 2; // se reparte entre las dos bandas
+
+// [x de origen, ancho de origen, ancho de destino]; las bandas 50-70 y 102-122
+// son pergamino liso, se pueden estirar sin que se note.
+$segments = [
+    [0,   50, 50],
+    [50,  20, 20 + $grow],
+    [70,  32, 32],
+    [102, 20, 20 + $grow],
+    [122, 50, 50],
+];
+
+foreach (FILES as $name) {
+    $path = IMG_DIR . $name;
+    $src = imagecreatefrompng($path);
+    if (!$src) {
+        fwrite(STDERR, "No se pudo abrir $name\n");
+        exit(1);
+    }
+    $h = imagesy($src);
+    if (imagesx($src) !== SRC_WIDTH) {
+        fwrite(STDERR, "$name mide " . imagesx($src) . "px: restaurá el original de " . SRC_WIDTH . "px con git checkout\n");
+        exit(1);
+    }
+
+    // el "middle" es paletizado; se normaliza a truecolor para poder remuestrear
+    $tc = imagecreatetruecolor(SRC_WIDTH, $h);
+    imagealphablending($tc, false);
+    imagesavealpha($tc, true);
+    imagefill($tc, 0, 0, imagecolorallocatealpha($tc, 0, 0, 0, 127));
+    imagecopy($tc, $src, 0, 0, 0, 0, SRC_WIDTH, $h);
+
+    $out = imagecreatetruecolor($newWidth, $h);
+    imagealphablending($out, false);
+    imagesavealpha($out, true);
+    imagefill($out, 0, 0, imagecolorallocatealpha($out, 0, 0, 0, 127));
+
+    $dx = 0;
+    foreach ($segments as [$sx, $sw, $dw]) {
+        if ($sw === $dw) {
+            imagecopy($out, $tc, $dx, 0, $sx, 0, $sw, $h);
+        } else {
+            imagecopyresampled($out, $tc, $dx, 0, $sx, 0, $dw, $h, $sw, $h);
+        }
+        $dx += $dw;
+    }
+    if ($dx !== $newWidth) {
+        fwrite(STDERR, "$name: ancho final $dx != $newWidth\n");
+        exit(1);
+    }
+
+    imagepng($out, $path);
+    echo "$name -> {$newWidth}x{$h}\n";
+}

@@ -67,7 +67,7 @@ The **live** admin panel is `Admin/admin.php` → `Admin/Templates/`. The old du
 - The web container runs Apache as **UID 1000** so it can write the bind-mounted code and `config/` / `install/installconfig/`. Permission errors on those paths usually trace back to a UID mismatch.
 - `config/connection.php`, `config/installed`, `.env`, and `backup-*.sql` are gitignored; never commit generated config or secrets.
 - Do **not** touch any sibling `travian-*` Docker containers on this host — only the `traviant4-php7` stack belongs to this project.
-- Sidebar layout is fragile: never widen `#side_info` / `#villageList` in `compact1.css` (breaks the float layout); grow vertically instead.
+- Sidebar layout is fragile: never widen `#side_info` in `compact1.css` (it's a 196px float inside the 990px `#mid`, so widening it breaks the float layout). The signs *inside* it can overflow to the right — that's how `#villageList` is 196px wide — but each sign's width is baked into its `gpack/.../img/layout/sign*.png` art, so the PNGs must be re-spliced to match (see `tools/widen_village_sign.php`) and the CSS cache-buster in `Templates/html.tpl` bumped.
 - **Commit style:** the commit must be **only a title** — short, in English, no body/description. The author is always the repo user (Matias); **never add a `Co-Authored-By` trailer or any other co-author**.
 
 ## Deployment note

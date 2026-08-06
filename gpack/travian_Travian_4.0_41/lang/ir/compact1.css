@@ -789,16 +789,16 @@ body.login #side_info,body.logout #side_info,body.signup #side_info,body.support
 #side_info .listing .list a:hover{color:#99C01A;}#side_info .listing .pager{position:absolute;bottom:0;width:160px;height:30px;}
 #side_info .listing .pager a{display:block;background-image:url("../../img/navi/naviSmall.gif");height:9px;width:10px;position:absolute;}
 #side_info .listing .pager a.back{background-position:left 0;}#side_info .listing .pager a.next{background-position:right 0;}
-#side_info #villageList{left:9px;margin-top:-3px;width:172px;}#side_info #villageList .head{height:64px;background-image:url("../../img/layout/signVillagesTop-rtl.png");}
+#side_info #villageList{left:9px;margin-top:-3px;width:196px;}#side_info #villageList .head{height:64px;background-image:url("../../img/layout/signVillagesTop-rtl.png");}
 .ie6 #side_info #villageList .head{background-image:url("../../img/layout/signVillagesTop-rtl.gif");}
-#side_info #villageList .head a{top:21px;background-image:url("../../img/layout/icons/villageStatistics.gif");left:10px;width:125px;}
+#side_info #villageList .head a{top:21px;background-image:url("../../img/layout/icons/villageStatistics.gif");left:10px;width:149px;}
 #side_info #villageList .list{min-height:17px;padding-top:1px;background-image:url("../../img/layout/signVillagesMiddle-rtl.png");}
 .ie6 #side_info #villageList .list{background-image:url("../../img/layout/signVillagesMiddle-rtl.gif");}
 #side_info #villageList ul{margin-top:-20px;margin-bottom:-17px;}#side_info #villageList ul .attack{background-image:url(../../img/layout/icons/attacks.gif);background-position:left 3px;}
 #side_info #villageList ul li{margin-bottom:4px;height:24px;line-height:12px;margin-left:9px;padding-left:9px;}
-#side_info #villageList ul a{margin-left:0;width:136px;text-overflow:ellipsis;}
-#side_info #villageList ul li.attack a{margin-left:3px;width:134px;}
-#side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.png");width:172px;height:39px;}
+#side_info #villageList ul a{margin-left:0;width:160px;text-overflow:ellipsis;}
+#side_info #villageList ul li.attack a{margin-left:3px;width:158px;}
+#side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.png");width:196px;height:39px;}
 .ie6 #side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.gif");}
 #side_info #linkList{left:24px;margin-top:-7px;width:160px;}#side_info #linkList .head{height:66px;background-image:url("../../img/layout/signLinksTop-rtl.png");}
 .ie6 #side_info #linkList .head{background-image:url("../../img/layout/signLinksTop-rtl.gif");}
