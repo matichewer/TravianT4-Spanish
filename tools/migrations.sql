@@ -255,3 +255,14 @@ WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop;
 -- vez, despues del deploy, con el mismo script idempotente
 --   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
 -- que ahora tambien contempla el slot de cabeza.
+
+-- 2026-08-06 - Aldea natal del heroe perdida
+-- `hero.home` es la aldea que cobra el bono de recursos del heroe y, desde los cascos
+-- de entrenamiento, tambien la que cobra el descuento de cuartel y establo. Nada la
+-- reajustaba cuando el jugador dejaba de tener esa aldea (se la conquistan con jefes o
+-- se la arrasan con catapultas), asi que quedaba apuntando a una aldea ajena o
+-- inexistente y el heroe perdia los dos bonos sin ninguna pista de por que.
+-- El codigo nuevo muda la natal sola en los dos eventos; los heroes que ya quedaron
+-- rotos hay que reconciliarlos una vez, despues del deploy, con el script idempotente
+--   docker compose exec -T web php /var/www/html/tools/fix_hero_home_village.php --apply
+-- que la mueve a la capital y, si no hay, a la primera aldea que quede.

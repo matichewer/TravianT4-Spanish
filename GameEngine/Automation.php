@@ -226,6 +226,9 @@ class Automation {
         $database->query("UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = ".$villageId);
         // La residencia/palacio que la fundo tiene que recuperar el cupo de expansion.
         $database->releaseExpansionSlots($villageId);
+        // Si la arrasada era la aldea natal del héroe, hay que mudarlo o pierde el bono
+        // de recursos y el de entrenamiento sin forma de enterarse.
+        reassignHeroHomeVillage($database, $owner);
         $logging->VillageDestroyCatalog($villageId);
         return true;
     }
@@ -2795,6 +2798,10 @@ class Automation {
                                 $info_chief = "".$chief_pic.", Lealtad reducida de <b>".$conquestResult['old_loyalty']."</b> a <b>".$conquestResult['new_loyalty']."</b>.";
                             } elseif($conquestStatus === 'conquered') {
                                 $info_chief = "".$chief_pic.", ¡Conquistaste la aldea!";
+                                // Si al que perdió la aldea le tomaron la natal del héroe,
+                                // hay que mudarlo o pierde el bono de recursos y el de
+                                // entrenamiento sin forma de enterarse.
+                                reassignHeroHomeVillage($database, $defenderOwner);
                             } else {
                                 $conquestMessages = array(
                                     'same_owner' => 'No puedes conquistar una aldea propia.',

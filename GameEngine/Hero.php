@@ -476,6 +476,45 @@ if(!function_exists('heroHomeVillage')){
 	}
 }
 
+if(!function_exists('reassignHeroHomeVillage')){
+	// Devuelve la aldea natal del héroe, mudándola si la que tenía dejó de ser del
+	// jugador.
+	//
+	// Perder la aldea natal (que te la conquisten con jefes o que te la arrasen con
+	// catapultas) dejaba `hero.home` apuntando a una aldea ajena o directamente
+	// inexistente. Como los bonos se cobran comparando contra ese número, el héroe se
+	// quedaba sin bono de recursos y sin bono de entrenamiento hasta que el jugador lo
+	// mandara de apoyo a otra aldea propia con el check de aldea natal tildado, sin
+	// ninguna pista de que hiciera falta.
+	//
+	// getVillagesID() ordena por capital primero, así que la natal cae en la capital y,
+	// si no hay, en la primera aldea que quede.
+	function reassignHeroHomeVillage($database, $uid){
+		$uid = (int)$uid;
+		if($uid<=0 || !method_exists($database, 'getHeroData') || !method_exists($database, 'getVillagesID')){
+			return 0;
+		}
+		$hero = $database->getHeroData($uid);
+		if(!is_array($hero)){
+			return 0;
+		}
+		$villages = $database->getVillagesID($uid);
+		if(!is_array($villages) || empty($villages)){
+			return 0;
+		}
+		$villages = array_map('intval', $villages);
+		$home = heroHomeVillage($hero);
+		if(in_array($home, $villages, true)){
+			return $home;
+		}
+
+		$newHome = $villages[0];
+		$database->modifyHero2('home', $newHome, $uid, 0);
+
+		return $newHome;
+	}
+}
+
 if(!function_exists('heroVillageResourceBonus')){
 	function heroVillageResourceBonus($hero, $villageId, $speed){
 		if(!is_array($hero) || (int)$hero['dead']!==0 || heroHomeVillage($hero)!==(int)$villageId){
