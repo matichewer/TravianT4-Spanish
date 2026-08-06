@@ -12,6 +12,9 @@
  *      aldea que lo tiene, con el cupo del 10% que se repone en 10 minutos
  *   E) refuerzo a un oasis: informe correcto, cereal a cargo de la aldea del oasis
  *      y sólo el dueño o un aliado pueden reforzarlo
+ *   E4) espionaje: la Naturaleza no tiene espías; un oasis sólo resiste con
+ *       espías estacionados dentro
+ *   E5) sólo se conquista un oasis a 3 casillas o menos de la aldea atacante
  *   F) al conquistar la aldea, sus oasis cambian de dueño
  *   G) al borrar la aldea, sus oasis vuelven a quedar libres
  *   H) no se puede soltar el oasis de otro desde la Mansión del Héroe
@@ -333,6 +336,76 @@ check($reinforceError->invoke($units, $B_VIL, $B_UID) !== '',
       "una alianza distinta y sin pacto no puede reforzarlo");
 q("UPDATE {$P}users SET alliance = 0 WHERE id IN ($A_UID,$B_UID)");
 $session = $sessionBackup;
+
+// --------------------------------------------- E4) espionaje sobre el oasis
+say("\n== E4) espiar oasis ==");
+q("DELETE FROM {$P}enforcement"); q("DELETE FROM {$P}ndata");
+q("UPDATE {$P}units SET u4 = 20 WHERE vref = $A_VIL");
+
+/**
+ * Espía el objetivo desde la aldea de A y devuelve cuántos espías vuelven.
+ * Limpia los movimientos antes: si mueren todos no se crea el regreso, y sin
+ * limpiar se leería el de la corrida anterior.
+ */
+function spyRun($target) {
+    global $P, $A_VIL;
+    q("DELETE FROM {$P}ndata");
+    q("DELETE FROM {$P}movement");
+    q("DELETE FROM {$P}attacks");
+    dispatch($A_VIL, $target, array(4 => 20), 1);
+    $back = one("SELECT a.t4 FROM {$P}movement m JOIN {$P}attacks a ON a.id = m.ref
+                 WHERE m.sort_type = 4 AND m.`to` = $A_VIL ORDER BY m.moveid DESC LIMIT 1");
+    return $back ? (int)$back['t4'] : 0;
+}
+
+// Un oasis libre lleno de murciélagos: la Naturaleza no tiene espías, así que la
+// exploración vuelve entera y sin ser detectada.
+q("UPDATE {$P}odata SET conqured = 0, owner = 3, name = 'Oasis sin ocupar' WHERE wref = $O");
+q("UPDATE {$P}wdata SET occupied = 0 WHERE id = $O");
+q("UPDATE {$P}units SET u31=0,u32=0,u33=0,u34=50,u35=0,u36=0,u37=0,u38=0,u39=0,u40=0 WHERE vref = $O");
+check(spyRun($O) === 20, "un oasis libre con 50 murciélagos no mata espías: la Naturaleza no explora");
+check((bool)one("SELECT id FROM {$P}ndata WHERE uid = $A_UID AND ntype = 22"),
+      "el espionaje de un oasis libre no se detecta");
+check(count(rows("SELECT id FROM {$P}ndata WHERE uid = 3")) === 0,
+      "la Naturaleza no recibe informes de espionaje");
+
+// Un oasis anexado sin tropas dentro tampoco resiste el espionaje.
+q("UPDATE {$P}units SET u34 = 0 WHERE vref = $O");
+q("UPDATE {$P}odata SET conqured = $A_VIL, owner = $A_UID, name = 'Oasis conquistado' WHERE wref = $O");
+q("UPDATE {$P}wdata SET occupied = 1 WHERE id = $O");
+check(spyRun($O) === 20, "un oasis anexado sin tropas dentro se espía sin bajas");
+
+// Con espías estacionados en el oasis sí resiste: la defensa la dan las tropas que
+// están DENTRO del oasis, no las de la aldea que lo tiene.
+q("INSERT INTO {$P}enforcement (vref,`from`,u4) VALUES ($O,$A_VIL,100)");
+check(spyRun($O) === 0, "100 espías estacionados en el oasis matan a los 20 exploradores");
+q("DELETE FROM {$P}enforcement");
+q("UPDATE {$P}units SET u4 = 5000 WHERE vref = $A_VIL");
+check(spyRun($O) === 20,
+      "los espías de la aldea que tiene el oasis no lo defienden: tienen que estar dentro");
+q("UPDATE {$P}units SET u4 = 0 WHERE vref = $A_VIL");
+q("DELETE FROM {$P}ndata");
+
+// --------------------------- E5) sólo se conquista un oasis cercano
+say("\n== E5) alcance de la conquista ==");
+$farOasis = one("SELECT o.wref, w.x, w.y FROM {$P}odata o JOIN {$P}wdata w ON w.id = o.wref
+                 WHERE o.conqured = 0 AND (ABS(w.x - {$coorA['x']}) > 3 OR ABS(w.y - {$coorA['y']}) > 3)
+                 LIMIT 1");
+$FAR = (int)$farOasis['wref'];
+q("UPDATE {$P}units SET u31=0,u32=0,u33=0,u34=0,u35=0,u36=0,u37=0,u38=0,u39=0,u40=0 WHERE vref = $FAR");
+q("UPDATE {$P}odata SET conqured = 0, owner = 3, loyalty = 100 WHERE wref = $FAR");
+q("UPDATE {$P}hero SET dead = 0, health = 100, wref = $A_VIL WHERE uid = $A_UID");
+q("UPDATE {$P}units SET hero = 1 WHERE vref = $A_VIL");
+q("DELETE FROM {$P}ndata");
+dispatch($A_VIL, $FAR, array(11 => 1), 4);
+$farData = one("SELECT conqured, owner, loyalty FROM {$P}odata WHERE wref = $FAR");
+check((int)$farData['conqured'] === 0 && (int)$farData['owner'] === 3,
+      "un oasis a más de 3 casillas no se conquista");
+check((int)$farData['loyalty'] === 100,
+      "un oasis fuera de alcance no pierde lealtad: sólo se lo puede atacar");
+$farReport = one("SELECT data FROM {$P}ndata WHERE uid = $A_UID ORDER BY id DESC LIMIT 1");
+check($farReport && strpos($farReport['data'], 'demasiado lejos') !== false,
+      "el informe explica por qué no se conquistó");
 
 // ------------------------- F) la aldea cambia de dueño: los oasis la siguen
 say("\n== F) al conquistar la aldea, los oasis cambian de dueño ==");

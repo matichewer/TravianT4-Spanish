@@ -99,11 +99,37 @@ function spyDetectionScouting($attackingScouts, $localScouts, $reinforcementScou
 function spyDetectionDefendingScouts($localScouts, $reinforcementScouts) {
 	$defender = spyDetectionUnits(0, array(4 => $localScouts, 14 => $reinforcementScouts));
 	$scouts = 0;
-	foreach(array(4, 14, 23, 34, 44) as $scoutUnit) {
+	foreach(scoutUnitIds() as $scoutUnit) {
 		$scouts += (int)$defender['u'.$scoutUnit];
 	}
 	return $scouts;
 }
+
+// 0. La Naturaleza no tiene espía. Su cuarta unidad (u34) es el murciélago, un animal
+// de combate: contarlo como espía hacía que un oasis con murciélagos detectara la
+// exploración y matara a los espías. Los natares sí lo tienen, en u44.
+spyDetectionAssert(
+	!in_array(34, scoutUnitIds(), true),
+	'El murciélago (u34) no cuenta como espía: la Naturaleza no tiene explorador.'
+);
+spyDetectionAssert(
+	in_array(44, scoutUnitIds(), true),
+	'El Pájaro de Presa (u44) sí cuenta como espía: es el explorador natar.'
+);
+$batOasis = spyDetectionScouting(20, 0, 0);
+spyDetectionAssert(
+	(float)$batOasis['defense'] === 0.0,
+	'Un oasis sin espías no aporta defensa de espionaje.'
+);
+$withBats = spyDetectionUnits(0, array(34 => 50));
+$batDefense = 0;
+foreach(scoutUnitIds() as $scoutUnit) {
+	$batDefense += (int)$withBats['u'.$scoutUnit];
+}
+spyDetectionAssert(
+	$batDefense === 0,
+	'50 murciélagos en un oasis no cuentan como espías defensores.'
+);
 
 // 1. Los espías de refuerzo defienden exactamente igual que los propios: 20 puntos cada
 // uno, vengan de donde vengan.

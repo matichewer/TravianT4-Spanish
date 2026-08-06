@@ -1,6 +1,23 @@
 <?php
 require_once __DIR__.'/Hero.php';
 
+/**
+ * Las únicas unidades que espían y que defienden contra el espionaje.
+ *
+ * No sale de "la cuarta unidad de cada tribu": los galos lo tienen en la tercera
+ * (u23) y la Naturaleza directamente **no tiene espía** — su cuarta unidad, u34,
+ * es el murciélago, un animal de combate. Contarlo como espía hacía que un oasis
+ * con murciélagos detectara y matara a los exploradores como si tuviera espías.
+ *
+ *   u4  Equites Legati (romanos)   u14 Explorador (germanos)
+ *   u23 Explorador (galos)         u44 Pájaro de Presa (natares)
+ */
+if(!function_exists('scoutUnitIds')) {
+	function scoutUnitIds() {
+		return array(4, 14, 23, 44);
+	}
+}
+
 class Battle {
 	private $catapultUnits = array(8, 18, 28, 48);
 
@@ -273,7 +290,7 @@ class Battle {
 			'ktyp' => 1
 		);
 		$attackerStart = ($attackerTribe - 1) * 10 + 1;
-		$scoutingUnits = array(4, 14, 23);
+		$scoutingUnits = scoutUnitIds();
 		for($position = 1; $position <= 10; $position++) {
 			$unitId = $attackerStart + $position - 1;
 			$unitField = 'u'.$unitId;
@@ -446,7 +463,7 @@ class Battle {
 		global $bid34;
 
 		$cavalry = array(4, 5, 6, 15, 16, 23, 24, 25, 26);
-		$scouts = array(4, 14, 23, 34);
+		$scouts = scoutUnitIds();
 		$attackerTribe = (int)$post['a1_v'];
 		$defenderTribe = (int)$post['tribe'];
 		$start = ($attackerTribe - 1) * 10 + 1;
@@ -729,7 +746,7 @@ class Battle {
 		global $bid34, $database;
 
 		$cavalry = array(4, 5, 6, 15, 16, 23, 24, 25, 26, 35, 36, 45, 46);
-		$scouts = array(4, 14, 23, 34, 44);
+		$scouts = scoutUnitIds();
 		$result = array(
 			1 => 0,
 			2 => 0,

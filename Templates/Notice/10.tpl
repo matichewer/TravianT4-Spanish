@@ -95,7 +95,7 @@
 			<th><?php echo REPORT_RESOURCES; ?></th>
 			<td>
 						<div class="rArea">
-						<img class="r1" src="img/x.gif" title="<?php echo LUMBER; ?>">
+						<img class="r1" src="img/x.gif" title="<?php echo WOOD; ?>">
 						<?php echo $dataarray[2]; ?></div>
 									<div class="rArea">
 						<img class="r2" src="img/x.gif" title="<?php echo CLAY; ?>">

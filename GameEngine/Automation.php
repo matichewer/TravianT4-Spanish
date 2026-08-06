@@ -1746,7 +1746,7 @@ class Automation {
                 $catapult = array(8, 18, 28, 48);
                 $ram = array(7, 17, 27, 37, 47);
                 $chief = array(9, 19, 29, 39, 49);
-                $spys = array(4, 14, 23, 34, 44);
+                $spys = scoutUnitIds();
                 for ($i = $start; $i <= $end; $i++) {
                     $y = $i - $u;
                     $Attacker['u'.$i] = $data['t'.$y];
@@ -1954,7 +1954,7 @@ class Automation {
                 $catapult = array(8, 18, 28, 48);
                 $ram = array(7, 17, 27, 37, 47);
                 $chief = array(9, 19, 29, 39, 49);
-                $spys = array(4, 14, 23, 34, 44);
+                $spys = scoutUnitIds();
                 for ($i = $start; $i <= $end; $i++) {
                     $y = $i - $u;
                     $Attacker['u'.$i] = $data['t'.$y];
@@ -2045,7 +2045,7 @@ class Automation {
             // del if porque también decide si el espionaje se detecta, y eso no depende
             // de las jaulas ni del héroe atacante.
             $def_spy = 0;
-            foreach(array(4, 14, 23, 34, 44) as $scoutUnit) {
+            foreach(scoutUnitIds() as $scoutUnit) {
                 if(isset($Defender['u'.$scoutUnit])) {
                     $def_spy += (int)$Defender['u'.$scoutUnit];
                 }
@@ -2931,7 +2931,7 @@ class Automation {
                         $info_spy = "".$spy_pic.",
 <tbody><tr><td class=\"empty\" colspan=\"12\"></td></tr></tbody>
 <tbody class=\"goods\">
-	<tr><th>".REPORT_RESOURCES."</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"".LUMBER."\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\">".round($totcrop)."</div></div></td></tr></tbody>
+	<tr><th>".REPORT_RESOURCES."</th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"r1\" src=\"img/x.gif\" title=\"".WOOD."\">".round($totwood)."</div><div class=\"rArea\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\">".round($totclay)."</div><div class=\"rArea\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\">".round($totiron)."</div><div class=\"rArea\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\">".round($totcrop)."</div></div></td></tr></tbody>
 
 <tbody class=\"goods\"><tr><th></th><td colspan=\"11\"><div class=\"res\"><div class=\"rArea\"><img class=\"gebIcon g23Icon\" src=\"img/x.gif\" title=\"Escondite\">".round($cranny)."</div></div></td></tr></tbody>";
 
