@@ -9,13 +9,16 @@
         $villageId = $session->villages[$i-1];
         $villageName = $database->getVillageField($villageId, 'name');
         $village_attack = "";
-        $village_title = htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8');
+        // El tooltip no repite el nombre, que ya se lee en el cartel: muestra la
+        // coordenada, que es el dato que no esta a la vista. El aviso de ataques
+        // se agrega solo cuando hay, porque tampoco se ve en ningun otro lado.
+        $village_attack_note = "";
         if($session->plus){
             $attack_coming = $database->getMovement2(3,$villageId,1);
             $aantal = count($attack_coming);
             if($aantal > 0){
                 $village_attack = "attack ";
-                $village_title = "ataques a esta aldea: ".$aantal;
+                $village_attack_note = " - ataques a esta aldea: ".$aantal;
             }
         }
     if($session->villages[$i-1] == $village->wid){ $select = "active"; $sid = "currentVillage"; }else{ $select = ""; $sid = ""; }
@@ -65,11 +68,13 @@
     }else{
     	$vill = "";
     }
-		// Solo el nombre: la coordenada queda en el title del enlace. data-name lo
-		// usa el CSS para medir el nombre siempre en negrita, asi el ancho del
-		// cartel no cambia segun cual sea la aldea activa (esa va en negrita).
+		// El mismo title en li y a, asi el tooltip es igual en toda la fila y no
+		// se pisan dos distintos. data-name lo usa el CSS para medir el nombre
+		// siempre en negrita, asi el ancho del cartel no cambia segun cual sea la
+		// aldea activa (esa va en negrita).
+		$village_title = "(".$coorproc['x']."|".$coorproc['y'].")".$village_attack_note;
 		echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
-	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" data-name=\"".htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8')."\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."</a></li>";
+	    <a id=\"".$sid."\" title=\"".$village_title."\" data-name=\"".htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8')."\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."</a></li>";
 	}
     	?>
 		
