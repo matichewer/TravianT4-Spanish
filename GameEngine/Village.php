@@ -267,7 +267,9 @@ class Village {
 		$fields = $crop;
 		$grainmillPercent = $grainmill >= 1 ? $bid8[$grainmill]['attri'] : 0;
 		$bakeryPercent = $bakery >= 1 ? $bid9[$bakery]['attri'] : 0;
-		$buildingBonus = $crop / 100 * ($grainmillPercent + $bakeryPercent);
+		$grainmillBonus = $crop / 100 * $grainmillPercent;
+		$bakeryBonus = $crop / 100 * $bakeryPercent;
+		$buildingBonus = $grainmillBonus + $bakeryBonus;
 		if($grainmill >= 1 || $bakery >= 1) {
 			$crop += $buildingBonus;
 		}
@@ -282,7 +284,7 @@ class Village {
 		$crop *= SPEED;
 		$gross = round($crop);
 		if($recordBreakdown) {
-			$this->productionBreakdown['crop'] = array('fields'=>$fields,'grainmill_level'=>$grainmill,'grainmill_percent'=>$grainmillPercent,'bakery_level'=>$bakery,'bakery_percent'=>$bakeryPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[3],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus4 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
+			$this->productionBreakdown['crop'] = array('fields'=>$fields,'grainmill_level'=>$grainmill,'grainmill_percent'=>$grainmillPercent,'grainmill_bonus'=>$grainmillBonus,'bakery_level'=>$bakery,'bakery_percent'=>$bakeryPercent,'bakery_bonus'=>$bakeryBonus,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[3],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus4 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
 		}
 		return $gross;
 	}

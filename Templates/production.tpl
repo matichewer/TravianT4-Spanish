@@ -10,13 +10,10 @@ function productionBreakdownTooltip($resource, $label, $details, $total) {
 	$lines[] = 'Campos de recursos: +'.productionBreakdownNumber($details['fields'] * $speed);
 	if($resource === 'crop') {
 		if($details['grainmill_level'] > 0) {
-			$lines[] = 'Molino de cereal (nivel '.$details['grainmill_level'].', +'.$details['grainmill_percent'].'%): incluido';
+			$lines[] = 'Molino de cereal (nivel '.$details['grainmill_level'].', +'.$details['grainmill_percent'].'%): +'.productionBreakdownNumber($details['grainmill_bonus'] * $speed);
 		}
 		if($details['bakery_level'] > 0) {
-			$lines[] = 'Panadería (nivel '.$details['bakery_level'].', +'.$details['bakery_percent'].'%): incluido';
-		}
-		if($details['building_bonus'] != 0) {
-			$lines[] = 'Bonos de edificios: +'.productionBreakdownNumber($details['building_bonus'] * $speed);
+			$lines[] = 'Panadería (nivel '.$details['bakery_level'].', +'.$details['bakery_percent'].'%): +'.productionBreakdownNumber($details['bakery_bonus'] * $speed);
 		}
 	} elseif($details['building_level'] > 0) {
 		$lines[] = $details['building'].' (nivel '.$details['building_level'].', +'.$details['building_percent'].'%): +'.productionBreakdownNumber($details['building_bonus'] * $speed);

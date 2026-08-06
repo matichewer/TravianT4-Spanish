@@ -56,5 +56,11 @@ productionBreakdownAssert(
 	strpos($template, 'Velocidad del servidor') === false,
 	'The server speed still occupies a separate tooltip row'
 );
+productionBreakdownAssert(
+	strpos($template, 'Bonos de edificios:') === false
+	&& strpos($template, "['grainmill_bonus'] * \$speed") !== false
+	&& strpos($template, "['bakery_bonus'] * \$speed") !== false,
+	'Crop building bonuses are not shown once per building'
+);
 
 echo "Production breakdown checks passed\n";
