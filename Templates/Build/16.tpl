@@ -230,7 +230,11 @@ if($units_walking >= 1){
                   echo "<table class=\"troop_details\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">
                   <a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
                   if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
-                  echo "<a href=\"karte.php?d=".$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."\">Refuerzo a la aldea ".$database->getVillageField($enforce['vref'],"name")."</a>";
+                  // Un oasis no está en vdata: su nombre sale de odata o la fila queda vacía.
+                  $reinforcedName = $database->isVillageOases($enforce['vref']) != 0
+                        ? $database->getOasisField($enforce['vref'],"name")
+                        : $database->getVillageField($enforce['vref'],"name");
+                  echo "<a href=\"karte.php?d=".$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."\">Refuerzo a ".$reinforcedName."</a>";
                   echo "</td></tr></thead><tbody class=\"units\">";
                   $tribe = $database->getUserField($database->getVillageField($enforce['from'],"owner"),"tribe",0);
                   $start = ($tribe-1)*10+1;

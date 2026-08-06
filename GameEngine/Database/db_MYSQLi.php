@@ -743,6 +743,8 @@
 							. " exp3 = IF(exp3 = $target,0,exp3)"
 							. " WHERE wref != $from AND (exp1 = $target OR exp2 = $target OR exp3 = $target)"
 						);
+						// Los oasis siguen a la aldea, así que cambian de dueño con ella.
+						$this->transferVillageOases($target, $attackerOwner);
 						$this->syncClimberPopulation($defenderOwner);
 						$this->syncClimberPopulation($attackerOwner);
 						return array(
@@ -1929,6 +1931,14 @@
         	function updateOasis($vid) {
         		$time = time();
         		$q = "UPDATE " . TB_PREFIX . "odata set lastupdated = $time where wref = $vid";
+        		return mysqli_query($this->connection,$q);
+        	}
+
+        	/** Reloj del cupo de saqueo del 10% de un oasis anexado. */
+        	function setOasisRaidClock($vid, $clock) {
+        		$vid = (int)$vid;
+        		$clock = max(0, (int)$clock);
+        		$q = "UPDATE " . TB_PREFIX . "odata set lastraid = $clock where wref = $vid";
         		return mysqli_query($this->connection,$q);
         	}
 
@@ -4174,7 +4184,13 @@ break;
 }
         			$basearray = $this->getOMInfo($wid);
         			//We switch type of oasis and instert record with apropriate infomation.
-        			$q = "INSERT into " . TB_PREFIX . "odata VALUES ('" . $basearray['id'] . "'," . $basearray['oasistype'] . ",0,".$tt."," . time() .",".time(). ",100,3,'Oasis sin ocupar')";
+        			// Columnas explícitas: agregar una columna nueva a odata rompía el
+        			// INSERT posicional que había acá.
+        			$q = "INSERT into " . TB_PREFIX . "odata"
+        				." (wref, type, conqured, wood, iron, clay, maxstore, crop, maxcrop,"
+        				." lastupdated, lastupdated2, loyalty, owner, name)"
+        				." VALUES ('" . $basearray['id'] . "'," . $basearray['oasistype'] . ",0,".$tt.","
+        				. time() .",".time(). ",100,3,'Oasis sin ocupar')";
         			$result = mysqli_query($this->connection,$q);
         		}
         	}
@@ -4772,7 +4788,54 @@ break;
         	}
 
 			function removeOases($wref) {
-                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, name = 'Oasis no conquistado' WHERE wref = $wref";
+                $wref = (int)$wref;
+                if($wref <= 0) {
+                    return false;
+                }
+                // Soltar un oasis lo devuelve al estado inicial: sin dueño, con la lealtad
+                // llena y con el reloj de repoblación arrancando ahora, para que los animales
+                // vuelvan recién a las 24 h y no de golpe en la primera pasada.
+                $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, loyalty = 100,"
+                    ." lastupdated2 = ".time().", name = 'Oasis sin ocupar' WHERE wref = $wref";
+                $result = mysqli_query($this->connection,$q);
+                mysqli_query($this->connection,"UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = $wref");
+                return $result;
+            }
+
+			/**
+			 * Suelta todos los oasis que tenía una aldea. Se usa cuando la aldea
+			 * desaparece (cuenta borrada): sin esto el oasis quedaba marcado como
+			 * conquistado por una aldea inexistente, no repoblaba animales y seguía
+			 * mandándole los informes de defensa a su ex dueño.
+			 */
+			function releaseVillageOases($vref) {
+                $vref = (int)$vref;
+                if($vref <= 0) {
+                    return 0;
+                }
+                $released = 0;
+                $q = "SELECT wref FROM ".TB_PREFIX."odata WHERE conqured = $vref";
+                $result = mysqli_query($this->connection,$q);
+                while($result && $row = mysqli_fetch_assoc($result)) {
+                    $this->removeOases((int)$row['wref']);
+                    $released++;
+                }
+                return $released;
+            }
+
+			/**
+			 * Pasa los oasis de una aldea a su nuevo dueño. `conqured` sigue apuntando
+			 * a la misma aldea, pero `owner` tiene que seguir al jugador: es la columna
+			 * que decide a quién le llegan los informes de defensa del oasis, quién
+			 * figura como propietario en el mapa y quién lo ve en la Mansión del Héroe.
+			 */
+			function transferVillageOases($vref, $newOwner) {
+                $vref = (int)$vref;
+                $newOwner = (int)$newOwner;
+                if($vref <= 0 || $newOwner <= 0) {
+                    return false;
+                }
+                $q = "UPDATE ".TB_PREFIX."odata SET owner = $newOwner WHERE conqured = $vref";
                 return mysqli_query($this->connection,$q);
             }
 

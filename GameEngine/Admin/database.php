@@ -215,9 +215,12 @@ class adm_DB {
     $q = "DELETE FROM ".TB_PREFIX."training WHERE `vref` = $wref;";
     mysql_query($q, $this->connection); 
     $q = "DELETE FROM ".TB_PREFIX."movement WHERE `from` = $wref;";
-    mysql_query($q, $this->connection);       
+    mysql_query($q, $this->connection);
     $q = "UPDATE ".TB_PREFIX."wdata SET `occupied` = '0' WHERE `id` = $wref;";
-    mysql_query($q, $this->connection);  
+    mysql_query($q, $this->connection);
+    // La aldea ya no existe: sus oasis vuelven a quedar libres.
+    global $database;
+    $database->releaseVillageOases($wref);
     }
   }
 	

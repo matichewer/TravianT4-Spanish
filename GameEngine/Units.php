@@ -37,6 +37,29 @@ class Units {
 	// espiar cualquier aldea gratis y sin ser detectado enviando una unidad
 	// cualquiera como exploración: las bajas del combate de espionaje solo se
 	// aplicaban a las casillas de espía, así que el resto volvía intacto.
+	// Un oasis sólo lo puede reforzar quien lo tiene o alguien de su alianza (propia
+	// o aliada por diplomacia). Antes cualquiera podía meterle tropas al oasis de un
+	// enemigo. Devuelve '' si el refuerzo es válido.
+	private function oasisReinforcementError($oasisConquered, $oasisOwner) {
+		global $database, $session;
+		$oasisConquered = (int)$oasisConquered;
+		$oasisOwner = (int)$oasisOwner;
+		if($oasisConquered === 0) {
+			return "No puedes reforzar un oasis sin ocupar.";
+		}
+		if($oasisOwner === (int)$session->uid) {
+			return '';
+		}
+		$ownAlliance = (int)$session->alliance;
+		$targetAlliance = (int)$database->getUserField($oasisOwner,'alliance',0);
+		if($ownAlliance > 0 && $targetAlliance > 0
+			&& ($ownAlliance === $targetAlliance
+				|| $database->areAlliancesAllied($ownAlliance,$targetAlliance))) {
+			return '';
+		}
+		return "Sólo puedes reforzar un oasis tuyo o de un aliado.";
+	}
+
 	private function scoutingSendError($tribe, $troops) {
 		$scoutPosition = $this->getTribeScoutPosition($tribe);
 		if($scoutPosition < 1) {
@@ -387,11 +410,15 @@ class Units {
                   }else{
 
                 // Oases accept normal attacks and raids. Only an oasis already
-                // held by a player can be reinforced.
+                // held by a player can be reinforced, and only by its owner or an ally.
                 $oasisConquered = (int)$database->getOasisField($id,"conqured");
+                $oasisOwner = (int)$database->getOasisField($id,"owner");
                 $attackType = isset($post['c']) ? (int)$post['c'] : 0;
-                if($attackType === 2 && $oasisConquered === 0) {
-                    $form->addError("error","No puedes reforzar un oasis sin ocupar.");
+                if($attackType === 2) {
+                    $reinforceError = $this->oasisReinforcementError($oasisConquered,$oasisOwner);
+                    if($reinforceError !== '') {
+                        $form->addError("error",$reinforceError);
+                    }
                 }
 
                       if($form->returnErrors() > 0) {
@@ -402,10 +429,10 @@ class Units {
 
                 $villageName = $oasisConquered !== 0 ? $database->getOasisField($id,"name") : "Oasis sin ocupar";
                 $speed= 300;
-                $timetaken = $generator->procDistanceTime($coor,$village->coor,INCREASE_SPEED,1);                                
-                array_push($post, "$id", "$villageName", "3","$timetaken");
+                $timetaken = $generator->procDistanceTime($coor,$village->coor,INCREASE_SPEED,1);
+                array_push($post, "$id", "$villageName", ($oasisConquered !== 0 ? (string)$oasisOwner : "3"), "$timetaken");
                 return $post;
-                
+
             }
                   }	
 
@@ -468,10 +495,14 @@ class Units {
                                 //break;
                             }
 				// Recheck the reinforcement rule on confirmation so a hand-crafted
-				// request cannot reinforce an unoccupied oasis.
-				if($database->isVillageOases($data['to_vid']) != 0) {
-					if((int)$data['type'] === 2 && (int)$database->getOasisField($data['to_vid'],"conqured") === 0) {
-						$form->addError("error","No puedes reforzar un oasis sin ocupar.");
+				// request cannot reinforce an unoccupied or enemy oasis.
+				if($database->isVillageOases($data['to_vid']) != 0 && (int)$data['type'] === 2) {
+					$reinforceError = $this->oasisReinforcementError(
+						(int)$database->getOasisField($data['to_vid'],"conqured"),
+						(int)$database->getOasisField($data['to_vid'],"owner")
+					);
+					if($reinforceError !== '') {
+						$form->addError("error",$reinforceError);
 					}
 				}
 				// Idem con la exploración: se revalida en la confirmación para que una

@@ -186,3 +186,49 @@ ALTER TABLE s1_attacks
 -- deploy, con el script idempotente
 --   docker compose exec -T web php /var/www/html/tools/fix_hero_footwear_bonuses.php --apply
 -- que recalcula speed y autoregen a partir de los objetos equipados.
+
+-- 2026-08-06 - Oasis huerfanos y dueno desincronizado
+-- `odata` tiene dos columnas que tienen que ir juntas: `conqured` (la aldea que lo
+-- tiene) y `owner` (el jugador). Nada las mantenia en sincronia:
+--   * al conquistar una aldea con jefes, sus oasis quedaban con el `owner` viejo,
+--     asi que los informes de defensa del oasis le seguian llegando al ex dueno y
+--     el nuevo no lo veia en la Mansion del Heroe;
+--   * al borrarse una cuenta o arrasarse una aldea, sus oasis quedaban marcados
+--     como conquistados por una aldea inexistente: no repoblaban animales, no se
+--     podian volver a tomar y seguian marcados como ocupados en el mapa.
+-- El codigo ya sincroniza ambos casos; esto arregla los mundos que ya estan corriendo.
+
+-- 1) Oasis atados a una aldea que ya no existe: vuelven a estar libres.
+UPDATE s1_odata AS o
+LEFT JOIN s1_vdata AS v ON v.wref = o.conqured
+SET o.conqured = 0,
+    o.owner = 3,
+    o.loyalty = 100,
+    o.lastupdated2 = UNIX_TIMESTAMP(),
+    o.name = 'Oasis sin ocupar'
+WHERE o.conqured <> 0 AND v.wref IS NULL;
+
+-- 2) El dueno del oasis es siempre el dueno actual de la aldea que lo tiene.
+UPDATE s1_odata AS o
+INNER JOIN s1_vdata AS v ON v.wref = o.conqured
+SET o.owner = v.owner
+WHERE o.conqured <> 0 AND o.owner <> v.owner;
+
+-- 3) `wdata.occupied` de los oasis tiene que reflejar si estan conquistados.
+UPDATE s1_wdata AS w
+INNER JOIN s1_odata AS o ON o.wref = w.id
+SET w.occupied = IF(o.conqured = 0, 0, 1)
+WHERE w.oasistype <> 0 AND w.occupied <> IF(o.conqured = 0, 0, 1);
+
+-- 4) Informes huerfanos: reforzar un oasis creaba un informe con uid = 0 que no
+--    era de nadie y solo engordaba la tabla.
+DELETE FROM s1_ndata WHERE uid = 0;
+
+-- 2026-08-06 - Saqueo de un oasis anexado
+-- En Travian, saquear un oasis que ya tiene dueno se lleva hasta el 10% de los
+-- recursos de la ALDEA que lo tiene, y ese cupo tarda 10 minutos en reponerse.
+-- Aca el botin salia del stock propio del oasis (`odata.wood/clay/iron/crop`), que
+-- es el comportamiento correcto solo para un oasis libre. `lastraid` es el reloj
+-- de ese cupo del 10%.
+ALTER TABLE s1_odata
+  ADD COLUMN IF NOT EXISTS lastraid int(11) unsigned NOT NULL DEFAULT 0;

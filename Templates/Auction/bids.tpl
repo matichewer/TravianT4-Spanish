@@ -105,7 +105,7 @@ include "Templates/Auction/alt.tpl";
     $outputList .= "<input type=\"hidden\" name=\"a\" value=\"".$_GET['a']."\">";
     $outputList .= "<div class=\"bidHeadline\">Oferta por ".$num." × ".$name."</div><div>";
     $outputList .= "Oferta actual: <img title=\"Plata de Travian\" class=\"silver\" src=\"img/x.gif\"> <span>".$silver."</span><br>Mejor postor: ";
-    if($uid!=0){ $outputList .= "".$database->getUserField($uid,username,0).""; }
+    if($uid!=0){ $outputList .= "".$database->getUserField($uid,'username',0).""; }
     if($session->uid == $uid){ $bidvalue = $silver; }else{ $bidvalue = ""; }
     $outputList .= "<span></span><br>Oferta máxima:<input class=\"maxBid text\" type=\"text\" name=\"maxBid\" value=\"".$bidvalue."\">";
     $outputList .= "<span> (mínimo <img title=\"Plata de Travian\" class=\"silver\" src=\"img/x.gif\"> ".$silver.")</span>";

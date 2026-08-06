@@ -7,6 +7,11 @@ require_once __DIR__.'/GeneratorX.php';
 
 class Automation {
 
+    // Saqueo de un oasis anexado: hasta el 10% de lo que guarda la aldea que lo
+    // tiene, y el cupo se repone entero en 10 minutos.
+    const OASIS_RAID_SHARE = 0.10;
+    const OASIS_RAID_WINDOW = 600;
+
     private $bountyresarray = array();
     private $bountyinfoarray = array();
     private $bountyproduction = array();
@@ -213,6 +218,9 @@ class Automation {
         $database->query("DELETE FROM ".TB_PREFIX."fdata WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."market WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."movement WHERE `to` = ".$villageId." OR `from` = ".$villageId);
+        // La aldea arrasada suelta sus oasis: si no, quedan conquistados por una aldea
+        // que ya no existe y nadie puede volver a tomarlos.
+        $database->releaseVillageOases($villageId);
         $database->query("DELETE FROM ".TB_PREFIX."odata WHERE wref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."research WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."tdata WHERE vref = ".$villageId);
@@ -659,6 +667,39 @@ class Automation {
         return $result;
     }
 
+    /**
+     * Fracción del cupo de saqueo disponible en un oasis anexado. El cupo vale
+     * OASIS_RAID_SHARE de lo que guarda la aldea que tiene el oasis y se repone
+     * linealmente en OASIS_RAID_WINDOW segundos desde el último saqueo: volver a
+     * los 6 de los 10 minutos deja el 60% del cupo.
+     */
+    public function oasisRaidShare($lastRaid, $now) {
+        $lastRaid = (int)$lastRaid;
+        $now = (int)$now;
+        if($lastRaid <= 0) {
+            // Nunca lo saquearon: el cupo está entero.
+            return self::OASIS_RAID_SHARE;
+        }
+        $elapsed = max(0, min(self::OASIS_RAID_WINDOW, $now - $lastRaid));
+        return self::OASIS_RAID_SHARE * ($elapsed / self::OASIS_RAID_WINDOW);
+    }
+
+    /**
+     * Reloj del cupo tras un saqueo. Si el atacante se llevó todo el cupo el reloj
+     * arranca de cero; si sólo pudo cargar una parte, se atrasa en proporción para
+     * que el resto del cupo siga disponible.
+     */
+    public function oasisRaidClock($stolen, $cap, $now) {
+        $stolen = max(0, (int)$stolen);
+        $cap = max(0, (int)$cap);
+        $now = (int)$now;
+        if($cap <= 0 || $stolen >= $cap) {
+            return $now;
+        }
+        $consumed = $stolen / $cap;
+        return $now - (int)floor(self::OASIS_RAID_WINDOW * (1 - $consumed));
+    }
+
     public function getTypeLevel($tid, $vid) {
         global $village, $database;
         $keyholder = array();
@@ -815,6 +856,10 @@ class Automation {
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."market where vref = ".$village;
                     $database->query($q);
+                    // La aldea desaparece: sus oasis vuelven a estar libres. El DELETE de
+                    // abajo nunca borró nada (un wref de aldea jamás está en odata) y dejaba
+                    // el oasis marcado como conquistado por una aldea inexistente.
+                    $database->releaseVillageOases($village);
                     $q = "DELETE FROM ".TB_PREFIX."odata where wref = ".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."research where vref = ".$village;
@@ -1567,6 +1612,10 @@ class Automation {
             $breweryLevel = 0;
             $herosend_att = (int)$data['t11'];
             $cage = array('id' => 0, 'type' => 0);
+            // Se reinicia por ataque: el foreach comparte el scope y si no, el oasis
+            // del ataque anterior se filtraba al siguiente.
+            $oasisHolder = 0;
+            $oasisRaidCap = 0;
             $dead = array_fill(1, 50, 0);
             $dead['hero'] = 0;
             $DefenderHeroByTribe = array_fill(1, 5, 0);
@@ -1813,6 +1862,7 @@ class Automation {
                 $from = $database->getMInfo($data['from']);
                 $toF = $database->getOasisV($data['to']);
                 $fromF = $database->getVillage($data['from']);
+                $oasisHolder = (int)$toF['conqured'];
 
                 $cage = heroEquippedItem($database, $AttackerID, 9);
                 if(!is_array($cage)) {
@@ -2511,6 +2561,23 @@ class Automation {
                     $totiron = $database->getVillageField($data['to'], 'iron');
                     $totwood = $database->getVillageField($data['to'], 'wood');
                     $totcrop = $database->getVillageField($data['to'], 'crop');
+                } else if($oasisHolder > 0) {
+                    // Un oasis anexado no tiene granero propio: el saqueo se lleva hasta
+                    // el 10% de lo que guarda la aldea que lo tiene, y ese cupo tarda
+                    // OASIS_RAID_WINDOW segundos en reponerse. El escondite no lo protege:
+                    // el tope del 10% es la protección.
+                    $cranny = 0;
+                    $cranny_eff = 0;
+
+                    $this->updateRes($oasisHolder, $toF['owner']);
+                    $this->pruneResource();
+
+                    $oasisRaidShare = $this->oasisRaidShare($toF['lastraid'], $AttackArrivalTime);
+                    $totclay = floor($database->getVillageField($oasisHolder, 'clay') * $oasisRaidShare);
+                    $totiron = floor($database->getVillageField($oasisHolder, 'iron') * $oasisRaidShare);
+                    $totwood = floor($database->getVillageField($oasisHolder, 'wood') * $oasisRaidShare);
+                    $totcrop = floor($database->getVillageField($oasisHolder, 'crop') * $oasisRaidShare);
+                    $oasisRaidCap = $totwood + $totclay + $totiron + $totcrop;
                 } else {
                     $cranny = 0;
                     $cranny_eff = 0;
@@ -3075,6 +3142,18 @@ class Automation {
                         $reference = $database->sendResource($steal[0], $steal[1], $steal[2], $steal[3], 0, 0);
                         if($isoasis == 0) {
                             $database->modifyResource($to['wref'], $steal[0], $steal[1], $steal[2], $steal[3], 0);
+                        } elseif($oasisHolder > 0) {
+                            // El botín de un oasis anexado sale de la aldea que lo tiene,
+                            // y consume el cupo del 10% hasta que se reponga.
+                            $database->modifyResource($oasisHolder, $steal[0], $steal[1], $steal[2], $steal[3], 0);
+                            $database->setOasisRaidClock(
+                                $data['to'],
+                                $this->oasisRaidClock(
+                                    $steal[0] + $steal[1] + $steal[2] + $steal[3],
+                                    $oasisRaidCap,
+                                    $AttackArrivalTime
+                                )
+                            );
                         } else {
                             $database->modifyOasisResource($to['wref'], $steal[0], $steal[1], $steal[2], $steal[3], 0);
                         }
@@ -3450,17 +3529,32 @@ class Automation {
                 $database->setMovementProc($data['moveid']);
             } else {
                 //set base things
+                // Un oasis no tiene fila en vdata: sus datos (nombre y dueño) viven en
+                // odata. Sin esto el informe salía con el nombre vacío, con toWref = 0 y
+                // se creaba un segundo informe con uid = 0 que no era de nadie.
+                $targetIsOasis = $database->isVillageOases($data['to']) != 0;
                 $owntribe = $database->getUserField($database->getVillageField($data['from'], "owner"), "tribe", 0);
-                $targettribe = $database->getUserField($database->getVillageField($data['to'], "owner"), "tribe", 0);
-                $to = $database->getMInfo($data['to']);
                 $from = $database->getMInfo($data['from']);
-                $toF = $database->getVillage($data['to']);
                 $fromF = $database->getVillage($data['from']);
+                if($targetIsOasis) {
+                    $to = $database->getOMInfo($data['to']);
+                    $toF = $database->getOasisV($data['to']);
+                    $to['wref'] = (int)$data['to'];
+                    $targettribe = $database->getUserField($to['owner'], "tribe", 0);
+                } else {
+                    $to = $database->getMInfo($data['to']);
+                    $toF = $database->getVillage($data['to']);
+                    $targettribe = $database->getUserField($database->getVillageField($data['to'], "owner"), "tribe", 0);
+                }
                 // El héroe se guarda en un único sitio: en aldea propia vive en `units`,
                 // en aldea ajena vive en la fila de refuerzo. Escribirlo en los dos lados
                 // lo duplicaba (aparecía dos veces en el informe de batalla y defendía doble).
                 if($data['t11'] != 0) {
-                    if($database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")) {
+                    // En un oasis el héroe siempre vive en la fila de refuerzo: el oasis
+                    // tiene fila en `units`, así que sin este guarda el héroe se escribiría
+                    // ahí y quedaría fuera del alcance de su dueño.
+                    if(!$targetIsOasis
+                        && $database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")) {
                         //don't reinforce, addunit instead
                         $heroOwner = $database->getVillageField($data['from'], "owner");
                         $database->modifyUnit($data['to'], 'hero', 1, 1);

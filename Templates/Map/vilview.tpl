@@ -137,7 +137,7 @@ if($tileDetailsPopup) {
 		<tbody>
 			<tr class="first">
 				<th>Tribu:</th>
-				<td><?php switch($uinfo['tribe']) { case 1: echo TRIBE1; break; case 2: echo TRIBE2; break; case 3: echo TRIBE3; break; case 5: echo TRIBE5; break;} ?></td>
+				<td><?php switch($uinfo['tribe']) { case 1: echo TRIBE1; break; case 2: echo TRIBE2; break; case 3: echo TRIBE3; break; case 4: echo TRIBE4; break; case 5: echo TRIBE5; break; default: echo "-";} ?></td>
 			</tr>
 			<tr>
 				<th>Alianza:</th>
@@ -148,11 +148,11 @@ if($tileDetailsPopup) {
 			</tr>
 			<tr>
 				<th>Propietario:</th>
-				<td><a href="spieler.php?uid=<?php echo $basearray['owner']; ?>"><?php echo $database->getUserField($basearray['owner'],username,0); ?></a></td>
+				<td><a href="spieler.php?uid=<?php echo $basearray['owner']; ?>"><?php echo $database->getUserField($basearray['owner'],'username',0); ?></a></td>
 			</tr>
 			<tr>
 				<th>Aldea:</th>
-				<td><a href="karte.php?z=<?php echo $basearray['wref']; ?>"><?php echo $vilowner['name']; ?></a></td>
+				<td><a href="karte.php?d=<?php echo (int)$basearray['conqured']; ?>&amp;c=<?php echo $generator->getMapCheck($basearray['conqured']); ?>"><?php echo $vilowner['name']; ?></a></td>
 			</tr>
 		</tbody>
 	</table><Br />

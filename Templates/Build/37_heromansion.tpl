@@ -1,7 +1,19 @@
 ﻿<?php
-if($_GET['gid']==37 && isset($_GET['del'])){
-	$database->removeOases($_GET['del']);
-    mysql_query("UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = ".$_GET['del']."");
+// Sólo se puede soltar un oasis de la aldea que se está mirando: antes `del` entraba
+// crudo en el SQL y sin comprobar dueño, así que cualquiera podía liberar el oasis de
+// cualquier otro jugador (y colar SQL de paso).
+if(isset($_GET['gid'], $_GET['del']) && (int)$_GET['gid'] === 37) {
+	$oasisToRelease = is_scalar($_GET['del']) && ctype_digit((string)$_GET['del'])
+		? (int)$_GET['del']
+		: 0;
+	if($oasisToRelease > 0) {
+		$oasisInfo = $database->getOasisInfo($oasisToRelease);
+		if(is_array($oasisInfo)
+			&& (int)$oasisInfo['conqured'] === (int)$village->wid
+			&& (int)$database->getVillageField($village->wid, 'owner') === (int)$session->uid) {
+			$database->removeOases($oasisToRelease);
+		}
+	}
 }
 
 ?>
@@ -13,7 +25,9 @@ if($_GET['gid']==37 && isset($_GET['del'])){
 	<tbody>
 <?php
 $prefix = "".TB_PREFIX."odata";
-$sql = mysql_query("SELECT * FROM $prefix WHERE owner = $session->uid AND conqured = $village->wid ORDER BY lastupdated ASC");
+// El filtro va por `conqured`: es la columna que ata el oasis a la aldea. Filtrar
+// también por `owner` escondía los oasis heredados al conquistar una aldea ajena.
+$sql = mysql_query("SELECT * FROM $prefix WHERE conqured = ".(int)$village->wid." ORDER BY lastupdated ASC");
 $query = mysql_num_rows($sql);
 if($query>0){
 while($row = mysql_fetch_array($sql)){ 
@@ -142,6 +156,7 @@ break;
     $getoasis = mysql_query("SELECT * FROM ".TB_PREFIX."wdata WHERE oasistype > 0");
     $coor2 = $database->getCoor($village->wid);
 
+	if(!function_exists('getDistance')) {
 	function getDistance($coorx1, $coory1, $coorx2, $coory2) {
 		$max = 2 * WORLD_MAX + 1;
 		$x1 = intval($coorx1);
@@ -153,7 +168,8 @@ break;
 		$dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
 		return round($dist, 1);
 	}
-        
+	}
+
         
 		while($row2 = mysql_fetch_array($getoasis)) {
 			$dist = getDistance($coor2['x'], $coor2['y'], $row2['x'], $row2['y']);
@@ -194,7 +210,7 @@ break;
             if($basearray['owner']==3){
                 $oOwner = "-";
             }else{
-                $oOwner = $database->getUserField($basearray['owner'],username,0);
+                $oOwner = $database->getUserField($basearray['owner'],'username',0);
             }
             echo "<td class=\"nam\">".$oOwner."</td>";
             if($basearray['conqured']==0){

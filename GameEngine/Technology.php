@@ -227,6 +227,19 @@ class Technology {
 					+ (int)(isset($enforce['hero']) ? $enforce['hero'] : 0);
 			}
 		}
+		// Un oasis no produce cereal ni tiene granero: a las tropas estacionadas ahí
+		// las alimenta la aldea que lo conquistó. Sin esto un ejército aparcado en el
+		// oasis no le costaba cereal a nadie.
+		foreach($database->getOasis($base) as $oasis) {
+			foreach($database->getEnforceVillage($oasis['wref'],0) as $enforce) {
+				for($i=1;$i<=50;$i++) {
+					$ownunit['u'.$i] = (int)(isset($ownunit['u'.$i]) ? $ownunit['u'.$i] : 0)
+						+ (int)(isset($enforce['u'.$i]) ? $enforce['u'.$i] : 0);
+				}
+				$ownunit['hero'] = (int)(isset($ownunit['hero']) ? $ownunit['hero'] : 0)
+					+ (int)(isset($enforce['hero']) ? $enforce['hero'] : 0);
+			}
+		}
 		$movement = $database->getVillageMovement($base);
 		if(!empty($movement)) {
 			for($i=1;$i<=50;$i++) {
