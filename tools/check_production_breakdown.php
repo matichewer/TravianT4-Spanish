@@ -24,7 +24,7 @@ foreach(array(
 	"'building_bonus'=>",
 	"'oasis_bonus'=>",
 	"'plus_bonus'=>",
-	"'speed_bonus'=>",
+	"'speed'=>",
 	"'gross'=>"
 ) as $component) {
 	productionBreakdownAssert(strpos($engine, $component) !== false, 'Production component is missing: '.$component);
@@ -49,8 +49,12 @@ productionBreakdownAssert(
 	'Loading the village overwrites the final crop breakdown'
 );
 
-foreach(array('Campos de recursos:', 'Oasis (+', 'Bono Plus (+', 'Velocidad del servidor', 'Bono del héroe:', 'Población:', 'Consumo de tropas:', 'Artefacto (consumo ahorrado):', 'Total actual:') as $label) {
+foreach(array('Campos de recursos:', 'Oasis (+', 'Bono Plus (+', 'Bono del héroe:', 'Población:', 'Consumo de tropas:', 'Artefacto (consumo ahorrado):', 'Total actual:') as $label) {
 	productionBreakdownAssert(strpos($template, $label) !== false, 'Tooltip label is missing: '.$label);
 }
+productionBreakdownAssert(
+	strpos($template, 'Velocidad del servidor') === false,
+	'The server speed still occupies a separate tooltip row'
+);
 
 echo "Production breakdown checks passed\n";

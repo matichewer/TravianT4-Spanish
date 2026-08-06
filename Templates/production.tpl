@@ -6,7 +6,8 @@ function productionBreakdownNumber($value) {
 
 function productionBreakdownTooltip($resource, $label, $details, $total) {
 	$lines = array('<b>'.$label.' por hora</b>');
-	$lines[] = 'Campos de recursos: +'.productionBreakdownNumber($details['fields']);
+	$speed = $details['speed'];
+	$lines[] = 'Campos de recursos: +'.productionBreakdownNumber($details['fields'] * $speed);
 	if($resource === 'crop') {
 		if($details['grainmill_level'] > 0) {
 			$lines[] = 'Molino de cereal (nivel '.$details['grainmill_level'].', +'.$details['grainmill_percent'].'%): incluido';
@@ -15,19 +16,16 @@ function productionBreakdownTooltip($resource, $label, $details, $total) {
 			$lines[] = 'Panadería (nivel '.$details['bakery_level'].', +'.$details['bakery_percent'].'%): incluido';
 		}
 		if($details['building_bonus'] != 0) {
-			$lines[] = 'Bonos de edificios: +'.productionBreakdownNumber($details['building_bonus']);
+			$lines[] = 'Bonos de edificios: +'.productionBreakdownNumber($details['building_bonus'] * $speed);
 		}
 	} elseif($details['building_level'] > 0) {
-		$lines[] = $details['building'].' (nivel '.$details['building_level'].', +'.$details['building_percent'].'%): +'.productionBreakdownNumber($details['building_bonus']);
+		$lines[] = $details['building'].' (nivel '.$details['building_level'].', +'.$details['building_percent'].'%): +'.productionBreakdownNumber($details['building_bonus'] * $speed);
 	}
 	if($details['oasis_percent'] > 0) {
-		$lines[] = 'Oasis (+'.$details['oasis_percent'].'%): +'.productionBreakdownNumber($details['oasis_bonus']);
+		$lines[] = 'Oasis (+'.$details['oasis_percent'].'%): +'.productionBreakdownNumber($details['oasis_bonus'] * $speed);
 	}
 	if($details['plus_percent'] > 0) {
-		$lines[] = 'Bono Plus (+'.$details['plus_percent'].'%): +'.productionBreakdownNumber($details['plus_bonus']);
-	}
-	if($details['speed'] != 1) {
-		$lines[] = 'Velocidad del servidor (×'.$details['speed'].'): +'.productionBreakdownNumber($details['speed_bonus']);
+		$lines[] = 'Bono Plus (+'.$details['plus_percent'].'%): +'.productionBreakdownNumber($details['plus_bonus'] * $speed);
 	}
 	$lines[] = 'Producción bruta: '.productionBreakdownNumber($details['gross']);
 	if(!empty($details['hero'])) {
