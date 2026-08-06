@@ -3,17 +3,6 @@ include "Data/hero_full.php";
 require_once __DIR__."/Hero.php";
 $hero_levels = $GLOBALS["hero_levels"];
 
-if(!function_exists('getHeroWeaponPowerBonus')){
-	function getHeroWeaponPowerBonus($type){
-		$type = (int)$type;
-		if($type<16 || $type>60){
-			return 0;
-		}
-
-		return (($type-16)%3+1)*500;
-	}
-}
-
 if(!function_exists('getHeroEquipmentDefinition')){
 	function getHeroEquipmentDefinition($btype){
 		// El slot sale de heroEquipmentSlot() para que no haya dos mapas de btype a

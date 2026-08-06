@@ -39,6 +39,89 @@ if(!function_exists('heroArmorVitalityReduction')){
 	}
 }
 
+if(!function_exists('getHeroWeaponPowerBonus')){
+	// Fuerza de combate que suma un arma (btype 4, types 16-60). Las tres de cada
+	// familia valen 500, 1000 y 1500.
+	function getHeroWeaponPowerBonus($type){
+		$type = (int)$type;
+		if($type<16 || $type>60){
+			return 0;
+		}
+
+		return (($type-16)%3+1)*500;
+	}
+}
+
+if(!function_exists('getHeroWeaponBonuses')){
+	// La mano derecha (btype 4) promete dos cosas: fuerza de combate para el héroe y un
+	// bono de ataque y defensa **por cada unidad** de la tropa a la que apunta el arma.
+	// Lo segundo es lo que hace valiosa un arma de tribu: con 5000 legionarios, la
+	// espada larga son 25.000 puntos de ataque contra los 1500 del héroe.
+	//
+	// Cada arma es de una unidad concreta y de una tribu concreta: un romano puede
+	// saquear una espada gala, pero como nunca va a tener falanges no le suma nada.
+	function getHeroWeaponBonuses($type){
+		$type = (int)$type;
+		// arma => array(unidad, ataque y defensa por unidad)
+		$weapons = array(
+			16 => array(1, 3),  17 => array(1, 4),  18 => array(1, 5),
+			19 => array(2, 3),  20 => array(2, 4),  21 => array(2, 5),
+			22 => array(3, 3),  23 => array(3, 4),  24 => array(3, 5),
+			25 => array(5, 9),  26 => array(5, 12), 27 => array(5, 15),
+			28 => array(6, 12), 29 => array(6, 16), 30 => array(6, 20),
+			31 => array(21, 3), 32 => array(21, 4), 33 => array(21, 5),
+			34 => array(22, 3), 35 => array(22, 4), 36 => array(22, 5),
+			37 => array(24, 6), 38 => array(24, 8), 39 => array(24, 10),
+			40 => array(25, 6), 41 => array(25, 8), 42 => array(25, 10),
+			43 => array(26, 9), 44 => array(26, 12), 45 => array(26, 15),
+			46 => array(11, 3), 47 => array(11, 4), 48 => array(11, 5),
+			49 => array(12, 3), 50 => array(12, 4), 51 => array(12, 5),
+			52 => array(13, 3), 53 => array(13, 4), 54 => array(13, 5),
+			55 => array(15, 6), 56 => array(15, 8), 57 => array(15, 10),
+			58 => array(16, 9), 59 => array(16, 12), 60 => array(16, 15)
+		);
+
+		return array(
+			'itempower' => getHeroWeaponPowerBonus($type),
+			'unit' => isset($weapons[$type]) ? $weapons[$type][0] : 0,
+			'strength' => isset($weapons[$type]) ? $weapons[$type][1] : 0
+		);
+	}
+}
+
+if(!function_exists('heroEquippedWeaponBonuses')){
+	// Unidad y bono por unidad del arma que lleva puesta el héroe de $uid. El bono es
+	// plano: la herrería mejora el valor base de la tropa, no lo que agrega el arma.
+	function heroEquippedWeaponBonuses($database, $uid){
+		$empty = array('unit' => 0, 'strength' => 0);
+		$weapon = (int)$uid > 0 ? heroEquippedItem($database, $uid, 4) : false;
+		if(!is_array($weapon)){
+			return $empty;
+		}
+		$bonuses = getHeroWeaponBonuses((int)$weapon['type']);
+		if($bonuses['unit'] <= 0){
+			return $empty;
+		}
+
+		return array('unit' => $bonuses['unit'], 'strength' => $bonuses['strength']);
+	}
+}
+
+if(!function_exists('heroWeaponArmyBonus')){
+	// Puntos que el arma le agrega a un ejército concreto: el bono por unidad por la
+	// cantidad de esa unidad que hay en esa tropa. Si el ejército no lleva la unidad del
+	// arma (o el arma es de otra tribu), no suma nada.
+	function heroWeaponArmyBonus($weapon, $units){
+		if(!is_array($weapon) || (int)$weapon['unit'] <= 0 || !is_array($units)){
+			return 0;
+		}
+		$key = 'u'.(int)$weapon['unit'];
+		$amount = isset($units[$key]) ? max(0, (int)$units[$key]) : 0;
+
+		return $amount * (int)$weapon['strength'];
+	}
+}
+
 if(!function_exists('getHeroLeftHandBonuses')){
 	// La mano izquierda (btype 3) mezcla seis familias: mapas (61-63), estandartes
 	// (64-66), banderas (67-69), bolsas del ladrón (73-75), escudos (76-78) y cuernos

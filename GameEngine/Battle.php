@@ -838,6 +838,18 @@ class Battle {
 				} else {
 					$attackerInfantry += $heroStrength;
 				}
+				// El arma de la mano derecha sube el ataque de la tropa a la que apunta,
+				// no el del héroe. Entra antes del bono de mando porque pasa a ser parte
+				// del ataque del ejército, igual que el valor propio de las unidades.
+				$weapon = heroEquippedWeaponBonuses($database, (int)$attackerHero['uid']);
+				$weaponBonus = heroWeaponArmyBonus($weapon, $Attacker);
+				if($weaponBonus > 0) {
+					if(in_array((int)$weapon['unit'], $cavalry, true)) {
+						$attackerCavalry += $weaponBonus;
+					} else {
+						$attackerInfantry += $weaponBonus;
+					}
+				}
 				$heroBonus = $this->battleHeroBonus($attackerHero['offBonus']);
 				$attackerInfantry *= $heroBonus;
 				$attackerCavalry *= $heroBonus;
@@ -964,6 +976,15 @@ class Battle {
 			$heroStrength = $this->battleHeroStrength($hero, $heroTribe, $att_tribe);
 			$defenderOwners[$ownerKey]['infantry'] += $heroStrength;
 			$defenderOwners[$ownerKey]['cavalry'] += $heroStrength;
+			// El arma también da defensa por unidad, y se la cobra la tropa que está con
+			// el héroe: la de esta fuente, no todo lo que el jugador tenga en la batalla.
+			// El objeto dice "+X defensa" sin distinguir, así que va a los dos lados.
+			$weapon = heroEquippedWeaponBonuses($database, (int)$source['owner']);
+			$weaponBonus = heroWeaponArmyBonus($weapon, $source['units']);
+			if($weaponBonus > 0) {
+				$defenderOwners[$ownerKey]['infantry'] += $weaponBonus;
+				$defenderOwners[$ownerKey]['cavalry'] += $weaponBonus;
+			}
 			$defenderOwners[$ownerKey]['bonus'] = max(
 				$defenderOwners[$ownerKey]['bonus'],
 				$this->battleHeroBonus($hero['defBonus'])
