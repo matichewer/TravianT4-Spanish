@@ -13,10 +13,12 @@
  *
  * Carteles disponibles:
  *   villages -> signVillages{Top,Middle,Bottom}-rtl.png, el cartel de la lista de
- *               aldeas. Hoy NO se usa: #villageList es dinámico y estira el arte
- *               original de 172px con background-size, así que no hay que
- *               regenerar nada salvo que cambie mucho el rango de anchos.
+ *               aldeas (y el panel de cultura, que usa el mismo arte). Hoy está
+ *               generado a 194px, elegido como punto medio del rango de anchos
+ *               que toman los dos: el cartel va de 172 a 235 y el panel mide 168,
+ *               así que background-size nunca lo estira ni lo encoge más de ~20%.
  *   vname    -> sign_village-rtl.png, el cartel con el nombre de la aldea actual.
+ *               Hoy está generado a 225px.
  *
  * Los segmentos son [x de origen, ancho de origen, estirable]. El crecimiento se
  * reparte entre las bandas estirables en proporción a su ancho, así todas quedan

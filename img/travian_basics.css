@@ -384,7 +384,7 @@ details.buildingLevelHelp summary:focus {
 
 .cultureProgressSignTop {
 	height: 64px;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesTop-rtl.png?v=172b);
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesTop-rtl.png?v=194);
 	background-size: 100% 64px;
 }
 
@@ -395,14 +395,14 @@ details.buildingLevelHelp summary:focus {
 .cultureProgressSignBody {
 	margin: -43px 0 -19px;
 	padding: 0 18px 0 12px;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesMiddle-rtl.png?v=172b);
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesMiddle-rtl.png?v=194);
 	background-repeat: repeat-y;
 	background-size: 100% 2px;
 }
 
 .cultureProgressSignFoot {
 	height: 39px;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesBottom-rtl.png?v=172b);
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesBottom-rtl.png?v=194);
 	background-size: 100% 39px;
 }
 
