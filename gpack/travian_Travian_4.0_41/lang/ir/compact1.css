@@ -697,9 +697,9 @@ body.loader #myGameLinkHeaderWrapper,body.login #myGameLinkHeaderWrapper,body.lo
 .ie6 #myGameLinkHeaderWrapper{margin:30px 31px 0 0;}#ingameManual{height:180px;left:0;position:absolute;top:519px;width:195px;background-image:url(../../img/x.gif);}
 #ingameManual .question{background-image:url("../../img/layout/question-rtl-ignore.png");position:absolute;left:16px;top:43px;width:24px;height:37px;}
 .ie6 #ingameManual .question{background-image:url("../../img/layout/question-rtl-ignore.gif");}
-#villageName{background-image:url("../../img/layout/sign_village-rtl.png");font-size:14px;font-weight:bold;height:76px;left:8px;margin:0;position:absolute;text-align:left;top:150px;width:205px;z-index:50;}
+#villageName{background-image:url("../../img/layout/sign_village-rtl.png?v=225");background-repeat:no-repeat;background-size:100% 74px;font-size:14px;font-weight:bold;height:76px;left:110px;transform:translateX(-50%);margin:0;position:absolute;text-align:left;top:150px;width:max-content;max-width:280px;z-index:50;}@media (max-width:1029px){#villageName{left:8px;transform:none;}}
 .ie6 #villageName{background-image:url("../../img/layout/sign_village-rtl.gif");}
-#villageName div{overflow:hidden;white-space:nowrap;height:38px;width:144px;position:relative;top:17px;left:16px;padding-top:6px;text-align:center;cursor:hand;}
+#villageName div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:38px;width:max-content;min-width:137px;max-width:212px;position:relative;top:17px;margin-left:16px;margin-right:52px;padding-top:6px;text-align:center;cursor:hand;}
 #villageName div.clickable{cursor:pointer;cursor:hand;}#villageName .loyalty{font-size:10px;font-weight:normal;position:relative;top:-3px;}
 #villageName .low{color:#DE0000;}#villageName .medium{color:#F88C1F;}#villageName .high{color:#228B22;}
 #contentOuterContainer{float:left;position:relative;width:605px;margin-left:189px;}
@@ -789,16 +789,16 @@ body.login #side_info,body.logout #side_info,body.signup #side_info,body.support
 #side_info .listing .list a:hover{color:#99C01A;}#side_info .listing .pager{position:absolute;bottom:0;width:160px;height:30px;}
 #side_info .listing .pager a{display:block;background-image:url("../../img/navi/naviSmall.gif");height:9px;width:10px;position:absolute;}
 #side_info .listing .pager a.back{background-position:left 0;}#side_info .listing .pager a.next{background-position:right 0;}
-#side_info #villageList{left:9px;margin-top:-3px;width:max-content;min-width:172px;max-width:240px;}#side_info #villageList .head{height:64px;background-image:url("../../img/layout/signVillagesTop-rtl.png?v=200");background-size:100% 64px;}
+#side_info #villageList{left:9px;margin-top:-3px;width:max-content;min-width:172px;max-width:220px;}#side_info #villageList .head{height:64px;background-image:url("../../img/layout/signVillagesTop-rtl.png?v=172b");background-size:100% 64px;}
 .ie6 #side_info #villageList .head{background-image:url("../../img/layout/signVillagesTop-rtl.gif");}
 #side_info #villageList .head a{top:21px;background-image:url("../../img/layout/icons/villageStatistics.gif");left:10px;width:auto;}
-#side_info #villageList .list{min-height:17px;padding-top:1px;background-image:url("../../img/layout/signVillagesMiddle-rtl.png?v=200");background-size:100% 2px;}
+#side_info #villageList .list{min-height:17px;padding-top:1px;background-image:url("../../img/layout/signVillagesMiddle-rtl.png?v=172b");background-size:100% 2px;}
 .ie6 #side_info #villageList .list{background-image:url("../../img/layout/signVillagesMiddle-rtl.gif");}
 #side_info #villageList ul{margin-top:-20px;margin-bottom:-17px;}#side_info #villageList ul .attack{background-image:url(../../img/layout/icons/attacks.gif);background-position:left 3px;}
 #side_info #villageList ul li{margin-bottom:4px;height:24px;line-height:12px;margin-left:9px;padding-left:9px;padding-right:18px;}
 #side_info #villageList ul a{margin-left:0;width:auto;text-overflow:ellipsis;}#side_info #villageList ul a:after{content:attr(data-name);display:block;height:0;overflow:hidden;font-weight:bold;white-space:nowrap;visibility:hidden;}
 #side_info #villageList ul li.attack a{margin-left:3px;width:auto;}
-#side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.png?v=200");background-size:100% 39px;width:auto;height:39px;}
+#side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.png?v=172b");background-size:100% 39px;width:auto;height:39px;}
 .ie6 #side_info #villageList .foot{background-image:url("../../img/layout/signVillagesBottom-rtl.gif");}
 #side_info #linkList{left:24px;margin-top:-7px;width:160px;}#side_info #linkList .head{height:66px;background-image:url("../../img/layout/signLinksTop-rtl.png");}
 .ie6 #side_info #linkList .head{background-image:url("../../img/layout/signLinksTop-rtl.gif");}

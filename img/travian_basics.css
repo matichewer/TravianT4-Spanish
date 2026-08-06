@@ -349,23 +349,32 @@ details.buildingLevelHelp summary:focus {
 	}
 }
 
-/* Culture capacity indicator in the persistent village sidebar. Kept narrow and
-   flush to the left edge so it never reaches the dorf1 resource field badges,
-   the leftmost of which starts at x=155 of the centred page wrapper. */
+/* Culture capacity indicator in the persistent village sidebar. It borrows the
+   village list sign art (signVillages{Top,Middle,Bottom}) so it matches the rest
+   of the sidebar: :before is the top roll, :after the bottom one, and the middle
+   strip repeats behind the content. background-size stretches the 172px art to
+   whatever width the panel has, so the width below is free to change.
+
+   Kept narrow and flush to the left edge so it never reaches the dorf1 resource
+   field badges, the leftmost of which starts at x=293 of the viewport; at
+   left:-16px that caps the panel at 168px wide. */
 #cultureProgress {
 	box-sizing: border-box;
 	position: absolute;
 	top: 422px;
 	left: -16px;
 	z-index: 90;
-	width: 150px;
+	width: 168px;
 	margin: 0;
-	padding: 9px 7px 10px;
-	border: 2px solid #684719;
-	border-radius: 3px 3px 6px 6px;
-	background-color: #ead69d;
-	background-image: linear-gradient(to bottom, #f8edc9, #ead69d);
-	box-shadow: inset 0 0 0 1px rgba(255, 248, 214, 0.8), inset 0 -7px 14px rgba(104, 71, 25, 0.12), 0 2px 3px rgba(52, 35, 13, 0.35);
+	/* asimetrico a proposito: el borde de madera del arte es mas ancho a la derecha */
+	padding: 0 18px 0 12px;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesMiddle-rtl.png?v=172b);
+	background-repeat: repeat-y;
+	background-size: 100% 2px;
+	box-shadow: none;
 	color: #3c2a14;
 	font-size: 11px;
 }
@@ -378,8 +387,10 @@ details.buildingLevelHelp summary:focus {
 	}
 }
 
-#cultureProgress.cultureProgressReady {
-	border-color: #5f4a19;
+/* The old panel signalled "you can settle another village" with a darker border,
+   which the sign art has no room for. Highlight the village count instead. */
+#cultureProgress.cultureProgressReady .cultureProgressVillages strong {
+	color: #4f7500;
 }
 
 /* No quest master sign left: dock the panel right under the village name sign. */
@@ -398,26 +409,35 @@ details.buildingLevelHelp summary:focus {
 	z-index: 2000;
 }
 
+/* Los dos extremos del cartel. Van en el flujo, con margen negativo a los lados
+   para tapar el padding y hacia adentro para recuperar la parte del arte que es
+   pergamino util: el rollo de arriba ocupa 21px y el de abajo 20px, el resto lo
+   usa el contenido. */
 #cultureProgress:before,
 #cultureProgress:after {
 	content: "";
-	position: absolute;
-	top: 8px;
-	width: 7px;
-	height: 7px;
-	border: 1px solid #604417;
-	border-radius: 50%;
-	background-color: #a9853d;
-	background-image: radial-gradient(circle at 35% 30%, #f1d788, #8a6426 70%);
-	box-shadow: 0 1px 1px rgba(55, 35, 10, 0.45);
+	display: block;
+	position: static;
+	width: auto;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	box-shadow: none;
 }
 
 #cultureProgress:before {
-	left: 7px;
+	height: 64px;
+	margin: 0 -18px -43px -12px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesTop-rtl.png?v=172b);
+	background-size: 100% 64px;
 }
 
 #cultureProgress:after {
-	right: 7px;
+	height: 39px;
+	margin: -19px -18px 0 -12px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesBottom-rtl.png?v=172b);
+	background-size: 100% 39px;
 }
 
 .cultureProgressHeader,
