@@ -3,9 +3,9 @@
 include("GameEngine/Village.php");
 
 $troopStatsTribes = array(
+	array('name' => 'Galos', 'firstUnit' => 21),
 	array('name' => 'Romanos', 'firstUnit' => 1),
-	array('name' => 'Germanos', 'firstUnit' => 11),
-	array('name' => 'Galos', 'firstUnit' => 21)
+	array('name' => 'Germanos', 'firstUnit' => 11)
 );
 
 function troopStatsDuration($seconds)
@@ -22,28 +22,19 @@ include "Templates/html.tpl";
 <body class="v35 webkit chrome troopStatsClean">
 	<div id="wrapper">
 		<img id="staticElements" src="img/x.gif" alt="" />
-		<div id="logoutContainer">
-			<a id="logout" href="logout.php" title="<?php echo LOGOUT; ?>">&nbsp;</a>
+		<div class="troopStatsHeader">
+			<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="<?php echo SERVER_NAME; ?>"></a>
+			<p class="troopStatsBack"><a href="help.php">&laquo; Volver a la ayuda</a></p>
 		</div>
 		<div class="bodyWrapper">
 			<img style="filter:chroma();" src="img/x.gif" id="msfilter" alt="" />
-			<div id="header">
-				<div id="mtop">
-					<a id="logo" href="<?php echo HOMEPAGE; ?>" target="_blank" title="<?php echo SERVER_NAME; ?>"></a>
-					<?php include("Templates/navigation.tpl"); ?>
-					<div class="clear"></div>
-				</div>
-			</div>
 			<div id="mid">
-				<a id="ingameManual" href="help.php" title="Ayuda"><img src="img/x.gif" class="question" alt="Ayuda" /></a>
-				<div class="clear"></div>
 				<div id="contentOuterContainer">
 					<div class="contentTitle">&nbsp;</div>
 					<div class="contentContainer">
 						<div id="content" class="universal troopStatsPage">
 							<h1 class="titleInHeader">Estadísticas de tropas</h1>
 							<p class="troopStatsIntro">Valores base de las unidades de las tres tribus. El tiempo de entrenamiento corresponde a un servidor de velocidad 1 y se reduce mediante la velocidad del servidor y el nivel del edificio.</p>
-							<p class="troopStatsBack"><a href="help.php">&laquo; Volver a la ayuda</a></p>
 							<?php foreach ($troopStatsTribes as $troopStatsTribe) { ?>
 							<h2><?php echo $troopStatsTribe['name']; ?></h2>
 							<div class="troopStatsTableWrapper">

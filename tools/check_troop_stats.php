@@ -35,6 +35,13 @@ if (strpos($endpoint, "array('name' => 'Romanos', 'firstUnit' => 1)") === false
 	$failures[] = 'La página no incluye las tres tribus jugables.';
 }
 
+$gaulsPosition = strpos($endpoint, "array('name' => 'Galos', 'firstUnit' => 21)");
+$romansPosition = strpos($endpoint, "array('name' => 'Romanos', 'firstUnit' => 1)");
+$teutonsPosition = strpos($endpoint, "array('name' => 'Germanos', 'firstUnit' => 11)");
+if (!($gaulsPosition < $romansPosition && $romansPosition < $teutonsPosition)) {
+	$failures[] = 'Las tribus no aparecen en el orden Galos, Romanos y Germanos.';
+}
+
 if ($failures) {
 	fwrite(STDERR, implode("\n", $failures)."\n");
 	exit(1);

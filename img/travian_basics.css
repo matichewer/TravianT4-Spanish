@@ -26,6 +26,24 @@ body.troopStatsClean #staticElements {
 	display: none;
 }
 
+.troopStatsHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 105px;
+	padding: 0 48px;
+	box-sizing: border-box;
+}
+
+.troopStatsHeader #logo {
+	float: none;
+	margin: 0;
+}
+
+.troopStatsHeader .troopStatsBack {
+	margin: 0;
+}
+
 body.troopStatsClean #contentOuterContainer {
 	left: 50%;
 	float: none;
@@ -41,12 +59,17 @@ body.troopStatsClean #contentOuterContainer .contentFooter {
 	background-color: #fff;
 }
 
+body.troopStatsClean #contentOuterContainer .contentTitle {
+	display: none;
+}
+
 body.troopStatsClean #contentOuterContainer .contentContainer {
-	min-height: calc(100vh - 190px);
+	min-height: calc(100vh - 105px);
 	padding: 0;
 }
 
 body.troopStatsClean #content {
+	padding-top: 22px;
 	padding-right: 40px;
 	padding-left: 40px;
 }
