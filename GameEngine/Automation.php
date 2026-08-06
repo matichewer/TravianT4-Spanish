@@ -1812,7 +1812,7 @@ class Automation {
                 $toF = $database->getOasisV($data['to']);
                 $fromF = $database->getVillage($data['from']);
 
-                $cage = $database->getEquippedHeroItem($AttackerID, 9);
+                $cage = heroEquippedItem($database, $AttackerID, 9);
                 if(!is_array($cage)) {
                     $cage = array('id' => 0, 'type' => 0, 'num' => 0);
                 }
@@ -2352,7 +2352,7 @@ class Automation {
                         ${'heal'.$i} = 0;
                     }
 
-                    $smallbandage = $database->getEquippedHeroItem($AttackerID, 7);
+                    $smallbandage = heroEquippedItem($database, $AttackerID, 7);
                     if(!is_array($smallbandage)) {
                         $smallbandage = array('id' => 0, 'type' => 0, 'num' => 0);
                     }
@@ -2394,7 +2394,7 @@ class Automation {
 						}
                     }
 
-                    $bandage = $database->getEquippedHeroItem($AttackerID, 8);
+                    $bandage = heroEquippedItem($database, $AttackerID, 8);
                     if(!is_array($bandage)) {
                         $bandage = array('id' => 0, 'type' => 0, 'num' => 0);
                     }

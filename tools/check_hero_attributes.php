@@ -123,6 +123,18 @@ heroAttributeAssert(
 	strpos($itemTemplate,'La velocidad del héroe es')===false,
 	'A hero item tooltip still states a fixed final hero speed'
 );
+// Los tres caballos comparten slot y solo se diferencian por la velocidad que aportan,
+// así que cada uno necesita su propio nombre para poder distinguirlos en la bolsa.
+$horseNames = array();
+foreach(array(103,104,105) as $horseType){
+	$btype = 6;
+	$type = $horseType;
+	$name = '';
+	include dirname(__DIR__).'/Templates/Auction/alt.tpl';
+	heroAttributeAssert($name!=='','Horse type '.$horseType.' has no name');
+	$horseNames[$horseType] = $name;
+}
+heroAttributeAssert(count(array_unique($horseNames))===3,'Two horses share the same name');
 
 foreach(array(
 	'<div class="changeResourcesHeadline"><b>Recursos</b></div>',
@@ -157,7 +169,13 @@ class HeroAttributeBattleDatabase
 		return $this->heroes[$uid];
 	}
 
-	public function getEquippedHeroItem($uid,$btype)
+	// Sin nada equipado: lo que manda es el slot de `heroinventory`, no `proc`.
+	public function getHeroInventory($uid)
+	{
+		return array('helmet'=>0,'body'=>0,'leftHand'=>0,'rightHand'=>0,'shoes'=>0,'horse'=>0,'bag'=>0);
+	}
+
+	public function getItemData($id)
 	{
 		return false;
 	}

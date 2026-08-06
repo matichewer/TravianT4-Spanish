@@ -541,7 +541,7 @@
         
 	}elseif($btype==6){
     	if($type==103){
-        	$name = "Pura sangre";
+        	$name = "Caballo de las estepas";
 			$title = "velocidad del héroe +7";
             $item = "103";
             $effect = "14";

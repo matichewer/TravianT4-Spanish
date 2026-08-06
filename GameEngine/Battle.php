@@ -654,10 +654,7 @@ class Battle {
 
 	private function battleHeroIsMounted($uid) {
 		global $database;
-		if((int)$uid <= 0 || !method_exists($database, 'getEquippedHeroItem')) {
-			return false;
-		}
-		$horse = $database->getEquippedHeroItem((int)$uid, 6);
+		$horse = heroEquippedItem($database, $uid, 6);
 		return is_array($horse) && !empty($horse['id']);
 	}
 

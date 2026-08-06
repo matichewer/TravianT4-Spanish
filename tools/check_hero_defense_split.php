@@ -33,11 +33,13 @@ class HeroDefenseSplitDatabase {
 	public function getHeroData3($uid) {
 		return $this->getHeroData2($uid);
 	}
-	public function getEquippedHeroItem($uid, $btype) {
-		if((int)$btype === 6 && !empty($this->mounted[(int)$uid])) {
-			return array('id' => 1, 'type' => 103);
-		}
-		return false;
+	// Lo equipado se resuelve por el slot de `heroinventory`, no por el flag `proc`.
+	// El id del caballo es el uid de su dueño para que la validación tenga qué mirar.
+	public function getHeroInventory($uid) {
+		return array('horse' => !empty($this->mounted[(int)$uid]) ? (int)$uid : 0);
+	}
+	public function getItemData($id) {
+		return (int)$id > 0 ? array('id' => (int)$id, 'uid' => (int)$id, 'btype' => 6, 'type' => 103) : false;
 	}
 	public function getUserField($uid, $field, $mode) {
 		if($field === 'tribe') {

@@ -43,12 +43,14 @@ if(!function_exists('getHeroWeaponPowerBonus')){
 if(!function_exists('getHeroEquipmentDefinition')){
 	function getHeroEquipmentDefinition($btype){
 		// El slot sale de heroEquipmentSlot() para que no haya dos mapas de btype a
-		// columna de `heroinventory` que se puedan desincronizar.
+		// columna de `heroinventory` que se puedan desincronizar. La tabla de caras
+		// acota a los btype 1-6: los de bolsa (7-9) tienen slot pero no se equipan por
+		// acá, van por equipHeroBagItem.
 		$slot = heroEquipmentSlot($btype);
-		if($slot===false){
+		$faces = array(1 => 'helmet', 2 => null, 3 => 'leftHand', 4 => 'rightHand', 5 => 'foot', 6 => 'horse');
+		if($slot===false || !array_key_exists((int)$btype, $faces)){
 			return false;
 		}
-		$faces = array(1 => 'helmet', 2 => null, 3 => 'leftHand', 4 => 'rightHand', 5 => 'foot', 6 => 'horse');
 
 		return array('slot' => $slot, 'face' => $faces[(int)$btype]);
 	}

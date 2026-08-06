@@ -140,7 +140,7 @@ $engine = realpath("GameEngine/Automation.php");
 $src = file($engine);
 $blockStart = $blockEnd = 0;
 foreach($src as $n => $line) {
-    if(strpos($line, 'getEquippedHeroItem($AttackerID, 7)') !== false) { $blockStart = $n + 1; }
+    if(strpos($line, 'heroEquippedItem($database, $AttackerID, 7)') !== false) { $blockStart = $n + 1; }
     if($blockStart && strpos($line, 'addMovement(4,') !== false && !$blockEnd) { $blockEnd = $n + 1; }
 }
 if(!$blockStart || !$blockEnd) { die("No se pudo delimitar el bloque de vendas en Automation.php\n"); }

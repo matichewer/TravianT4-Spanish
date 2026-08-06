@@ -27,7 +27,11 @@ class HeroBattleExperienceDatabase {
 		return $this->getHeroData2($uid);
 	}
 
-	public function getEquippedHeroItem($uid, $btype) {
+	// Sin nada equipado: lo que manda es el slot de `heroinventory`, no `proc`.
+	public function getHeroInventory($uid) {
+		return array('helmet' => 0, 'body' => 0, 'leftHand' => 0, 'rightHand' => 0, 'shoes' => 0, 'horse' => 0, 'bag' => 0);
+	}
+	public function getItemData($id) {
 		return false;
 	}
 

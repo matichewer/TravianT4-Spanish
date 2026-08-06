@@ -51,9 +51,13 @@ if(!function_exists('heroBootsDistanceThreshold')){
 }
 
 if(!function_exists('heroEquipmentSlot')){
-	// Columna de `heroinventory` en la que vive cada tipo de objeto equipable.
+	// Columna de `heroinventory` en la que vive cada tipo de objeto. Los tres tipos de
+	// bolsa (vendas chicas, vendas, jaulas) comparten `bag`: el héroe lleva uno solo.
 	function heroEquipmentSlot($btype){
-		$slots = array(1=>'helmet', 2=>'body', 3=>'leftHand', 4=>'rightHand', 5=>'shoes', 6=>'horse');
+		$slots = array(
+			1=>'helmet', 2=>'body', 3=>'leftHand', 4=>'rightHand', 5=>'shoes', 6=>'horse',
+			7=>'bag', 8=>'bag', 9=>'bag'
+		);
 		$btype = (int)$btype;
 
 		return isset($slots[$btype]) ? $slots[$btype] : false;
@@ -74,13 +78,8 @@ if(!function_exists('heroEquippedItem')){
 		if($uid<=0 || $slot===false){
 			return false;
 		}
-		// Los dobles de prueba de los checkers solo implementan la consulta vieja; la
-		// clase real expone las dos, así que en el juego siempre corre el camino de
-		// arriba.
 		if(!method_exists($database, 'getHeroInventory') || !method_exists($database, 'getItemData')){
-			return method_exists($database, 'getEquippedHeroItem')
-				? $database->getEquippedHeroItem($uid, $btype)
-				: false;
+			return false;
 		}
 		$inventory = $database->getHeroInventory($uid);
 		if(!is_array($inventory) || empty($inventory[$slot])){

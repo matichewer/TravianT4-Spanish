@@ -129,7 +129,20 @@ bootsAssert(heroEquippedBootsSpeedBonus($database, 0)===0, 'A missing user produ
 bootsAssert(heroEquippedItem($database, 6, 5)['id']===61, 'The shoes slot did not resolve to the item it points at');
 bootsAssert(heroEquippedItem($database, 5, 5)===false, 'An empty shoes slot resolved to an item');
 bootsAssert(heroEquipmentSlot(5)==='shoes' && heroEquipmentSlot(6)==='horse', 'Equipment slots are mislabelled');
-bootsAssert(heroEquipmentSlot(7)===false, 'Bag items were treated as an equipment slot');
+// Los tres tipos de bolsa comparten `bag`: el héroe puede llevar uno solo, así que
+// preguntar por vendas cuando lo cargado son jaulas tiene que dar vacío.
+bootsAssert(
+	heroEquipmentSlot(7)==='bag' && heroEquipmentSlot(8)==='bag' && heroEquipmentSlot(9)==='bag',
+	'Bag items do not share the bag slot'
+);
+bootsAssert(heroEquipmentSlot(13)===false, 'A non-equipable item was given a slot');
+$bagDatabase = new FakeBootsDatabase(
+	array(1 => array('bag' => 91)),
+	array(91 => bootsItem(91, 1, 5, 1, 9))
+);
+bootsAssert(heroEquippedItem($bagDatabase, 1, 9)['id']===91, 'The loaded cages were not read from the bag');
+bootsAssert(heroEquippedItem($bagDatabase, 1, 7)===false, 'Cages in the bag were read as small bandages');
+bootsAssert(heroEquippedItem($bagDatabase, 1, 8)===false, 'Cages in the bag were read as bandages');
 
 // procDistanceTime completo. Se carga GeneratorX con lo mínimo que usa el modo 1.
 if(!defined('WORLD_MAX')){ define('WORLD_MAX', 200); }
