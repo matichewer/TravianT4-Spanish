@@ -117,8 +117,9 @@ body.troopStatsClean #content {
 }
 
 table.troopStatsTable {
-	width: 100%;
+	width: auto;
 	min-width: 820px;
+	max-width: 100%;
 	table-layout: auto;
 }
 
