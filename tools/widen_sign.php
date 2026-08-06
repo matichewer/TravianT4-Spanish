@@ -15,7 +15,7 @@
  *   villages -> signVillages{Top,Middle,Bottom}-rtl.png, el cartel de la lista de
  *               aldeas (y el panel de cultura, que usa el mismo arte). Hoy está
  *               generado a 194px, elegido como punto medio del rango de anchos
- *               que toman los dos: el cartel va de 172 a 235 y el panel mide 168,
+ *               que toman los dos: el cartel va de 172 a 220 y el panel mide 168,
  *               así que background-size nunca lo estira ni lo encoge más de ~20%.
  *   vname    -> sign_village-rtl.png, el cartel con el nombre de la aldea actual.
  *               Hoy está generado a 225px.

@@ -65,11 +65,11 @@
     }else{
     	$vill = "";
     }
-		// El nombre y la coordenada van en un solo renglon. data-name lo usa el CSS
-		// para medir el nombre siempre en negrita, asi el ancho del cartel no
-		// cambia segun cual sea la aldea activa (la activa se dibuja en negrita).
+		// Solo el nombre: la coordenada queda en el title del enlace. data-name lo
+		// usa el CSS para medir el nombre siempre en negrita, asi el ancho del
+		// cartel no cambia segun cual sea la aldea activa (esa va en negrita).
 		echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
-	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\"><span class=\"villageNameText\" data-name=\"".htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8')."\">".$villageName."</span><span class=\"villageCoords\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
+	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" data-name=\"".htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8')."\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."</a></li>";
 	}
     	?>
 		
