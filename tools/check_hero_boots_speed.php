@@ -175,22 +175,23 @@ bootsAssert(
 	'Boots leaked into a movement that does not carry troops'
 );
 
-// Cada camino en el que el héroe viaja tiene que pasar el bono. Se revisa en el código
-// para que un movimiento nuevo no se olvide de las botas en silencio.
+// Cada camino en el que el héroe viaja tiene que pasar los dos bonos: el de las botas
+// de mercenario y el de la mano izquierda (mapa, estandarte, bandera). Se revisa en el
+// código para que un movimiento nuevo no se olvide de alguno en silencio.
 $callSites = array(
 	'GameEngine/Units.php' => array(
-		'$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus));',
-		'$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus);',
-		'$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);',
+		'procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus,$travelBonus)',
+		'procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus,$travelBonus)',
+		'procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,$travelBonus)',
 		'heroEquippedBootsSpeedBonus($database, $session->uid)'
 	),
 	'GameEngine/Automation.php' => array(
-		'$endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus) + $AttackArrivalTime;',
-		'$endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1, $returnBootsBonus) + $AttackArrivalTime;',
+		'procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus, $travelBonus)',
+		'procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1, $returnBootsBonus, $returnTravelBonus)',
 		'heroEquippedBootsSpeedBonus($database, $ownerID)'
 	),
-	'Templates/a2b/attack.tpl' => array('$time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus);'),
-	'Templates/a2b/sendback.tpl' => array('$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);'),
+	'Templates/a2b/attack.tpl' => array('procDistanceTime($from,$to,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0)'),
+	'Templates/a2b/sendback.tpl' => array('procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0)'),
 	'Templates/a2b/adventure.tpl' => array('heroEquippedBootsSpeedBonus($database,$session->uid)'),
 	'hero_adventure.php' => array('heroEquippedBootsSpeedBonus($database,$session->uid)')
 );

@@ -61,6 +61,13 @@ if(!function_exists('applyHeroEquipmentBonusChange')){
 			$autoRegen = max(0, (int)$heroData['autoregen']-$oldBonuses['autoregen'])+$newBonuses['autoregen'];
 			$database->modifyHero2('itempower', $itemPower, $uid, 0);
 			$database->modifyHero2('autoregen', $autoRegen, $uid, 0);
+		}elseif((int)$btype===3){
+			// De la mano izquierda solo el escudo (76-78) guarda algo: mapas, estandartes,
+			// banderas, bolsas y cuernos se leen del objeto equipado cuando hacen falta.
+			$oldBonus = is_array($oldItem) ? getHeroLeftHandBonuses((int)$oldItem['type']) : array('itempower' => 0);
+			$newBonus = is_array($newItem) ? getHeroLeftHandBonuses((int)$newItem['type']) : array('itempower' => 0);
+			$itemPower = max(0, (int)$heroData['itempower']-$oldBonus['itempower'])+$newBonus['itempower'];
+			$database->modifyHero2('itempower', $itemPower, $uid, 0);
 		}elseif((int)$btype===4){
 			$oldBonus = is_array($oldItem) ? getHeroWeaponPowerBonus((int)$oldItem['type']) : 0;
 			$newBonus = is_array($newItem) ? getHeroWeaponPowerBonus((int)$newItem['type']) : 0;

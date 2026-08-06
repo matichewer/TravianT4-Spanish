@@ -84,7 +84,11 @@ class GeneratorX {
    // $bootsBonus es el porcentaje de las botas de mercenario del héroe que viaja con
    // el ejército; solo se pasa cuando el héroe va en el movimiento y solo cuenta en
    // los modos que llevan velocidad real de tropas ($mode = 1).
-   public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0) {
+   //
+   // $travelBonus es el de la mano izquierda (mapa, estandarte o bandera). A diferencia
+   // de las botas, que solo acortan el tramo que pasa el umbral, este sube la velocidad
+   // de todo el viaje. Quien llama ya decidió si corresponde para ese trayecto.
+   public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0,$travelBonus=0) {
 		$xdistance = ABS($thiscoor['x'] - $coor['x']);
 		if($xdistance > WORLD_MAX) {
 			$xdistance = (2 * WORLD_MAX + 1) - $xdistance;
@@ -117,6 +121,9 @@ class GeneratorX {
 				$speed = max(1, (float)$ref) * tournamentSquareSpeedFactor($coor, $distance);
 		}
 		$effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
+		if($mode && $travelBonus > 0) {
+			$speed *= 1 + max(0, (float)$travelBonus) / 100;
+		}
 		return round(($effectiveDistance/$speed) * 3600 / INCREASE_SPEED);
 	}
    

@@ -18,6 +18,8 @@ class HeroArmorDatabase {
 	public $changes = array();
 
 	public function getHeroInventory($uid) { return $this->inventory; }
+	public function getVillageField($wref,$field) { return 0; }
+	public function getUserField($uid,$field,$mode) { return 0; }
 	public function getItemData($id) { return isset($this->items[$id]) ? $this->items[$id] : false; }
 
 	public function modifyHero2($column, $value, $uid, $mode) {

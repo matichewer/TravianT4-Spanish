@@ -39,6 +39,123 @@ if(!function_exists('heroArmorVitalityReduction')){
 	}
 }
 
+if(!function_exists('getHeroLeftHandBonuses')){
+	// La mano izquierda (btype 3) mezcla seis familias: mapas (61-63), estandartes
+	// (64-66), banderas (67-69), bolsas del ladrón (73-75), escudos (76-78) y cuernos
+	// del natariano (79-81). No hay objetos 70-72: la numeración tiene ese hueco.
+	//
+	// Solo `itempower` se guarda en el héroe al equipar. El resto se lee del objeto
+	// equipado en el momento: los tres de velocidad dependen del viaje concreto, el
+	// botín de cada batalla y el cuerno de contra quién se pelea.
+	function getHeroLeftHandBonuses($type){
+		$homecoming = array(61 => 30, 62 => 40, 63 => 50);
+		$ownVillages = array(64 => 30, 65 => 40, 66 => 50);
+		$alliance = array(67 => 15, 68 => 20, 69 => 25);
+		$bounty = array(73 => 10, 74 => 15, 75 => 20);
+		$itemPower = array(76 => 500, 77 => 1000, 78 => 1500);
+		$natar = array(79 => 20, 80 => 25, 81 => 30);
+		$type = (int)$type;
+
+		return array(
+			'homecoming' => isset($homecoming[$type]) ? $homecoming[$type] : 0,
+			'ownvillages' => isset($ownVillages[$type]) ? $ownVillages[$type] : 0,
+			'alliance' => isset($alliance[$type]) ? $alliance[$type] : 0,
+			'bounty' => isset($bounty[$type]) ? $bounty[$type] : 0,
+			'itempower' => isset($itemPower[$type]) ? $itemPower[$type] : 0,
+			'natar' => isset($natar[$type]) ? $natar[$type] : 0
+		);
+	}
+}
+
+if(!function_exists('heroTravelSpeedBonus')){
+	// Porcentaje de velocidad extra que aporta el objeto de mano izquierda a un viaje
+	// concreto. Solo se puede llevar uno, así que las tres familias nunca se suman.
+	function heroTravelSpeedBonus($type, $isReturn, $sameOwner, $sameAlliance){
+		$bonuses = getHeroLeftHandBonuses($type);
+		if($isReturn && $bonuses['homecoming'] > 0){
+			return $bonuses['homecoming'];
+		}
+		if($sameOwner && $bonuses['ownvillages'] > 0){
+			return $bonuses['ownvillages'];
+		}
+		if($sameAlliance && $bonuses['alliance'] > 0){
+			return $bonuses['alliance'];
+		}
+
+		return 0;
+	}
+}
+
+if(!function_exists('heroEquippedTravelSpeedBonus')){
+	// Bono de velocidad del objeto que lleva puesto el héroe de $uid para el viaje entre
+	// dos aldeas. Igual que las botas de mercenario, solo cuenta si el héroe viaja en
+	// ese ejército: quien llama decide eso mirando la posición 11 de la tropa.
+	function heroEquippedTravelSpeedBonus($database, $uid, $fromVillage, $toVillage, $isReturn = false){
+		$uid = (int)$uid;
+		$item = $uid > 0 ? heroEquippedItem($database, $uid, 3) : false;
+		if(!is_array($item)){
+			return 0;
+		}
+		$bonuses = getHeroLeftHandBonuses((int)$item['type']);
+		// Un mapa en un regreso no necesita saber de quién son las aldeas, así que se
+		// resuelve sin consultar la base.
+		if($isReturn && $bonuses['homecoming'] > 0){
+			return $bonuses['homecoming'];
+		}
+		if($bonuses['ownvillages'] <= 0 && $bonuses['alliance'] <= 0){
+			return 0;
+		}
+		$fromVillage = (int)$fromVillage;
+		$toVillage = (int)$toVillage;
+		if($fromVillage <= 0 || $toVillage <= 0 || !method_exists($database, 'getVillageField')){
+			return 0;
+		}
+
+		$fromOwner = (int)$database->getVillageField($fromVillage, 'owner');
+		$toOwner = (int)$database->getVillageField($toVillage, 'owner');
+		$sameOwner = $fromOwner > 0 && $fromOwner === $toOwner;
+		$sameAlliance = false;
+		if(!$sameOwner && $bonuses['alliance'] > 0 && $fromOwner > 0 && $toOwner > 0
+			&& method_exists($database, 'getUserField')){
+			$fromAlliance = (int)$database->getUserField($fromOwner, 'alliance', 0);
+			$toAlliance = (int)$database->getUserField($toOwner, 'alliance', 0);
+			$sameAlliance = $fromAlliance > 0 && $fromAlliance === $toAlliance;
+		}
+
+		return heroTravelSpeedBonus((int)$item['type'], $isReturn, $sameOwner, $sameAlliance);
+	}
+}
+
+if(!function_exists('heroEquippedBountyBonus')){
+	// Porcentaje extra de botín de la bolsa del ladrón que lleve puesta el héroe.
+	function heroEquippedBountyBonus($database, $uid){
+		$item = (int)$uid > 0 ? heroEquippedItem($database, $uid, 3) : false;
+		if(!is_array($item)){
+			return 0;
+		}
+		$bonuses = getHeroLeftHandBonuses((int)$item['type']);
+
+		return $bonuses['bounty'];
+	}
+}
+
+if(!function_exists('heroNatarStrengthFactor')){
+	// Factor por el que se multiplica la fuerza del héroe cuando el rival es natar
+	// (tribu 5). Vale para atacarlos y para defenderse de ellos.
+	function heroNatarStrengthFactor($database, $uid, $opponentTribe){
+		if((int)$opponentTribe !== 5){
+			return 1;
+		}
+		$item = (int)$uid > 0 ? heroEquippedItem($database, $uid, 3) : false;
+		if(!is_array($item)){
+			return 1;
+		}
+		$bonuses = getHeroLeftHandBonuses((int)$item['type']);
+
+		return 1 + $bonuses['natar'] / 100;
+	}
+}
+
 if(!function_exists('getHeroShoesBonuses')){
 	// El slot de pies (btype 5) mezcla tres familias de objetos que no comparten
 	// efecto: botas de regeneración (94-96) suman salud por día, botas de mercenario

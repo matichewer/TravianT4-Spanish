@@ -70,10 +70,11 @@ if ($enforce['hero']>0){ $colspan = 11; }else{ $colspan = 10; }
                             $herodetail = $database->getHeroData($to['owner']);
 							$speeds[] = $herodetail['speed'];
 							$bootsBonus = heroEquippedBootsSpeedBonus($database, $to['owner']);
+							$travelBonus = heroEquippedTravelSpeedBonus($database,$to['owner'],$village->wid,$enforce['from'],true);
 						}
 					}
 				}
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0);
 
 			?>
    <tbody class="infos">

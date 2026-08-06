@@ -387,12 +387,13 @@ if($canMoveHome){
 								$herodetail = $database->getHeroData($session->uid);
 								$speeds[] = $herodetail['speed'];
 								$bootsBonus = heroEquippedBootsSpeedBonus($database, $session->uid);
+								$travelBonus = heroEquippedTravelSpeedBonus($database,$session->uid,$village->wid,$process['0'],false);
 							}
                         }
                     }
                 }
 
-                $time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus);
+                $time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0);
 
             ?>
 

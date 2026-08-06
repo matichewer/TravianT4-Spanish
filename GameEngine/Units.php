@@ -265,17 +265,19 @@ class Units {
 				$speeds[] = max(1, (float)$unit['speed']);
 			}
 		}
+		$travelBonus = 0;
 		if((int)$prisoner['t11'] > 0) {
 			$hero = $database->getHeroData($owner);
 			$speeds[] = is_array($hero) && !empty($hero['speed']) ? max(1, (float)$hero['speed']) : 6;
 			$bootsBonus = heroEquippedBootsSpeedBonus($database, $owner);
+			$travelBonus = heroEquippedTravelSpeedBonus($database,$owner,(int)$prisoner['wref'],(int)$prisoner['from'],true);
 		}
 		if(empty($speeds)) {
 			return false;
 		}
 		$trapCoordinates = $database->getCoor((int)$prisoner['wref']);
 		$homeCoordinates = $database->getCoor((int)$prisoner['from']);
-		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus));
+		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus,$travelBonus));
 		$troops = array();
 		for($i = 1; $i <= 11; $i++) {
 			$troops[$i] = max(0,(int)$prisoner['t'.$i]);
@@ -577,15 +579,19 @@ class Units {
 			}
 		}
 		$bootsBonus = 0;
+		$travelBonus = 0;
 		if (isset($data['u11'])) {
 			if($data['u11'] != '' && $data['u11'] > 0){
 				$heroarray = $database->getHeroData($session->uid);
 				$speeds[] = max(1, (int)$heroarray['speed']);
 				$bootsBonus = heroEquippedBootsSpeedBonus($database, $session->uid);
+				// Ida: el estandarte vale si las dos aldeas son propias y la bandera si
+				// son de la misma alianza. El mapa no, que es solo para volver.
+				$travelBonus = heroEquippedTravelSpeedBonus($database,$session->uid,$village->wid,$data['to_vid'],false);
 			}
 		}
 
-		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus);
+		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus,$travelBonus);
 		$sentAt = time();
 		$catapultUnit = $battle->getTribeCatapultUnit((int)$session->tribe);
 		$hasCatapults = $catapultUnit > 0
@@ -724,10 +730,14 @@ class Units {
 						$post['t'.$i.'']='0';
 					}
 				}
-				$bootsBonus = ($post['t11'] != '' && $post['t11'] > 0)
+				$heroReturns = $post['t11'] != '' && $post['t11'] > 0;
+				$bootsBonus = $heroReturns
 					? heroEquippedBootsSpeedBonus($database, $to['owner'])
 					: 0;
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus);
+				$travelBonus = $heroReturns
+					? heroEquippedTravelSpeedBonus($database,$to['owner'],$village->wid,$enforce['from'],true)
+					: 0;
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,$travelBonus);
 				$reference = $database->addAttack($enforce['from'],$post['t1'],$post['t2'],$post['t3'],$post['t4'],$post['t5'],$post['t6'],$post['t7'],$post['t8'],$post['t9'],$post['t10'],$post['t11'],2,0,0,0,0);
 				$database->addMovement(4,$village->wid,$enforce['from'],$reference,0,($time+time()));
 				$technology->checkReinf($post['ckey']);

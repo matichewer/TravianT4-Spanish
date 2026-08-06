@@ -661,8 +661,14 @@ class Battle {
 		return $base + ($base + 300 * $population / 7) * (pow(1.007, $level) - 1);
 	}
 
-	private function battleHeroStrength($hero, $tribe) {
-		return heroFightingStrength($hero, $tribe);
+	// El cuerno del natariano (79-81) sube la fuerza del héroe solo cuando el rival es
+	// natar (tribu 5). Vale para atacarlos y para defenderse de ellos.
+	private function battleHeroStrength($hero, $tribe, $opponentTribe = 0) {
+		global $database;
+		$strength = heroFightingStrength($hero, $tribe);
+		$uid = is_array($hero) && isset($hero['uid']) ? (int)$hero['uid'] : 0;
+
+		return $strength * heroNatarStrengthFactor($database, $uid, $opponentTribe);
 	}
 
 	private function battleHeroBonus($points) {
@@ -826,7 +832,7 @@ class Battle {
 		if((int)$type !== 1 && !empty($Attacker['hero'])) {
 			$attackerHero = $database->getHeroData2((int)$Attacker['id']);
 			if(is_array($attackerHero)) {
-				$heroStrength = $this->battleHeroStrength($attackerHero, $att_tribe);
+				$heroStrength = $this->battleHeroStrength($attackerHero, $att_tribe, $def_tribe);
 				if($this->battleHeroIsMounted($attackerHero['uid'])) {
 					$attackerCavalry += $heroStrength;
 				} else {
@@ -955,7 +961,7 @@ class Battle {
 			// llevara o no caballo, así que un héroe montado no defendía nada frente
 			// a un ataque de infantería (y uno a pie, nada frente a caballería). El
 			// caballo solo decide si el héroe ataca como caballería, no cómo defiende.
-			$heroStrength = $this->battleHeroStrength($hero, $heroTribe);
+			$heroStrength = $this->battleHeroStrength($hero, $heroTribe, $att_tribe);
 			$defenderOwners[$ownerKey]['infantry'] += $heroStrength;
 			$defenderOwners[$ownerKey]['cavalry'] += $heroStrength;
 			$defenderOwners[$ownerKey]['bonus'] = max(
@@ -1082,6 +1088,12 @@ class Battle {
 		foreach($attackerAmounts as $position => $amount) {
 			$unitData = $GLOBALS['u'.($attackerStart + $position - 1)];
 			$maxBounty += max(0, $amount - $result['casualties_attacker'][$position]) * (int)$unitData['cap'];
+		}
+		// La bolsa del ladrón (73-75) sube el botín solo si el héroe sobrevivió al
+		// asalto: un héroe muerto no se lleva nada a casa.
+		if(is_array($attackerHero) && empty($result['casualties_attacker'][11])) {
+			$bountyBonus = heroEquippedBountyBonus($database, (int)$attackerHero['uid']);
+			$maxBounty = (int)floor($maxBounty * (1 + $bountyBonus / 100));
 		}
 		$result['bounty'] = $maxBounty;
 
