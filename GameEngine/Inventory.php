@@ -73,7 +73,14 @@ if(!function_exists('applyHeroEquipmentBonusChange')){
 			return;
 		}
 
-		if((int)$btype===2){
+		if((int)$btype===1){
+			// Solo los cascos de regeneración (4-6) guardan algo: los de experiencia se
+			// leen del objeto equipado al momento de otorgarla.
+			$oldBonus = is_array($oldItem) ? getHeroHelmetBonuses((int)$oldItem['type']) : array('autoregen' => 0);
+			$newBonus = is_array($newItem) ? getHeroHelmetBonuses((int)$newItem['type']) : array('autoregen' => 0);
+			$autoRegen = max(0, (int)$heroData['autoregen']-$oldBonus['autoregen'])+$newBonus['autoregen'];
+			$database->modifyHero2('autoregen', $autoRegen, $uid, 0);
+		}elseif((int)$btype===2){
 			$oldBonuses = is_array($oldItem) ? getHeroArmorBonuses((int)$oldItem['type']) : array('itempower' => 0, 'autoregen' => 0);
 			$newBonuses = is_array($newItem) ? getHeroArmorBonuses((int)$newItem['type']) : array('itempower' => 0, 'autoregen' => 0);
 			$itemPower = max(0, (int)$heroData['itempower']-$oldBonuses['itempower'])+$newBonuses['itempower'];

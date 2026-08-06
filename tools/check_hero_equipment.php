@@ -98,7 +98,7 @@ function check($condition, $message)
 }
 
 $definitions = array(
-	1 => array('slot' => 'helmet', 'face' => 'helmet', 'types' => array(1, 3)),
+	1 => array('slot' => 'helmet', 'face' => 'helmet', 'types' => array(4, 6)),
 	2 => array('slot' => 'body', 'face' => null, 'types' => array(82, 88)),
 	3 => array('slot' => 'leftHand', 'face' => 'leftHand', 'types' => array(61, 63)),
 	4 => array('slot' => 'rightHand', 'face' => 'rightHand', 'types' => array(16, 18)),
@@ -123,7 +123,9 @@ foreach($definitions as $btype => $definition){
 	check($db->inventory[$definition['slot']]===$second['id'], "btype $btype: slot did not receive replacement");
 	check($db->items[$first['id']]['proc']===0, "btype $btype: replaced item remained equipped");
 	check($db->items[$second['id']]['proc']===1, "btype $btype: replacement was not marked equipped");
-	if($btype===2){
+	if($btype===1){
+		check($db->hero['autoregen']===30, 'helmet regeneration accumulated during replacement');
+	}elseif($btype===2){
 		check($db->hero['itempower']===500 && $db->hero['autoregen']===10, 'armor bonuses accumulated during replacement');
 	}elseif($btype===4){
 		check($db->hero['itempower']===1500, 'weapon power accumulated during replacement');
@@ -142,7 +144,9 @@ foreach($definitions as $btype => $definition){
 	if($definition['face']!==null){
 		check($db->face[$definition['face']]===0, "btype $btype: removal did not clear appearance");
 	}
-	if($btype===2){
+	if($btype===1){
+		check($db->hero['autoregen']===10, 'helmet regeneration remained after removal');
+	}elseif($btype===2){
 		check($db->hero['itempower']===0 && $db->hero['autoregen']===10, 'armor bonuses remained after removal');
 	}elseif($btype===4){
 		check($db->hero['itempower']===0, 'weapon power remained after removal');

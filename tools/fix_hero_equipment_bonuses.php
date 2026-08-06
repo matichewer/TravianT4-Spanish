@@ -1,17 +1,17 @@
 <?php
 // Reconcilia `hero.speed` y `hero.autoregen` con lo que el héroe tiene equipado.
 //
-// Hasta el commit que aplicó los bonos del slot de pies, equipar espuelas o botas de
-// regeneración no escribía nada en el héroe. Los que ya las tenían puestas quedaron
-// con el bono sin sumar, y al desequiparlas el código nuevo se lo resta igual: un
-// héroe con corcel + espuelas bajaría de 20 a 15, y uno con botas de regeneración se
-// quedaría en 0 de regeneración.
+// Cada vez que un slot empieza a aplicar un bono que antes ignoraba, los héroes que ya
+// tenían el objeto puesto quedan con el bono sin sumar, y al desequiparlo el código
+// nuevo se lo resta igual: un héroe con corcel + espuelas bajaría de 20 a 15, y uno con
+// botas o casco de regeneración se quedaría en 0 de regeneración. Pasó con el slot de
+// pies y volvió a pasar con los cascos de regeneración (4-6).
 //
 // Recalcula desde cero a partir de los objetos equipados, así que es idempotente y se
 // puede volver a correr sin miedo.
 //
-//   docker compose exec -T web php /var/www/html/tools/fix_hero_footwear_bonuses.php
-//   docker compose exec -T web php /var/www/html/tools/fix_hero_footwear_bonuses.php --apply
+//   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php
+//   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
 //
 // Sin --apply solo informa lo que cambiaría.
 
@@ -45,6 +45,12 @@ foreach($rows as $row){
 
 	$speed = $baseSpeed;
 	$autoRegen = $baseAutoRegen;
+
+	$helmet = heroEquippedItem($database, $uid, 1);
+	if(is_array($helmet)){
+		$helmetBonuses = getHeroHelmetBonuses((int)$helmet['type']);
+		$autoRegen += $helmetBonuses['autoregen'];
+	}
 
 	$horse = heroEquippedItem($database, $uid, 6);
 	if(is_array($horse)){

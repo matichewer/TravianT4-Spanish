@@ -120,19 +120,136 @@ if(!function_exists('heroBootsTravelDistance')){
 	}
 }
 
+if(!function_exists('getHeroHelmetBonuses')){
+	// El slot de cabeza (btype 1) mezcla cinco familias que no comparten efecto: cascos
+	// de experiencia (1-3), de regeneración (4-6), de cultura (7-9), de establo (10-12)
+	// y de cuartel (13-15). Solo se puede llevar uno a la vez. Las tres últimas familias
+	// todavía no tienen efecto implementado en ningún lado.
+	function getHeroHelmetBonuses($type){
+		$experience = array(1 => 15, 2 => 20, 3 => 25);
+		$autoRegen = array(4 => 10, 5 => 15, 6 => 20);
+		$type = (int)$type;
+
+		return array(
+			'experience' => isset($experience[$type]) ? $experience[$type] : 0,
+			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0
+		);
+	}
+}
+
 if(!function_exists('heroExperienceWithHelmet')){
+	// La cuenta va en enteros a propósito: con `$experience * (1 + 15/100)` el 1,15 de
+	// coma flotante vale 1,1499… y un bono exacto se cae un punto al truncar (100 de
+	// experiencia daban 114 en vez de 115, que es justo el caso de los rollos, que
+	// otorgan múltiplos de 10).
 	function heroExperienceWithHelmet($database, $uid, $experience){
-		$experience = max(0, (float)$experience);
+		$experience = max(0, (int)$experience);
 		$helmet = heroEquippedItem($database, $uid, 1);
-		if(is_array($helmet) && isset($helmet['type'])){
-			$bonuses = array(1 => 15, 2 => 20, 3 => 25);
-			$type = (int)$helmet['type'];
-			if(isset($bonuses[$type])){
-				$experience *= 1 + $bonuses[$type] / 100;
-			}
+		$bonuses = is_array($helmet) ? getHeroHelmetBonuses((int)$helmet['type']) : array('experience' => 0);
+
+		return intdiv($experience*(100+$bonuses['experience']), 100);
+	}
+}
+
+if(!function_exists('heroAdventureTierThresholds')){
+	// El mundo abre soltando solo el primer nivel de cada familia de objetos, suma el
+	// segundo a la semana y el tercero a las dos semanas.
+	function heroAdventureTierThresholds(){
+		return array('second' => 604800, 'third' => 1209600);
+	}
+}
+
+if(!function_exists('heroAdventureItemTypes')){
+	// Tipos que puede soltar una aventura para cada categoría de equipo, según el
+	// tiempo transcurrido desde COMMENCE.
+	//
+	// Las ramas van de más vieja a más nueva. Estaban al revés (primero la de 7 días),
+	// y como cualquier momento posterior a los 14 días también supera los 7, la rama
+	// del tercer nivel nunca se alcanzaba: el Casco de la Sabiduría, la Curación, el
+	// Cónsul, la Caballería Pesada y el Arconte no salían nunca, y lo mismo pasaba con
+	// el tercer nivel de armas, escudos, calzado y caballos.
+	function heroAdventureItemTypes($btype, $tribe, $elapsed){
+		$btype = (int)$btype;
+		$tribe = (int)$tribe;
+		$elapsed = (int)$elapsed;
+		$thresholds = heroAdventureTierThresholds();
+		$tier = 1;
+		if($elapsed >= $thresholds['third']){
+			$tier = 3;
+		}elseif($elapsed >= $thresholds['second']){
+			$tier = 2;
 		}
 
-		return (int)floor($experience);
+		switch($btype){
+			case 1:
+				$tiers = array(
+					1 => array(1, 4, 7, 10, 13),
+					2 => array(1, 2, 4, 5, 7, 8, 10, 11, 13, 14),
+					3 => array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+				);
+				break;
+			case 3:
+				// No hay objetos 70-72: la numeración de la mano izquierda tiene ese hueco.
+				$tiers = array(
+					1 => array(61, 64, 67, 73, 79),
+					2 => array(61, 62, 64, 65, 67, 68, 73, 74, 79, 80),
+					3 => array(61, 62, 63, 64, 65, 66, 67, 68, 69, 73, 74, 75, 76, 77, 78, 79, 80, 81)
+				);
+				break;
+			case 4:
+				$weapons = array(
+					1 => array(
+						1 => array(16, 19, 22, 25, 28),
+						2 => array(16, 17, 19, 20, 22, 23, 25, 26, 28, 29),
+						3 => array(16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30)
+					),
+					2 => array(
+						1 => array(46, 49, 52, 55, 58),
+						2 => array(46, 47, 49, 50, 52, 53, 55, 56, 58, 59),
+						3 => array(46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60)
+					),
+					3 => array(
+						1 => array(31, 34, 37, 40, 43),
+						2 => array(31, 32, 34, 35, 37, 38, 40, 41, 43, 44),
+						3 => array(31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45)
+					)
+				);
+				// Las armas son propias de cada tribu y solo hay tablas para las tres
+				// jugables: una tribu fuera de rango no suelta arma.
+				return isset($weapons[$tribe][$tier]) ? $weapons[$tribe][$tier] : array();
+			case 5:
+				$tiers = array(
+					1 => array(94, 97, 100),
+					2 => array(94, 95, 97, 98, 100, 101),
+					3 => array(94, 95, 96, 97, 98, 99, 100, 101, 102)
+				);
+				break;
+			case 6:
+				$tiers = array(
+					1 => array(103),
+					2 => array(103, 104),
+					3 => array(103, 104, 105)
+				);
+				break;
+			default:
+				// btype 2 (armadura) no suelta nada: la tabla estaba comentada de antes.
+				return array();
+		}
+
+		return $tiers[$tier];
+	}
+}
+
+if(!function_exists('heroAdventureConsumableType')){
+	// Los consumibles (btype 7-15) no tienen niveles: cada categoría es un único objeto.
+	function heroAdventureConsumableType($btype){
+		$types = array(
+			7 => 112, 8 => 113, 9 => 114, 10 => 107, 11 => 106,
+			12 => 108, 13 => 110, 14 => 109, 15 => 111
+		);
+		$btype = (int)$btype;
+
+		return isset($types[$btype]) ? $types[$btype] : 0;
 	}
 }
 

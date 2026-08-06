@@ -184,7 +184,7 @@ ALTER TABLE s1_attacks
 -- espuelas bajaria de 20 a 15, y uno con botas de regeneracion quedaria en 0).
 -- No hay cambio de esquema: hay que reconciliar los datos una vez, despues del
 -- deploy, con el script idempotente
---   docker compose exec -T web php /var/www/html/tools/fix_hero_footwear_bonuses.php --apply
+--   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
 -- que recalcula speed y autoregen a partir de los objetos equipados.
 
 -- 2026-08-06 - Oasis huerfanos y dueno desincronizado
@@ -246,3 +246,12 @@ SET wood = LEAST(wood, maxstore),
     iron = LEAST(iron, maxstore),
     crop = LEAST(crop, maxcrop)
 WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop;
+
+-- 2026-08-06 - Cascos de regeneracion (btype 1, types 4-6)
+-- `applyHeroEquipmentBonusChange` no tenia rama para btype 1, asi que el Casco de la
+-- Regeneracion / de la Salud / de la Curacion no sumaba nada a `hero.autoregen`. Los
+-- heroes que ya lo tenian puesto quedaron sin el bono, y el codigo nuevo se lo resta
+-- igual al desequiparlo. No hay cambio de esquema: hay que reconciliar los datos una
+-- vez, despues del deploy, con el mismo script idempotente
+--   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
+-- que ahora tambien contempla el slot de cabeza.
