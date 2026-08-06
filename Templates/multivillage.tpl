@@ -55,8 +55,10 @@
     }else{
     	$vill = "";
     }
+		// data-name lo usa el CSS para medir el nombre siempre en negrita, asi el
+		// ancho del cartel no cambia segun cual sea la aldea activa
 		echo "<li class=\"entry ".$village_attack."".$select."\" title=\"".$village_title."\">
-	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."<span class=\"villageCoords\" style=\"display:block;font-size:10px;line-height:10px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
+	    <a id=\"".$sid."\" title=\"".$village_title." (".$coorproc['x']."|".$coorproc['y'].")\" data-name=\"".htmlspecialchars($villageName, ENT_QUOTES, 'UTF-8')."\" href=\"?newdid=".$villageId."".$vill."\" class=\"".$select."\">".$villageName."<span class=\"villageCoords\" style=\"display:block;font-size:10px;line-height:10px;opacity:0.7;\">(".$coorproc['x']."|".$coorproc['y'].")</span></a></li>";
 	}
     	?>
 		
