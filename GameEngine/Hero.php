@@ -7,6 +7,38 @@ if(!function_exists('getHeroHorseSpeedBonus')){
 	}
 }
 
+if(!function_exists('getHeroArmorBonuses')){
+	// El torso (btype 2) mezcla cuatro familias: armaduras de regeneración (82-84), de
+	// escamas (85-87), petos (88-90) y articuladas (91-93). `itempower` y `autoregen` se
+	// guardan en el héroe al equipar; `vitality` no, porque se aplica sobre el daño de
+	// cada batalla y se lee del objeto equipado en ese momento.
+	function getHeroArmorBonuses($type){
+		$itemPower = array(88 => 500, 89 => 1000, 90 => 1500, 91 => 250, 92 => 500, 93 => 750);
+		$autoRegen = array(82 => 20, 83 => 30, 84 => 40, 85 => 10, 86 => 15, 87 => 20);
+		$vitality = array(85 => 4, 86 => 6, 87 => 8, 91 => 3, 92 => 4, 93 => 5);
+		$type = (int)$type;
+
+		return array(
+			'itempower' => isset($itemPower[$type]) ? $itemPower[$type] : 0,
+			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0,
+			'vitality' => isset($vitality[$type]) ? $vitality[$type] : 0
+		);
+	}
+}
+
+if(!function_exists('heroArmorVitalityReduction')){
+	// Puntos de salud que la armadura puesta le descuenta al daño de una batalla.
+	function heroArmorVitalityReduction($database, $uid){
+		$armor = heroEquippedItem($database, $uid, 2);
+		if(!is_array($armor)){
+			return 0;
+		}
+		$bonuses = getHeroArmorBonuses((int)$armor['type']);
+
+		return $bonuses['vitality'];
+	}
+}
+
 if(!function_exists('getHeroShoesBonuses')){
 	// El slot de pies (btype 5) mezcla tres familias de objetos que no comparten
 	// efecto: botas de regeneración (94-96) suman salud por día, botas de mercenario
@@ -273,6 +305,16 @@ if(!function_exists('heroAdventureItemTypes')){
 					3 => array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
 				);
 				break;
+			case 2:
+				// La tabla del torso estaba comentada de arrastre, y como las aventuras son
+				// la única fuente de objetos (las subastas son entre jugadores), ninguna de
+				// las doce armaduras podía existir en el mundo.
+				$tiers = array(
+					1 => array(82, 85, 88, 91),
+					2 => array(82, 83, 85, 86, 88, 89, 91, 92),
+					3 => array(82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93)
+				);
+				break;
 			case 3:
 				// No hay objetos 70-72: la numeración de la mano izquierda tiene ese hueco.
 				$tiers = array(
@@ -317,7 +359,7 @@ if(!function_exists('heroAdventureItemTypes')){
 				);
 				break;
 			default:
-				// btype 2 (armadura) no suelta nada: la tabla estaba comentada de antes.
+				// btype 0 es el "no se encontró nada valioso" y 7-15 van por consumibles.
 				return array();
 		}
 

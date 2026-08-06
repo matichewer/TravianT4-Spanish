@@ -243,7 +243,7 @@ foreach(range(1, 15) as $type){
 }
 
 // Los niveles son acumulativos y no hay huecos dentro de una familia.
-foreach(array(1, 3, 4, 5, 6) as $btype){
+foreach(array(1, 2, 3, 4, 5, 6) as $btype){
 	$previous = array();
 	foreach($tiers as $elapsed){
 		$types = heroAdventureItemTypes($btype, 1, $elapsed);
@@ -278,7 +278,6 @@ check(heroAdventureItemTypes(4, 6, 0)===array(), 'una tribu inválida soltó un 
 
 // Las categorías sin tabla no sueltan equipo.
 check(heroAdventureItemTypes(0, 1, $thresholds['third'])===array(), 'btype 0 soltó equipo');
-check(heroAdventureItemTypes(2, 1, $thresholds['third'])===array(), 'la armadura soltó equipo');
 check(heroAdventureItemTypes(7, 1, $thresholds['third'])===array(), 'un consumible salió por la tabla de equipo');
 
 // Los consumibles son uno por categoría y no se pisan entre sí.

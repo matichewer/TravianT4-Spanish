@@ -703,16 +703,36 @@ class Battle {
 			: 0;
 	}
 
+	// Salud que pierde el héroe en la batalla. Las armaduras de escamas (85-87) y las
+	// articuladas (91-93) descuentan puntos fijos de esa pérdida; el resto no.
+	private function battleHeroDamage($hero, $losses) {
+		global $database;
+		if(!is_array($hero) || empty($hero['uid'])) {
+			return 0;
+		}
+		$damage = max(0, min(100, (int)round(100 * $losses)));
+		if($damage <= 0) {
+			return 0;
+		}
+
+		return max(0, $damage - heroArmorVitalityReduction($database, (int)$hero['uid']));
+	}
+
 	// Que un héroe caiga depende solo del porcentaje de bajas de su bando, así que se
 	// puede saber antes de tocar la base de datos. Eso permite contar los héroes
 	// muertos de los dos lados antes de repartir la experiencia.
+	//
+	// La armadura descuenta salud perdida, así que entra en la muerte por quedarse sin
+	// vitalidad; no en la regla de bajas catastróficas (más del 90% del bando aniquilado
+	// se lleva al héroe puesto), que modela al ejército arrasado y no un desgaste.
 	private function battleHeroDies($hero, $losses) {
 		if(!is_array($hero) || empty($hero['uid'])) {
 			return false;
 		}
-		$damage = max(0, min(100, (int)round(100 * $losses)));
+		$rawDamage = max(0, min(100, (int)round(100 * $losses)));
+		$damage = $this->battleHeroDamage($hero, $losses);
 		$health = max(0, min(100, (float)$hero['health']));
-		return $damage > 90 || $damage >= $health;
+		return $rawDamage > 90 || $damage >= $health;
 	}
 
 	private function battleHeroOutcome($hero, $losses, $experience) {
@@ -722,7 +742,7 @@ class Battle {
 			return $outcome;
 		}
 
-		$damage = max(0, min(100, (int)round(100 * $losses)));
+		$damage = $this->battleHeroDamage($hero, $losses);
 		$dead = $this->battleHeroDies($hero, $losses);
 		$outcome['dead'] = $dead ? 1 : 0;
 		$outcome['damage'] = $damage;

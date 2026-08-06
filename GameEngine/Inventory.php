@@ -3,32 +3,6 @@ include "Data/hero_full.php";
 require_once __DIR__."/Hero.php";
 $hero_levels = $GLOBALS["hero_levels"];
 
-if(!function_exists('getHeroArmorBonuses')){
-	function getHeroArmorBonuses($type){
-		$itemPower = array(
-			88 => 500,
-			89 => 1000,
-			90 => 1500,
-			91 => 250,
-			92 => 500,
-			93 => 750
-		);
-		$autoRegen = array(
-			82 => 20,
-			83 => 30,
-			84 => 40,
-			85 => 10,
-			86 => 15,
-			87 => 20
-		);
-
-		return array(
-			'itempower' => isset($itemPower[$type]) ? $itemPower[$type] : 0,
-			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0
-		);
-	}
-}
-
 if(!function_exists('getHeroWeaponPowerBonus')){
 	function getHeroWeaponPowerBonus($type){
 		$type = (int)$type;
