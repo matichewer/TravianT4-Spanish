@@ -16,6 +16,7 @@ class Village {
 	public $unitarray = array(), $techarray = array(), $unitall = array(), $researching = array(), $abarray = array();
 	private $infoarray = array();
 	private $production = array();
+	private $productionBreakdown = array();
 	private $oasisowned = array(), $ocounter = array();
 	
 	function __construct() {
@@ -34,6 +35,10 @@ class Village {
 	
 	public function getProd($type) {
 		return $this->production[$type];
+	}
+
+	public function getProductionBreakdown($type) {
+		return isset($this->productionBreakdown[$type]) ? $this->productionBreakdown[$type] : array();
 	}
 	
 	public function getAllUnits($vid) {
@@ -74,7 +79,7 @@ class Village {
 		$this->pop = $this->infoarray['pop'];
 		$this->maxstore = $this->infoarray['maxstore'];
 		$this->maxcrop = $this->infoarray['maxcrop'];
-		$this->allcrop = $this->getCropProd();
+		$this->allcrop = $this->getCropProd(false);
 		$this->loyalty = $this->infoarray['loyalty'];
 		$this->master = count($database->getMasterJobs($this->wid));
 		//de gs in town, zetten op max pakhuisinhoud
@@ -97,18 +102,28 @@ class Village {
 	        $this->production['wood'] = $this->getWoodProd()+$heroProduction['wood'];
 			$this->production['clay'] = $this->getClayProd()+$heroProduction['clay'];
 			$this->production['iron'] = $this->getIronProd()+$heroProduction['iron'];
+			$cropProduction = $this->getCropProd();
+			foreach(array('wood','clay','iron','crop') as $resource) {
+				$this->productionBreakdown[$resource]['hero'] = $heroProduction[$resource];
+			}
+			$this->productionBreakdown['crop']['population'] = $this->pop;
+			$this->productionBreakdown['crop']['upkeep'] = $upkeep;
+			$this->productionBreakdown['crop']['artefact_saving'] = 0;
 
 	        if ($uniqueA['size']==3 && $uniqueA['owner']==$session->uid){
-	        $this->production['crop'] = $this->getCropProd()-$this->pop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
+	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
+			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.50);
 
 	        }else if ($normalA['type']==4 && $normalA['size']==1 && $normalA['owner']==$session->uid){
-	        $this->production['crop'] = $this->getCropProd()-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.25);
 
 	        }else if ($largeA['size']==2 && $largeA['owner']==$session->uid){
-	         $this->production['crop'] = $this->getCropProd()-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.25);
 
 	        }else{
-			$this->production['crop'] = $this->getCropProd()-$this->pop-$upkeep+$heroProduction['crop'];
+			$this->production['crop'] = $cropProduction-$this->pop-$upkeep+$heroProduction['crop'];
 	}
     }
 	
@@ -147,17 +162,25 @@ class Village {
 			}
 		}
 		for($i=0;$i<=count($woodholder)-1;$i++) { $wood+= $bid1[$this->resarray[$woodholder[$i]]]['prod']; }
+		$fields = $wood;
+		$buildingPercent = $sawmill >= 1 ? $bid5[$sawmill]['attri'] : 0;
+		$buildingBonus = $wood / 100 * $buildingPercent;
 		if($sawmill >= 1) {
-			$wood += $wood /100 * $bid5[$sawmill]['attri'];
+			$wood += $buildingBonus;
 		}
+		$oasisBonus = $wood*0.25*$this->ocounter[0];
 		if($this->ocounter[0] != 0) {
 			$wood += $wood*0.25*$this->ocounter[0];
 		}
+		$plusBonus = $session->bonus1 == 1 ? $wood * 0.25 : 0;
 		if($session->bonus1 == 1) {
 			$wood *= 1.25;
 		}
+		$beforeSpeed = $wood;
 		$wood *= SPEED;
-		return round($wood);
+		$gross = round($wood);
+		$this->productionBreakdown['wood'] = array('fields'=>$fields,'building'=>'Aserradero','building_level'=>$sawmill,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[0],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus1 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'speed_bonus'=>$wood-$beforeSpeed,'gross'=>$gross);
+		return $gross;
 	}
 	
 	private function getClayProd() {
@@ -173,17 +196,25 @@ class Village {
 			}
 		}
 		for($i=0;$i<=count($clayholder)-1;$i++) { $clay+= $bid2[$this->resarray[$clayholder[$i]]]['prod']; }
+		$fields = $clay;
+		$buildingPercent = $brick >= 1 ? $bid6[$brick]['attri'] : 0;
+		$buildingBonus = $clay / 100 * $buildingPercent;
 		if($brick >= 1) {
-			$clay += $clay /100 * $bid6[$brick]['attri'];
+			$clay += $buildingBonus;
 		}
+		$oasisBonus = $clay*0.25*$this->ocounter[1];
 		if($this->ocounter[1] != 0) {
 			$clay += $clay*0.25*$this->ocounter[1];
 		}
+		$plusBonus = $session->bonus2 == 1 ? $clay * 0.25 : 0;
 		if($session->bonus2 == 1) {
 			$clay *= 1.25;
 		}
+		$beforeSpeed = $clay;
 		$clay *= SPEED;
-		return round($clay);
+		$gross = round($clay);
+		$this->productionBreakdown['clay'] = array('fields'=>$fields,'building'=>'Fábrica de ladrillos','building_level'=>$brick,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[1],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus2 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'speed_bonus'=>$clay-$beforeSpeed,'gross'=>$gross);
+		return $gross;
 	}
 	
 	private function getIronProd() {
@@ -199,20 +230,28 @@ class Village {
 			}
 		}
 		for($i=0;$i<=count($ironholder)-1;$i++) { $iron+= $bid3[$this->resarray[$ironholder[$i]]]['prod']; }
+		$fields = $iron;
+		$buildingPercent = $foundry >= 1 ? $bid7[$foundry]['attri'] : 0;
+		$buildingBonus = $iron / 100 * $buildingPercent;
 		if($foundry >= 1) {
-			$iron += $iron /100 * $bid7[$foundry]['attri'];
+			$iron += $buildingBonus;
 		}
+		$oasisBonus = $iron*0.25*$this->ocounter[2];
 		if($this->ocounter[2] != 0) {
 			$iron += $iron*0.25*$this->ocounter[2];
 		}
+		$plusBonus = $session->bonus3 == 1 ? $iron * 0.25 : 0;
 		if($session->bonus3 == 1) {
 			$iron *= 1.25;
 		}
+		$beforeSpeed = $iron;
 		$iron *= SPEED;
-		return round($iron);
+		$gross = round($iron);
+		$this->productionBreakdown['iron'] = array('fields'=>$fields,'building'=>'Fundición de hierro','building_level'=>$foundry,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[2],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus3 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'speed_bonus'=>$iron-$beforeSpeed,'gross'=>$gross);
+		return $gross;
 	}
 	
-	private function getCropProd() {
+	private function getCropProd($recordBreakdown = true) {
 		global $bid4,$bid8,$bid9,$session;
 		$crop = $grainmill = $bakery = 0;
 		$cropholder = array();
@@ -228,17 +267,28 @@ class Village {
 			}
 		}
 		for($i=0;$i<=count($cropholder)-1;$i++) { $crop+= $bid4[$this->resarray[$cropholder[$i]]]['prod']; }
+		$fields = $crop;
+		$grainmillPercent = $grainmill >= 1 ? $bid8[$grainmill]['attri'] : 0;
+		$bakeryPercent = $bakery >= 1 ? $bid9[$bakery]['attri'] : 0;
+		$buildingBonus = $crop / 100 * ($grainmillPercent + $bakeryPercent);
 		if($grainmill >= 1 || $bakery >= 1) {
-			$crop += $crop /100 * ($bid8[$grainmill]['attri'] + $bid9[$bakery]['attri']);
+			$crop += $buildingBonus;
 		}
+		$oasisBonus = $crop*0.25*$this->ocounter[3];
 		if($this->ocounter[3] != 0) {
 			$crop += $crop*0.25*$this->ocounter[3];
 		}
+		$plusBonus = $session->bonus4 == 1 ? $crop * 0.25 : 0;
 		if($session->bonus4 == 1) {
 			$crop *= 1.25;
 		}
+		$beforeSpeed = $crop;
 		$crop *= SPEED;
-		return round($crop);
+		$gross = round($crop);
+		if($recordBreakdown) {
+			$this->productionBreakdown['crop'] = array('fields'=>$fields,'grainmill_level'=>$grainmill,'grainmill_percent'=>$grainmillPercent,'bakery_level'=>$bakery,'bakery_percent'=>$bakeryPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[3],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus4 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'speed_bonus'=>$crop-$beforeSpeed,'gross'=>$gross);
+		}
+		return $gross;
 	}
 	
 	private function sortOasis() {
