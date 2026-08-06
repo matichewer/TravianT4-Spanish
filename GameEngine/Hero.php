@@ -123,19 +123,62 @@ if(!function_exists('heroBootsTravelDistance')){
 if(!function_exists('getHeroHelmetBonuses')){
 	// El slot de cabeza (btype 1) mezcla cinco familias que no comparten efecto: cascos
 	// de experiencia (1-3), de regeneración (4-6), de cultura (7-9), de establo (10-12)
-	// y de cuartel (13-15). Solo se puede llevar uno a la vez. Las dos últimas familias
-	// todavía no tienen efecto implementado en ningún lado.
+	// y de cuartel (13-15). Solo se puede llevar uno a la vez.
 	function getHeroHelmetBonuses($type){
 		$experience = array(1 => 15, 2 => 20, 3 => 25);
 		$autoRegen = array(4 => 10, 5 => 15, 6 => 20);
 		$culture = array(7 => 100, 8 => 400, 9 => 800);
+		$stable = array(10 => 10, 11 => 15, 12 => 20);
+		$barracks = array(13 => 10, 14 => 15, 15 => 20);
 		$type = (int)$type;
 
 		return array(
 			'experience' => isset($experience[$type]) ? $experience[$type] : 0,
 			'autoregen' => isset($autoRegen[$type]) ? $autoRegen[$type] : 0,
-			'culture' => isset($culture[$type]) ? $culture[$type] : 0
+			'culture' => isset($culture[$type]) ? $culture[$type] : 0,
+			'stable' => isset($stable[$type]) ? $stable[$type] : 0,
+			'barracks' => isset($barracks[$type]) ? $barracks[$type] : 0
 		);
+	}
+}
+
+if(!function_exists('heroTrainingHelmetSlot')){
+	// Qué familia de cascos acelera cada edificio. El bono es del edificio, no del tipo
+	// de tropa: el Gran Cuartel y el Gran Establo lo cobran igual que los normales.
+	function heroTrainingHelmetSlot($buildingType){
+		$slots = array(19 => 'barracks', 29 => 'barracks', 20 => 'stable', 30 => 'stable');
+		$buildingType = (int)$buildingType;
+
+		return isset($slots[$buildingType]) ? $slots[$buildingType] : false;
+	}
+}
+
+if(!function_exists('heroTrainingTimeFactor')){
+	// Factor por el que se multiplica el tiempo de entrenamiento de una aldea según el
+	// casco puesto. Devuelve 1 cuando no hay bono, así que se puede multiplicar siempre.
+	//
+	// El bono se cobra en la aldea natal, no en la que tenga al héroe parado. `wref` se
+	// mueve solo cada vez que sale de aventura o refuerza, y eso cambiaría los tiempos
+	// de una cola ya empezada; `home` solo cambia si el jugador lo pide, igual que el
+	// bono de recursos. (En Travian oficial es donde está el héroe.)
+	function heroTrainingTimeFactor($database, $uid, $villageId, $buildingType){
+		$uid = (int)$uid;
+		$villageId = (int)$villageId;
+		$slot = heroTrainingHelmetSlot($buildingType);
+		if($slot===false || $uid<=0 || $villageId<=0 || !method_exists($database, 'getHeroData')){
+			return 1;
+		}
+		$hero = $database->getHeroData($uid);
+		if(!is_array($hero) || (int)$hero['dead']!==0 || heroHomeVillage($hero)!==$villageId){
+			return 1;
+		}
+		$helmet = heroEquippedItem($database, $uid, 1);
+		if(!is_array($helmet)){
+			return 1;
+		}
+		$bonuses = getHeroHelmetBonuses((int)$helmet['type']);
+
+		return (100-$bonuses[$slot])/100;
 	}
 }
 

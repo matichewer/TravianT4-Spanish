@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/Hero.php';
+
 class Technology {
 	
 	public $unarray = array(1=>U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,U13,U14,U15,U16,U17,U18,U19,U20,U21,U22,U23,U24,U25,U26,U27,U28,U29,U30,U31,U32,U33,U34,U35,U36,U37,U38,U39,U40,U41,U42,U43,U44,U45,U46,U47,U48,U49,U50,U99,U0);
@@ -536,15 +538,19 @@ class Technology {
 		try {
 			$each = 0;
 			if(in_array($unit,$footies,true)) {
+				// El casco entra dentro del round() y no después, para que el tiempo
+				// encolado sea exactamente el que muestran 19_train.tpl / 29_train.tpl.
+				$helmet = heroTrainingTimeFactor($database,$session->uid,$village->wid,$great ? 29 : 19);
 				$each = $great
-					? round(($bid29[$building->getTypeLevel(29)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED)
-					: round(($bid19[$building->getTypeLevel(19)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
+					? round(($bid29[$building->getTypeLevel(29)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED * $helmet)
+					: round(($bid19[$building->getTypeLevel(19)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED * $helmet);
 			}
 			if(in_array($unit,$calvary,true)) {
 				$horseDrinking = $building->getTypeLevel(41)>=1 ? (1/$bid41[$building->getTypeLevel(41)]['attri']) : 1;
+				$helmet = heroTrainingTimeFactor($database,$session->uid,$village->wid,$great ? 30 : 20);
 				$each = $great
-					? round(($bid30[$building->getTypeLevel(30)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED)
-					: round(($bid20[$building->getTypeLevel(20)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED);
+					? round(($bid30[$building->getTypeLevel(30)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED * $helmet)
+					: round(($bid20[$building->getTypeLevel(20)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED * $helmet);
 			}
 			if(in_array($unit,$workshop,true)) {
 				$each = $great

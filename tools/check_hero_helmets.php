@@ -12,7 +12,7 @@ class FakeHelmetDatabase
 {
 	public $inventory = array('helmet'=>0,'body'=>0,'leftHand'=>0,'rightHand'=>0,'shoes'=>0,'horse'=>0,'bag'=>0);
 	public $items = array();
-	public $hero = array('itempower'=>0,'autoregen'=>10,'speed'=>7,'dead'=>0);
+	public $hero = array('itempower'=>0,'autoregen'=>10,'speed'=>7,'dead'=>0,'wref'=>500,'home'=>500);
 	public $face = array('helmet'=>0,'leftHand'=>0,'rightHand'=>0,'foot'=>0,'horse'=>0);
 
 	public function __construct($items = array())
@@ -144,6 +144,85 @@ foreach(array(1, 4, 10, 13) as $type){
 $db = new FakeHelmetDatabase();
 check(heroHelmetCulturePoints($db, 7)===0, 'sin casco apareció cultura');
 check(accountCulturePointsPerDay($db, 7)===250, 'sin casco cambió la producción diaria');
+
+// --- Tiempo de entrenamiento (types 10-15) ------------------------------------
+
+$HOME = 500;
+$OTHER = 501;
+
+// Establo (10-12) acelera el Establo y el Gran Establo; cuartel (13-15), el Cuartel y
+// el Gran Cuartel. Ninguno toca al otro edificio.
+$training = array(
+	10 => array('stable' => 0.90), 11 => array('stable' => 0.85), 12 => array('stable' => 0.80),
+	13 => array('barracks' => 0.90), 14 => array('barracks' => 0.85), 15 => array('barracks' => 0.80)
+);
+foreach($training as $type => $expected){
+	$db = withHelmet($type);
+	$stable = isset($expected['stable']) ? $expected['stable'] : 1.0;
+	$barracks = isset($expected['barracks']) ? $expected['barracks'] : 1.0;
+
+	foreach(array(20, 30) as $buildingType){
+		$factor = heroTrainingTimeFactor($db, 7, $HOME, $buildingType);
+		check(abs($factor-$stable)<0.0001,
+			"el casco $type dio factor $factor en el edificio $buildingType, se esperaba $stable");
+	}
+	foreach(array(19, 29) as $buildingType){
+		$factor = heroTrainingTimeFactor($db, 7, $HOME, $buildingType);
+		check(abs($factor-$barracks)<0.0001,
+			"el casco $type dio factor $factor en el edificio $buildingType, se esperaba $barracks");
+	}
+
+	// El bono es de la aldea natal: en cualquier otra aldea no se cobra.
+	foreach(array(19, 20, 29, 30) as $buildingType){
+		check(heroTrainingTimeFactor($db, 7, $OTHER, $buildingType)===1,
+			"el casco $type aceleró el edificio $buildingType de otra aldea");
+	}
+
+	// Un héroe muerto no acelera nada.
+	$db->hero['dead'] = 1;
+	foreach(array(19, 20, 29, 30) as $buildingType){
+		check(heroTrainingTimeFactor($db, 7, $HOME, $buildingType)===1,
+			"un héroe muerto con el casco $type aceleró el edificio $buildingType");
+	}
+	$db->hero['dead'] = 0;
+
+	// El casco no acelera talleres, residencia ni trampero.
+	foreach(array(21, 42, 25, 26, 36) as $buildingType){
+		check(heroTrainingTimeFactor($db, 7, $HOME, $buildingType)===1,
+			"el casco $type aceleró el edificio $buildingType");
+	}
+
+	// Nada de esto se guarda en el héroe.
+	check((int)$db->hero['autoregen']===10, "el casco $type tocó la regeneración");
+	check(heroHelmetCulturePoints($db, 7)===0, "el casco $type aportó cultura");
+}
+
+// Los cascos de las otras familias no aceleran el entrenamiento.
+foreach(array(1, 4, 7) as $type){
+	$db = withHelmet($type);
+	foreach(array(19, 20, 29, 30) as $buildingType){
+		check(heroTrainingTimeFactor($db, 7, $HOME, $buildingType)===1,
+			"el casco $type aceleró el edificio $buildingType");
+	}
+}
+
+$db = new FakeHelmetDatabase();
+check(heroTrainingTimeFactor($db, 7, $HOME, 19)===1, 'sin casco apareció un bono de entrenamiento');
+
+// `home` manda sobre `wref`: mover al héroe a otra aldea no mueve el bono.
+$db = withHelmet(15);
+$db->hero['wref'] = $OTHER;
+check(abs(heroTrainingTimeFactor($db, 7, $HOME, 19)-0.80)<0.0001,
+	'el bono se fue con el héroe en vez de quedarse en la aldea natal');
+check(heroTrainingTimeFactor($db, 7, $OTHER, 19)===1,
+	'el bono siguió al héroe a la aldea donde está parado');
+
+// Los héroes viejos sin `home` caen en `wref`, igual que el bono de recursos.
+$db = withHelmet(15);
+$db->hero['home'] = 0;
+$db->hero['wref'] = $HOME;
+check(abs(heroTrainingTimeFactor($db, 7, $HOME, 19)-0.80)<0.0001,
+	'un héroe sin `home` no cobró el bono en su `wref`');
 
 // --- Botín de aventura --------------------------------------------------------
 

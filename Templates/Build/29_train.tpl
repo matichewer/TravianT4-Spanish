@@ -25,7 +25,7 @@
                         <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Consumo de cereal\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"duración\">";
-                        echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid29[$village->resarray['f'.$id]]['attri'] / 100) / SPEED));
+                        echo $generator->getTimeFormat(round(${'u'.$i}['time'] * ($bid29[$village->resarray['f'.$id]]['attri'] / 100) / SPEED * heroTrainingTimeFactor($database,$session->uid,$village->wid,29)));
 if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
 echo "&nbsp;&nbsp;<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".((${'u'.$i}['wood']*3)*$technology->maxUnitPlus($i,true))."&r2=".((${'u'.$i}['clay']*3)*$technology->maxUnitPlus($i,true))."&r3=".((${'u'.$i}['iron']*3)*$technology->maxUnitPlus($i,true))."&r4=".((${'u'.$i}['crop']*3)*$technology->maxUnitPlus($i,true))."'; return false;\">&nbsp;<img src=\"img/x.gif\" style=\"margin-top:6px;\" class=\"npc\" alt=\"npc\"></button>";
 }
