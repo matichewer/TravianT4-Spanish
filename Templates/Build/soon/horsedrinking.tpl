@@ -8,7 +8,7 @@ $uprequire = $building->resourceRequired($id,$bid);
 	<a href="#" onclick="return Travian.Game.iPopup(41,4);" class="build_logo">
 		<img class="building big white g41" src="img/x.gif" alt="Abrevadero">
 	</a>
-	El abrevadero de los romanos reduce el tiempo de entrenamiento de la caballería y también la manutención de esas tropas. También puede construirse en aldeas romanas con Maravilla del mundo.</div>
+	El abrevadero de los romanos reduce el tiempo de entrenamiento de la caballería y también la consumo de cereal de esas tropas. También puede construirse en aldeas romanas con Maravilla del mundo.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">

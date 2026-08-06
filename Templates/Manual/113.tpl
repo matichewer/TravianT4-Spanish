@@ -27,7 +27,7 @@
 
 </tr>
 <tr>
-	<th>Manutención</th>
+	<th>Consumo de cereal</th>
 	<td><img class="r5" src="img/x.gif" alt="Consumo de cereal" title="Consumo de cereal" /> 1</td>
 </tr>
 <tr>

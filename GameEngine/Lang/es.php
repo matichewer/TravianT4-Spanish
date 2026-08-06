@@ -423,7 +423,7 @@ define("REPORT_SUBJECT","Asunto:");
 define("REPORT_TO","A");
 define("REPORT_TRAVEL_TIME","Tiempo de viaje");
 define("REPORT_TROOPS","Tropas");
-define("REPORT_UPKEEP","Manutención");
+define("REPORT_UPKEEP","Consumo de cereal");
 define("REPORT_WARSIM","simulador de combate");
 define("ARRIVING_ATTACKING_TROOPS","Tropas atacantes en camino");
 define("CALCULATED_IN","Calculado en");

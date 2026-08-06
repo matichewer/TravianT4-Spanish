@@ -196,7 +196,7 @@ if($units_walking >= 1){
 					echo $enforce['hero']."</td>";
                 }
 				echo "</tr></tbody>
-				<tbody class=\"infos\"><tr><th>Manutención</th>";
+				<tbody class=\"infos\"><tr><th>Consumo de cereal</th>";
                 if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
                 echo "<div class='sup'>".$technology->getUpkeep($enforce,$tribe)."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
             
@@ -224,7 +224,7 @@ if($units_walking >= 1){
 					echo $enforce['u'.$i]."</td>";
 				}
 				echo "</tr></tbody>
-				<tbody class=\"infos\"><tr><th>Manutención</th>";
+				<tbody class=\"infos\"><tr><th>Consumo de cereal</th>";
                 echo "<td colspan=\"10\">";
                 echo "<div class='sup'>".$technology->getUpkeep($enforce,4)."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
             

@@ -357,11 +357,11 @@ check(count(rows("SELECT id FROM {$P}ndata WHERE uid = 0")) === 0,
       "reforzar un oasis no crea el informe fantasma con uid 0");
 
 // -------------------- E2) el cereal de esas tropas lo paga la aldea del oasis
-say("\n== E2) la manutención de las tropas del oasis la paga la aldea que lo tiene ==");
+say("\n== E2) la consumo de cereal de las tropas del oasis la paga la aldea que lo tiene ==");
 $withOasisTroops = $technology->getUpkeep($technology->getAllUnits($A_VIL), 0, $A_VIL);
 q("DELETE FROM {$P}enforcement WHERE vref = $O");
 $withoutOasisTroops = $technology->getUpkeep($technology->getAllUnits($A_VIL), 0, $A_VIL);
-say("     manutención con las 120 tropas en el oasis: $withOasisTroops · sin ellas: $withoutOasisTroops");
+say("     consumo de cereal con las 120 tropas en el oasis: $withOasisTroops · sin ellas: $withoutOasisTroops");
 check($withOasisTroops - $withoutOasisTroops === 120,
       "las 120 tropas del oasis suman su cereal a la aldea que lo conquistó");
 // Y no se las cobra a nadie más: el oasis no es una aldea.

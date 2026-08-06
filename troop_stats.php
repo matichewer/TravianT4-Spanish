@@ -51,7 +51,7 @@ include "Templates/html.tpl";
 											<th><img class="r2" src="img/x.gif" alt="Barro" title="Barro" /></th>
 											<th><img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /></th>
 											<th><img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /></th>
-											<th><img class="r5" src="img/x.gif" alt="Manutención" title="Manutención" /></th>
+											<th><img class="r5" src="img/x.gif" alt="Consumo de cereal por hora" title="Consumo de cereal por hora" /></th>
 											<th title="Casillas por hora">Vel.</th>
 											<th title="Capacidad de carga">Carga</th>
 											<th><img class="clock" src="img/x.gif" alt="Tiempo de entrenamiento" title="Tiempo de entrenamiento a nivel 1" /></th>

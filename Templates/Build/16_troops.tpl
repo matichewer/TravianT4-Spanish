@@ -34,5 +34,5 @@
                 echo $village->unitarray['hero']."</td>";
             ?>
            </tr></tbody>
-            <tbody class="infos"><tr><th>Manutención</th>
+            <tbody class="infos"><tr><th>Consumo de cereal</th>
             <td colspan="11"><div class="sup"><?php echo $technology->getUpkeep($village->unitarray,$session->tribe); ?><img class="r4" src="img/x.gif" title="" alt="Cereal" />por hora</div></td></tr>

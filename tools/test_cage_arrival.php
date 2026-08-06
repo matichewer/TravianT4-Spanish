@@ -146,10 +146,10 @@ check($enforce && (int)$enforce['u31'] === 2 && (int)$enforce['u32'] === 1
 check((int)one("SELECT COUNT(*) c FROM {$P}movement WHERE `from` = 0 AND proc = 0")['c'] === 0,
       "el movimiento quedó procesado");
 
-// manutención: la barra de recursos y el informe tienen que coincidir
+// consumo de cereal: la barra de recursos y el informe tienen que coincidir
 $upkeepAll = $technology->getUpkeep($technology->getAllUnits($VILLAGE), 0);
 $upkeepNature = $technology->getUpkeep($enforce, 4);
-say("  manutención: total aldea $upkeepAll · sólo animales $upkeepNature");
+say("  consumo de cereal: total aldea $upkeepAll · sólo animales $upkeepNature");
 check($upkeepNature === 8, "el informe cobra el cereal real de los animales (2+1+2+3)");
 
 q("DELETE FROM {$P}enforcement WHERE vref = $VILLAGE AND `from` = 0");

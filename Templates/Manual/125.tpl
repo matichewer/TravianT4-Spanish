@@ -29,7 +29,7 @@
 
 </tr>
 <tr>
-	<th>Manutención</th>
+	<th>Consumo de cereal</th>
 	<td><img class="r5" src="img/x.gif" alt="Consumo de cereal" title="Consumo de cereal" /> 2</td>
 </tr>
 <tr>
@@ -39,7 +39,7 @@
 </tr>
 </tbody></table>
 
-<img id="big_unit" class="big_u25" src="img/x.gif" alt="Jinete Druida" title="Jinete Druida" /><div id="t_desc">Esta unidad de caballería media es brillante en defensa. Su propósito principal es defender contra la infantería enemiga. Su costo y manutención son relativamente caros.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 5, <a href="manual.php?typ=4&amp;gid=20">Establo</a> Nivel 5</div><map id="nav" name="nav">
+<img id="big_unit" class="big_u25" src="img/x.gif" alt="Jinete Druida" title="Jinete Druida" /><div id="t_desc">Esta unidad de caballería media es brillante en defensa. Su propósito principal es defender contra la infantería enemiga. Su costo y consumo de cereal son relativamente caros.</div><div id="prereqs"><b>Requisitos</b><br /><a href="manual.php?typ=4&amp;gid=22">Academia</a> Nivel 5, <a href="manual.php?typ=4&amp;gid=20">Establo</a> Nivel 5</div><map id="nav" name="nav">
  <area href="manual.php?typ=1&amp;s=24" title="atrás" coords="0,0,45,18" shape="rect" alt="" />
  <area href="manual.php?s=1" title="Resumen" coords="46,0,70,18" shape="rect" alt="" />
  <area href="manual.php?typ=1&amp;s=26" title="adelante" coords="71,0,116,18" shape="rect" alt="" />
