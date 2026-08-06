@@ -20,7 +20,17 @@
         }
     if($session->villages[$i-1] == $village->wid){ $select = "active"; $sid = "currentVillage"; }else{ $select = ""; $sid = ""; }
     $coorproc = $database->getCoor($session->villages[$i-1]);
-    if(isset($_GET['id'])){
+    // En build.php seguimos el edificio, no el hueco: si el hueco actual tiene un
+    // edificio, cambiamos de aldea con &gid= para abrir el mismo tipo de edificio
+    // alla (build.php manda a dorf2.php si esa aldea no lo tiene).
+    $buildingGid = 0;
+    if(basename($_SERVER['PHP_SELF']) == 'build.php' && isset($_GET['id']) && is_scalar($_GET['id']) && ctype_digit((string)$_GET['id'])
+    	&& (int)$_GET['id'] >= 19 && (int)$_GET['id'] <= 40) {
+    	$buildingGid = (int)$village->resarray['f'.(int)$_GET['id'].'t'];
+    }
+    if($buildingGid > 0){
+    	$vill = "&gid=".$buildingGid;
+    }else if(isset($_GET['id'])){
     	$vill = "&id=".$_GET['id'];
     }else if(isset($_GET['gid'])){
     	$vill = "&gid=".$_GET['gid'];

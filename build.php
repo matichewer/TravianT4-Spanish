@@ -35,7 +35,13 @@ $technology->procTech($_POST);
 $market->procMarket($_POST);
 $market->procTradeRoutes($_POST,$_GET);
 if(isset($_GET['gid']) && is_scalar($_GET['gid']) && ctype_digit((string)$_GET['gid'])) {
-	$_GET['id'] = strval($building->getTypeField((int)$_GET['gid']));
+	$gidField = $building->getTypeField((int)$_GET['gid']);
+	if($gidField === null) {
+		// Esta aldea no tiene ese edificio: mostramos el centro de la aldea.
+		header("Location: dorf2.php");
+		exit;
+	}
+	$_GET['id'] = strval($gidField);
 } else if(isset($_POST['id']) && is_scalar($_POST['id'])) {
 	$_GET['id'] = (string)$_POST['id'];
 }
