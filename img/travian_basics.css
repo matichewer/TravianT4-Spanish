@@ -141,7 +141,7 @@ table.troopStatsTable tbody tr:nth-child(even) td {
 
 table.troopStatsTable .troopStatsUnit {
 	min-width: 135px;
-	text-align: center;
+	text-align: left;
 }
 
 table.troopStatsTable td.troopStatsUnit img.unit {
