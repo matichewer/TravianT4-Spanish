@@ -11,6 +11,50 @@
 
 require_once __DIR__."/Hero.php";
 
+if(!function_exists('tournamentSquareSpeedFactor')){
+	// Multiplicador de velocidad que aporta la Plaza de Torneos de la aldea de origen
+	// del movimiento. Vive suelto acá porque lo necesitan las dos copias de
+	// procDistanceTime (GeneratorX para las salidas y las vistas previas, Automation
+	// para los regresos): tenerlo en un solo lugar es lo que evita que vuelvan a
+	// desincronizarse, que es lo que pasaba cuando el bono valía solo a la vuelta.
+	//
+	// Conserva la fórmula histórica y su umbral propio (TS_THRESHOLD, distinto al de
+	// las botas de mercenario) para no cambiarle los tiempos a quien ya la construyó.
+	function tournamentSquareSpeedFactor($originCoor, $distance){
+		global $bid14, $database, $generator;
+		if($distance <= TS_THRESHOLD || !is_array($originCoor) || !isset($originCoor['x'], $originCoor['y'])){
+			return 1;
+		}
+		if(!is_object($database) || !method_exists($database, 'getResourceLevel')
+			|| !method_exists($database, 'getVilWref') || !is_array($bid14)){
+			return 1;
+		}
+		// La aldea se resuelve por coordenada contra `wdata` en vez de calcular el id
+		// con getBaseID(): esa fórmula depende de que WORLD_MAX coincida con el radio
+		// real del mundo generado, y si no coinciden devuelve el id de otra aldea.
+		$originId = (int)$database->getVilWref($originCoor['x'], $originCoor['y']);
+		if($originId<=0){
+			return 1;
+		}
+		$fields = $database->getResourceLevel($originId);
+		if(!is_array($fields)){
+			return 1;
+		}
+		$attri = 0;
+		for($field = 19; $field <= 40; $field++){
+			if(isset($fields['f'.$field.'t']) && (int)$fields['f'.$field.'t'] === 14){
+				$level = (int)$fields['f'.$field];
+				$attri = isset($bid14[$level]['attri']) ? (int)$bid14[$level]['attri'] : 0;
+			}
+		}
+		if($attri <= 0){
+			return 1;
+		}
+
+		return (TS_THRESHOLD + ($distance - TS_THRESHOLD) * $attri / 100) / $distance;
+	}
+}
+
 class GeneratorX {
 	
 	public function generateRandID(){
@@ -41,7 +85,6 @@ class GeneratorX {
    // el ejército; solo se pasa cuando el héroe va en el movimiento y solo cuenta en
    // los modos que llevan velocidad real de tropas ($mode = 1).
    public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0) {
-		global $bid28,$bid14,$building;
 		$xdistance = ABS($thiscoor['x'] - $coor['x']);
 		if($xdistance > WORLD_MAX) {
 			$xdistance = (2 * WORLD_MAX + 1) - $xdistance;
@@ -69,10 +112,9 @@ class GeneratorX {
 			}
 		}
 		else {
-				$speed = $ref;
-				if($building->getTypeLevel(14) != 0) {
-					//$speed = $distance <= TS_THRESHOLD ? $speed : $speed * ( ( TS_THRESHOLD + ( $distance - TS_THRESHOLD ) * $bid14[$this->getsort_typeLevel(14,$resarray)]['attri'] / 100 ) / $distance ) ;
-			}
+				// La Plaza de Torneos se mira sobre la aldea de origen del movimiento,
+				// no sobre la que el jugador tenga abierta.
+				$speed = max(1, (float)$ref) * tournamentSquareSpeedFactor($coor, $distance);
 		}
 		$effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
 		return round(($effectiveDistance/$speed) * 3600 / INCREASE_SPEED);

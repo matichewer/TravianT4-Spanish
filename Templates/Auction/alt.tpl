@@ -515,12 +515,12 @@
         	$name = "Botas del Guerrero";
         	$title = "+50% de velocidad del ejército en distancias > 20 casillas";
             $item = "98";
-            $effect = "30";
+            $effect = "50";
         }elseif($type==99){
         	$name = "Botas del Arconte";
         	$title = "+75% de velocidad del ejército en distancias > 20 casillas";
             $item = "99";
-            $effect = "35";
+            $effect = "75";
         }
         if($type==100){
         	$name = "Espuelas pequeñas";

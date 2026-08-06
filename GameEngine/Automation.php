@@ -2,6 +2,8 @@
 
 require_once __DIR__.'/CombatRanking.php';
 require_once __DIR__.'/Hero.php';
+// Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
+require_once __DIR__.'/GeneratorX.php';
 
 class Automation {
 
@@ -4433,13 +4435,12 @@ class Automation {
         }
     }
 
+    // Gemela de GeneratorX::procDistanceTime, que es la que calculan las salidas y las
+    // vistas previas: las dos tienen que dar lo mismo para el mismo viaje. Por eso el
+    // bono de la Plaza de Torneos sale del helper compartido y no de una copia local.
     // $bootsBonus: porcentaje de las botas de mercenario del héroe que viaja en el
-    // movimiento. Se suma a lo que ya haga la Plaza de Torneos, que tiene su propio
-    // umbral y su propia fórmula.
+    // movimiento; tiene su propio umbral, distinto al de la Plaza de Torneos.
     private function procDistanceTime($coor, $thiscoor, $ref, $mode, $bootsBonus = 0) {
-        global $bid14, $database, $generator;
-        $resarray = $database->getResourceLevel($generator->getBaseID($coor['x'], $coor['y']));
-        $ts_attri = 0;
         $xdistance = ABS($thiscoor['x'] - $coor['x']);
         if($xdistance > WORLD_MAX) {
             $xdistance = (2 * WORLD_MAX + 1) - $xdistance;
@@ -4462,16 +4463,7 @@ class Automation {
                 $speed = 1;
             }
         } else {
-            $speed = max(1, (float)$ref);
-            for ($i = 19; $i <= 40; $i++) {
-                if($resarray['f'.$i.'t'] == 14) {
-                    $ts_level = $resarray['f'.$i];
-                    $ts_attri = $bid14[$ts_level]['attri'];
-                }
-            }
-            if($ts_attri > 0) {
-                $speed = $distance <= TS_THRESHOLD ? $speed : $speed * ((TS_THRESHOLD + ($distance - TS_THRESHOLD) * $ts_attri / 100) / $distance);
-            }
+            $speed = max(1, (float)$ref) * tournamentSquareSpeedFactor($coor, $distance);
         }
 
         $effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
