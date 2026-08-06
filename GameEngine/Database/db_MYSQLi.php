@@ -5114,11 +5114,11 @@ break;
         		return $dbarray['id'];
         	}
 
-			function getEquippedHeroItem($uid, $btype) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "heroitems where uid = ".$uid." AND btype = ".$btype." AND proc = 1";
-				$result = mysqli_query($this->connection,$q);
-        		return mysqli_fetch_array($result);
-        	}
+			// getEquippedHeroItem() vivía acá y buscaba por `proc = 1` sin mirar el slot
+			// ni acotar con LIMIT, así que devolvía cualquier fila marcada: un objeto
+			// suelto podía dar un bono fantasma, y los tres tipos de bolsa (que comparten
+			// la columna `bag`) podían aparecer equipados a la vez. Lo equipado se
+			// resuelve con heroEquippedItem() de Hero.php, que va por `heroinventory`.
 
 			function getItemData($id) {
 				$id = (int)$id;

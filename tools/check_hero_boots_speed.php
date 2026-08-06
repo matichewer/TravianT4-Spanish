@@ -202,6 +202,21 @@ foreach($callSites as $file => $fragments){
 	}
 }
 
+// La consulta vieja por `proc` ya no existe. Si alguien la reintroduce, vuelve el bug
+// de fondo: un objeto suelto contando como equipado.
+foreach(array('GameEngine/Database/db_MYSQLi.php', 'GameEngine/Database/db_MYSQL.php') as $driver){
+	$path = dirname(__DIR__).'/'.$driver;
+	if(!file_exists($path)){
+		continue;
+	}
+	$source = file_get_contents($path);
+	bootsAssert($source!==false, "Could not read $driver");
+	bootsAssert(
+		strpos($source, 'function getEquippedHeroItem')===false,
+		"$driver brought back the proc-based equipment lookup"
+	);
+}
+
 // El tooltip del héroe tiene que desglosar las espuelas aparte de la velocidad base.
 $heroTemplate = file_get_contents(dirname(__DIR__).'/Templates/hero.tpl');
 bootsAssert($heroTemplate!==false, 'Could not read hero template');
