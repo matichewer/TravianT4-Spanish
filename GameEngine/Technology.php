@@ -354,6 +354,52 @@ class Technology {
 		return ($village->techarray['t'.$tech] == 1);
 	}
 
+	// Tiempo de entrenamiento de una unidad en segundos, para cuartel (19), gran cuartel
+	// (29), establo (20), gran establo (30), taller (21) y gran taller (42).
+	//
+	// Es la única definición: la usan trainUnit() y las plantillas de esos edificios,
+	// para que el tiempo que se muestra sea exactamente el que se encola. Antes cada
+	// plantilla repetía la fórmula por su cuenta y se olvidaba de algún factor: las del
+	// establo no descontaban el Bebedero, y ni las del cuartel ni las del establo
+	// descontaban el artefacto de entrenamiento, así que con cualquiera de los dos
+	// activos la interfaz mentía.
+	//
+	// `$level` es el del edificio; si no se pasa, sale del propio edificio de la aldea.
+	public function getUnitTrainingTime($unit,$buildingType,$level=null) {
+		global $database,$session,$village,$building,$bid19,$bid20,$bid21,$bid29,$bid30,$bid41,$bid42;
+
+		$unit = (int)$unit;
+		$buildingType = (int)$buildingType;
+		$unitData = isset($GLOBALS['u'.$unit]) ? $GLOBALS['u'.$unit] : null;
+		$tables = array(19=>$bid19, 20=>$bid20, 21=>$bid21, 29=>$bid29, 30=>$bid30, 42=>$bid42);
+		if(!is_array($unitData) || !isset($tables[$buildingType])) {
+			return 0;
+		}
+
+		if($level === null) {
+			$level = is_object($building) ? $building->getTypeLevel($buildingType) : 0;
+		}
+		$level = (int)$level;
+		if(!isset($tables[$buildingType][$level]['attri'])) {
+			return 0;
+		}
+
+		$time = $unitData['time'] * ($tables[$buildingType][$level]['attri'] / 100) / SPEED;
+
+		// El Bebedero solo acelera la caballería.
+		if($buildingType === 20 || $buildingType === 30) {
+			$troughLevel = is_object($building) ? (int)$building->getTypeLevel(41) : 0;
+			if($troughLevel >= 1 && isset($bid41[$troughLevel]['attri'])) {
+				$time /= $bid41[$troughLevel]['attri'];
+			}
+		}
+
+		$time *= heroTrainingTimeFactor($database,$session->uid,$village->wid,$buildingType);
+		$time *= $this->getTrainingArtefactFactor();
+
+		return max(1,(int)round($time));
+	}
+
 	public function getExpansionUnitTrainingTime($unit,$fieldId) {
 		global $village,$bid25,$bid26;
 
@@ -538,27 +584,13 @@ class Technology {
 		try {
 			$each = 0;
 			if(in_array($unit,$footies,true)) {
-				// El casco entra dentro del round() y no después, para que el tiempo
-				// encolado sea exactamente el que muestran 19_train.tpl / 29_train.tpl.
-				$helmet = heroTrainingTimeFactor($database,$session->uid,$village->wid,$great ? 29 : 19);
-				$each = $great
-					? round(($bid29[$building->getTypeLevel(29)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED * $helmet)
-					: round(($bid19[$building->getTypeLevel(19)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED * $helmet);
+				$each = $this->getUnitTrainingTime($unit,$great ? 29 : 19);
 			}
 			if(in_array($unit,$calvary,true)) {
-				$horseDrinking = $building->getTypeLevel(41)>=1 ? (1/$bid41[$building->getTypeLevel(41)]['attri']) : 1;
-				$helmet = heroTrainingTimeFactor($database,$session->uid,$village->wid,$great ? 30 : 20);
-				$each = $great
-					? round(($bid30[$building->getTypeLevel(30)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED * $helmet)
-					: round(($bid20[$building->getTypeLevel(20)]['attri'] * $horseDrinking / 100) * ${'u'.$unit}['time'] / SPEED * $helmet);
+				$each = $this->getUnitTrainingTime($unit,$great ? 30 : 20);
 			}
 			if(in_array($unit,$workshop,true)) {
-				$each = $great
-					? round(($bid42[$building->getTypeLevel(42)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED)
-					: round(($bid21[$building->getTypeLevel(21)]['attri'] / 100) * ${'u'.$unit}['time'] / SPEED);
-			}
-			if(in_array($unit,array_merge($footies,$calvary,$workshop),true)) {
-				$each = round($each * $this->getTrainingArtefactFactor());
+				$each = $this->getUnitTrainingTime($unit,$great ? 42 : 21);
 			}
 			if(in_array($unit,$special,true)) {
 				$each = $this->getExpansionUnitTrainingTime($unit,$fieldId);

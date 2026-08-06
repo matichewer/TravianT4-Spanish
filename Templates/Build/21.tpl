@@ -51,7 +51,7 @@ if ($building->getTypeLevel(21) > 0) { ?>
                         <span class=\"resources r5\"><img class=\"r5\" src=\"img/x.gif\" alt=\"Consumo de cereal\">".${'u'.$i}['pop']."</span>
                         <div class=\"clear\"></div>
                         <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"duración\">";
-                        echo $generator->getTimeFormat(max(1,round(${'u'.$i}['time'] * ($bid21[$village->resarray['f'.$id]]['attri'] / 100) / SPEED * $technology->getTrainingArtefactFactor())));
+                        echo $generator->getTimeFormat($technology->getUnitTrainingTime($i,21,$village->resarray['f'.$id]));
 						echo "</span><div class=\"clear\"></div></div><span class=\"value\">Total</span>
 						<input type=\"text\" class=\"text\" name=\"t$i\" value=\"0\" maxlength=\"4\">
                         <span class=\"value\"> / </span>

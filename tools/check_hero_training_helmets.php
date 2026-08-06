@@ -88,6 +88,12 @@ class TrainingDatabaseStub {
 		return true;
 	}
 
+	public $artefacts = array();
+
+	public function getActiveArtefactsByType($wid,$uid,$type) {
+		return (int)$type === 5 ? $this->artefacts : array();
+	}
+
 	public function getHeroData($uid) { return $this->hero; }
 	public function getHeroInventory($uid) { return $this->inventory; }
 	public function getItemData($id) { return isset($this->items[$id]) ? $this->items[$id] : false; }
@@ -199,6 +205,57 @@ foreach(array(10,12,13,15) as $type) {
 	$database->wearHelmet($type);
 	trainingAssert(queuedTime(7,20,21,5) === $workshopBase,"el casco $type aceleró el taller");
 }
+
+// --- El Bebedero y el artefacto, que las plantillas se olvidaban ---------------
+
+// El Bebedero (41) acelera solo la caballería, y solo en establo y gran establo.
+$database->wearHelmet(0);
+$building->levels[41] = 10;
+$troughFactor = 1 / $bid41[10]['attri'];
+trainingAssert(
+	queuedTime(4,20,20,5) === expectedTime($u4['time'],$bid20[5]['attri'],$troughFactor),
+	'el establo no descontó el Bebedero'
+);
+trainingAssert(
+	queuedTime(4,20,30,5,true) === expectedTime($u4['time'],$bid30[5]['attri'],$troughFactor),
+	'el gran establo no descontó el Bebedero'
+);
+trainingAssert(queuedTime(1,20,19,5) === $barracksBase,'el Bebedero aceleró la infantería');
+trainingAssert(queuedTime(7,20,21,5) === $workshopBase,'el Bebedero aceleró el taller');
+
+// El Bebedero y el casco se acumulan.
+$database->wearHelmet(12);
+trainingAssert(
+	queuedTime(4,20,20,5) === expectedTime($u4['time'],$bid20[5]['attri'],$troughFactor * 0.80),
+	'el Bebedero y el casco de establo no se acumularon'
+);
+$database->wearHelmet(0);
+$building->levels[41] = 0;
+
+// El artefacto de entrenamiento aplica a los tres edificios, no solo al taller.
+$database->artefacts = array(array('size' => 2));
+trainingAssert(
+	queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],0.25),
+	'el cuartel no descontó el artefacto de entrenamiento'
+);
+trainingAssert(
+	queuedTime(4,20,20,5) === expectedTime($u4['time'],$bid20[5]['attri'],0.25),
+	'el establo no descontó el artefacto de entrenamiento'
+);
+trainingAssert(
+	queuedTime(7,20,21,5) === expectedTime($u7['time'],$bid21[5]['attri'],0.25),
+	'el taller no descontó el artefacto de entrenamiento'
+);
+
+// Artefacto y casco se acumulan.
+$database->wearHelmet(15);
+trainingAssert(
+	queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],0.25 * 0.80),
+	'el artefacto y el casco de cuartel no se acumularon'
+);
+$database->wearHelmet(0);
+$database->artefacts = array();
+trainingAssert(queuedTime(1,20,19,5) === $barracksBase,'el tiempo no volvió al base sin artefacto');
 
 // --- Aldea natal y héroe muerto -----------------------------------------------
 
