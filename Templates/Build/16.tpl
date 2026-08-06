@@ -77,13 +77,22 @@ $prisonerTotal = function($prisoner) {
 	}
 	return $total;
 };
+$prisonerVillageLink = function($wref) use ($database, $generator) {
+	$wref = (int)$wref;
+	$name = (string)$database->getVillageField($wref,'name');
+	if($name === '') {
+		return 'Aldea desconocida';
+	}
+	$name = htmlspecialchars($name,ENT_QUOTES,'UTF-8');
+	return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'">'.$name.'</a>';
+};
 $captivesHere = $database->getPrisoners($village->wid);
 $ownCaptured = $database->getPrisoners3($village->wid);
 if(!empty($captivesHere) || !empty($ownCaptured)) {
 	echo '<h4 class="spacer">Tropas atrapadas</h4>';
 	echo '<table class="troop_details" cellpadding="1" cellspacing="1"><thead><tr><th>Situación</th><th>Aldea</th><th>Tropas</th><th>Acción</th></tr></thead><tbody>';
 	foreach($captivesHere as $prisoner) {
-		$originName = htmlspecialchars((string)$database->getVillageField((int)$prisoner['from'],'name'),ENT_QUOTES,'UTF-8');
+		$originName = $prisonerVillageLink($prisoner['from']);
 		echo '<tr><td>Prisioneros en tus trampas</td><td>'.$originName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="release"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
@@ -91,7 +100,7 @@ if(!empty($captivesHere) || !empty($ownCaptured)) {
 		echo '<button type="submit" value="Liberar"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Liberar</div></div></button></form></td></tr>';
 	}
 	foreach($ownCaptured as $prisoner) {
-		$trapName = htmlspecialchars((string)$database->getVillageField((int)$prisoner['wref'],'name'),ENT_QUOTES,'UTF-8');
+		$trapName = $prisonerVillageLink($prisoner['wref']);
 		echo '<tr><td>Tropas tuyas prisioneras</td><td>'.$trapName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="disband"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
