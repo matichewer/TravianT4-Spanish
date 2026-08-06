@@ -31,14 +31,17 @@ if ($newWidth < SRC_WIDTH || $newWidth % 2 !== 0) {
 }
 $grow = ($newWidth - SRC_WIDTH) / 2; // se reparte entre las dos bandas
 
-// [x de origen, ancho de origen, ancho de destino]; las bandas 50-70 y 102-122
-// son pergamino liso, se pueden estirar sin que se note.
+// [x de origen, ancho de origen, ancho de destino]. Los tramos fijos cubren el
+// clavo y el rollo izquierdos (0-30), el nudo central (70-102) y el clavo y el
+// rollo derechos (142-172). Las dos bandas restantes son pergamino liso: son
+// las que se estiran, lo más anchas posible para que el estirado se reparta y
+// la curva del borde superior no se quiebre.
 $segments = [
-    [0,   50, 50],
-    [50,  20, 20 + $grow],
+    [0,   30, 30],
+    [30,  40, 40 + $grow],
     [70,  32, 32],
-    [102, 20, 20 + $grow],
-    [122, 50, 50],
+    [102, 40, 40 + $grow],
+    [142, 30, 30],
 ];
 
 foreach (FILES as $name) {
