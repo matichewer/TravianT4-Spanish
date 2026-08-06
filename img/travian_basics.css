@@ -351,40 +351,59 @@ details.buildingLevelHelp summary:focus {
 
 /* Culture capacity indicator in the persistent village sidebar. It borrows the
    village list sign art (signVillages{Top,Middle,Bottom}) so it matches the rest
-   of the sidebar: :before is the top roll, :after the bottom one, and the middle
-   strip repeats behind the content. background-size stretches the 172px art to
-   whatever width the panel has, so the width below is free to change.
+   of the sidebar, built as three real boxes exactly like #villageList is
+   (.head / .list / .foot). The container itself must stay backgroundless: the
+   roll art is transparent outside the sign outline, so any background here shows
+   through above the top roll and below the bottom one as a pale band.
+   background-size stretches the 172px art to whatever width the panel has, so
+   the width below is free to change.
 
-   Kept narrow and flush to the left edge so it never reaches the dorf1 resource
-   field badges, the leftmost of which starts at x=293 of the viewport; at
-   left:-16px that caps the panel at 168px wide. */
+   Kept clear of the dorf1 resource field badges, the leftmost of which starts at
+   x=293 of the viewport; at left:-40px a 168px panel ends at x=266. */
 #cultureProgress {
 	box-sizing: border-box;
 	position: absolute;
 	top: 422px;
-	left: -16px;
+	left: -40px;
 	z-index: 90;
 	width: 168px;
 	margin: 0;
-	/* asimetrico a proposito: el borde de madera del arte es mas ancho a la derecha */
-	padding: 0 18px 0 12px;
+	padding: 0;
 	border: 0;
 	border-radius: 0;
-	background-color: transparent;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesMiddle-rtl.png?v=172b);
-	background-repeat: repeat-y;
-	background-size: 100% 2px;
+	background: none;
 	box-shadow: none;
 	color: #3c2a14;
 	font-size: 11px;
 }
 
-/* The panel hangs past the 990px page wrapper, like the quest and protection
-   signs do. Pull it back in when the window is too narrow to show the overhang. */
-@media (max-width: 1029px) {
-	#cultureProgress {
-		left: 0;
-	}
+.cultureProgressSignTop,
+.cultureProgressSignFoot {
+	background-repeat: no-repeat;
+}
+
+.cultureProgressSignTop {
+	height: 64px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesTop-rtl.png?v=172b);
+	background-size: 100% 64px;
+}
+
+/* Se mete 43px dentro del rollo de arriba y 19px dentro del de abajo, que es la
+   parte de esas dos piezas que ya es pergamino y puede llevar contenido.
+   El padding es asimetrico a proposito: el borde de madera del arte es mas
+   ancho a la derecha que a la izquierda. */
+.cultureProgressSignBody {
+	margin: -43px 0 -19px;
+	padding: 0 18px 0 12px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesMiddle-rtl.png?v=172b);
+	background-repeat: repeat-y;
+	background-size: 100% 2px;
+}
+
+.cultureProgressSignFoot {
+	height: 39px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesBottom-rtl.png?v=172b);
+	background-size: 100% 39px;
 }
 
 /* The old panel signalled "you can settle another village" with a darker border,
@@ -398,6 +417,18 @@ details.buildingLevelHelp summary:focus {
 	top: 232px;
 }
 
+/* Both the panel (40px) and the village name sign (up to 55px) hang past the
+   990px page wrapper. Pull them back in when the window is too narrow for the
+   overhang, or they get clipped by the left edge of the document. The threshold
+   is 990 + 2*55 + 20 rather than 990 + 2*55: a media query measures the viewport
+   *including* the scrollbar, while the wrapper is centred in the width without
+   it, so the breakpoint has to leave room for the scrollbar too. */
+@media (max-width: 1119px) {
+	#cultureProgress {
+		left: 0;
+	}
+}
+
 /* Keep the culture panel below the beginner-protection sign while it is shown.
    Declared last so it also wins when the quest sign is already gone. */
 #cultureProgress.cultureProgressWithProtection {
@@ -409,36 +440,8 @@ details.buildingLevelHelp summary:focus {
 	z-index: 2000;
 }
 
-/* Los dos extremos del cartel. Van en el flujo, con margen negativo a los lados
-   para tapar el padding y hacia adentro para recuperar la parte del arte que es
-   pergamino util: el rollo de arriba ocupa 21px y el de abajo 20px, el resto lo
-   usa el contenido. */
-#cultureProgress:before,
-#cultureProgress:after {
-	content: "";
-	display: block;
-	position: static;
-	width: auto;
-	border: 0;
-	border-radius: 0;
-	background-color: transparent;
-	background-repeat: no-repeat;
-	box-shadow: none;
-}
-
-#cultureProgress:before {
-	height: 64px;
-	margin: 0 -18px -43px -12px;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesTop-rtl.png?v=172b);
-	background-size: 100% 64px;
-}
-
-#cultureProgress:after {
-	height: 39px;
-	margin: -19px -18px 0 -12px;
-	background-image: url(../gpack/travian_Travian_4.0_41/img/layout/signVillagesBottom-rtl.png?v=172b);
-	background-size: 100% 39px;
-}
+/* El cartel se arma con .cultureProgressSign{Top,Body,Foot}; el panel en si no
+   dibuja nada. */
 
 .cultureProgressHeader,
 .cultureProgressInfo {

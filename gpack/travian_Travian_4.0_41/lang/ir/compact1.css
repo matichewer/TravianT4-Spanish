@@ -697,7 +697,7 @@ body.loader #myGameLinkHeaderWrapper,body.login #myGameLinkHeaderWrapper,body.lo
 .ie6 #myGameLinkHeaderWrapper{margin:30px 31px 0 0;}#ingameManual{height:180px;left:0;position:absolute;top:519px;width:195px;background-image:url(../../img/x.gif);}
 #ingameManual .question{background-image:url("../../img/layout/question-rtl-ignore.png");position:absolute;left:16px;top:43px;width:24px;height:37px;}
 .ie6 #ingameManual .question{background-image:url("../../img/layout/question-rtl-ignore.gif");}
-#villageName{background-image:url("../../img/layout/sign_village-rtl.png?v=225");background-repeat:no-repeat;background-size:100% 74px;font-size:14px;font-weight:bold;height:76px;left:110px;transform:translateX(-50%);margin:0;position:absolute;text-align:left;top:150px;width:max-content;max-width:280px;z-index:50;}@media (max-width:1029px){#villageName{left:8px;transform:none;}}
+#villageName{background-image:url("../../img/layout/sign_village-rtl.png?v=225");background-repeat:no-repeat;background-size:100% 74px;font-size:14px;font-weight:bold;height:76px;left:85px;transform:translateX(-50%);margin:0;position:absolute;text-align:left;top:150px;width:max-content;max-width:280px;z-index:50;}@media (max-width:1119px){#villageName{left:8px;transform:none;}}
 .ie6 #villageName{background-image:url("../../img/layout/sign_village-rtl.gif");}
 #villageName div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:38px;width:max-content;min-width:137px;max-width:212px;position:relative;top:17px;margin-left:16px;margin-right:52px;padding-top:6px;text-align:center;cursor:hand;}
 #villageName div.clickable{cursor:pointer;cursor:hand;}#villageName .loyalty{font-size:10px;font-weight:normal;position:relative;top:-3px;}

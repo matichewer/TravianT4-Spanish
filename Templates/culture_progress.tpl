@@ -34,7 +34,13 @@ $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 $cultureDailyProduction = accountCulturePointsPerDay($database, $cultureOwnerId);
 $cultureHelmetProduction = heroHelmetCulturePoints($database, $cultureOwnerId);
 ?>
+<?php /* Tres piezas como el cartel de la lista de aldeas: el rollo de arriba, el
+cuerpo con el pergamino repetido y el rollo de abajo. Tienen que ser elementos
+propios y no un fondo del contenedor, porque el arte de los rollos es
+transparente por fuera del cartel y dejaria ver el pergamino por detras. */ ?>
 <div id="cultureProgress" class="cultureProgress<?php echo $cultureReadyClass . $cultureQuestClass . $cultureProtectionClass; ?>">
+	<div class="cultureProgressSignTop"></div>
+	<div class="cultureProgressSignBody">
 	<div class="cultureProgressHeader">
 		<span class="cultureProgressTitleWrap">
 			<span class="cultureProgressTitle" aria-describedby="cultureProgressTooltip">Puntos de Cultura</span>
@@ -68,4 +74,6 @@ $cultureHelmetProduction = heroHelmetCulturePoints($database, $cultureOwnerId);
 	</div>
 <?php } ?>
 	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta<?php if($cultureHelmetProduction > 0) { echo ', incluidos '.number_format($cultureHelmetProduction, 0, ',', '.').' PC del casco del héroe'; } ?>">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día</div>
+	</div>
+	<div class="cultureProgressSignFoot"></div>
 </div>
