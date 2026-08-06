@@ -19,7 +19,7 @@ function troopStatsDuration($seconds)
 
 include "Templates/html.tpl";
 ?>
-<body class="v35 webkit chrome plus">
+<body class="v35 webkit chrome troopStatsClean">
 	<div id="wrapper">
 		<img id="staticElements" src="img/x.gif" alt="" />
 		<div id="logoutContainer">
@@ -43,7 +43,7 @@ include "Templates/html.tpl";
 						<div id="content" class="universal troopStatsPage">
 							<h1 class="titleInHeader">Estadísticas de tropas</h1>
 							<p class="troopStatsIntro">Valores base de las unidades de las tres tribus. El tiempo de entrenamiento corresponde a un servidor de velocidad 1 y se reduce mediante la velocidad del servidor y el nivel del edificio.</p>
-							<p><a href="help.php">&laquo; Volver a la ayuda</a></p>
+							<p class="troopStatsBack"><a href="help.php">&laquo; Volver a la ayuda</a></p>
 							<?php foreach ($troopStatsTribes as $troopStatsTribe) { ?>
 							<h2><?php echo $troopStatsTribe['name']; ?></h2>
 							<div class="troopStatsTableWrapper">
@@ -94,14 +94,7 @@ include "Templates/html.tpl";
 					<div class="contentFooter">&nbsp;</div>
 				</div>
 
-<?php
-include("Templates/sideinfo.tpl");
-include("Templates/footer.tpl");
-include("Templates/header.tpl");
-include("Templates/res.tpl");
-include("Templates/vname.tpl");
-include("Templates/quest.tpl");
-?>
+<?php include("Templates/footer.tpl"); ?>
 
 				<div id="ce"></div>
 			</div>

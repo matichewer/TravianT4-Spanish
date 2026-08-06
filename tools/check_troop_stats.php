@@ -23,6 +23,12 @@ if (strpos($endpoint, "\${'u'.\$troopStatsUnitId}") === false) {
 	$failures[] = 'La página no obtiene las estadísticas desde unitdata.php.';
 }
 
+foreach (array('Templates/sideinfo.tpl', 'Templates/header.tpl', 'Templates/res.tpl', 'Templates/vname.tpl', 'Templates/quest.tpl') as $template) {
+	if (strpos($endpoint, $template) !== false) {
+		$failures[] = 'La página de consulta todavía carga el panel '.$template.'.';
+	}
+}
+
 if (strpos($endpoint, "array('name' => 'Romanos', 'firstUnit' => 1)") === false
 	|| strpos($endpoint, "array('name' => 'Germanos', 'firstUnit' => 11)") === false
 	|| strpos($endpoint, "array('name' => 'Galos', 'firstUnit' => 21)") === false) {
