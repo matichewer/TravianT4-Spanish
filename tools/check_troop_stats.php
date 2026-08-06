@@ -23,6 +23,14 @@ if (strpos($endpoint, "\${'u'.\$troopStatsUnitId}") === false) {
 	$failures[] = 'La página no obtiene las estadísticas desde unitdata.php.';
 }
 
+if (strpos($endpoint, '$troopStatsUnit[\'speed\'] * $troopStatsMovementSpeed') === false) {
+	$failures[] = 'La velocidad de las unidades no usa INCREASE_SPEED.';
+}
+
+if (strpos($endpoint, '$troopStatsUnit[\'time\'] / $troopStatsTrainingSpeed') === false) {
+	$failures[] = 'El tiempo de entrenamiento no usa SPEED.';
+}
+
 foreach (array('Templates/sideinfo.tpl', 'Templates/header.tpl', 'Templates/res.tpl', 'Templates/vname.tpl', 'Templates/quest.tpl') as $template) {
 	if (strpos($endpoint, $template) !== false) {
 		$failures[] = 'La página de consulta todavía carga el panel '.$template.'.';

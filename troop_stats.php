@@ -7,6 +7,8 @@ $troopStatsTribes = array(
 	array('name' => 'Romanos', 'firstUnit' => 1),
 	array('name' => 'Germanos', 'firstUnit' => 11)
 );
+$troopStatsTrainingSpeed = max(1, (int) SPEED);
+$troopStatsMovementSpeed = max(1, (int) INCREASE_SPEED);
 
 function troopStatsDuration($seconds)
 {
@@ -34,7 +36,7 @@ include "Templates/html.tpl";
 					<div class="contentContainer">
 						<div id="content" class="universal troopStatsPage">
 							<h1 class="titleInHeader">Estadísticas de tropas</h1>
-							<p class="troopStatsIntro">Valores base de las unidades de las tres tribus. El tiempo de entrenamiento corresponde a un servidor de velocidad 1 y se reduce mediante la velocidad del servidor y el nivel del edificio.</p>
+							<p class="troopStatsIntro">Estadísticas de las unidades de las tres tribus. Los tiempos corresponden al nivel 1 del edificio de entrenamiento y disminuyen al mejorar ese edificio.</p>
 							<?php foreach ($troopStatsTribes as $troopStatsTribe) { ?>
 							<h2><?php echo $troopStatsTribe['name']; ?></h2>
 							<div class="troopStatsTableWrapper">
@@ -52,7 +54,7 @@ include "Templates/html.tpl";
 											<th><img class="r5" src="img/x.gif" alt="Manutención" title="Manutención" /></th>
 											<th title="Casillas por hora">Vel.</th>
 											<th title="Capacidad de carga">Carga</th>
-											<th><img class="clock" src="img/x.gif" alt="Tiempo de entrenamiento" title="Tiempo base de entrenamiento" /></th>
+											<th><img class="clock" src="img/x.gif" alt="Tiempo de entrenamiento" title="Tiempo de entrenamiento a nivel 1" /></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -70,9 +72,9 @@ include "Templates/html.tpl";
 											<td><?php echo $troopStatsUnit['iron']; ?></td>
 											<td><?php echo $troopStatsUnit['crop']; ?></td>
 											<td><?php echo $troopStatsUnit['pop']; ?></td>
-											<td><?php echo $troopStatsUnit['speed']; ?></td>
+											<td><?php echo $troopStatsUnit['speed'] * $troopStatsMovementSpeed; ?></td>
 											<td><?php echo $troopStatsUnit['cap']; ?></td>
-											<td><?php echo troopStatsDuration($troopStatsUnit['time']); ?></td>
+											<td><?php echo troopStatsDuration(max(1, (int) round($troopStatsUnit['time'] / $troopStatsTrainingSpeed))); ?></td>
 										</tr>
 									<?php } ?>
 									</tbody>
