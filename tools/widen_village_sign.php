@@ -17,7 +17,10 @@
  *   #villageList .head a{width}                     -> ancho nuevo - 47
  *   #villageList ul a{width}                        -> ancho nuevo - 36
  *   #villageList ul li.attack a{width}              -> ancho nuevo - 38
- * y subir el cache-buster de compact.css en Templates/html.tpl.
+ * y subir TRES cache-busters, si no Cloudflare sigue sirviendo lo viejo:
+ *   - el ?v=N de las tres url(...signVillages*.png) en compact1.css
+ *   - el ?v=N del @import de compact1.css en compact.css
+ *   - el ?asdNNN de compact.css en Templates/html.tpl
  */
 
 const SRC_WIDTH = 172;
