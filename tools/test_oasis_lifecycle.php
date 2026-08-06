@@ -8,6 +8,7 @@
  *   A) conquista con el héroe: odata + wdata quedan coherentes
  *   B) el bono de producción llega a la aldea que lo conquistó, y sólo a ella
  *   C) un oasis conquistado no repuebla animales; uno libre sí
+ *   C2) el oasis produce recursos hasta su propio granero (maxstore/maxcrop)
  *   D) saqueo de un oasis anexado: el informe va al dueño y el botín sale de la
  *      aldea que lo tiene, con el cupo del 10% que se repone en 10 minutos
  *   E) refuerzo a un oasis: informe correcto, cereal a cargo de la aldea del oasis
@@ -209,6 +210,61 @@ $u = one("SELECT u31,u32,u33,u34,u35,u36,u37,u38,u39,u40 FROM {$P}units WHERE vr
 check(array_sum(array_map('intval', $u)) > 0, "un oasis libre sí repuebla animales pasadas 24 h");
 check((int)one("SELECT lastupdated2 FROM {$P}odata WHERE wref = $F")['lastupdated2'] >= time() - 60,
       "la repoblación reinicia el reloj para que no dispare dos veces seguidas");
+
+// ------------------------- C2) el oasis produce hasta su propio granero
+say("\n== C2) producción de recursos de un oasis ==");
+// Un oasis con granero de 2000: antes el barrido filtraba por un 800 fijo y la
+// producción se estancaba ahí, muy por debajo del tope real.
+$big = one("SELECT wref, maxstore, maxcrop FROM {$P}odata WHERE maxstore >= 2000 AND maxcrop >= 2000 LIMIT 1");
+$BIG = (int)$big['wref'];
+$hourly = 8 * (float)SPEED;
+q("UPDATE {$P}odata SET wood = 850, clay = 850, iron = 850, crop = 850,
+     lastupdated = " . (time() - 3600) . " WHERE wref = $BIG");
+runPhase('oasisResourcesProduce');
+$grown = one("SELECT wood, clay, iron, crop, lastupdated FROM {$P}odata WHERE wref = $BIG");
+say("     tras 1 h: madera {$grown['wood']} (850 + $hourly esperado, tope {$big['maxstore']})");
+check((int)$grown['wood'] > 850, "un oasis por encima de 800 sigue produciendo");
+check(abs((int)$grown['wood'] - (850 + $hourly)) <= 1, "produce 8 por hora y por recurso, escalado por la velocidad");
+check((int)$grown['crop'] === (int)$grown['wood'], "los cuatro recursos crecen igual");
+check((int)$grown['lastupdated'] >= time() - 60, "la producción adelanta el reloj del oasis");
+
+// El tope es el granero propio, y no se pasa por mucho tiempo que haya corrido.
+q("UPDATE {$P}odata SET wood = 0, clay = 0, iron = 0, crop = 0,
+     lastupdated = " . (time() - 864000) . " WHERE wref = $BIG");
+runPhase('oasisResourcesProduce');
+$full = one("SELECT wood, clay, iron, crop FROM {$P}odata WHERE wref = $BIG");
+check((int)$full['wood'] === (int)$big['maxstore'], "llena hasta maxstore y no lo pasa");
+check((int)$full['crop'] === (int)$big['maxcrop'], "el cereal llena hasta maxcrop");
+
+// Un oasis lleno ya no se toca.
+q("UPDATE {$P}odata SET lastupdated = " . (time() - 3600) . " WHERE wref = $BIG");
+runPhase('oasisResourcesProduce');
+check((int)one("SELECT lastupdated FROM {$P}odata WHERE wref = $BIG")['lastupdated'] === time() - 3600,
+      "un oasis lleno no entra en el barrido");
+
+// Un reloj adelantado no puede restar recursos.
+q("UPDATE {$P}odata SET wood = 500, lastupdated = " . (time() + 3600) . " WHERE wref = $BIG");
+runPhase('oasisResourcesProduce');
+check((int)one("SELECT wood FROM {$P}odata WHERE wref = $BIG")['wood'] === 500,
+      "un reloj adelantado no descuenta recursos");
+
+// Saquear un oasis libre lo pone al día primero. Con un reloj muy viejo eso llegaba
+// a sumar decenas de miles de recursos: producía a 40 por hora en vez de 8 y sin tope.
+q("DELETE FROM {$P}ndata"); q("DELETE FROM {$P}movement"); q("DELETE FROM {$P}attacks");
+q("UPDATE {$P}odata SET conqured = 0, owner = 3, wood = 0, clay = 0, iron = 0, crop = 0,
+     lastupdated = " . (time() - 30 * 86400) . " WHERE wref = $BIG");
+q("UPDATE {$P}wdata SET occupied = 0 WHERE id = $BIG");
+q("UPDATE {$P}units SET u31=0,u32=0,u33=0,u34=0,u35=0,u36=0,u37=0,u38=0,u39=0,u40=0 WHERE vref = $BIG");
+q("UPDATE {$P}units SET u1 = 5000 WHERE vref = $B_VIL");
+dispatch($B_VIL, $BIG, array(1 => 2), 4);
+$raided = one("SELECT wood, clay, iron, crop FROM {$P}odata WHERE wref = $BIG");
+foreach(array('wood','clay','iron') as $res) {
+    check((int)$raided[$res] <= (int)$big['maxstore'],
+          "tras 30 días sin tocarse, el saqueo no infla $res por encima del granero");
+}
+check((int)$raided['crop'] <= (int)$big['maxcrop'],
+      "tras 30 días sin tocarse, el saqueo no infla el cereal por encima del granero");
+q("UPDATE {$P}units SET u1 = 0 WHERE vref = $B_VIL");
 
 // ------------------------------- D) ataque de un tercero al oasis ocupado
 say("\n== D) un tercero saquea el oasis ocupado ==");

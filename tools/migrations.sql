@@ -232,3 +232,17 @@ DELETE FROM s1_ndata WHERE uid = 0;
 -- de ese cupo del 10%.
 ALTER TABLE s1_odata
   ADD COLUMN IF NOT EXISTS lastraid int(11) unsigned NOT NULL DEFAULT 0;
+
+-- 2026-08-06 - Tope real del granero de los oasis
+-- El barrido periodico filtraba por un 800 fijo, asi que un oasis con `maxstore` de
+-- 1000 o 2000 dejaba de producir mucho antes de su tope. Y el camino que pone al dia
+-- el oasis justo antes de saquearlo producia a 40 por hora en vez de 8 y **sin tope**,
+-- asi que un oasis que llevaba tiempo sin tocarse podia llegar a decenas de miles de
+-- recursos en el momento del ataque. Ambos ya estan corregidos; esto recorta lo que
+-- haya quedado por encima del granero.
+UPDATE s1_odata
+SET wood = LEAST(wood, maxstore),
+    clay = LEAST(clay, maxstore),
+    iron = LEAST(iron, maxstore),
+    crop = LEAST(crop, maxcrop)
+WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop;

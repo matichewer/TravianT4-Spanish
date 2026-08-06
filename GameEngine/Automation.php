@@ -18,10 +18,6 @@ class Automation {
     private $bountyocounter = array();
     private $bountyunitall = array();
     private $bountypop;
-    private $bountyOresarray = array();
-    private $bountyOinfoarray = array();
-    private $bountyOproduction = array();
-    private $bountyOpop = 1;
 
     public function isWinner() {
         $q = mysql_query("SELECT vref FROM ".TB_PREFIX."fdata WHERE f99 = '100' and f99t = '40'");
@@ -4093,19 +4089,13 @@ class Automation {
         $this->bountyprocessProduction($bountywid);
     }
 
+    // Poner al día un oasis antes de saquearlo usa exactamente la misma producción
+    // que el barrido periódico. La cadena bountyLoadOTown/bountycalculateOProduction/
+    // bountyprocessOProduction que había acá producía a 40 por hora en vez de 8 (cinco
+    // veces de más) y sumaba **sin tope**: un oasis que llevaba tiempo sin tocarse
+    // llegaba a decenas de miles de recursos en el momento del ataque.
     private function updateORes($bountywid) {
-        global $session;
-        $this->bountyLoadOTown($bountywid);
-        $this->bountycalculateOProduction($bountywid);
-        $this->bountyprocessOProduction($bountywid);
-    }
-
-    private function bountyLoadOTown($bountywid) {
-        global $database, $session, $logging, $technology;
-        $this->bountyOinfoarray = $database->getOasisV($bountywid);
-        $this->bountyOresarray = $database->getResourceLevel($bountywid);
-        $this->bountyOpop = 2;
-
+        $this->produceOasisResources($bountywid);
     }
 
     private function bountyLoadTown($bountywid) {
@@ -4270,14 +4260,6 @@ class Automation {
         return $upkeep;
     }
 
-    private function bountycalculateOProduction($bountywid) {
-        global $technology, $database;
-        $this->bountyOproduction['wood'] = $this->bountyGetOWoodProd();
-        $this->bountyOproduction['clay'] = $this->bountyGetOClayProd();
-        $this->bountyOproduction['iron'] = $this->bountyGetOIronProd();
-        $this->bountyOproduction['crop'] = $this->bountyGetOCropProd();
-    }
-
 	    private function bountycalculateProduction($bountywid, $uid) {
 	        global $technology, $database;
 	        $normalA = $database->getOwnArtefactInfoByType($bountywid, 4);
@@ -4316,17 +4298,6 @@ class Automation {
         $database->updateVillage($bountywid);
     }
 
-    private function bountyprocessOProduction($bountywid) {
-        global $database;
-        $timepast = time() - $this->bountyOinfoarray['lastupdated'];
-        $nwood = ($this->bountyOproduction['wood'] / 3600) * $timepast;
-        $nclay = ($this->bountyOproduction['clay'] / 3600) * $timepast;
-        $niron = ($this->bountyOproduction['iron'] / 3600) * $timepast;
-        $ncrop = ($this->bountyOproduction['crop'] / 3600) * $timepast;
-        $database->modifyOasisResource($bountywid, $nwood, $nclay, $niron, $ncrop, 1);
-        $database->updateOasis($bountywid);
-    }
-
     private function bountyGetWoodProd() {
         global $bid1, $bid5, $session;
         $wood = $sawmill = 0;
@@ -4351,38 +4322,6 @@ class Automation {
 //        $wood += $wood*$this->bountyocounter[0]*0.25;
         $wood *= SPEED;
         return round($wood);
-    }
-
-    private function bountyGetOWoodProd() {
-        global $session;
-        $wood = 0;
-        $wood += 40;
-        $wood *= SPEED;
-        return round($wood);
-    }
-
-    private function bountyGetOClayProd() {
-        global $session;
-        $clay = 0;
-        $clay += 40;
-        $clay *= SPEED;
-        return round($clay);
-    }
-
-    private function bountyGetOIronProd() {
-        global $session;
-        $iron = 0;
-        $iron += 40;
-        $iron *= SPEED;
-        return round($iron);
-    }
-
-    private function bountyGetOCropProd() {
-        global $session;
-        $crop = 0;
-        $crop += 40;
-        $crop *= SPEED;
-        return round($crop);
     }
 
     private function bountyGetClayProd() {
@@ -5234,32 +5173,37 @@ class Automation {
         }
     }
 
-    private function oasisResourcesProduce() {
+    /**
+     * Pone al día los recursos de un oasis (o de todos, con $wref = 0).
+     *
+     * El tope es el granero del propio oasis: `maxstore`/`maxcrop` valen 1000 o 2000
+     * según el tipo, así que el filtro fijo en 800 que había en el barrido cortaba la
+     * producción muy por debajo del tope real. Va en un solo UPDATE en vez de una
+     * consulta por oasis: la pasada recorría cientos de filas de a una.
+     *
+     * `lastupdated` se asigna al final a propósito: MariaDB evalúa el SET de izquierda
+     * a derecha, así que los cuatro recursos todavía leen el reloj viejo.
+     */
+    private function produceOasisResources($wref = 0) {
         global $database;
+        $wref = (int)$wref;
         $time = time();
-        $q = "SELECT * FROM ".TB_PREFIX."odata WHERE wood < 800 OR clay < 800 OR iron < 800 OR crop < 800";
-        $array = $database->query_return($q);
-        foreach ($array as $getoasis) {
-            $oasiswood = $getoasis['wood'] + (8 * SPEED / 3600) * (time() - $getoasis['lastupdated']);
-            $oasisclay = $getoasis['clay'] + (8 * SPEED / 3600) * (time() - $getoasis['lastupdated']);
-            $oasisiron = $getoasis['iron'] + (8 * SPEED / 3600) * (time() - $getoasis['lastupdated']);
-            $oasiscrop = $getoasis['crop'] + (8 * SPEED / 3600) * (time() - $getoasis['lastupdated']);
-            if($oasiswood > $getoasis['maxstore']) {
-                $oasiswood = $getoasis['maxstore'];
-            }
-            if($oasisclay > $getoasis['maxstore']) {
-                $oasisclay = $getoasis['maxstore'];
-            }
-            if($oasisiron > $getoasis['maxstore']) {
-                $oasisiron = $getoasis['maxstore'];
-            }
-            if($oasiscrop > $getoasis['maxcrop']) {
-                $oasiscrop = $getoasis['maxcrop'];
-            }
-            $q = "UPDATE ".TB_PREFIX."odata set wood = $oasiswood, clay = $oasisclay, iron = $oasisiron, crop = $oasiscrop where wref = ".$getoasis['wref']."";
-            $database->query($q);
-            $database->updateOasis($getoasis['wref']);
-        }
+        // 8 por hora y por recurso, escalado por la velocidad del servidor.
+        $rate = sprintf('%.10F', 8 * (float)SPEED / 3600);
+        $elapsed = "GREATEST(0, $time - lastupdated)";
+        $pending = "(wood < maxstore OR clay < maxstore OR iron < maxstore OR crop < maxcrop)";
+        $q = "UPDATE ".TB_PREFIX."odata SET"
+            ." wood = LEAST(maxstore, wood + $rate * $elapsed),"
+            ." clay = LEAST(maxstore, clay + $rate * $elapsed),"
+            ." iron = LEAST(maxstore, iron + $rate * $elapsed),"
+            ." crop = LEAST(maxcrop, crop + $rate * $elapsed),"
+            ." lastupdated = $time"
+            ." WHERE ".($wref > 0 ? "wref = $wref AND " : "").$pending;
+        $database->query($q);
+    }
+
+    private function oasisResourcesProduce() {
+        $this->produceOasisResources();
     }
 
     private function procNewClimbers() {
