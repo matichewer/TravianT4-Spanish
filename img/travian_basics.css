@@ -1,7 +1,46 @@
 @CHARSET "UTF-8";
 
+.helpInfoBlock a.helpUsefulLink {
+	display: inline;
+	color: #80a900;
+	font-weight: bold;
+}
+
+.helpInfoBlock a.helpUsefulLink:hover,
+.helpInfoBlock a.helpUsefulLink:focus {
+	color: #5f8000;
+	text-decoration: underline;
+}
+
 .troopStatsIntro {
 	line-height: 1.45;
+}
+
+body.troopStatsClean #mid {
+	width: calc(100% - 40px);
+	max-width: 1400px;
+}
+
+body.troopStatsClean #contentOuterContainer {
+	float: none;
+	width: calc(100% - 80px);
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+body.troopStatsClean #contentOuterContainer .contentTitle,
+body.troopStatsClean #contentOuterContainer .contentContainer,
+body.troopStatsClean #contentOuterContainer .contentFooter {
+	background-image: none;
+	background-color: #fff;
+}
+
+body.troopStatsClean #contentOuterContainer .contentTitle {
+	border-radius: 7px 7px 0 0;
+}
+
+body.troopStatsClean #contentOuterContainer .contentFooter {
+	border-radius: 0 0 7px 7px;
 }
 
 .troopStatsBack {
@@ -33,7 +72,7 @@
 
 table.troopStatsTable {
 	width: 100%;
-	min-width: 760px;
+	min-width: 1000px;
 	table-layout: auto;
 }
 

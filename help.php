@@ -32,10 +32,8 @@ include "Templates/html.tpl";
 <div id="content" class="universal"><h1 class="titleInHeader"><?php echo $lang['HELP1']['TITRE']; ?></h1>
 
 <div class="helpInfoBlock">
-	<a href="troop_stats.php">
-		<div class="helpHeadLine">Enlaces útiles</div>
-		<div class="helpText">Estadísticas de tropas: compara las unidades romanas, germanas y galas.</div>
-	</a>
+	<div class="helpHeadLine">Enlaces útiles</div>
+	<div class="helpText"><a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas: compara las unidades romanas, germanas y galas.</a></div>
 </div>
 <div class="helpInfoBlock helpInfoLinkLess">
 	<div class="helpHeadLine"><?php echo $lang['HELP1']['Partie_7']; ?></div>
