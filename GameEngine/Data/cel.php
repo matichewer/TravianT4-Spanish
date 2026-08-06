@@ -46,4 +46,25 @@ $gc= array(
 18 => 115815,
 19 => 111645,
 20 => 107626);
+
+if(!function_exists('celebrationDuration')){
+	// Duración de una celebración en segundos, según el nivel del Ayuntamiento. Es la
+	// única definición: la usan celebration.php y Templates/Build/24_1.tpl, para que el
+	// tiempo que se anuncia sea el que después se agenda. Antes la plantilla lo derivaba
+	// de `$cel[..]['time']` y el `attri` del edificio, y el servidor de estas tablas, así
+	// que se iban unos segundos.
+	//
+	// La fiesta grande solo existe desde el nivel 10: `$gc` no tiene filas más abajo.
+	function celebrationDuration($type, $level){
+		global $sc, $gc;
+		$type = (int)$type;
+		$level = (int)$level;
+		$table = $type === 1 ? $sc : ($type === 2 ? $gc : array());
+		if(!isset($table[$level])){
+			return 0;
+		}
+
+		return max(1, (int)round($table[$level] / SPEED));
+	}
+}
 ?>

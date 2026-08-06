@@ -1,32 +1,66 @@
 <?php
 include("GameEngine/Village.php");
+
+// El selector de aldea de las demás páginas valida que la aldea sea propia antes de
+// moverla a la sesión; acá no lo hacía, así que se podía apuntar la sesión a cualquier
+// aldea del mundo.
 if(isset($_GET['newdid'])){
-	$_SESSION['wid'] = $_GET['newdid'];
+	$newVillageId = (int)$_GET['newdid'];
+	if(in_array($newVillageId,array_map('intval',$session->villages),true)){
+		$_SESSION['wid'] = $newVillageId;
+	}
 	header("Location: ".$_SERVER['PHP_SELF']);
+	exit;
 }
-if($village->resarray['f'.$_GET['id'].'t'] == 24 and $village->currentcel == 0){
-	if(!empty($_GET['type']) && $_GET['type'] == 1){
-		if(6400 < $village->awood || 6650 < $village->aclay || 5940 < $village->airon || 1340 < $village->acrop){
-			$endtime = ($sc[$village->resarray['f'.$_GET['id']]]/ SPEED) + time();
-			$wood = 6400;
-			$clay = 6650;
-			$iron = 5940;
-			$crop = 1340;
-			$database->modifyResource($village->resarray['vref'],$wood,$clay,$iron,$crop,$mode);
-			$database->addCel($village->resarray['vref'],$endtime,$_GET['type']);
+
+$fieldId = isset($_GET['id']) && is_scalar($_GET['id']) && ctype_digit((string)$_GET['id'])
+	? (int)$_GET['id']
+	: 0;
+$redirect = "build.php?id=".($fieldId >= 1 && $fieldId <= 40 ? $fieldId : 1);
+
+// Igual que entrenar tropas o investigar: es una acción que cambia el estado, así que
+// lleva el token de la sesión.
+$tokenIsValid = isset($_GET['c']) && is_scalar($_GET['c'])
+	&& hash_equals((string)$session->mchecker,(string)$_GET['c']);
+$type = isset($_GET['type']) && is_scalar($_GET['type']) ? (int)$_GET['type'] : 0;
+
+if($tokenIsValid && $fieldId >= 1 && $fieldId <= 40 && ($type === 1 || $type === 2)
+	&& (int)$village->resarray['f'.$fieldId.'t'] === 24 && (int)$village->currentcel === 0){
+
+	$session->changeChecker();
+	$level = (int)$village->resarray['f'.$fieldId];
+	// celebrationDuration() devuelve 0 cuando el nivel no existe en la tabla. Eso es lo
+	// que pasaba con la fiesta grande por debajo del nivel 10: `$gc` no tiene esas filas,
+	// así que el tiempo quedaba vacío y la celebración terminaba en el acto, regalando
+	// los 2000 puntos de cultura.
+	$duration = celebrationDuration($type, $level);
+	$cost = isset($cel[$type]) ? $cel[$type] : null;
+
+	if($duration > 0 && is_array($cost)){
+		// Cobrar y agendar en un solo paso: el chequeo viejo aceptaba la celebración si
+		// alcanzaba *alguno* de los cuatro recursos (usaba `||`) y después descontaba los
+		// cuatro igual, dejando los otros en negativo.
+		$paid = $database->deductResourcesIfAvailable(
+			$village->resarray['vref'],
+			$cost['wood'],
+			$cost['clay'],
+			$cost['iron'],
+			$cost['crop']
+		);
+		if($paid){
+			if(!$database->addCel($village->resarray['vref'], time()+$duration, $type)){
+				$database->modifyResource(
+					$village->resarray['vref'],
+					$cost['wood'],
+					$cost['clay'],
+					$cost['iron'],
+					$cost['crop'],
+					1
+				);
+			}
 		}
 	}
-	elseif(!empty($_GET['type']) && $_GET['type'] == 2){
-		if(29700 < $village->awood || 33250 < $village->aclay || 32000 < $village->airon || 6700 < $village->acrop){
-			$endtime = ($gc[$village->resarray['f'.$_GET['id']]]/ SPEED) + time();
-			$wood= 29700;
-			$clay= 33250;
-			$iron= 32000;
-			$crop= 6700;
-			$database->modifyResource($village->resarray['vref'],$wood,$clay,$iron,$crop,$mode);
-			$database->addCel($village->resarray['vref'],$endtime,$_GET['type']);
-		}
-	}
 }
-header("Location: build.php?id=".$_GET['id']);
-?>
+
+header("Location: ".$redirect);
+exit;

@@ -23,7 +23,7 @@ echo "
                     <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".$cel[$i]['crop']."</span>
                     <div class=\"clear\"></div>
                     <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
-					echo $generator->getTimeFormat(round($cel[$i]['time'] * ($bid24[$building->getTypeLevel(24)]['attri'] / 100)/SPEED));
+					echo $generator->getTimeFormat(celebrationDuration($i,$level));
 					echo "</span>";
 					if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
                         echo "<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".$cel[$i]['wood']."&r2=".$cel[$i]['clay']."&r3=".$cel[$i]['iron']."&r4=".$cel[$i]['crop']."'; return false;\"><img src=\"img/x.gif\" class=\"npc\" alt=\"npc\"></button>";
@@ -43,7 +43,7 @@ echo "
 				}
 			} else {
 				echo "
-                	<button type=\"button\" value=\"Ünnepelj\" class=\"build\" onclick=\"window.location.href = 'celebration.php?id=$id&type=$i'; return false;\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
+                	<button type=\"button\" value=\"Ünnepelj\" class=\"build\" onclick=\"window.location.href = 'celebration.php?id=$id&type=$i&c=$session->mchecker'; return false;\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
 <div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div>
 </div><div class=\"button-contents\">Celebrar</div></div></button>";
                 echo "</div><div class=\"clear\"></div></div></div>";
@@ -71,7 +71,7 @@ echo "
                 <span class=\"resources r4 little_res\"><img class=\"r4\" src=\"img/x.gif\" alt=\"Cereal\">".$cel[$i]['crop']."</span>
                 <div class=\"clear\"></div>
                 <span class=\"clocks\"><img class=\"clock\" src=\"img/x.gif\" alt=\"Duración\">";
-                echo $generator->getTimeFormat(round($cel[$i]['time'] * ($bid24[$building->getTypeLevel(24)]['attri'] / 100)/SPEED));
+                echo $generator->getTimeFormat(celebrationDuration($i,$level));
                 echo "</span>";
                 if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
                 echo "<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".$cel[$i]['wood']."&r2=".$cel[$i]['clay']."&r3=".$cel[$i]['iron']."&r4=".$cel[$i]['crop']."'; return false;\"><img src=\"img/x.gif\" class=\"npc\" alt=\"npc\"></button>";
@@ -91,7 +91,7 @@ echo "<div class=\"contractLink\"><span class=\"none\">La gran celebración est�
 					}
                 }
                 else {
-                    echo "<button type=\"button\" value=\"Ünnepelj\" class=\"build\" onclick=\"window.location.href = 'celebration.php?id=$id&type=$i'; return false;\">
+                    echo "<button type=\"button\" value=\"Ünnepelj\" class=\"build\" onclick=\"window.location.href = 'celebration.php?id=$id&type=$i&c=$session->mchecker'; return false;\">
 <div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
 <div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div>
 </div><div class=\"button-contents\">Celebrar</div></div></button>";
