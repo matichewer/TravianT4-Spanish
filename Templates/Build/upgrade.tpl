@@ -15,7 +15,10 @@ if($bindicate == 1) {
         }
 	$master = count($database->getMasterJobsByField($village->wid,$id));
 	$uprequire = $building->resourceRequired($id,$village->resarray['f'.$id.'t'],($loopsame > 0 ? 2:1)+$doublebuild+$master);
-	$mastertime = $uprequire['time'];
+	// El pedido al constructor maestro cuesta oro, así que el enlace lleva el token
+	// de sesión: sin él, un enlace de afuera podía gastarlo desde el navegador del
+	// jugador. La duración ya no viaja por la URL, la calcula el servidor.
+	$masterToken = urlencode((string)$session->mchecker);
 ?>
 <div id="contract" class="contractWrapper">
 <div class="contractText">Costo de mejora al nivel <?php echo $village->resarray['f'.$id]+($loopsame > 0 ? 2:1)+$doublebuild+$master; ?> </div>
@@ -57,7 +60,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 <?php
 	if($id <= 18) {
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";
@@ -65,7 +68,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 	}
 	}else{
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";
@@ -82,7 +85,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 <?php
 	if($id <= 18) {
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";
@@ -90,7 +93,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 	}
 	}else{
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";
@@ -118,7 +121,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 <?php
 	if($id <= 18) {
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";
@@ -126,7 +129,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 	}
 	}else{
 	if($session->gold >= 1 && $village->master == 0){
-	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&time=$mastertime\">Construir con maestro constructor </a>";
+	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
 		echo "<span class=\"none\">Construir con maestro constructor</span>";

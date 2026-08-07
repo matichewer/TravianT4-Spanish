@@ -1268,15 +1268,8 @@ class Automation {
             }
             $q = "DELETE FROM ".TB_PREFIX."bdata where id = ".$indi['id'];
             $database->query($q);
-            /* $crop = $database->getCropProdstarv($indi['wid']);
-				$unitarrays = $this->getAllUnits($indi['wid']);
-				$village = $database->getVillage($indi['wid']);
-				$upkeep = $village['pop'] + $this->getUpkeep($unitarrays, 0, $indi['wid']);
-				if ($crop < $upkeep){
-					// add starv data
-					$database->setVillageField($indi['wid'], 'starv', $upkeep);
-					$database->setVillageField($indi['wid'], 'starvupdate', $time);
-				} */
+            // La hambruna ya no necesita que la marquen desde acá: starvation() busca
+            // las aldeas por su granero en rojo.
         }
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             @unlink("GameEngine/Prevention/build.txt");
@@ -1461,9 +1454,20 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."route where timestamp < $time";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
-            $targettribe = $database->getUserField($database->getVillageField($data['from'], "owner"), "tribe", 0);
+            // claimTradeRoute avanza el timestamp de forma atomica (WHERE timestamp = valor leido),
+            // asi solo un request concurrente gana la fila y ninguna ruta se entrega por duplicado.
+            if(!$database->claimTradeRoute($data['id'], $data['timestamp'])) {
+                continue;
+            }
+            $fromOwner = (int)$database->getVillageField($data['from'], "owner");
+            $toOwner = (int)$database->getVillageField($data['wid'], "owner");
+            if($fromOwner !== (int)$data['uid'] || $toOwner !== (int)$data['uid']) {
+                // Aldea origen o destino ya no existe o cambio de dueno (conquista/abandono): la ruta quedo huerfana.
+                $database->deleteTradeRoute($data['id']);
+                continue;
+            }
+            $targettribe = $database->getUserField($fromOwner, "tribe", 0);
             $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
-            $database->editTradeRoute($data['id'], "timestamp", 86400, 1);
         }
     }
 
@@ -3293,15 +3297,8 @@ class Automation {
 
                 }
             }
-            /* $crop = $database->getCropProdstarv($to['wref']);
-				$unitarrays = $this->getAllUnits($to['wref']);
-				$getvillage = $database->getVillage($to['wref']);
-				$village_upkeep = $getvillage['pop'] + $this->getUpkeep($unitarrays, 0, $to['wref']);
-				if ($crop < $village_upkeep){
-					// add starv data
-					$database->setVillageField($to['wref'], 'starv', $village_upkeep);
-					$database->setVillageField($to['wref'], 'starvupdate', time());
-				} */
+            // La hambruna ya no necesita que la marquen desde acá: starvation() busca
+            // las aldeas por su granero en rojo.
             unset($crop, $unitarrays, $getvillage, $village_upkeep);
 
         }
@@ -4285,15 +4282,8 @@ class Automation {
                 if($new_amt == 0) {
                     $database->trainUnit($train['id'], 0, 0, 0, 0, 1, 1);
                 }
-                /* $crop = $database->getCropProdstarv($train['vref']);
-				$unitarrays = $this->getAllUnits($train['vref']);
-				$village = $database->getVillage($train['vref']);
-				$upkeep = $village['pop'] + $this->getUpkeep($unitarrays, 0, $train['vref']);
-				if ($crop < $upkeep){
-					// add starv data
-					$database->setVillageField($train['vref'], 'starv', $upkeep);
-					$database->setVillageField($train['vref'], 'starvupdate', $time);
-				} */
+            // La hambruna ya no necesita que la marquen desde acá: starvation() busca
+            // las aldeas por su granero en rojo.
                 }
             }
         } finally {
@@ -4767,6 +4757,21 @@ class Automation {
         }
     }
 
+    /**
+     * Hambruna.
+     *
+     * Estaba apagada: los tres puntos que marcaban una aldea como hambrienta
+     * (fin de construcción, fin de entrenamiento y llegada de un ataque) estaban
+     * comentados, y `getStarvation()` sólo miraba la marca, así que ninguna tropa
+     * moría nunca aunque el granero quedara en rojo. Ahora la condición se lee
+     * directamente del estado de la aldea —cereal agotado y balance negativo— y no
+     * depende de que alguien se acuerde de marcarla.
+     *
+     * Mientras quede cereal en el granero sólo se anota el déficit. Cuando el
+     * granero llega a cero mueren tropas del contingente más numeroso, las justas
+     * para que el balance vuelva a cero, igual que en Travian. El héroe no se toca:
+     * no vive en la tabla de unidades.
+     */
     private function starvation() {
         if(file_exists("GameEngine/Prevention/starvation.txt")) {
             @unlink("GameEngine/Prevention/starvation.txt");
@@ -4774,218 +4779,144 @@ class Automation {
         global $database;
         $ourFileHandle = @fopen("GameEngine/Prevention/starvation.txt", 'w');
         @fclose($ourFileHandle);
-        $starvcost = array(
-
-            '1' => 30,
-            '2' => 70,
-            '3' => 80,
-            '4' => 40,
-            '5' => 100,
-            '6' => 180,
-            '7' => 70,
-            '8' => 90,
-            '9' => 37500,
-            '10' => 5500,
-            '11' => 40,
-            '12' => 40,
-            '13' => 70,
-            '14' => 50,
-            '15' => 75,
-            '16' => 80,
-            '17' => 70,
-            '18' => 60,
-            '19' => 27200,
-            '20' => 6500,
-            '21' => 30,
-            '22' => 60,
-            '23' => 40,
-            '24' => 60,
-            '25' => 120,
-            '26' => 170,
-            '27' => 75,
-            '28' => 90,
-            '29' => 37500,
-            '30' => 4900,
-            '31' => 100,
-            '32' => 100,
-            '33' => 100,
-            '34' => 100,
-            '35' => 100,
-            '36' => 100,
-            '37' => 100,
-            '38' => 100,
-            '39' => 100,
-            '40' => 100,
-            '41' => 100,
-            '42' => 100,
-            '43' => 100,
-            '44' => 100,
-            '45' => 100,
-            '46' => 100,
-            '47' => 100,
-            '48' => 100,
-            '49' => 100,
-            '50' => 100
-        );
-        $starvupkeep = array(
-
-            '1' => 1,
-            '2' => 1,
-            '3' => 1,
-            '4' => 2,
-            '5' => 3,
-            '6' => 4,
-            '7' => 3,
-            '8' => 6,
-            '9' => 5,
-            '10' => 1,
-            '11' => 1,
-            '12' => 1,
-            '13' => 1,
-            '14' => 1,
-            '15' => 2,
-            '16' => 3,
-            '17' => 6,
-            '18' => 4,
-            '19' => 1,
-            '20' => 1,
-            '21' => 1,
-            '22' => 1,
-            '23' => 2,
-            '24' => 2,
-            '25' => 2,
-            '26' => 3,
-            '27' => 3,
-            '28' => 6,
-            '29' => 4,
-            '30' => 1,
-            '31' => 1,
-            '32' => 1,
-            '33' => 1,
-            '34' => 2,
-            '35' => 2,
-            '36' => 3,
-            '37' => 3,
-            '38' => 3,
-            '39' => 3,
-            '40' => 5,
-            '41' => 1,
-            '42' => 1,
-            '43' => 1,
-            '44' => 1,
-            '45' => 2,
-            '46' => 3,
-            '47' => 6,
-            '48' => 5,
-            '49' => 1,
-            '50' => 1
-        );
 
         $time = time();
-
-        // load villages with minus prod
-        $starvarray = array();
-        $starvarray = $database->getStarvation();
-        foreach ($starvarray as $starv) {
-            if(($starv['starvupdate'] + 60) < $time) {
-                // get enforce
-                $enforcearray = $database->getEnforceVillage($starv['wref'], 0);
-                $maxcount = 0;
-                $maxtype = 0;
-                $killunits = 0;
-                if(count($enforcearray) == 0) {
-                    // get units
-                    $unitarray = $database->getUnit($starv['wref']);
-                    for ($i = 0; $i <= 50; $i++) {
-                        $units = $unitarray['u'.$i];
-                        if($unitarray['u'.$i] > $maxcount) {
-                            $maxcount = $unitarray['u'.$i];
-                            $maxtype = $i;
-                        }
-                    }
-                } else {
-                    foreach ($enforcearray as $enforce) {
-                        for ($i = 0; $i <= 50; $i++) {
-                            $units = $enforce['u'.$i];
-                            if($enforce['u'.$i] > $maxcount) {
-                                $maxcount = $enforce['u'.$i];
-                                $maxtype = $i;
-                                $enf = $enforce['id'];
-                            }
-                        }
-					}
-				}
-                if($maxcount <= 0 || $maxtype <= 0) {
-                    $database->setVillageField($starv['wref'], 'starv', 0);
-                    $database->setVillageField($starv['wref'], 'starvupdate', 0);
-                    $database->setVillageField($starv['wref'], 'crop', max(0, (float)$database->getVillageField($starv['wref'], 'crop')));
-                    continue;
-                }
-
-                // counting
-
-                $timedif = $time - $starv['starvupdate'];
-
-                $starvsec = ($starv['starv'] / 3600);
-
-                $difcrop = ($timedif * $starvsec);
-                $newcrop = 0;
-                $oldcrop = $database->getVillageField($starv['wref'], 'crop');
-                if($oldcrop > 100) {
-                    $difcrop = $difcrop - $oldcrop;
-                    if($difcrop < 0) {
-                        $difcrop = 0;
-                        $newcrop = $oldcrop - $difcrop;
-                    } else {
-                        $newcrop = $starvcost[$maxtype];
-                    }
-                }
-                if($difcrop > 0) {
-                    $killunits = round(($difcrop / $starvcost[$maxtype]));
-                    if(isset($enf)) {
-                        if($killunits < $maxcount) {
-                            $database->modifyEnforce($enf, $maxtype, $killunits, 0);
-                        } else {
-                            $database->deleteReinf($enf);
-                        }
-                    } else {
-                        if($killunits < $maxcount) {
-                            $database->modifyUnit($starv['wref'], $maxtype, $killunits, 0);
-                        } elseif($killunits > $maxcount) {
-                            $killunits = $maxcount;
-                            $database->modifyUnit($starv['wref'], $maxtype, $killunits, 0);
-                        }
-                    }
-                }
-
-                $upkeep = $starv['starv'] - ($killunits * $starvupkeep[$maxtype]);
-
-                $time = time();
-
-                $crop = $database->getCropProdstarv($starv['wref']);
-                $unitarrays = $this->getAllUnits($starv['wref']);
-                $upkeep = $this->getUpkeep($unitarrays, 0, $starv['wref']);
-                if($crop < $upkeep) {
-                    // add starv data
-                    $database->setVillageField($starv['wref'], 'starv', $upkeep);
-                    $database->setVillageField($starv['wref'], 'starvupdate', $time);
-                    $database->setVillageField($starv['wref'], 'crop', $newcrop);
-                } else {
-                    $database->setVillageField($starv['wref'], 'starv', 0);
-                    $database->setVillageField($starv['wref'], 'starvupdate', 0);
-                    $database->setVillageField($starv['wref'], 'crop', $newcrop);
-                }
+        foreach ($database->getStarvation() as $starv) {
+            $wref = (int)$starv['wref'];
+            if($wref <= 0) {
+                continue;
             }
-            unset ($starv);
-            unset ($unitarray);
-            unset ($enforcearray);
-            unset ($enforce);
-            unset ($starvarray);
+            // Una tanda por minuto y por aldea, para que la mortandad no dependa
+            // de cuántas veces se cargue una página.
+            if((int)$starv['starvupdate'] + 60 > $time) {
+                continue;
+            }
+            $net = $this->villageNetCropProduction($wref);
+            $crop = (float)$database->getVillageField($wref, 'crop');
+            if($net >= 0) {
+                $this->clearStarvation($wref, $crop);
+                continue;
+            }
+            if($crop > 0) {
+                // Todavía come de la reserva: se anota el déficit por hora y se espera.
+                $database->setVillageField($wref, 'starv', round(-$net));
+                $database->setVillageField($wref, 'starvupdate', $time);
+                continue;
+            }
+            $victim = $this->selectStarvationVictim($wref);
+            if($victim === null) {
+                // No queda nada que matar: se corta el rojo para no arrastrar deuda.
+                $this->clearStarvation($wref, 0);
+                continue;
+            }
+            $upkeepPerUnit = max(1, $this->unitUpkeep($victim['type']));
+            $kill = (int)min($victim['count'], ceil(-$net / $upkeepPerUnit));
+            if($kill < 1) {
+                $kill = 1;
+            }
+            if($victim['enforcement'] !== null) {
+                if($kill >= $victim['count']) {
+                    $database->deleteReinf($victim['enforcement']);
+                } else {
+                    $database->modifyEnforce($victim['enforcement'], $victim['type'], $kill, 0);
+                }
+            } else {
+                $database->modifyUnit($wref, $victim['type'], $kill, 0);
+            }
+            $wasStarving = (float)$starv['starv'] > 0;
+            $database->setVillageField($wref, 'crop', 0);
+            $database->setVillageField($wref, 'starv', round(-$net));
+            $database->setVillageField($wref, 'starvupdate', $time);
+            if(!$wasStarving) {
+                $this->notifyStarvation($wref);
+            }
         }
 
         if(file_exists("GameEngine/Prevention/starvation.txt")) {
             @unlink("GameEngine/Prevention/starvation.txt");
         }
+    }
+
+    /**
+     * Producción de cereal por hora ya descontados población, tropas propias y
+     * refuerzos: exactamente el número que el dueño ve en dorf1.
+     */
+    private function villageNetCropProduction($wid) {
+        global $database;
+        $saved = array($this->bountyinfoarray, $this->bountyresarray, $this->bountyoasisowned, $this->bountyocounter, $this->bountypop, $this->bountyproduction);
+        $owner = $database->getVillageField($wid, 'owner');
+        $this->bountyLoadTown($wid);
+        $this->bountycalculateProduction($wid, $owner);
+        $net = $this->bountyproduction['crop'];
+        list($this->bountyinfoarray, $this->bountyresarray, $this->bountyoasisowned, $this->bountyocounter, $this->bountypop, $this->bountyproduction) = $saved;
+        return $net;
+    }
+
+    /**
+     * Contingente más numeroso de la aldea, sean tropas propias o un refuerzo.
+     * Devuelve null si no hay ninguna unidad a la que pasarle la cuenta.
+     */
+    private function selectStarvationVictim($wref) {
+        global $database;
+        $best = null;
+        $own = $database->getUnit($wref);
+        if(is_array($own)) {
+            for($unit = 1; $unit <= 50; $unit++) {
+                $count = isset($own['u'.$unit]) ? (int)$own['u'.$unit] : 0;
+                if($count > 0 && ($best === null || $count > $best['count'])) {
+                    $best = array('count'=>$count, 'type'=>$unit, 'enforcement'=>null);
+                }
+            }
+        }
+        $reinforcements = $database->getEnforceVillage($wref, 0);
+        if(is_array($reinforcements)) {
+            foreach($reinforcements as $reinforcement) {
+                for($unit = 1; $unit <= 50; $unit++) {
+                    $count = isset($reinforcement['u'.$unit]) ? (int)$reinforcement['u'.$unit] : 0;
+                    if($count > 0 && ($best === null || $count > $best['count'])) {
+                        $best = array('count'=>$count, 'type'=>$unit, 'enforcement'=>(int)$reinforcement['id']);
+                    }
+                }
+            }
+        }
+        return $best;
+    }
+
+    /**
+     * Consumo de cereal por hora de una unidad, de la tabla de unidades del juego.
+     */
+    private function unitUpkeep($type) {
+        $type = (int)$type;
+        $unit = isset($GLOBALS['u'.$type]) ? $GLOBALS['u'.$type] : null;
+        if(is_array($unit) && isset($unit['pop'])) {
+            // A propósito sin el descuento del abrevadero romano: quedarse corto en el
+            // consumo por unidad haría matar de más, y pasarse sólo mata de menos, que
+            // la pasada siguiente corrige.
+            return max(1, (int)$unit['pop']);
+        }
+        return 1;
+    }
+
+    private function clearStarvation($wref, $crop) {
+        global $database;
+        $database->setVillageField($wref, 'starv', 0);
+        $database->setVillageField($wref, 'starvupdate', 0);
+        if($crop < 0) {
+            $database->setVillageField($wref, 'crop', 0);
+        }
+    }
+
+    private function notifyStarvation($wref) {
+        global $database;
+        $owner = (int)$database->getVillageField($wref, 'owner');
+        if($owner <= 4) {
+            return;
+        }
+        $name = $database->getVillageField($wref, 'name');
+        $message = "[message]Tu granero en [b]".addslashes($name)."[/b] se quedó vacío y el balance de cereal sigue en negativo."
+            ." Las tropas empezaron a morir de hambre y seguirán muriendo hasta que la producción vuelva a cero."
+            ." Amplía las plantaciones de cereal, reduce el ejército o manda tropas a otra aldea.[/message]";
+        $database->sendMessage($owner, 4, 'Hambruna en '.addslashes($name), $message, 0, 0, 0, 0, 0);
     }
 
     // by SlimShady95, aka Manuel Mannhardt < manuel_mannhardt@web.de > UPDATED FROM songeriux < haroldas.snei@gmail.com >

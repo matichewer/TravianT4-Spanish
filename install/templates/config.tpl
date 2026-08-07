@@ -183,7 +183,6 @@ echo "<div class=\"headline\"><span class=\"f10 c5\">Error creating constant.php
             <tr class="hover">
                 <td>Type:</td>
                 <td><select name="connectt" dir="ltr" class="text">
-                        <option value="0" >MYSQL(deprecated)</option>
                         <option value="1" selected="selected">MYSQLi</option>
                     </select></td>
             </tr>

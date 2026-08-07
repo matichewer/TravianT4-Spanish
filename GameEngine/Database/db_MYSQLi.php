@@ -153,8 +153,15 @@
 				return $this->mysqli_fetch_all($result);
 			}
 
+			/**
+			 * Aldeas que pueden estar pasando hambre. Antes sólo miraba la marca
+			 * `starv`, que nadie ponía nunca (los tres puntos que la escribían están
+			 * comentados desde el fork), así que la hambruna no se disparaba jamás.
+			 * La condición de verdad es el granero en rojo; la marca queda para el
+			 * ritmo y para el aviso al jugador.
+			 */
 			function getStarvation(){
-                    $q = "SELECT * FROM " . TB_PREFIX . "vdata where starv != 0";
+                    $q = "SELECT * FROM " . TB_PREFIX . "vdata where crop < 0 or starv != 0";
                     $result = mysqli_query($this->connection,$q);
                     return $this->mysqli_fetch_all($result);
             }
@@ -2575,13 +2582,24 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-			function editTradeRoute($id,$column,$value,$mode) {
-			if(!$mode){
-				$q = "UPDATE " . TB_PREFIX . "route set $column = $value where id = $id";
-			}else{
-				$q = "UPDATE " . TB_PREFIX . "route set $column = $column + $value where id = $id";
+			function claimTradeRoute($id,$timestamp) {
+				$id = (int) $id;
+				$timestamp = (int) $timestamp;
+				$q = "UPDATE " . TB_PREFIX . "route SET timestamp = timestamp + 86400 WHERE id = $id AND timestamp = $timestamp";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
-				return mysqli_query($this->connection,$q);
+
+			function getVillageRouteMerchantTotal($vid,$excludeRouteId = 0) {
+				$vid = (int) $vid;
+				$excludeRouteId = (int) $excludeRouteId;
+				$q = "SELECT SUM(merchant) FROM " . TB_PREFIX . "route WHERE `from` = $vid";
+				if($excludeRouteId > 0) {
+					$q .= " AND id <> $excludeRouteId";
+				}
+				$result = mysqli_query($this->connection,$q);
+				$row = mysqli_fetch_row($result);
+				return ($row && $row[0] !== null) ? (int)$row[0] : 0;
 			}
 
 			function deleteTradeRoute($id) {
@@ -5534,27 +5552,6 @@ break;
 				// The image copy
 				imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
 			}
-
-            /**
-             * Producción bruta de cereal usada por la hambruna. Comparte fórmula con
-             * dorf1: antes sumaba el oasis sobre la producción de los campos en vez
-             * de sobre la producción ya bonificada, así que una aldea con molino,
-             * panadería y oasis de cereal parecía producir menos de lo que producía
-             * y podía matar tropas por hambre sin motivo.
-             */
-            function getCropProdstarv($wref) {
-                $owner = $this->getVillageField($wref, 'owner');
-                $buildarray = $this->getResourceLevel($wref);
-                $q = "SELECT type FROM `" . TB_PREFIX . "odata` WHERE conqured = $wref";
-                $oasis = $this->query_return($q);
-                $gross = villageGrossProduction(
-                    $buildarray,
-                    villageOasisCounter($oasis),
-                    villageGoldBonusFlags($this, $owner),
-                    SPEED
-                );
-                return $gross['production']['crop'];
-            }
 
 		function getFieldDistance($wid) {
 		$q = "SELECT * FROM " . TB_PREFIX . "vdata where owner > 4 and wref != $wid";

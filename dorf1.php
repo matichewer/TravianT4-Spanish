@@ -11,7 +11,9 @@ if(isset($_GET['newdid'])) {
 else {
 	$building->procBuild($_GET);
 }
-if(isset($_GET['master']) && isset($_GET['id']) && $session->gold >= 1 && $session->goldclub && $village->master == 0) {
+if(isset($_GET['master']) && isset($_GET['id']) && isset($_GET['c'])
+	&& is_scalar($_GET['c']) && hash_equals((string)$session->mchecker,(string)$_GET['c'])
+	&& $session->gold >= 1 && $session->goldclub && $village->master == 0) {
 if($session->access!=BANNED){
 // El nivel y la duración salen de las tablas del juego, no de la URL.
 $masterRequest = $building->masterBuildingRequest($_GET['id'],$_GET['master']);

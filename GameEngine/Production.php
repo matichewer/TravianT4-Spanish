@@ -9,7 +9,8 @@
  * molino en una, el oasis se sumaba sobre la base en otra, y dos ignoraban el
  * bono de producción comprado con oro. Como cada una escribe recursos reales en
  * la aldea, la diferencia se traducía en recursos que aparecían o desaparecían
- * según quién actualizara la aldea. Todas usan ahora estas funciones.
+ * según quién actualizara la aldea. Todas usan ahora estas funciones (la de la
+ * hambruna se borró: usa la producción neta de Automation, que ya sale de acá).
  *
  * Orden canónico (el que ya usaba Village.php, que es lo que ve el jugador):
  *   campos -> + % de los edificios de bonus sobre la producción de los campos

@@ -100,7 +100,6 @@ for($tribe = 1; $tribe <= 5; $tribe++) {
 
 $automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 $heroInventorySource = file_get_contents(dirname(__DIR__).'/hero_inventory.php');
-$mysqlSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQL.php');
 $mysqliSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
 $installerSchema = file_get_contents(dirname(__DIR__).'/install/data/sql.sql');
 $migrationsSource = file_get_contents(dirname(__DIR__).'/tools/migrations.sql');
@@ -125,7 +124,8 @@ troopEvasionAssert(
 	'The inventory must explain that hero hiding is independent from troop evasion.'
 );
 
-foreach(array('MySQL' => $mysqlSource, 'MySQLi' => $mysqliSource) as $adapter => $source) {
+// Sólo queda el driver MySQLi: el de `mysql_*` se borró porque no corre en PHP 7.
+foreach(array('MySQLi' => $mysqliSource) as $adapter => $source) {
 	$methodStart = strpos($source, 'function getOrdinaryTroopReturnsInWindow');
 	$methodEnd = $methodStart === false ? false : strpos($source, 'function getMovement(', $methodStart);
 	$methodSource = $methodStart === false || $methodEnd === false

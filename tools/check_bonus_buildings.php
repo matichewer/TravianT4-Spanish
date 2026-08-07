@@ -322,7 +322,17 @@ foreach(array('dorf1.php','dorf2.php') as $entry) {
 	check(strpos($source,'$building->masterBuildingRequest($_GET[\'id\'],$_GET[\'master\'])') !== false,
 		$entry.' valida el pedido del constructor maestro');
 	check(strpos($source,"\$_GET['time']") === false, $entry.' ya no confía en la duración que viene por la URL');
+	// El pedido gasta oro: sin token, un enlace externo podía dispararlo.
+	check(strpos($source,'hash_equals((string)$session->mchecker,(string)$_GET[\'c\'])') !== false,
+		$entry.' exige el token de sesión para usar el constructor maestro');
 }
+$upgradeTemplate = file_get_contents(dirname(__DIR__).'/Templates/Build/upgrade.tpl');
+check(strpos($upgradeTemplate,'$masterToken = urlencode((string)$session->mchecker);') !== false,
+	'el enlace del constructor maestro lleva el token de sesión');
+check(substr_count($upgradeTemplate,'master=$bid&id=$id&c=$masterToken') === 6,
+	'los seis enlaces del constructor maestro usan el token y no la duración');
+check(strpos($upgradeTemplate,'time=$mastertime') === false,
+	'ningún enlace manda ya la duración por la URL');
 
 // ---------------------------------------------------------------------------
 section('F. Una sola fórmula y producción no retroactiva');
@@ -330,12 +340,15 @@ section('F. Una sola fórmula y producción no retroactiva');
 $sources = array(
 	'GameEngine/Village.php',
 	'GameEngine/Automation.php',
-	'GameEngine/Database/db_MYSQLi.php',
 	'Templates/dorf3/3.tpl'
 );
 foreach($sources as $source) {
 	$code = file_get_contents(dirname(__DIR__).'/'.$source);
 	check(strpos($code,'villageGrossProduction(') !== false, $source.' usa la fórmula compartida');
+}
+// Nadie vuelve a calcular un bono de edificio a mano, ni siquiera la capa de datos.
+foreach(array_merge($sources,array('GameEngine/Database/db_MYSQLi.php')) as $source) {
+	$code = file_get_contents(dirname(__DIR__).'/'.$source);
 	check(!preg_match('/bid9\[[^\]]+\]\[.attri.\]/',$code), $source.' no recalcula el bono de la panadería por su cuenta');
 	check(!preg_match('/bid5\[[^\]]+\]\[.attri.\]/',$code), $source.' no recalcula el bono del aserradero por su cuenta');
 }

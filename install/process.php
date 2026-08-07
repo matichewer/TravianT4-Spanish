@@ -39,18 +39,10 @@ class Process {
         global $database;
         $myFile = "installconfig/constant.php";
         $fh = fopen($myFile, 'w') or die("<br/><br/><br/>Can't open or create file: install\installconfig\constant.php");
-        // DB_TYPE no existe todavia: installconfig/connection.php se genera mas
-        // abajo, en esta misma pasada. El tipo sale del formulario, y ante la
-        // duda se usa MySQLi, porque el template mysql_* solo corre en PHP 5.
-        $dbType = isset($_POST['connectt']) ? (int)$_POST['connectt'] : 1;
-        switch($dbType) {
-			case 0:
-			$text = file_get_contents("data/constant_format.tpl");
-			break;
-			default:
-			$text = file_get_contents("data/constant_format_mysqli.tpl");
-			break;
-		}
+        // Sólo hay un driver: MySQLi. El de `mysql_*` no existe desde PHP 7.0, así
+        // que elegirlo dejaba una instalación que no arrancaba.
+        $dbType = 1;
+        $text = file_get_contents("data/constant_format_mysqli.tpl");
         $text = preg_replace("'%TRADERCAP%'", $_POST['tradercap'], $text);
         $text = preg_replace("'%CRANNYCAP%'", $_POST['crannycap'], $text);
         $text = preg_replace("'%TRAPPERCAP%'", $_POST['trappercap'], $text);
@@ -84,7 +76,7 @@ class Process {
         $text = preg_replace("'%SPASS%'", $_POST['spass'], $text);
         $text = preg_replace("'%SDB%'", $_POST['sdb'], $text);
         $text = preg_replace("'%PREFIX%'", $_POST['prefix'], $text);
-        $text = preg_replace("'%CONNECTT%'", $_POST['connectt'], $text);
+        $text = preg_replace("'%CONNECTT%'", $dbType, $text);
 
         fwrite($fh, $text);
 
