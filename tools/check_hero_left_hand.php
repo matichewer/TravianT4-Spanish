@@ -220,4 +220,14 @@ foreach(array(70, 71, 72) as $type){
 	check(array_sum($bonuses) === 0, "el objeto inexistente $type tiene bonos");
 }
 
+// El script de reconciliación tiene que contemplar el escudo: un héroe que ya lo tenía
+// puesto antes del deploy no tiene su fuerza guardada, y desequiparlo se la restaría al
+// arma. Se revisa en el código para que un cambio futuro no se lo lleve puesto.
+$migration = file_get_contents(dirname(__DIR__).'/tools/fix_hero_equipment_bonuses.php');
+check($migration !== false, 'No se pudo leer fix_hero_equipment_bonuses.php');
+foreach(array('getHeroLeftHandBonuses', 'getHeroWeaponPowerBonus', 'itempower') as $fragment){
+	check(strpos($migration, $fragment) !== false,
+		"fix_hero_equipment_bonuses.php ya no reconcilia $fragment");
+}
+
 echo "Hero left hand regression: OK\n";

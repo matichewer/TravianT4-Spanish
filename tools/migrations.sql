@@ -266,3 +266,13 @@ WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop;
 -- rotos hay que reconciliarlos una vez, despues del deploy, con el script idempotente
 --   docker compose exec -T web php /var/www/html/tools/fix_hero_home_village.php --apply
 -- que la mueve a la capital y, si no hay, a la primera aldea que quede.
+
+-- 2026-08-07 - Fuerza de combate del escudo (btype 3, types 76-78)
+-- Los escudos siempre cayeron de las aventuras, pero hasta el commit que implemento la
+-- mano izquierda `applyHeroEquipmentBonusChange` no tenia rama para btype 3, asi que su
+-- fuerza de combate nunca se sumaba a `hero.itempower`. El codigo nuevo si se la resta
+-- al desequiparlos: un heroe con escudo y arma puestos de antes tenia guardada solo la
+-- fuerza del arma, y sacarse el escudo le restaba 1500 que nunca se habian sumado,
+-- llevandose puesta la del arma. Hay que reconciliar una vez, despues del deploy, con
+--   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
+-- que ahora recalcula tambien `itempower` a partir del peto, el escudo y el arma.
