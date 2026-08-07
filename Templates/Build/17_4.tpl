@@ -41,20 +41,25 @@ $routes = $database->getTradeRoute($session->uid);
     echo "<tr><td colspan=\"5\" class=\"none\">No hay rutas comerciales activas.</td></tr>";
     }else{
 foreach($routes as $route){
+$isOwnVillage = (int)$route['from'] === (int)$village->wid;
 ?>
 <tr>
-<th><a href="build.php?gid=17&amp;t=4&amp;action=delRoute&amp;routeid=<?php echo (int)$route['id']; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>"><img class="del" src="img/x.gif" alt="eliminar" title="eliminar"></a></th>
+<th><?php if($isOwnVillage){ ?><a href="build.php?gid=17&amp;t=4&amp;action=delRoute&amp;routeid=<?php echo (int)$route['id']; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>"><img class="del" src="img/x.gif" alt="eliminar" title="eliminar"></a><?php } ?></th>
 <th>
 <?php
 $routeVillageName = htmlspecialchars((string)$database->getVillageField($route['wid'],"name"),ENT_QUOTES,'UTF-8');
 echo "Ruta comercial a <a href=karte.php?d=".(int)$route['wid']."&amp;c=".$generator->getMapCheck($route['wid']).">".$routeVillageName."</a><br>";
+if(!$isOwnVillage){
+$originVillageName = htmlspecialchars((string)$database->getVillageField($route['from'],"name"),ENT_QUOTES,'UTF-8');
+echo "<small>Origen: <a href=\"dorf2.php?newdid=".(int)$route['from']."\">".$originVillageName."</a></small><br>";
+}
 ?>
 <img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Madera" title="Madera"> <?php echo $route['wood']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Barro" title="Barro"> <?php echo $route['clay']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Hierro" title="Hierro"> <?php echo $route['iron']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Cereal" title="Cereal"> <?php echo $route['crop']; ?>
 
 </th>
 <th><?php if($route['start'] > 9){ echo $route['start'];}else{ echo "0".$route['start'];} echo ":00"; ?></th>
 <th><?php echo $route['deliveries']."x".$route['merchant']; ?></th>
-<th><a href="build.php?id=<?php echo $id; ?>&t=4&action=editRoute&routeid=<?php echo $route['id']; ?>">» editar</a></th>
+<th><?php if($isOwnVillage){ ?><a href="build.php?id=<?php echo $id; ?>&t=4&action=editRoute&routeid=<?php echo $route['id']; ?>">» editar</a><?php }else{ ?><small>gestionar desde esa aldea</small><?php } ?></th>
 </tr>
 <?php }} ?>
         </tbody></table>

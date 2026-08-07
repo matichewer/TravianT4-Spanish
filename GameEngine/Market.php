@@ -107,8 +107,17 @@ class Market {
         $start = $this->nonNegativeInteger(isset($post['start']) ? $post['start'] : null);
         $deliveries = $this->positiveInteger(isset($post['deliveries']) ? $post['deliveries'] : null);
         $reqMerc = $this->requiredMerchants(array_sum($resource));
+
+        // Las rutas ya creadas reservan mercaderes de forma permanente (se liberan solo
+        // al borrar la ruta), asi que hay que descontarlas de la capacidad del edificio;
+        // si no, se pueden crear rutas cuya suma de mercaderes nunca entra en el mismo
+        // Mercado y terminan fallando en silencio cada vez que les toca disparar.
+        $routeId = $postAction === 'editRoute' ? $this->positiveInteger(isset($post['routeid']) ? $post['routeid'] : null) : 0;
+        $committedByOtherRoutes = $database->getVillageRouteMerchantTotal($village->wid,$routeId ?: 0);
+        $merchantsFreeForRoutes = max(0,$this->merchant - $committedByOtherRoutes);
+
         if(array_sum($resource) <= 0 || $start === false || $start > 23 || $deliveries < 1 || $deliveries > 3
-            || $reqMerc <= 0 || $reqMerc > $this->merchant) {
+            || $reqMerc <= 0 || $reqMerc > $merchantsFreeForRoutes) {
             $this->redirectToMarket(0,4);
         }
         $timestamp = strtotime('today '.sprintf('%02d',$start).':00:00');
@@ -123,7 +132,6 @@ class Market {
             }
             $database->createTradeRoute($session->uid,$target,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp);
         } else {
-            $routeId = $this->positiveInteger(isset($post['routeid']) ? $post['routeid'] : null);
             if($routeId) {
                 $database->updateTradeRouteOwned($routeId,$session->uid,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp);
             }
@@ -388,7 +396,10 @@ class Market {
         if($amount <= 0 || $this->maxcarry <= 0) {
             return 0;
         }
-        return (int)ceil($amount/$this->maxcarry);
+        // El -0.1 evita que un total que sea multiplo exacto de maxcarry (comun con el
+        // bonus del Almacen Grande, que no siempre da una capacidad entera) redondee
+        // hacia arriba por imprecision de coma flotante. Mismo colchon que sendResource2.
+        return (int)ceil(($amount-0.1)/$this->maxcarry);
     }
      
     private function loadOnsale() { 
