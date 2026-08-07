@@ -422,10 +422,31 @@ details.buildingLevelHelp summary:focus {
    overhang, or they get clipped by the left edge of the document. The threshold
    is 990 + 2*55 + 20 rather than 990 + 2*55: a media query measures the viewport
    *including* the scrollbar, while the wrapper is centred in the width without
-   it, so the breakpoint has to leave room for the scrollbar too. */
+   it, so the breakpoint has to leave room for the scrollbar too.
+
+   This is the case phones land in: with no <meta name="viewport"> they lay the
+   page out at ~980px, so the panel loses its overhang and slides 40px right,
+   straight over the leftmost dorf1 resource badges (x=155 and x=163 of the
+   wrapper). Narrowing it to 152px keeps it clear of both; the content needs
+   114px and 152 leaves 122. */
 @media (max-width: 1119px) {
 	#cultureProgress {
 		left: 0;
+		width: 152px;
+	}
+
+	/* A 152px el arte escala a 0.78, asi que el borde de madera mide 7px a la
+	   izquierda y 13px a la derecha en vez de 9 y 16: se puede recortar el
+	   padding y recuperar los 6px que necesita "Aldeas: N de N posibles" para
+	   no partirse en dos renglones. */
+	/* Con #cultureProgress adelante: las reglas base de estas dos clases estan
+	   mas abajo en el archivo y con la misma especificidad ganarian por orden. */
+	#cultureProgress .cultureProgressSignBody {
+		padding: 0 15px 0 9px;
+	}
+
+	#cultureProgress .cultureProgressHeader {
+		padding: 0 3px 5px;
 	}
 }
 
