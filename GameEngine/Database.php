@@ -2,6 +2,7 @@
 
 include_once(dirname(__FILE__).'/../config/connection.php');
 include_once(dirname(__FILE__).'/../config/config.php');
+require_once(dirname(__FILE__).'/Production.php');
 
 switch(DB_TYPE) {
 	case 1:

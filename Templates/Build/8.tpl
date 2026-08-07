@@ -11,7 +11,7 @@ El molino aumenta tu producción de cereal un 5% por nivel, hasta un máximo del
 	<table cellpadding="1" cellspacing="1" id="build_value">
 		<tr>
 			<th>Aumento de producción actual:</th>
-			<td><b><?php echo $bid8[$village->resarray['f'.$id]]['attri']; ?></b>%</td>
+			<td><b><?php echo $village->resarray['f'.$id] >= 1 ? $bid8[$village->resarray['f'.$id]]['attri'] : 0; ?></b>%</td>
 		</tr>
 		<tr>
 		<?php 

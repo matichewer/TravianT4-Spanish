@@ -10,7 +10,7 @@ Aquí se usa la harina de tu molino para hornear pan. Junto con el molino, el au
 	<table cellpadding="1" cellspacing="1" id="build_value">
 		<tr>
 			<th>Aumento de producción actual:</th>
-			<td><b><?php echo $bid9[$village->resarray['f'.$id]]['attri']; ?></b>%</td>
+			<td><b><?php echo $village->resarray['f'.$id] >= 1 ? $bid9[$village->resarray['f'.$id]]['attri'] : 0; ?></b>%</td>
 		</tr>
 		<tr>
 		<?php 

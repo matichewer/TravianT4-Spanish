@@ -52,6 +52,8 @@ When adding logic, follow this pattern (`global $database, $session, ...`) rathe
 ### Game data & logic
 `GameEngine/Data/*.php` are static lookup tables (building costs `buidata`, units `unitdata`, resource fields `resdata`, hero `hero_full`, culture points `cp`, celebrations `cel`). Core mechanics: `Village.php`, `Building.php`, `Market.php`, `Technology.php`, `Battle.php`, `Account.php`, `Alliance.php`, `Ranking.php`, `Message.php`, `Inventory.php`, `Units.php`, `Profile.php`. `Automation.php` / `AutomationSinglePlayer.php` drive automated/bot behavior.
 
+**Resource production has exactly one formula**, in `GameEngine/Production.php` (`villageGrossProduction()`): fields → bonus buildings (sawmill/brickyard/foundry, and grain mill + bakery added on top of the *fields*, never chained) → oasis → gold bonus → `SPEED`. Village, the raid path that tops up a village before it is looted (`Automation::updateRes`), the starvation check (`getCropProdstarv`) and the dorf3 overview all call it — never re-implement it locally, the copies used to drift and each one writes real resources. Anything that changes a field or bonus-building level while the owner is away must call `Automation::accrueProductionBeforeLevelChange()` first, so the new level is not applied retroactively to the hours already elapsed.
+
 ### Templates
 `.tpl` files are **plain PHP includes**, not a template engine — they mix HTML and `<?php ?>` and read the same globals. Edit them like PHP.
 

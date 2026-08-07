@@ -11,10 +11,13 @@ if(isset($_GET['newdid'])) {
 else {
 	$building->procBuild($_GET);
 }
-if(isset($_GET['master']) && isset($_GET['id']) && isset($_GET['time']) && $session->gold >= 1 && $session->goldclub && $village->master == 0) {
+if(isset($_GET['master']) && isset($_GET['id']) && $session->gold >= 1 && $session->goldclub && $village->master == 0) {
 if($session->access!=BANNED){
-$level = $database->getResourceLevel($village->wid);
-$database->addBuilding($village->wid, $_GET['id'], $_GET['master'], 1, $_GET['time'], 1, $level['f'.$_GET['id']] + 1 + count($database->getBuildingByField($village->wid,$_GET['id'])));
+// El nivel y la duración salen de las tablas del juego, no de la URL.
+$masterRequest = $building->masterBuildingRequest($_GET['id'],$_GET['master']);
+if($masterRequest !== false) {
+$database->addBuilding($village->wid, (int)$_GET['id'], (int)$_GET['master'], 1, $masterRequest['time'], 1, $masterRequest['level']);
+}
 header("Location: ".$_SERVER['PHP_SELF']);
 }else{
 header("Location: banned.php");

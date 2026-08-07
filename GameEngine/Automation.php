@@ -4,6 +4,7 @@ require_once __DIR__.'/CombatRanking.php';
 require_once __DIR__.'/Hero.php';
 // Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
 require_once __DIR__.'/GeneratorX.php';
+require_once __DIR__.'/Production.php';
 
 class Automation {
 
@@ -1204,6 +1205,13 @@ class Automation {
                 }
                 $database->query("DELETE FROM ".TB_PREFIX."bdata WHERE id=".(int)$indi['id']);
                 continue;
+            }
+            // Un campo de recursos o un edificio de bonus cambia la producción: hay
+            // que cobrar lo producido hasta este instante con el nivel viejo. Si no,
+            // la próxima visita del jugador aplica el nivel nuevo a todas las horas
+            // que estuvo desconectado y regala el bono hacia atrás.
+            if((int)$indi['type'] >= 1 && (int)$indi['type'] <= 9) {
+                $this->accrueProductionBeforeLevelChange($indi['wid'], $indi['timestamp']);
             }
             $q = "UPDATE ".TB_PREFIX."fdata set f".$indi['field']." = ".$indi['level'].", f".$indi['field']."t = ".$indi['type']." where vref = ".$indi['wid'];
             if($database->query($q)) {
@@ -4023,11 +4031,31 @@ class Automation {
         }
     }
 
-    private function updateRes($bountywid, $uid) {
+    /**
+     * Pone al día los recursos de una aldea con la producción que tiene ahora.
+     * $until permite cerrar el tramo en un instante pasado (el momento exacto en
+     * que termina una construcción o una demolición), para que el nivel nuevo no
+     * se aplique hacia atrás sobre las horas que el jugador estuvo desconectado.
+     */
+    private function updateRes($bountywid, $uid, $until = null) {
         global $session;
         $this->bountyLoadTown($bountywid);
         $this->bountycalculateProduction($bountywid, $uid);
-        $this->bountyprocessProduction($bountywid);
+        $this->bountyprocessProduction($bountywid, $until);
+    }
+
+    /**
+     * Cierra el tramo de producción de una aldea justo antes de que cambie el
+     * nivel de un edificio o un campo que altera la producción.
+     */
+    private function accrueProductionBeforeLevelChange($villageId, $until) {
+        global $database;
+        $villageId = (int)$villageId;
+        if($villageId <= 0) {
+            return;
+        }
+        $owner = $database->getVillageField($villageId,'owner');
+        $this->updateRes($villageId, $owner, $until);
     }
 
     // Poner al día un oasis antes de saquearlo usa exactamente la misma producción
@@ -4064,49 +4092,7 @@ class Automation {
     }
 
     private function bountysortOasis() {
-        $crop = $clay = $wood = $iron = 0;
-        foreach ($this->bountyoasisowned as $oasis) {
-            switch($oasis['type']) {
-                case 1:
-                    $wood += 1;
-                    break;
-                case 2:
-                    $wood += 2;
-                    break;
-                case 3:
-                    $wood += 1;
-                    $crop += 1;
-                    break;
-                case 4:
-                    $clay += 1;
-                    break;
-                case 5:
-                    $clay += 2;
-                    break;
-                case 6:
-                    $clay += 1;
-                    $crop += 1;
-                    break;
-                case 7:
-                    $iron += 1;
-                    break;
-                case 8:
-                    $iron += 2;
-                    break;
-                case 9:
-                    $iron += 1;
-                    $crop += 1;
-                    break;
-                case 10:
-                case 11:
-                    $crop += 1;
-                    break;
-                case 12:
-                    $crop += 2;
-                    break;
-            }
-        }
-        return array($wood, $clay, $iron, $crop);
+        return villageOasisCounter($this->bountyoasisowned);
     }
 
     function getAllUnits($base) {
@@ -4209,145 +4195,51 @@ class Automation {
 	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
 	        $heroData = $database->getHeroData($uid);
 	        $heroProduction = heroVillageResourceBonus($heroData, $bountywid, SPEED);
+	        // Misma fórmula y mismos bonos de oro que ve el dueño en dorf1: esta
+	        // producción escribe recursos reales, así que no puede diferir de la
+	        // que el jugador tiene a la vista.
+	        $gross = villageGrossProduction(
+	            $this->bountyresarray,
+	            $this->bountyocounter,
+	            villageGoldBonusFlags($database, $uid),
+	            SPEED
+	        );
+	        $grossCrop = $gross['production']['crop'];
 
-	        $this->bountyproduction['wood'] = $this->bountyGetWoodProd()+$heroProduction['wood'];
-	        $this->bountyproduction['clay'] = $this->bountyGetClayProd()+$heroProduction['clay'];
-	        $this->bountyproduction['iron'] = $this->bountyGetIronProd()+$heroProduction['iron'];
+	        $this->bountyproduction['wood'] = $gross['production']['wood']+$heroProduction['wood'];
+	        $this->bountyproduction['clay'] = $gross['production']['clay']+$heroProduction['clay'];
+	        $this->bountyproduction['iron'] = $gross['production']['iron']+$heroProduction['iron'];
 
 	        if($uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
+	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
 
 	        } else if($normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
 	        } else if($largeA['size'] == 2 && $largeA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
+	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
 	        } else {
-	            $this->bountyproduction['crop'] = $this->bountyGetCropProd()-$this->bountypop-$upkeep+$heroProduction['crop'];
+	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-$upkeep+$heroProduction['crop'];
 	        }
 	    }
 
-    private function bountyprocessProduction($bountywid) {
+    private function bountyprocessProduction($bountywid, $until = null) {
         global $database;
-        $timepast = time() - $this->bountyinfoarray['lastupdate'];
+        $lastupdate = (int)$this->bountyinfoarray['lastupdate'];
+        $now = $until === null ? time() : (int)$until;
+        $timepast = max(0, $now - $lastupdate);
+        if($timepast === 0) {
+            return;
+        }
         $nwood = ($this->bountyproduction['wood'] / 3600) * $timepast;
         $nclay = ($this->bountyproduction['clay'] / 3600) * $timepast;
         $niron = ($this->bountyproduction['iron'] / 3600) * $timepast;
         $ncrop = ($this->bountyproduction['crop'] / 3600) * $timepast;
-        $database->modifyResource($bountywid, $nwood, $nclay, $niron, $ncrop, 1);
-        $database->updateVillage($bountywid);
-    }
-
-    private function bountyGetWoodProd() {
-        global $bid1, $bid5, $session;
-        $wood = $sawmill = 0;
-        $woodholder = array();
-        for ($i = 1; $i <= 38; $i++) {
-            if($this->bountyresarray['f'.$i.'t'] == 1) {
-                array_push($woodholder, 'f'.$i);
-            }
-            if($this->bountyresarray['f'.$i.'t'] == 5) {
-                $sawmill = $this->bountyresarray['f'.$i];
-            }
-        }
-        for ($i = 0; $i <= count($woodholder) - 1; $i++) {
-            $wood += $bid1[$this->bountyresarray[$woodholder[$i]]]['prod'];
-        }
-        if($sawmill >= 1) {
-            $wood += $wood / 100 * $bid5[$sawmill]['attri'];
-        }
-        if($this->bountyocounter[0] != 0) {
-            $wood += $wood * 0.25 * $this->bountyocounter[0];
-        }
-//        $wood += $wood*$this->bountyocounter[0]*0.25;
-        $wood *= SPEED;
-        return round($wood);
-    }
-
-    private function bountyGetClayProd() {
-        global $bid2, $bid6, $session;
-        $clay = $brick = 0;
-        $clayholder = array();
-        for ($i = 1; $i <= 38; $i++) {
-            if($this->bountyresarray['f'.$i.'t'] == 2) {
-                array_push($clayholder, 'f'.$i);
-            }
-            if($this->bountyresarray['f'.$i.'t'] == 6) {
-                $brick = $this->bountyresarray['f'.$i];
-            }
-        }
-        for ($i = 0; $i <= count($clayholder) - 1; $i++) {
-            $clay += $bid2[$this->bountyresarray[$clayholder[$i]]]['prod'];
-        }
-        if($brick >= 1) {
-            $clay += $clay / 100 * $bid6[$brick]['attri'];
-        }
-        if($this->bountyocounter[1] != 0) {
-            $clay += $clay * 0.25 * $this->bountyocounter[1];
-        }
-//        $clay += $clay*$this->bountyocounter[1]*0.25;
-        $clay *= SPEED;
-        return round($clay);
-    }
-
-    private function bountyGetIronProd() {
-        global $bid3, $bid7, $session;
-        $iron = $foundry = 0;
-        $ironholder = array();
-        for ($i = 1; $i <= 38; $i++) {
-            if($this->bountyresarray['f'.$i.'t'] == 3) {
-                array_push($ironholder, 'f'.$i);
-            }
-            if($this->bountyresarray['f'.$i.'t'] == 7) {
-                $foundry = $this->bountyresarray['f'.$i];
-            }
-        }
-        for ($i = 0; $i <= count($ironholder) - 1; $i++) {
-            $iron += $bid3[$this->bountyresarray[$ironholder[$i]]]['prod'];
-        }
-        if($foundry >= 1) {
-            $iron += $iron / 100 * $bid7[$foundry]['attri'];
-        }
-        if($this->bountyocounter[2] != 0) {
-            $iron += $iron * 0.25 * $this->bountyocounter[2];
-        }
-//        $iron += $iron*$this->bountyocounter[2]*0.25;
-        $iron *= SPEED;
-        return round($iron);
-    }
-
-    private function bountyGetCropProd() {
-        global $bid4, $bid8, $bid9, $session;
-        $crop = $grainmill = $bakery = 0;
-        $cropholder = array();
-        for ($i = 1; $i <= 38; $i++) {
-            if($this->bountyresarray['f'.$i.'t'] == 4) {
-                array_push($cropholder, 'f'.$i);
-            }
-            if($this->bountyresarray['f'.$i.'t'] == 8) {
-                $grainmill = $this->bountyresarray['f'.$i];
-            }
-            if($this->bountyresarray['f'.$i.'t'] == 9) {
-                $bakery = $this->bountyresarray['f'.$i];
-            }
-        }
-        for ($i = 0; $i <= count($cropholder) - 1; $i++) {
-            $crop += $bid4[$this->bountyresarray[$cropholder[$i]]]['prod'];
-        }
-        if($grainmill >= 1) {
-            $crop += $crop / 100 * $bid8[$grainmill]['attri'];
-        }
-        if($bakery >= 1) {
-            $crop += $crop / 100 * $bid9[$bakery]['attri'];
-        }
-        if($this->bountyocounter[3] != 0) {
-            $crop += $crop * 0.25 * $this->bountyocounter[3];
-        }
-
-//        $crop += $crop*$this->bountyocounter[3]*0.25;
-        $crop *= SPEED;
-        return round($crop);
+        // accrueVillageResources acota al almacén y sólo aplica si `lastupdate`
+        // sigue siendo el que leímos, así que dos procesos que pisen la misma
+        // aldea no pueden acreditar el mismo tramo dos veces.
+        $database->accrueVillageResources($bountywid, $lastupdate, $now, $nwood, $nclay, $niron, $ncrop);
     }
 
     private function trainingComplete() {
@@ -4525,6 +4417,11 @@ class Automation {
             if($vil['timetofinish'] <= time()) {
                 $type = $database->getFieldType($vil['vref'], $vil['buildnumber']);
                 $level = $database->getFieldLevel($vil['vref'], $vil['buildnumber']);
+                // Igual que al construir: se cobra lo producido con el nivel viejo
+                // hasta el momento en que termina la demolición.
+                if((int)$type >= 1 && (int)$type <= 9) {
+                    $this->accrueProductionBeforeLevelChange($vil['vref'], $vil['timetofinish']);
+                }
                 $this->applyStorageCapacityDelta($vil['vref'], $type, $level, $level - 1);
                 if($type == 18) {
                     $allyleader = $database->getVillageField($data['to'], "owner");
@@ -4809,8 +4706,23 @@ class Automation {
             $villiron = $database->getVillageField($master['wid'], 'iron');
             $villcrop = $database->getVillageField($master['wid'], 'crop');
             $type = $master['type'];
-            $level = $master['level'];
-            $buildarray = $GLOBALS["bid".$type];
+            $buildarray = isset($GLOBALS["bid".$type]) ? $GLOBALS["bid".$type] : array();
+            // El nivel se recalcula al activar: si mientras el pedido esperaba se
+            // canceló la construcción normal que tenía delante, el nivel guardado
+            // saltearía uno (y se pagaría uno solo por dos niveles).
+            $level = (int)$database->getFieldLevel($master['wid'], $master['field'])
+                + 1
+                + count($database->getBuildingByField($master['wid'], $master['field']));
+            $maxLevel = $type <= 4
+                ? ((int)$database->getVillageField($master['wid'], 'capital') === 1 ? count($buildarray) - 1 : count($buildarray) - 11)
+                : count($buildarray);
+            if(!isset($buildarray[$level]) || $level > $maxLevel) {
+                continue;
+            }
+            if((int)$level !== (int)$master['level']) {
+                $database->query("UPDATE ".TB_PREFIX."bdata SET level = ".(int)$level." WHERE id = ".(int)$master['id']);
+                $master['level'] = $level;
+            }
             $buildwood = $buildarray[$level]['wood'];
             $buildclay = $buildarray[$level]['clay'];
             $buildiron = $buildarray[$level]['iron'];

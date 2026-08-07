@@ -25,64 +25,20 @@ foreach($varray as $vil){
 	$maxs = $vdata['maxstore'];
 	$maxc = $vdata['maxcrop'];
 
+	// Misma producción que muestra dorf1 para cada aldea: la copia que había acá
+	// se olvidaba de los oasis anexados y aplicaba el bono de oro de la madera a
+	// los cuatro recursos, así que los tiempos de llenado no coincidían.
 	$vresarray = $database->getResourceLevel($vid);
-	$prod_wood = $sawmill = 0;
-	$prod_clay = $claypit = 0;
-	$prod_iron = $foundry = 0;
-	$prod_crop = $grainmill = $bakery = 0;
-	$woodholder = array();
-	$clayholder = array();
-	$ironholder = array();
-	$cropholder = array();
-	for($i=1;$i<=38;$i++) {
-		if($vresarray['f'.$i.'t'] == 1) {
-			array_push($woodholder,'f'.$i);
-		} elseif($vresarray['f'.$i.'t'] == 5) {
-			$sawmill = $vresarray['f'.$i];
-		} elseif($vresarray['f'.$i.'t'] == 2) {
-			array_push($clayholder,'f'.$i);
-		} elseif($vresarray['f'.$i.'t'] == 6) {
-			$claypit = $vresarray['f'.$i];
-		} elseif($vresarray['f'.$i.'t'] == 3) {
-			array_push($ironholder,'f'.$i);
-		} elseif($vresarray['f'.$i.'t'] == 7) {
-			$foundry = $vresarray['f'.$i];
-		} elseif($vresarray['f'.$i.'t'] == 4) {
-			array_push($cropholder,'f'.$i);
-		} elseif($vresarray['f'.$i.'t'] == 8) {
-			$grainmill = $vresarray['f'.$i];
-		} elseif($vresarray['f'.$i.'t'] == 9) {
-			$bakery = $vresarray['f'.$i];
-		}
-	}
-	for($i=0;$i<=count($woodholder)-1;$i++) { $prod_wood+= $bid1[$vresarray[$woodholder[$i]]]['prod']; }
-	for($i=0;$i<=count($clayholder)-1;$i++) { $prod_clay+= $bid2[$vresarray[$clayholder[$i]]]['prod']; }
-	for($i=0;$i<=count($ironholder)-1;$i++) { $prod_iron+= $bid3[$vresarray[$ironholder[$i]]]['prod']; }
-	for($i=0;$i<=count($cropholder)-1;$i++) { $prod_crop+= $bid4[$vresarray[$cropholder[$i]]]['prod']; }
-	if($sawmill >= 1) {
-		$prod_wood += $prod_wood /100 * $bid5[$sawmill]['attri'];
-	}
-	if($claypit >= 1) {
-		$prod_clay += $prod_clay /100 * $bid6[$claypit]['attri'];
-	}
-	if($foundry >= 1) {
-		$prod_iron += $prod_iron /100 * $bid7[$foundry]['attri'];
-	}
-	if ($grainmill >= 1 || $bakery >= 1) {
-		$prod_crop += $prod_crop /100 * ($bid8[$grainmill]['attri'] + $bid9[$bakery]['attri']);
-	}
-	$oasisowned = $database->getOasis($vid);
-	//more oasis logic required
-	if($session->plus) {
-		$prod_wood *= 1.25;
-		$prod_clay *= 1.25;
-		$prod_iron *= 1.25;
-		$prod_crop *= 1.25;
-	}
-	$prod_wood *= SPEED;
-	$prod_clay *= SPEED;
-	$prod_iron *= SPEED;
-	$prod_crop *= SPEED;
+	$vgross = villageGrossProduction(
+		$vresarray,
+		villageOasisCounter($database->getOasis($vid)),
+		array($session->bonus1 == 1,$session->bonus2 == 1,$session->bonus3 == 1,$session->bonus4 == 1),
+		SPEED
+	);
+	$prod_wood = $vgross['production']['wood'];
+	$prod_clay = $vgross['production']['clay'];
+	$prod_iron = $vgross['production']['iron'];
+	$prod_crop = $vgross['production']['crop'];
 
 	$prod_crop -= $pop;
     $prod_crop -= $technology->getUpkeep($technology->getAllUnits($vid),0);

@@ -450,20 +450,29 @@ class Building {
 			case 11:
 			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(11);
 			break;
+			// Edificios de bonus: uno solo por aldea. La lista de construcción ya los
+			// oculta cuando existen, pero sin este control una petición a mano creaba
+			// un segundo aserradero y el bono pasaba a ser el del último campo, no el
+			// del mejor edificio.
 			case 5:
-			if($this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5) { return true; } else { return false; }
+			return $this->isSingleBonusBuildingAllowed(5)
+				&& $this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 6:
-			if($this->getTypeLevel(2) >= 10 && $this->getTypeLevel(15) >= 5) { return true; } else { return false; }
+			return $this->isSingleBonusBuildingAllowed(6)
+				&& $this->getTypeLevel(2) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 7:
-			if($this->getTypeLevel(3) >= 10 && $this->getTypeLevel(15) >= 5) { return true; } else { return false; }
+			return $this->isSingleBonusBuildingAllowed(7)
+				&& $this->getTypeLevel(3) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 8:
-			if($this->getTypeLevel(4) >= 5) { return true; } else { return false; }
+			return $this->isSingleBonusBuildingAllowed(8)
+				&& $this->getTypeLevel(4) >= 5 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 9:
-			if($this->getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5) { return true; } else { return false; }
+			return $this->isSingleBonusBuildingAllowed(9)
+				&& $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5;
 			break;
 			case 12:
 			if($this->getTypeLevel(22) >= 1 && $this->getTypeLevel(15) >= 3) { return true; } else { return false; }
@@ -623,6 +632,14 @@ class Building {
 		return $database->hasPalace((int)$session->uid,(int)$village->wid);
 	}
 
+	/**
+	 * Aserradero, fábrica de ladrillos, fundición, molino y panadería son únicos
+	 * por aldea: ni construido ni en cola puede haber otro del mismo tipo.
+	 */
+	private function isSingleBonusBuildingAllowed($tid) {
+		return $this->getTypeCount($tid) == 0 && !$this->hasQueuedType($tid);
+	}
+
 	private function hasQueuedType($tid) {
 		foreach($this->buildArray as $queuedBuilding) {
 			if((int)$queuedBuilding['type'] === (int)$tid) {
@@ -642,10 +659,17 @@ class Building {
 			}
 		}
 		$dataarray = $$name;
-		$wood = $dataarray[$village->resarray['f'.$id]+$plus]['wood'];
-		$clay = $dataarray[$village->resarray['f'.$id]+$plus]['clay'];
-		$iron = $dataarray[$village->resarray['f'.$id]+$plus]['iron'];
-		$crop = $dataarray[$village->resarray['f'.$id]+$plus]['crop'];
+		$target = $village->resarray['f'.$id]+$plus;
+		// Un nivel que no existe en la tabla (el siguiente al máximo, con la mejora
+		// anterior todavía en obra) no tiene costo: sin esto el edificio se anunciaba
+		// como mejorable y con los costos en blanco.
+		if(!isset($dataarray[$target])) {
+			return 0;
+		}
+		$wood = $dataarray[$target]['wood'];
+		$clay = $dataarray[$target]['clay'];
+		$iron = $dataarray[$target]['iron'];
+		$crop = $dataarray[$target]['crop'];
 		if($wood > $village->maxstore || $clay > $village->maxstore || $iron > $village->maxstore) {
 			return 1;
 		}
@@ -946,6 +970,85 @@ class Building {
 		return array("wood"=>$wood,"clay"=>$clay,"iron"=>$iron,"crop"=>$crop,"pop"=>$pop,"time"=>$time,"cp"=>$cp);
 	}
 	
+	/**
+	 * Valida un pedido al constructor maestro y devuelve el nivel y la duración
+	 * que corresponden, o false si el pedido no es legal.
+	 *
+	 * dorf1.php/dorf2.php encolaban tal cual el tipo, el campo, el nivel y hasta la
+	 * duración que venían en la URL. Con eso se podía encolar un segundo aserradero,
+	 * un aserradero de nivel 6 (que no existe: sin costo, sin tiempo y con bono 0) o
+	 * cualquier edificio en cualquier campo. El nivel y el tiempo se recalculan acá.
+	 */
+	public function masterBuildingRequest($field,$type) {
+		global $database,$village;
+		$field = (int)$field;
+		$type = (int)$type;
+		if($field < 1 || $field > 40) {
+			return false;
+		}
+		$dataarray = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : null;
+		if(!is_array($dataarray) || empty($dataarray)) {
+			return false;
+		}
+		$demolition = $database->getDemolition($village->wid);
+		if(!empty($demolition) && (int)$demolition[0]['buildnumber'] === $field) {
+			return false;
+		}
+		foreach($this->buildArray as $job) {
+			if((int)$job['field'] === $field && (int)$job['master'] === 1) {
+				return false;
+			}
+		}
+		$currentType = (int)$village->resarray['f'.$field.'t'];
+		$currentLevel = (int)$village->resarray['f'.$field];
+		if($currentType !== 0) {
+			// Mejora: el tipo tiene que ser el que ya está en el campo.
+			if($currentType !== $type) {
+				return false;
+			}
+		}
+		else {
+			// Construcción nueva: campo válido para el tipo y requisitos cumplidos.
+			if($type == 16) {
+				if($field != 39) { return false; }
+			}
+			else if($type == 31 || $type == 32 || $type == 33) {
+				if($field != 40) { return false; }
+			}
+			else if($field < 19 || $field > 38) {
+				return false;
+			}
+			if(!$this->meetRequirement($type)) {
+				return false;
+			}
+			foreach($this->buildArray as $job) {
+				if((int)$job['field'] === $field) {
+					return false;
+				}
+			}
+		}
+		$queued = count($database->getBuildingByField($village->wid,$field));
+		$level = $currentLevel + 1 + $queued;
+		$maxLevel = $this->masterMaxLevel($type,$dataarray);
+		if($level < 1 || $level > $maxLevel || !isset($dataarray[$level])) {
+			return false;
+		}
+		$uprequire = $this->resourceRequired($field,$type,1 + $queued);
+		return array('level'=>$level,'time'=>max(1,(int)$uprequire['time']));
+	}
+
+	/**
+	 * Nivel máximo de un tipo de edificio en esta aldea, con la misma regla que
+	 * isMax(): los campos de recursos llegan a 20 sólo en la capital.
+	 */
+	private function masterMaxLevel($type,$dataarray) {
+		global $village;
+		if($type <= 4) {
+			return (int)$village->capital === 1 ? count($dataarray) - 1 : count($dataarray) - 11;
+		}
+		return count($dataarray);
+	}
+
 	public function getTypeField($type) {
 		global $village;
 		for($i=19;$i<=40;$i++) {

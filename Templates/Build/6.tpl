@@ -11,7 +11,7 @@ Aquí el barro se procesa en ladrillos. Según su nivel, tu fábrica de ladrillo
 		<tr>
 			<th>
 Aumento de producción actual:</th>
-			<td><b><?php echo $bid6[$village->resarray['f'.$id]]['attri']; ?></b>%</td>
+			<td><b><?php echo $village->resarray['f'.$id] >= 1 ? $bid6[$village->resarray['f'.$id]]['attri'] : 0; ?></b>%</td>
 		</tr>
 		<tr>
 		<?php 

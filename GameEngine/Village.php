@@ -6,6 +6,7 @@ include("Building.php");
 include("Market.php");
 include_once("Technology.php");
 require_once __DIR__."/Hero.php";
+require_once __DIR__."/Production.php";
 class Village {
 	
 	public $type;
@@ -149,192 +150,49 @@ class Village {
 		$this->LoadTown();
 	}
 	
+	/**
+	 * Producción bruta de los cuatro recursos. La cuenta vive en Production.php
+	 * para que la aldea, el saqueo, la hambruna y la vista de aldeas usen la misma.
+	 */
+	private function grossProduction() {
+		global $session;
+		$bonusFlags = array(
+			$session->bonus1 == 1,
+			$session->bonus2 == 1,
+			$session->bonus3 == 1,
+			$session->bonus4 == 1
+		);
+		return villageGrossProduction($this->resarray,$this->ocounter,$bonusFlags,SPEED);
+	}
+
 	private function getWoodProd() {
-		global $bid1,$bid5,$session;
-		$wood = $sawmill = 0;
-		$woodholder = array();
-		for($i=1;$i<=38;$i++) {
-			if($this->resarray['f'.$i.'t'] == 1) {
-				array_push($woodholder,'f'.$i);
-			}
-			if($this->resarray['f'.$i.'t'] == 5) {
-				$sawmill = $this->resarray['f'.$i];
-			}
-		}
-		for($i=0;$i<=count($woodholder)-1;$i++) { $wood+= $bid1[$this->resarray[$woodholder[$i]]]['prod']; }
-		$fields = $wood;
-		$buildingPercent = $sawmill >= 1 ? $bid5[$sawmill]['attri'] : 0;
-		$buildingBonus = $wood / 100 * $buildingPercent;
-		if($sawmill >= 1) {
-			$wood += $buildingBonus;
-		}
-		$oasisBonus = $wood*0.25*$this->ocounter[0];
-		if($this->ocounter[0] != 0) {
-			$wood += $wood*0.25*$this->ocounter[0];
-		}
-		$plusBonus = $session->bonus1 == 1 ? $wood * 0.25 : 0;
-		if($session->bonus1 == 1) {
-			$wood *= 1.25;
-		}
-		$wood *= SPEED;
-		$gross = round($wood);
-		$this->productionBreakdown['wood'] = array('fields'=>$fields,'building'=>'Aserradero','building_level'=>$sawmill,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[0],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus1 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
-		return $gross;
+		$gross = $this->grossProduction();
+		$this->productionBreakdown['wood'] = $gross['breakdown']['wood'];
+		return $gross['production']['wood'];
 	}
-	
+
 	private function getClayProd() {
-		global $bid2,$bid6,$session;
-		$clay = $brick = 0;
-		$clayholder = array();
-		for($i=1;$i<=38;$i++) {
-			if($this->resarray['f'.$i.'t'] == 2) {
-				array_push($clayholder,'f'.$i);
-			}
-			if($this->resarray['f'.$i.'t'] == 6) {
-				$brick = $this->resarray['f'.$i];
-			}
-		}
-		for($i=0;$i<=count($clayholder)-1;$i++) { $clay+= $bid2[$this->resarray[$clayholder[$i]]]['prod']; }
-		$fields = $clay;
-		$buildingPercent = $brick >= 1 ? $bid6[$brick]['attri'] : 0;
-		$buildingBonus = $clay / 100 * $buildingPercent;
-		if($brick >= 1) {
-			$clay += $buildingBonus;
-		}
-		$oasisBonus = $clay*0.25*$this->ocounter[1];
-		if($this->ocounter[1] != 0) {
-			$clay += $clay*0.25*$this->ocounter[1];
-		}
-		$plusBonus = $session->bonus2 == 1 ? $clay * 0.25 : 0;
-		if($session->bonus2 == 1) {
-			$clay *= 1.25;
-		}
-		$clay *= SPEED;
-		$gross = round($clay);
-		$this->productionBreakdown['clay'] = array('fields'=>$fields,'building'=>'Fábrica de ladrillos','building_level'=>$brick,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[1],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus2 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
-		return $gross;
+		$gross = $this->grossProduction();
+		$this->productionBreakdown['clay'] = $gross['breakdown']['clay'];
+		return $gross['production']['clay'];
 	}
-	
+
 	private function getIronProd() {
-		global $bid3,$bid7,$session;
-		$iron = $foundry = 0;
-		$ironholder = array();
-		for($i=1;$i<=38;$i++) {
-			if($this->resarray['f'.$i.'t'] == 3) {
-				array_push($ironholder,'f'.$i);
-			}
-			if($this->resarray['f'.$i.'t'] == 7) {
-				$foundry = $this->resarray['f'.$i];
-			}
-		}
-		for($i=0;$i<=count($ironholder)-1;$i++) { $iron+= $bid3[$this->resarray[$ironholder[$i]]]['prod']; }
-		$fields = $iron;
-		$buildingPercent = $foundry >= 1 ? $bid7[$foundry]['attri'] : 0;
-		$buildingBonus = $iron / 100 * $buildingPercent;
-		if($foundry >= 1) {
-			$iron += $buildingBonus;
-		}
-		$oasisBonus = $iron*0.25*$this->ocounter[2];
-		if($this->ocounter[2] != 0) {
-			$iron += $iron*0.25*$this->ocounter[2];
-		}
-		$plusBonus = $session->bonus3 == 1 ? $iron * 0.25 : 0;
-		if($session->bonus3 == 1) {
-			$iron *= 1.25;
-		}
-		$iron *= SPEED;
-		$gross = round($iron);
-		$this->productionBreakdown['iron'] = array('fields'=>$fields,'building'=>'Fundición de hierro','building_level'=>$foundry,'building_percent'=>$buildingPercent,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[2],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus3 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
-		return $gross;
+		$gross = $this->grossProduction();
+		$this->productionBreakdown['iron'] = $gross['breakdown']['iron'];
+		return $gross['production']['iron'];
 	}
-	
+
 	private function getCropProd($recordBreakdown = true) {
-		global $bid4,$bid8,$bid9,$session;
-		$crop = $grainmill = $bakery = 0;
-		$cropholder = array();
-		for($i=1;$i<=38;$i++) {
-			if($this->resarray['f'.$i.'t'] == 4) {
-				array_push($cropholder,'f'.$i);
-			}
-			if($this->resarray['f'.$i.'t'] == 8) {
-				$grainmill = $this->resarray['f'.$i];
-			}
-			if($this->resarray['f'.$i.'t'] == 9) {
-				$bakery = $this->resarray['f'.$i];
-			}
-		}
-		for($i=0;$i<=count($cropholder)-1;$i++) { $crop+= $bid4[$this->resarray[$cropholder[$i]]]['prod']; }
-		$fields = $crop;
-		$grainmillPercent = $grainmill >= 1 ? $bid8[$grainmill]['attri'] : 0;
-		$bakeryPercent = $bakery >= 1 ? $bid9[$bakery]['attri'] : 0;
-		$grainmillBonus = $crop / 100 * $grainmillPercent;
-		$bakeryBonus = $crop / 100 * $bakeryPercent;
-		$buildingBonus = $grainmillBonus + $bakeryBonus;
-		if($grainmill >= 1 || $bakery >= 1) {
-			$crop += $buildingBonus;
-		}
-		$oasisBonus = $crop*0.25*$this->ocounter[3];
-		if($this->ocounter[3] != 0) {
-			$crop += $crop*0.25*$this->ocounter[3];
-		}
-		$plusBonus = $session->bonus4 == 1 ? $crop * 0.25 : 0;
-		if($session->bonus4 == 1) {
-			$crop *= 1.25;
-		}
-		$crop *= SPEED;
-		$gross = round($crop);
+		$gross = $this->grossProduction();
 		if($recordBreakdown) {
-			$this->productionBreakdown['crop'] = array('fields'=>$fields,'grainmill_level'=>$grainmill,'grainmill_percent'=>$grainmillPercent,'grainmill_bonus'=>$grainmillBonus,'bakery_level'=>$bakery,'bakery_percent'=>$bakeryPercent,'bakery_bonus'=>$bakeryBonus,'building_bonus'=>$buildingBonus,'oasis_percent'=>25*$this->ocounter[3],'oasis_bonus'=>$oasisBonus,'plus_percent'=>$session->bonus4 == 1 ? 25 : 0,'plus_bonus'=>$plusBonus,'speed'=>SPEED,'gross'=>$gross);
+			$this->productionBreakdown['crop'] = $gross['breakdown']['crop'];
 		}
-		return $gross;
+		return $gross['production']['crop'];
 	}
-	
+
 	private function sortOasis() {
-		$crop = $clay = $wood = $iron = 0;
-		if (!empty($this->oasisowned)) {
-			foreach ($this->oasisowned as $oasis) {
-			switch($oasis['type']) {
-					case 1:
-					$wood += 1;
-					break;
-					case 2:
-					$wood += 2;
-					break;
-					case 3:
-					$wood += 1;
-					$crop += 1;
-					break;
-					case 4:
-					$clay += 1;
-					break;
-					case 5:
-					$clay += 2;
-					break;
-					case 6:
-					$clay += 1;
-					$crop += 1;
-					break;
-					case 7:
-					$iron += 1;
-					break;
-					case 8:
-					$iron += 2;
-					break;
-					case 9:
-					$iron += 1;
-					$crop += 1;
-					break;
-					case 10:
-					case 11:
-					$crop += 1;
-					break;
-					case 12:
-					$crop += 2;
-					break;
-				}
-			}
-		}
-		return array($wood,$clay,$iron,$crop);
+		return villageOasisCounter($this->oasisowned);
 	}
 	
 	private function ActionControl() {

@@ -5535,73 +5535,25 @@ break;
 				imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
 			}
 
+            /**
+             * Producción bruta de cereal usada por la hambruna. Comparte fórmula con
+             * dorf1: antes sumaba el oasis sobre la producción de los campos en vez
+             * de sobre la producción ya bonificada, así que una aldea con molino,
+             * panadería y oasis de cereal parecía producir menos de lo que producía
+             * y podía matar tropas por hambre sin motivo.
+             */
             function getCropProdstarv($wref) {
-			global $bid4,$bid8,$bid9,$sesion,$technology;
-
-				$basecrop = $grainmill = $bakery = 0;
                 $owner = $this->getVillageField($wref, 'owner');
-                $bonus = $this->getUserField($owner, b4, 0);
-
                 $buildarray = $this->getResourceLevel($wref);
-				$cropholder = array();
-				for($i=1;$i<=38;$i++) {
-                    if($buildarray['f'.$i.'t'] == 4) {
-                        array_push($cropholder,'f'.$i);
-                    }
-                    if($buildarray['f'.$i.'t'] == 8) {
-                        $grainmill = $buildarray['f'.$i];
-                    }
-                    if($buildarray['f'.$i.'t'] == 9) {
-                        $bakery = $buildarray['f'.$i];
-                    }
-				}
                 $q = "SELECT type FROM `" . TB_PREFIX . "odata` WHERE conqured = $wref";
                 $oasis = $this->query_return($q);
-				foreach($oasis as $oa){
-                    switch($oa['type']) {
-                        case 1:
-                        case 2:
-                        $wood += 1;
-                        break;
-                        case 3:
-                        $wood += 1;
-                        $cropo += 1;
-                        break;
-                        case 4:
-                        case 5:
-                        $clay += 1;
-                        break;
-                        case 6:
-                        $clay += 1;
-                        $cropo += 1;
-                        break;
-                        case 7:
-                        case 8:
-                        $iron += 1;
-                        break;
-                        case 9:
-                        $iron += 1;
-                        $cropo += 1;
-                        break;
-                        case 10:
-                        case 11:
-                        $cropo += 1;
-                        break;
-                        case 12:
-                        $cropo += 2;
-                        break;
-                    }
-				}
-				for($i=0;$i<=count($cropholder)-1;$i++) { $basecrop+= $bid4[$buildarray[$cropholder[$i]]]['prod']; }
-				$crop = $basecrop + $basecrop * 0.25 * $cropo;
-				if($grainmill >= 1 || $bakery >= 1) {
-                    $crop += $basecrop /100 * ($bid8[$grainmill]['attri'] + $bid9[$bakery]['attri']);
-				}
-				if($bonus > time()) {
-                    $crop *= 1.25;
-				}
-				$crop *= SPEED;
-				return $crop;
+                $gross = villageGrossProduction(
+                    $buildarray,
+                    villageOasisCounter($oasis),
+                    villageGoldBonusFlags($this, $owner),
+                    SPEED
+                );
+                return $gross['production']['crop'];
             }
 
 		function getFieldDistance($wid) {

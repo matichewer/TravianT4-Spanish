@@ -102,7 +102,7 @@ include("avaliable/hero.tpl");
 if($rallypoint >= 1 && !$database->getBuildList(19) && $mainbuilding >= 3 && $barrack == 0 && $id != 39 && $id != 40) {
 include("avaliable/barracks.tpl");
 }
-if($cropland >= 5 && !$database->getBuildList(8) && $grainmill == 0 && $id != 39 && $id != 40) {
+if($cropland >= 5 && $mainbuilding >= 5 && !$database->getBuildList(8) && $grainmill == 0 && $id != 39 && $id != 40) {
 include("avaliable/grainmill.tpl");
 }
 if($granary >= 1 && !$database->getBuildList(17) && $warehouse >= 1 && $mainbuilding >= 3 && $market == 0 && $id != 39 && $id != 40) {
@@ -209,7 +209,7 @@ if($hero == 0 && ($mainbuilding < 3 || $rallypoint == 0)){
 if($barrack == 0 && ($rallypoint == 0 || $mainbuilding < 3) ) {
     include("soon/barracks.tpl");
 }
-if($cropland < 5) {
+if($grainmill == 0 && ($cropland < 5 || $mainbuilding < 5)) {
    include("soon/grainmill.tpl");
 }
 if($marketplace == 0 && ($mainbuilding < 3 || $granary == 0 || $warehouse == 0)) {

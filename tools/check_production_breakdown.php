@@ -19,15 +19,32 @@ foreach(array('wood','clay','iron','crop') as $resource) {
 	);
 }
 
-foreach(array(
-	"'fields'=>",
-	"'building_bonus'=>",
-	"'oasis_bonus'=>",
-	"'plus_bonus'=>",
-	"'speed'=>",
-	"'gross'=>"
-) as $component) {
-	productionBreakdownAssert(strpos($engine, $component) !== false, 'Production component is missing: '.$component);
+// El desglose lo arma ahora la fórmula compartida de Production.php, así que se
+// comprueba sobre su salida real en vez de sobre el texto de Village.php.
+if(!defined('SPEED')) { define('SPEED', 1); }
+require_once dirname(__DIR__).'/GameEngine/Data/buidata.php';
+require_once dirname(__DIR__).'/GameEngine/Production.php';
+$sampleFields = array();
+for($field = 1; $field <= 40; $field++) { $sampleFields['f'.$field] = 0; $sampleFields['f'.$field.'t'] = 0; }
+$sampleFields['f1t'] = 1; $sampleFields['f1'] = 5;
+$sampleFields['f2t'] = 4; $sampleFields['f2'] = 5;
+$sampleFields['f19t'] = 5; $sampleFields['f19'] = 3;
+$sampleFields['f20t'] = 8; $sampleFields['f20'] = 3;
+$sampleFields['f21t'] = 9; $sampleFields['f21'] = 3;
+$sampleBreakdown = villageGrossProduction($sampleFields, array(1,0,0,1), array(true,false,false,true), 1);
+foreach(array('wood','clay','iron','crop') as $resource) {
+	foreach(array('fields','building_bonus','oasis_bonus','plus_bonus','speed','gross') as $component) {
+		productionBreakdownAssert(
+			array_key_exists($component, $sampleBreakdown['breakdown'][$resource]),
+			'Production component is missing: '.$resource.'.'.$component
+		);
+	}
+}
+foreach(array('grainmill_level','grainmill_bonus','bakery_level','bakery_bonus') as $component) {
+	productionBreakdownAssert(
+		array_key_exists($component, $sampleBreakdown['breakdown']['crop']),
+		'Crop production component is missing: '.$component
+	);
 }
 
 foreach(array(

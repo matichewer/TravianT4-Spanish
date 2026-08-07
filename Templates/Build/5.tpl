@@ -10,7 +10,7 @@ La madera producida por el leñador se convierte en tablones en el aserradero. S
 	<table cellpadding="1" cellspacing="1" id="build_value">
 		<tr>
 			<th>Aumento de producción en el nivel actual: </th>
-			<td><b><?php echo $bid5[$village->resarray['f'.$id]]['attri']; ?></b>%</td>
+			<td><b><?php echo $village->resarray['f'.$id] >= 1 ? $bid5[$village->resarray['f'.$id]]['attri'] : 0; ?></b>%</td>
 		</tr>
 		<tr>
 		<?php 
