@@ -232,7 +232,11 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 		$data['id'] = $itemId;
 		$data['btype'] = (int)$itemData['btype'];
 		$data['type'] = (int)$itemData['type'];
-		$data['amount'] = isset($data['amount']) ? (int)$data['amount'] : 0;
+		// La cantidad llega cruda del formulario. Una negativa pasaba los chequeos de
+		// "no más que el stack" y terminaba restando: el ungüento quitaba salud, la
+		// tabla de la ley bajaba la lealtad de la propia aldea y la obra de arte
+		// descontaba puntos de cultura, todo sin gastar un objeto y repetible.
+		$data['amount'] = isset($data['amount']) ? max(0, (int)$data['amount']) : 0;
 	}
 
 	if($data['btype']>=1 && $data['btype']<=6){
@@ -248,7 +252,7 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 	elseif($data['btype']==10){
-		if($data['amount'] <= $itemData['num']){
+		if($data['amount'] > 0 && $data['amount'] <= $itemData['num']){
 			$value = ($data['amount']*10);
 				if($data['amount'] < $itemData['num']){
 					$database->modifyHero2('experience', heroExperienceWithHelmet($database, $uid, $value), $uid, 1);
@@ -262,8 +266,10 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 	elseif($data['btype']==11){
-		if($heroData['health']<100){
-			if($data['amount'] <= $itemData['num']){
+		// Un héroe muerto tiene salud 0, así que entraba acá y se gastaban ungüentos
+		// que no servían de nada: revivirlo con el balde le deja la salud en 100 igual.
+		if((int)$heroData['dead']===0 && $heroData['health']<100){
+			if($data['amount'] > 0 && $data['amount'] <= $itemData['num']){
 				$health = round($heroData['health']);
 				if(($health+$data['amount'])>100){
 					$database->modifyHero2('health', 100, $uid, 0);
@@ -301,7 +307,7 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 
 	elseif($data['btype']==14){
 		if($village->loyalty<=125){
-			if($data['amount'] <= $itemData['num']){
+			if($data['amount'] > 0 && $data['amount'] <= $itemData['num']){
 				if(($village->loyalty+$data['amount'])>125){
 					$database->setVillageField($village->wid, 'loyalty', 125);
 					$newAmount = intval(125-$village->loyalty);
@@ -322,11 +328,8 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 	elseif($data['btype']==15){
-		if($data['amount'] <= $itemData['num']){
-			// La obra de arte concede un día de producción, y desde que el casco de
-			// cultura cuenta como producción diaria tiene que entrar acá también: si no,
-			// el número que promete el diálogo del inventario no es el que se acredita.
-			$value = ($data['amount']*accountCulturePointsPerDay($database, $uid));
+		if($data['amount'] > 0 && $data['amount'] <= $itemData['num']){
+			$value = ($data['amount']*artworkCulturePoints($database, $uid));
 			if($data['amount'] < $itemData['num']){
 				$database->updateUserField($uid, 'cp', $value, 2);
 				$database->editHeroNum($data['id'], $data['amount'], 0);

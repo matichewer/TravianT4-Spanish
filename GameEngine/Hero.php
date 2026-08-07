@@ -454,6 +454,23 @@ if(!function_exists('accountCulturePointsPerDay')){
 	}
 }
 
+if(!function_exists('artworkCulturePointsCap')){
+	// Tope que promete la obra de arte: "tantos PC como la producción diaria, hasta un
+	// máximo de 5000". El código no lo aplicaba, así que en cuentas grandes daba más de
+	// lo que decía el objeto.
+	function artworkCulturePointsCap(){
+		return 5000;
+	}
+}
+
+if(!function_exists('artworkCulturePoints')){
+	// Puntos de cultura que otorga **una** obra de arte. Una sola definición para que el
+	// diálogo del inventario anuncie lo mismo que después se acredita.
+	function artworkCulturePoints($database, $uid){
+		return min(artworkCulturePointsCap(), accountCulturePointsPerDay($database, $uid));
+	}
+}
+
 if(!function_exists('heroExperienceWithHelmet')){
 	// La cuenta va en enteros a propósito: con `$experience * (1 + 15/100)` el 1,15 de
 	// coma flotante vale 1,1499… y un bono exacto se cae un punto al truncar (100 de

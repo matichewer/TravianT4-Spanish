@@ -269,10 +269,10 @@ for($i=$inv;$i<=12;$i++){
 <?php
 // Los diálogos de confirmación tienen que anunciar lo mismo que después acredita
 // Inventory.php. Los dos consumibles dependen del casco puesto: el rollo, del bono de
-// experiencia, y la obra de arte, de la producción diaria, que incluye el casco de
-// cultura.
+// experiencia, y la obra de arte, de la producción diaria (que incluye el casco de
+// cultura) recortada por el tope de 5000 que promete el objeto.
 $currentCulturePoints = (int)$database->getUserField($session->uid, 'cp', 0);
-$cultureDailyProduction = accountCulturePointsPerDay($database, (int)$session->uid);
+$cultureDailyProduction = artworkCulturePoints($database, (int)$session->uid);
 $equippedHelmet = heroEquippedItem($database, (int)$session->uid, 1);
 $helmetExperienceBonus = is_array($equippedHelmet)
 	? getHeroHelmetBonuses((int)$equippedHelmet['type'])['experience']
