@@ -67,7 +67,35 @@ if(isset($argv[1]) && $argv[1] === 'capture-worker') {
 	exit(0);
 }
 
-$tables = array('movement','attacks','prisoners','units','hero','enforcement','vdata','users');
+$tables = array('movement','attacks','prisoners','units','hero','enforcement','vdata','users','fdata','wdata');
+
+// Clona una aldea a otro wref. `INSERT ... SELECT *` choca con la clave primaria, así que
+// hay que enumerar las columnas para poder pisar wref en el camino.
+function trapperCloneVillage($sourceWref,$newWref) {
+	global $database;
+	$columns = array();
+	$result = trapperQuery("SHOW COLUMNS FROM ".TB_PREFIX."vdata");
+	while($column = mysqli_fetch_assoc($result)) {
+		$columns[] = $column['Field'];
+	}
+	$select = array();
+	foreach($columns as $column) {
+		$select[] = $column === 'wref' ? (int)$newWref : '`'.$column.'`';
+	}
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."vdata (`".implode('`,`',$columns)."`) ".
+		"SELECT ".implode(',',$select)." FROM ".TB_PREFIX."vdata WHERE wref = ".(int)$sourceWref
+	);
+}
+
+// Las coordenadas viven en wdata: sin una fila ahí, el regreso de los liberados no puede
+// calcular el viaje.
+function trapperPlaceVillage($wref,$x,$y) {
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."wdata (id,fieldtype,oasistype,x,y,occupied,image) ".
+		"VALUES (".(int)$wref.",3,0,".(int)$x.",".(int)$y.",1,'')"
+	);
+}
 $sourcePrefix = 's1_';
 $created = false;
 
@@ -442,6 +470,156 @@ try {
 		'la automatización de consumo usa el mismo total con prisioneros'
 	);
 
+	if(!defined('GP_LOCATE')) {
+		define('GP_LOCATE','gpack/');
+	}
+	$releaseMethod = new ReflectionMethod('Automation','releaseTrappedTroops');
+	$releaseMethod->setAccessible(true);
+
+	// Rescate: un ataque ganado devuelve el 100% de lo atrapado. La liberación forzada no
+	// cuesta bajas, así que lo que entra a la trampa es exactamente lo que vuelve.
+	trapperQuery("DELETE FROM ".TB_PREFIX."prisoners");
+	$rescueVillage = $base + 700007;
+	trapperQuery("INSERT INTO ".TB_PREFIX."units (vref,u99,u99o) VALUES ($rescueVillage,30,20)");
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) ".
+		"VALUES ($rescueVillage,$base,13,7,0,0,0,0,0,0,0,0,0)"
+	);
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy) ".
+		"VALUES ($base,5,0,0,0,0,0,0,0,0,0,0,3,0,0,0)"
+	);
+	$rescueAttackId = (int)mysqli_insert_id($database->connection);
+	$rescueResult = $releaseMethod->invoke(
+		$automationForUpkeep,
+		array('from' => $base,'ref' => $rescueAttackId),
+		array('owner' => $owner,'wref' => $base),
+		array('wref' => $rescueVillage),
+		0
+	);
+	$rescueState = trapperRow(
+		"SELECT a.t1,a.t2,u.u99,u.u99o,".
+		"(SELECT COUNT(*) FROM ".TB_PREFIX."prisoners WHERE wref = $rescueVillage) prisoners ".
+		"FROM ".TB_PREFIX."attacks a INNER JOIN ".TB_PREFIX."units u ON u.vref = $rescueVillage ".
+		"WHERE a.id = $rescueAttackId"
+	);
+	trapperAssert(
+		(int)$rescueState['t1'] === 18 && (int)$rescueState['t2'] === 7,
+		'la liberación devuelve el 100% de las tropas atrapadas, sin bajas '.
+		'(t1 '.(int)$rescueState['t1'].', t2 '.(int)$rescueState['t2'].')'
+	);
+	trapperAssert(
+		(int)$rescueState['u99'] === 10 && (int)$rescueState['u99o'] === 0
+		&& (int)$rescueState['prisoners'] === 0,
+		'el rescate rompe las trampas que retenían al grupo'
+	);
+	trapperAssert(
+		(int)$rescueResult['freed'][1] === 13 && (int)$rescueResult['freed'][2] === 7,
+		'el rescate informa qué tropas volvieron con el ejército, para que el informe no las liste como presas'
+	);
+	trapperAssert(
+		strpos($rescueResult['info'],'liberó <b>20</b> tropas propias') !== false
+		&& strpos($rescueResult['info'],'murieron') === false,
+		'el informe del rescate ya no habla de bajas durante la liberación'
+	);
+
+	// Tropas propias pero de OTRA aldea: no pueden colarse en el ejército atacante, o
+	// rescatarlas sería un traslado gratis de tropas entre aldeas propias.
+	$otherHome = $base + 700008;
+	$foreignTrapVillage = $base + 700012;
+	trapperCloneVillage($base,$otherHome);
+	trapperQuery("INSERT INTO ".TB_PREFIX."wdata SELECT * FROM ".$sourcePrefix."wdata WHERE id = $base");
+	trapperPlaceVillage($otherHome,12,34);
+	trapperPlaceVillage($foreignTrapVillage,15,38);
+	trapperQuery("INSERT INTO ".TB_PREFIX."units (vref,u99,u99o) VALUES ($foreignTrapVillage,10,6)");
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) ".
+		"VALUES ($foreignTrapVillage,$otherHome,6,0,0,0,0,0,0,0,0,0,0)"
+	);
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy) ".
+		"VALUES ($base,4,0,0,0,0,0,0,0,0,0,0,3,0,0,0)"
+	);
+	$foreignAttackId = (int)mysqli_insert_id($database->connection);
+	$foreignRescue = $releaseMethod->invoke(
+		$automationForUpkeep,
+		array('from' => $base,'ref' => $foreignAttackId),
+		array('owner' => $owner,'wref' => $base),
+		array('wref' => $foreignTrapVillage),
+		0
+	);
+	$foreignState = trapperRow("SELECT t1 FROM ".TB_PREFIX."attacks WHERE id = $foreignAttackId");
+	$foreignReturn = trapperRow(
+		"SELECT COUNT(*) amount FROM ".TB_PREFIX."movement WHERE `from` = $foreignTrapVillage AND `to` = $otherHome"
+	);
+	trapperAssert(
+		(int)$foreignState['t1'] === 4 && (int)$foreignRescue['freed'][1] === 0,
+		'las tropas propias de otra aldea no se suman al ejército que las rescató'
+	);
+	trapperAssert(
+		(int)$foreignReturn['amount'] === 1,
+		'las tropas propias de otra aldea regresan a su propia aldea'
+	);
+
+	// El trampero destruido se lleva las trampas y suelta a los presos que ya no entran.
+	$shrinkVillage = $base + 700009;
+	trapperPlaceVillage($shrinkVillage,20,44);
+	trapperQuery("INSERT INTO ".TB_PREFIX."units (vref,u99,u99o) VALUES ($shrinkVillage,20,9)");
+	trapperQuery("INSERT INTO ".TB_PREFIX."fdata (vref,f19,f19t) VALUES ($shrinkVillage,0,0)");
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) ".
+		"VALUES ($shrinkVillage,$base,9,0,0,0,0,0,0,0,0,0,0)"
+	);
+	$automationForUpkeep->syncTrapperCapacity($shrinkVillage);
+	$shrinkState = trapperRow(
+		"SELECT u.u99,u.u99o,".
+		"(SELECT COUNT(*) FROM ".TB_PREFIX."prisoners WHERE wref = $shrinkVillage) prisoners,".
+		"(SELECT COUNT(*) FROM ".TB_PREFIX."movement WHERE `from` = $shrinkVillage AND `to` = $base) returns ".
+		"FROM ".TB_PREFIX."units u WHERE u.vref = $shrinkVillage"
+	);
+	trapperAssert(
+		(int)$shrinkState['prisoners'] === 0 && (int)$shrinkState['returns'] === 1,
+		'destruir el trampero suelta a los prisioneros hacia su aldea'
+	);
+	trapperAssert(
+		(int)$shrinkState['u99'] === 0 && (int)$shrinkState['u99o'] === 0,
+		'las trampas no sobreviven al trampero destruido '.
+		'(u99 '.(int)$shrinkState['u99'].', u99o '.(int)$shrinkState['u99o'].')'
+	);
+
+	// Un trampero que solo baja de nivel conserva lo que sigue entrando.
+	$partialVillage = $base + 700010;
+	$partialLevel = 5;
+	$partialCapacity = $bid36[$partialLevel]['attri'] * TRAPPER_CAPACITY;
+	trapperQuery("INSERT INTO ".TB_PREFIX."units (vref,u99,u99o) VALUES ($partialVillage,".($partialCapacity + 40).",0)");
+	trapperQuery("INSERT INTO ".TB_PREFIX."fdata (vref,f19,f19t) VALUES ($partialVillage,$partialLevel,36)");
+	$automationForUpkeep->syncTrapperCapacity($partialVillage);
+	$partialState = trapperRow("SELECT u99,u99o FROM ".TB_PREFIX."units WHERE vref = $partialVillage");
+	trapperAssert(
+		(int)$partialState['u99'] === (int)$partialCapacity,
+		'bajar el trampero recorta las trampas hasta la capacidad que queda '.
+		'(u99 '.(int)$partialState['u99'].', capacidad '.(int)$partialCapacity.')'
+	);
+
+	// Grupo sin aldea de origen viva: no hay a dónde volver, pero la trampa se libera.
+	$orphanVillage = $base + 700011;
+	trapperQuery("INSERT INTO ".TB_PREFIX."units (vref,u99,u99o) VALUES ($orphanVillage,15,7)");
+	trapperQuery(
+		"INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) ".
+		"VALUES ($orphanVillage,".($base + 999999).",7,0,0,0,0,0,0,0,0,0,0)"
+	);
+	$orphanPrisoner = trapperRow("SELECT * FROM ".TB_PREFIX."prisoners WHERE wref = $orphanVillage");
+	$discarded = $database->discardPrisonersAtomic((int)$orphanPrisoner['id'],$orphanVillage);
+	$orphanState = trapperRow(
+		"SELECT u99,u99o,(SELECT COUNT(*) FROM ".TB_PREFIX."prisoners WHERE wref = $orphanVillage) prisoners ".
+		"FROM ".TB_PREFIX."units WHERE vref = $orphanVillage"
+	);
+	trapperAssert(
+		$discarded === true && (int)$orphanState['prisoners'] === 0
+		&& (int)$orphanState['u99o'] === 0 && (int)$orphanState['u99'] === 15,
+		'un grupo sin aldea de origen se descarta y libera la trampa sin romperla'
+	);
+
 	$session = (object)array('tribe' => 3,'uid' => $owner);
 	$village = (object)array(
 		'techarray' => array('t99' => 0),
@@ -487,6 +665,53 @@ try {
 	trapperAssert(
 		strpos($automationSource,'$spyDetected = $this->spyAttemptDetected($def_spy, $totaltraped_att, $totaldead_att)') !== false,
 		'capturar espías genera un informe para el defensor aunque no haya bajas'
+	);
+	trapperAssert(
+		strpos($automationSource,'trappedTroopSurvivors') === false,
+		'no quedó rastro del 25% de bajas al liberar'
+	);
+	$databaseSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+	trapperAssert(
+		strpos($databaseSource,'function destroyUsedTraps') === false,
+		'la destrucción de trampas vive solo en los métodos atómicos'
+	);
+	// El regreso de las tropas curadas llega horas después del ejército: si el informe no
+	// lo cuenta, el atacante ve aparecer unidades de la nada.
+	trapperAssert(
+		strpos($automationSource,"',heal-v1,'.(int)\$totalheal") !== false,
+		'el informe del atacante lleva las tropas que revivió la venda'
+	);
+	trapperAssert(
+		strpos(file_get_contents(dirname(__DIR__).'/Templates/Notice/report_data.tpl'),'heal-v1') !== false,
+		'el lector de informes entiende el bloque de curación'
+	);
+	foreach(array(1,2) as $noticeType) {
+		trapperAssert(
+			strpos(file_get_contents(dirname(__DIR__).'/Templates/Notice/'.$noticeType.'.tpl'),'$reportHealedTroops') !== false,
+			'el reporte '.$noticeType.' muestra las tropas curadas por la venda'
+		);
+	}
+	// El nombre viaja dentro de un CSV y se imprime como HTML crudo, y los nombres admiten
+	// cualquier carácter: sin escapar, una coma parte el informe y el HTML se ejecuta.
+	$safeMethod = new ReflectionMethod('Automation','reportSafeText');
+	$safeMethod->setAccessible(true);
+	$unsafeName = $safeMethod->invoke($automationForUpkeep,'a,b<script>x</script>');
+	trapperAssert(
+		strpos($unsafeName,',') === false && strpos($unsafeName,'<script>') === false,
+		'el nombre del rescatador no puede partir el informe ni inyectar HTML ('.$unsafeName.')'
+	);
+	// El nombre de aldea ya viene escapado de la base: acá solo hay que sacarle la coma,
+	// y sobre todo no volver a escaparlo o cada `&amp;` se convertiría en `&amp;amp;`.
+	$fieldMethod = new ReflectionMethod('Automation','reportSafeField');
+	$fieldMethod->setAccessible(true);
+	$unsafeVillage = $fieldMethod->invoke($automationForUpkeep,'Pueblo, del &amp; Sur');
+	trapperAssert(
+		strpos($unsafeVillage,',') === false && strpos($unsafeVillage,'&amp;amp;') === false,
+		'el nombre de aldea no parte el CSV del informe ni se re-escapa ('.$unsafeVillage.')'
+	);
+	trapperAssert(
+		substr_count($automationSource,'addslashes($this->reportSafeField($to[\'name\']))') === 4,
+		'los cuatro nombres de aldea que viajan dentro del CSV están protegidos'
 	);
 
 	echo "Trapper lifecycle regression passed.\n";

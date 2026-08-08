@@ -172,6 +172,14 @@ if ($releaseInfo !== '') { //release prisoners
     <tbody class="goods"><tr><th><?php echo REPORT_INFORMATION; ?></th><td style="text-align:left" colspan="11">
     <?php echo $releaseInfo; ?>
     </td></tr></tbody>
+<?php }
+if ($reportHealedTroops > 0) { //bandage heal
+?>
+    <tbody><tr><td class="empty" colspan="12"></td></tr></tbody>
+    <tbody class="goods"><tr><th><?php echo REPORT_INFORMATION; ?></th><td style="text-align:left" colspan="11">
+    <img class="unit uhero" src="img/x.gif" alt="Héroe" title="Héroe" />
+    Tu héroe curó <b><?php echo $reportHealedTroops; ?></b> <?php echo $reportHealedTroops == 1 ? 'tropa' : 'tropas'; ?>. Regresan por separado y tardan más que el ejército.
+    </td></tr></tbody>
 <?php } ?>
 
 

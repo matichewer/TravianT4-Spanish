@@ -16,6 +16,11 @@ class Automation {
     private $bountyresarray = array();
     private $bountyinfoarray = array();
     private $bountyproduction = array();
+    // Sin declarar, la leían el chequeo de hambruna y el save/restore del estado de
+    // saqueo antes de que bountyLoadTown() la escribiera, y cada pasada tiraba un
+    // notice. El resultado salía bien igual porque villageOasisCounter() tolera el
+    // null, pero el ruido tapaba notices de verdad en el log.
+    private $bountyoasisowned = array();
     private $bountyocounter = array();
     private $bountyunitall = array();
     private $bountypop;
@@ -215,6 +220,35 @@ class Automation {
         $database->query("DELETE FROM ".TB_PREFIX."fdata WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."market WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."movement WHERE `to` = ".$villageId." OR `from` = ".$villageId);
+        // Los prisioneros no sobreviven a la aldea. Va después de vaciar `movement` (si no,
+        // el regreso recién creado se borraría con el resto) y antes de tirar `units` y
+        // `vdata`, que las dos operaciones todavía necesitan. Sin esto quedaban filas
+        // huérfanas: cobraban cereal para siempre, ocupaban trampas ajenas que ya nadie
+        // podía liberar, y ni el dueño de las tropas podía sacrificarlas.
+        foreach($database->getPrisoners($villageId) as $prisoner) {
+            $prisonerOwner = (int)$database->getVillageField($prisoner['from'], "owner");
+            $prisonerTribe = (int)$database->getUserField($prisonerOwner, "tribe", 0);
+            $survivors = array();
+            for($i = 1; $i <= 11; $i++) {
+                $survivors[$i] = max(0, (int)$prisoner['t'.$i]);
+            }
+            if(!$this->queueFreedPrisonerReturn($prisoner, $prisonerOwner, $prisonerTribe, $survivors)) {
+                $database->discardPrisonersAtomic((int)$prisoner['id'], (int)$prisoner['wref']);
+            }
+        }
+        // Y las tropas que esta aldea tenía atrapadas en otro lado se pierden con ella:
+        // ya no hay aldea a la que regresar. Libera las trampas del captor.
+        foreach($database->getPrisoners3($villageId) as $prisoner) {
+            $disbanded = $database->disbandPrisonersAtomic(
+                (int)$prisoner['id'],
+                (int)$prisoner['wref'],
+                (int)$prisoner['from'],
+                $owner
+            );
+            if(!$disbanded) {
+                $database->discardPrisonersAtomic((int)$prisoner['id'], (int)$prisoner['wref']);
+            }
+        }
         // La aldea arrasada suelta sus oasis: si no, quedan conquistados por una aldea
         // que ya no existe y nadie puede volver a tomarlos.
         $database->releaseVillageOases($villageId);
@@ -284,6 +318,9 @@ class Automation {
             $this->applyStorageCapacityDelta($villageId, $buildingType, $oldLevel, $newLevel);
             if($buildingType === 18) {
                 $this->refreshCatapultEmbassyCapacity($villageId);
+            }
+            if($buildingType === 36) {
+                $this->syncTrapperCapacity($villageId);
             }
             $population = $this->recountPop((int)$villageId);
             if((int)$population === 0) {
@@ -920,16 +957,21 @@ class Automation {
                         for ($i = 1; $i <= 11; $i++) {
                             $survivors[$i] = max(0, (int)$pris['t'.$i]);
                         }
-                        $this->queueFreedPrisonerReturn($pris, $owner, $tribe, $survivors);
+                        if(!$this->queueFreedPrisonerReturn($pris, $owner, $tribe, $survivors)) {
+                            $database->discardPrisonersAtomic((int)$pris['id'], (int)$pris['wref']);
+                        }
                     }
                     $getprisoners = $database->getPrisoners3($village);
                     foreach ($getprisoners as $pris) {
-                        $database->disbandPrisonersAtomic(
+                        $disbanded = $database->disbandPrisonersAtomic(
                             (int)$pris['id'],
                             (int)$pris['wref'],
                             (int)$pris['from'],
                             (int)$need['uid']
                         );
+                        if(!$disbanded) {
+                            $database->discardPrisonersAtomic((int)$pris['id'], (int)$pris['wref']);
+                        }
                     }
                     $q = "DELETE FROM ".TB_PREFIX."units where vref =".$village;
                     $database->query($q);
@@ -1204,6 +1246,39 @@ class Automation {
             return null;
         }
         return (int)$rows[0]['endtime'];
+    }
+
+    /**
+     * Termina ya mismo las construcciones que el jugador pagó con oro.
+     *
+     * `Building::finishAll()` repetía acá su propia versión del fin de obra y se le
+     * escapaban cosas: los puntos de cultura salían del nivel viejo cuando había dos
+     * mejoras encoladas en el mismo campo, la capacidad del almacén no se actualizaba
+     * y la población del ranking quedaba sin sincronizar. Ahora sólo adelanta el reloj
+     * de esos trabajos y los hace pasar por el mismo camino que los que terminan solos.
+     *
+     * Devuelve cuántos trabajos se adelantaron.
+     */
+    public function finishBuildingsNow($villageId, $jobIds) {
+        global $database;
+        $villageId = (int)$villageId;
+        $ids = array();
+        foreach((array)$jobIds as $jobId) {
+            $jobId = (int)$jobId;
+            if($jobId > 0) {
+                $ids[] = $jobId;
+            }
+        }
+        if($villageId <= 0 || empty($ids)) {
+            return 0;
+        }
+        $now = time();
+        $database->query(
+            "UPDATE ".TB_PREFIX."bdata SET timestamp = ".($now - 1)
+            ." WHERE wid = ".$villageId." AND master = 0 AND id IN (".implode(',',$ids).")"
+        );
+        $this->buildComplete($now, false);
+        return count($ids);
     }
 
     private function buildComplete($throughTime = null, $managePreventionFile = true) {
@@ -1647,6 +1722,10 @@ class Automation {
             $scout = $type = 0;
             $rom = $ger = $gal = $nat = $natar = 0;
             $info_ram = $info_cat = $info_chief = $info_spy = $info_trap = '';
+            // El informe del atacante cuenta cuántas tropas revivió la venda, así que el
+            // total tiene que arrancar en cero también cuando la batalla no deja bajas y
+            // el bloque de curación ni se ejecuta.
+            $totalheal = 0;
             $spyReinforcements = array();
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
@@ -2366,7 +2445,7 @@ class Automation {
                         $totalsend_att = $data['t1'] + $data['t2'] + $data['t3'] + $data['t4'] + $data['t5'] + $data['t6'] + $data['t7'] + $data['t8'] + $data['t9'] + $data['t10'] + $data['t11'];
                         $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                         //NEED TO SEND A RAPPORTAGE!!!
-                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1,reinforcement-context-v1,'.$from['owner'].','.$from['wref'].','.($scout ? 1 : 0).','.($spyDetected ? 1 : 0);
+                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($this->reportSafeField($to['name'])).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1,reinforcement-context-v1,'.$from['owner'].','.$from['wref'].','.($scout ? 1 : 0).','.($spyDetected ? 1 : 0);
                         //Notify the reinforcement owner on any real attack, and on a spy attempt only if it was detected (i.e. the village had at least one defending spy, own or reinforced) - an undetected spy attempt stays invisible to everyone, as with a normal attack.
                         if($reinforcementOwner > 0 && (int)$reinforcementOwner !== (int)$to['owner'] && (!$scout || $spyDetected)) {
                             if($totalnotlife == 0) {
@@ -2439,6 +2518,25 @@ class Automation {
                 //top 10 attack and defence update
                 $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                 $totalattackdead += $totaldead_att;
+
+                // El rescate de prisioneros va acá y no junto al informe: un ataque ganado
+                // libera lo que ya estaba atrapado y también lo que las trampas acaban de
+                // capturar en esta misma batalla, así que el informe no puede seguir
+                // listando como prisionero lo que vuelve con el ejército. $traped* queda
+                // intacto porque más arriba ya decidió quién peleó y quién conquista.
+                $stilltraped = array();
+                for ($i = 1; $i <= 11; $i++) {
+                    $stilltraped[$i] = ${'traped'.$i};
+                }
+                if($type == 3 && $totalsend_att - ($totaldead_att + $totaltraped_att) > 0) {
+                    $rescue = $this->releaseTrappedTroops($data, $from, $to, $ownally);
+                    $info_trap = $rescue['info'];
+                    for ($i = 1; $i <= 11; $i++) {
+                        $stilltraped[$i] = max(0, $stilltraped[$i] - $rescue['freed'][$i]);
+                    }
+                }
+                $totalstilltraped_att = array_sum($stilltraped);
+                $unitstraped_att = implode(',', $stilltraped);
                 if($totaldead_att > 0 && $dead11 == 0 && $Attacker['hero'] > 0) {
 
                     // Estado por ataque: el foreach reutiliza el scope, y sin este reset un
@@ -3068,7 +3166,7 @@ class Automation {
 
                     }
 
-                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.',0,0,0,0,0,'.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
+                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.',0,0,0,0,0,'.$to['owner'].','.$to['wref'].','.addslashes($this->reportSafeField($to['name'])).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
                     if(!empty($spyReinforcements)) {
                         $spyReinforcementJson = json_encode($spyReinforcements);
                         if($spyReinforcementJson !== false) {
@@ -3076,11 +3174,11 @@ class Automation {
                         }
                     }
                 } else {
-                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
+                    $data2 = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($this->reportSafeField($to['name'])).','.$targettribe.',,,'.$rom.','.$unitssend_def[1].','.$unitsdead_def[1].','.$ger.','.$unitssend_def[2].','.$unitsdead_def[2].','.$gal.','.$unitssend_def[3].','.$unitsdead_def[3].','.$nat.','.$unitssend_def[4].','.$unitsdead_def[4].','.$natar.','.$unitssend_def[5].','.$unitsdead_def[5].','.$info_ram.','.$info_cat.','.$info_chief.','.$info_spy.',trap-data-v1,'.$unitstraped_att;
                 }
 
                 // When all troops die, sends no info.
-                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($to['name']).',0,,,0,'.$unitssend_deff[1].','.$unitsdead_deff[1].',0,'.$unitssend_deff[2].','.$unitsdead_deff[2].',0,'.$unitssend_deff[3].','.$unitsdead_deff[3].',0,'.$unitssend_deff[4].','.$unitsdead_deff[4].',0,'.$unitssend_deff[5].','.$unitsdead_deff[5].',,,trap-data-v1,'.$unitstraped_att.',no-defense-info-v1';
+                $data_fail = ''.$from['owner'].','.$from['wref'].','.$owntribe.','.$unitssend_att.','.$unitsdead_att.','.$steal[0].','.$steal[1].','.$steal[2].','.$steal[3].','.$battlepart['bounty'].','.$to['owner'].','.$to['wref'].','.addslashes($this->reportSafeField($to['name'])).',0,,,0,'.$unitssend_deff[1].','.$unitsdead_deff[1].',0,'.$unitssend_deff[2].','.$unitsdead_deff[2].',0,'.$unitssend_deff[3].','.$unitsdead_deff[3].',0,'.$unitssend_deff[4].','.$unitsdead_deff[4].',0,'.$unitssend_deff[5].','.$unitsdead_deff[5].',,,trap-data-v1,'.$unitstraped_att.',no-defense-info-v1';
 
                 //Undetected and detected in here.
                 if($scout) {
@@ -3089,67 +3187,6 @@ class Automation {
                         $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
                     }
                 } else {
-                    if($type == 3 && $totalsend_att - ($totaldead_att + $totaltraped_att) > 0) {
-                        $prisoners = $database->getPrisoners($to['wref']);
-                        if(count($prisoners) > 0) {
-                            $mytroops = 0;
-                            $anothertroops = 0;
-                            $releasedDeaths = 0;
-                            foreach ($prisoners as $prisoner) {
-                                $p_owner = (int)$database->getVillageField($prisoner['from'], "owner");
-                                $p_alliance = (int)$database->getUserField($p_owner, "alliance", 0);
-                                $isOwnPrisoner = $p_owner === (int)$from['owner'];
-                                if(!$isOwnPrisoner && !$this->alliancesAreFriendly($p_alliance, $ownally)) {
-                                    continue;
-                                }
-                                $released = $this->trappedTroopSurvivors($prisoner);
-                                $capturedSnapshot = array();
-                                for($i = 1; $i <= 11; $i++) {
-                                    $capturedSnapshot[$i] = max(0,(int)$prisoner['t'.$i]);
-                                }
-                                $releaseCompleted = false;
-                                if($isOwnPrisoner) {
-                                    $releaseCompleted = $database->mergePrisonersIntoAttackAtomic(
-                                        (int)$prisoner['id'],
-                                        (int)$prisoner['wref'],
-                                        (int)$prisoner['from'],
-                                        (int)$data['ref'],
-                                        $released['units'],
-                                        $capturedSnapshot
-                                    );
-                                    if($releaseCompleted) {
-                                        $mytroops += $released['survived'];
-                                    }
-                                } else {
-                                    $p_tribe = (int)$database->getUserField($p_owner, "tribe", 0);
-                                    $releaseCompleted = $this->queueFreedPrisonerReturn(
-                                        $prisoner,
-                                        $p_owner,
-                                        $p_tribe,
-                                        $released['units']
-                                    );
-                                    if($releaseCompleted) {
-                                        $anothertroops += $released['survived'];
-                                    }
-                                }
-                                if($releaseCompleted) {
-                                    $releasedDeaths += $released['dead'];
-                                }
-                            }
-                            $trapper_pic = "<img src=\"".GP_LOCATE."img/u/98.gif\" alt=\"Trampa\" title=\"Trampa\" />";
-                            $p_username = $database->getUserField($from['owner'], "username", 0);
-                            if($mytroops > 0 && $anothertroops > 0) {
-                                $info_trap = "".$trapper_pic." ".$p_username." liberó <b>".$mytroops."</b> tropas propias y <b>".$anothertroops."</b> tropas aliadas.";
-                            } elseif($mytroops > 0) {
-                                $info_trap = "".$trapper_pic." ".$p_username." liberó <b>".$mytroops."</b> tropas propias.";
-                            } elseif($anothertroops > 0) {
-                                $info_trap = "".$trapper_pic." ".$p_username." liberó <b>".$anothertroops."</b> tropas aliadas.";
-                            }
-                            if($releasedDeaths > 0) {
-                                $info_trap .= " <b>".$releasedDeaths."</b> tropas murieron durante la liberación.";
-                            }
-                        }
-                    }
                     $data2 = $data2.','.addslashes($info_trap).',,';
                     // El desglose por jugador solo va en el informe del defensor: el atacante
                     // sigue viendo los bloques agrupados por tribu, sin saber qué aliado
@@ -3178,20 +3215,26 @@ class Automation {
                 //to here
 
                 // If the dead units not equal the ammount sent they will return and report
-                if($totalsend_att - ($totaldead_att + $totaltraped_att) > 0) {
+                // Lo que las trampas soltaron vuelve con el ejército, así que solo lo que
+                // sigue preso descuenta del regreso y decide si el ataque tuvo pérdidas.
+                if($totalsend_att - ($totaldead_att + $totalstilltraped_att) > 0) {
                     $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus, $travelBonus) + $AttackArrivalTime;
                     //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
+                    // Las tropas que revivió la venda vuelven por su cuenta y en su propio
+                    // movimiento: sin esta línea el atacante las veía aparecer sin ninguna
+                    // explicación en el informe. Va solo en su copia, no en la del defensor.
+                    $data2att = $totalheal > 0 ? $data2.',heal-v1,'.(int)$totalheal : $data2;
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $spyReportType = ($totaldead_att == 0 && $totaltraped_att == 0) ? 22 : 23;
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, $spyReportType, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        $spyReportType = ($totaldead_att == 0 && $totalstilltraped_att == 0) ? 22 : 23;
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, $spyReportType, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
                     } else {
-                        if($totaldead_att == 0 && $totaltraped_att == 0) {
+                        if($totaldead_att == 0 && $totalstilltraped_att == 0) {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
                         } else {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
                         }
                     }
 
@@ -3351,36 +3394,162 @@ class Automation {
         }
     }
 
-    private function trappedTroopSurvivors($prisoner) {
-        $survivors = array();
-        $remainders = array();
-        $capturedTotal = 0;
-        $deathsAssigned = 0;
-        for($i = 1; $i <= 11; $i++) {
-            $captured = max(0, (int)$prisoner['t'.$i]);
-            $capturedTotal += $captured;
-            $deaths = intdiv($captured, 4);
-            $deathsAssigned += $deaths;
-            $survivors[$i] = $captured - $deaths;
-            $remainders[$i] = $captured % 4;
+    /**
+     * Un texto que va a viajar dentro del CSV del informe y después se imprime como HTML
+     * crudo. Los nombres de usuario admiten cualquier carácter (USRNM_SPECIAL), así que
+     * una coma partía el informe en dos y el HTML se ejecutaba en el navegador del que lo
+     * leía. La coma vuelve como entidad: se ve igual y no corta el campo.
+     */
+    private function reportSafeText($text) {
+        return $this->reportSafeField(htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8'));
+    }
+
+    /**
+     * Solo neutraliza la coma, para el texto que ya viene escapado de la base (los nombres
+     * de aldea pasan por RemoveXSS al guardarse). Volver a pasarlo por htmlspecialchars
+     * convertiría cada `&amp;` en `&amp;amp;`.
+     */
+    private function reportSafeField($text) {
+        return str_replace(',', '&#44;', (string)$text);
+    }
+
+    /**
+     * Rescate de prisioneros: ganar un ataque libera lo que el atacante y sus aliados
+     * tenían atrapado en esa aldea y rompe las trampas que los retenían. Las tropas
+     * vuelven completas — forzar la liberación no cuesta bajas.
+     *
+     * Devuelve el texto para el informe y, por posición, cuántas de las tropas volvieron
+     * con el ejército de este ataque: el informe no puede seguir listando como prisionero
+     * lo que en la misma pasada volvió a casa.
+     */
+    private function releaseTrappedTroops($data, $from, $to, $ownally) {
+        global $database;
+        $rescue = array('info' => '', 'freed' => array_fill(1, 11, 0));
+        $prisoners = $database->getPrisoners($to['wref']);
+        if(count($prisoners) == 0) {
+            return $rescue;
         }
-        $deathsRemaining = (int)floor($capturedTotal / 4) - $deathsAssigned;
-        arsort($remainders);
-        foreach($remainders as $position => $remainder) {
-            if($deathsRemaining <= 0) {
-                break;
+        $mytroops = 0;
+        $anothertroops = 0;
+        foreach ($prisoners as $prisoner) {
+            $p_owner = (int)$database->getVillageField($prisoner['from'], "owner");
+            if($p_owner <= 0) {
+                continue;
             }
-            if($remainder > 0 && $survivors[$position] > 0) {
-                $survivors[$position]--;
-                $deathsRemaining--;
+            $p_alliance = (int)$database->getUserField($p_owner, "alliance", 0);
+            $isOwnPrisoner = $p_owner === (int)$from['owner'];
+            if(!$isOwnPrisoner && !$this->alliancesAreFriendly($p_alliance, $ownally)) {
+                continue;
+            }
+            $captured = array();
+            for($i = 1; $i <= 11; $i++) {
+                $captured[$i] = max(0,(int)$prisoner['t'.$i]);
+            }
+            $capturedTotal = array_sum($captured);
+            if($capturedTotal <= 0) {
+                continue;
+            }
+            // Solo el grupo que salió de la aldea atacante puede sumarse al regreso. Las
+            // tropas de otra aldea propia tienen que volver a la suya: si se mezclaban con
+            // este ejército, rescatarlas era un traslado gratis entre aldeas propias.
+            $joinsTheArmy = $isOwnPrisoner && (int)$prisoner['from'] === (int)$data['from'];
+            if($joinsTheArmy) {
+                $released = $database->mergePrisonersIntoAttackAtomic(
+                    (int)$prisoner['id'],
+                    (int)$prisoner['wref'],
+                    (int)$prisoner['from'],
+                    (int)$data['ref'],
+                    $captured,
+                    $captured
+                );
+            } else {
+                $p_tribe = (int)$database->getUserField($p_owner, "tribe", 0);
+                $released = $this->queueFreedPrisonerReturn($prisoner, $p_owner, $p_tribe, $captured);
+            }
+            if(!$released) {
+                continue;
+            }
+            if($isOwnPrisoner) {
+                $mytroops += $capturedTotal;
+            } else {
+                $anothertroops += $capturedTotal;
+            }
+            if($joinsTheArmy) {
+                for($i = 1; $i <= 11; $i++) {
+                    $rescue['freed'][$i] += $captured[$i];
+                }
             }
         }
-        return array(
-            'units' => $survivors,
-            'captured' => $capturedTotal,
-            'survived' => array_sum($survivors),
-            'dead' => $capturedTotal - array_sum($survivors)
-        );
+        if($mytroops <= 0 && $anothertroops <= 0) {
+            return $rescue;
+        }
+        $trapper_pic = "<img src=\"".GP_LOCATE."img/u/98.gif\" alt=\"Trampa\" title=\"Trampa\" />";
+        $p_username = $this->reportSafeText($database->getUserField($from['owner'], "username", 0));
+        if($mytroops > 0 && $anothertroops > 0) {
+            $rescue['info'] = $trapper_pic." ".$p_username." liberó <b>".$mytroops."</b> tropas propias y <b>".$anothertroops."</b> tropas aliadas.";
+        } elseif($mytroops > 0) {
+            $rescue['info'] = $trapper_pic." ".$p_username." liberó <b>".$mytroops."</b> tropas propias.";
+        } else {
+            $rescue['info'] = $trapper_pic." ".$p_username." liberó <b>".$anothertroops."</b> tropas aliadas.";
+        }
+        return $rescue;
+    }
+
+    /**
+     * El trampero decide cuántas trampas caben; `units.u99` es cuántas hay puestas. Cuando
+     * el edificio baja de nivel —catapultas o demolición— las trampas que ya no entran se
+     * rompen con él y los prisioneros que sostenían salen libres hacia su aldea. Sin esto
+     * las trampas sobrevivían a la destrucción del trampero (se recuperaban gratis al
+     * reconstruirlo) y los presos quedaban encerrados en un edificio que ya no existía.
+     */
+    public function syncTrapperCapacity($villageId) {
+        global $database, $bid36;
+        $villageId = (int)$villageId;
+        if($villageId <= 0) {
+            return;
+        }
+        $fields = $database->getResourceLevel($villageId);
+        if(!is_array($fields)) {
+            return;
+        }
+        $capacity = 0;
+        for($field = 19; $field <= 38; $field++) {
+            if(!isset($fields['f'.$field.'t']) || (int)$fields['f'.$field.'t'] !== 36) {
+                continue;
+            }
+            $level = (int)$fields['f'.$field];
+            if($level > 0 && isset($bid36[$level]['attri'])) {
+                $capacity += $bid36[$level]['attri'] * TRAPPER_CAPACITY;
+            }
+        }
+        $traps = $database->getUnit($villageId);
+        $occupied = is_array($traps) ? max(0, (int)$traps['u99o']) : 0;
+        if($occupied > $capacity) {
+            // Se sueltan grupos enteros, del más viejo al más nuevo, hasta que lo ocupado
+            // entra en lo que queda del trampero.
+            foreach($database->getPrisoners($villageId) as $prisoner) {
+                if($occupied <= $capacity) {
+                    break;
+                }
+                $owner = (int)$database->getVillageField($prisoner['from'], "owner");
+                $tribe = (int)$database->getUserField($owner, "tribe", 0);
+                $survivors = array();
+                for($i = 1; $i <= 11; $i++) {
+                    $survivors[$i] = max(0, (int)$prisoner['t'.$i]);
+                }
+                $group = array_sum($survivors);
+                $freed = $this->queueFreedPrisonerReturn($prisoner, $owner, $tribe, $survivors);
+                if(!$freed) {
+                    // Sin aldea de origen viva no hay a dónde volver: las tropas se pierden
+                    // con la trampa, pero el hueco tiene que quedar libre igual.
+                    $freed = $database->discardPrisonersAtomic((int)$prisoner['id'], (int)$prisoner['wref']);
+                }
+                if($freed) {
+                    $occupied -= $group;
+                }
+            }
+        }
+        $database->clampTrapsToCapacity($villageId, $capacity);
     }
 
     private function alliancesAreFriendly($firstAlliance,$secondAlliance) {
@@ -3399,6 +3568,13 @@ class Automation {
     private function queueFreedPrisonerReturn($prisoner,$owner,$tribe,$survivors) {
         global $database;
         if(array_sum($survivors) <= 0) {
+            return false;
+        }
+        // Sin dueño ni tribu válidos no hay velocidad de unidad que consultar: la aldea de
+        // origen ya no existe y el grupo tiene que resolverlo el que llama.
+        $owner = (int)$owner;
+        $tribe = (int)$tribe;
+        if($owner <= 0 || $tribe < 1 || $tribe > 5) {
             return false;
         }
         $trapCoordinates = $database->getCoor($prisoner['wref']);
@@ -4486,6 +4662,9 @@ class Automation {
                 }
                 $q = "UPDATE ".TB_PREFIX."fdata SET f".$vil['buildnumber']."=".($level - 1).$clear." WHERE vref=".$vil['vref'];
                 $database->query($q);
+                if($type == 36) {
+                    $this->syncTrapperCapacity($vil['vref']);
+                }
                 $pop = $this->getPop($type, $level - 1);
                 $database->modifyPop($vil['vref'], $pop[0], 1);
                 $this->procClimbers($database->getVillageField($vil['vref'], 'owner'));

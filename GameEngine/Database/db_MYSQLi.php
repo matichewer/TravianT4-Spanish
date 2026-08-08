@@ -327,48 +327,6 @@
 				return $dbarray['sitter'];
 			}
 
-			public function canConquerOasis($vref,$wref) {
-				$AttackerFields = $this->getResourceLevel($vref);
-				for($i=19;$i<=38;$i++) {
-					if($AttackerFields['f'.$i.'t'] == 37) { $HeroMansionLevel = $AttackerFields['f'.$i]; }
-				}
-				if($this->VillageOasisCount($vref) < floor(($HeroMansionLevel-5)/5)) {
-					$OasisInfo = $this->getOasisInfo($wref);
-                    $troopcount = $this->countOasisTroops($wref);
-					if($OasisInfo['conqured'] == 0 || $OasisInfo['conqured'] != 0 && $OasisInfo['loyalty'] < 99 / min(3,(4-$this->VillageOasisCount($OasisInfo['conqured']))) && $troopcount == 0) {
-						$CoordsVillage = $this->getCoor($vref);
-						$CoordsOasis = $this->getCoor($wref);
-						if(abs($CoordsOasis['x']-$CoordsVillage['x'])<=3 && abs($CoordsOasis['y']-$CoordsVillage['y'])<=3) {
-							return True;
-						} else {
-							return False;
-						}
-					} else {
-						return False;
-					}
-				} else {
-					return False;
-				}
-			}
-
-			public function conquerOasis($vref,$wref) {
-				$vinfo = $this->getVillage($vref);
-				$uid = $vinfo['owner'];
-				$q = "UPDATE `".TB_PREFIX."odata` SET conqured=$vref,loyalty=100,lastupdated=".time().",lastupdated2=".time().",owner=$uid,name='Occupied Oasis' WHERE wref=$wref";
-        		return mysqli_query($this->connection,$q);
-			}
-
-			public function modifyOasisLoyalty($wref) {
-				if($this->isVillageOases($wref) != 0) {
-					$OasisInfo = $this->getOasisInfo($wref);
-					if($OasisInfo['conqured'] != 0) {
-						$LoyaltyAmendment = floor(100 / min(3,(4-$this->VillageOasisCount($OasisInfo['conqured']))));
-						$q = "UPDATE `".TB_PREFIX."odata` SET loyalty=loyalty-$LoyaltyAmendment WHERE wref=$wref";
-						return mysqli_query($this->connection,$q);
-					}
-				}
-			}
-
         	function checkactiveSession($username, $sessid) {
         		$user = $this->getUserArray($username, 0);
 				$sessidarray = explode("+", $user['sessid']);
@@ -861,13 +819,6 @@
         		$dbarray = mysqli_fetch_array($result);
         		return $dbarray['oasistype'];
         	}
-
-			public function VillageOasisCount($vref) {
-				$q = "SELECT count(*) FROM ".TB_PREFIX."odata WHERE conqured=$vref";
-				$result = mysqli_query($this->connection,$q);
-				$row = mysqli_fetch_row($result);
-				return $row[0];
-			}
 
         	function populateOasis() {
         		$q = "SELECT * FROM " . TB_PREFIX . "wdata where oasistype != 0";
@@ -6062,14 +6013,70 @@ break;
 		return mysqli_query($this->connection,$q) or die(mysqli_error());
 	}
 
-	function destroyUsedTraps($wid,$amount) {
+	/**
+	 * Recorta las trampas puestas a lo que el trampero todavía aguanta. Se llama cuando
+	 * el edificio baja de nivel: las trampas que ya no entran se rompen con él. Nunca
+	 * baja de la ocupación actual, así que el que llama tiene que soltar antes a los
+	 * prisioneros que sobran o quedarían trampas ocupadas sin trampa que las sostenga.
+	 */
+	function clampTrapsToCapacity($wid,$capacity) {
 		$wid = (int)$wid;
-		$amount = max(0, (int)$amount);
-		if($wid <= 0 || $amount === 0) {
-			return true;
+		$capacity = max(0, (int)$capacity);
+		if($wid <= 0) {
+			return false;
 		}
-		$q = "UPDATE " . TB_PREFIX . "units SET u99 = GREATEST(0, u99 - $amount), u99o = GREATEST(0, u99o - $amount) WHERE vref = $wid";
+		$q = "UPDATE " . TB_PREFIX . "units SET u99 = LEAST(u99, GREATEST($capacity, u99o)) WHERE vref = $wid";
 		return mysqli_query($this->connection,$q);
+	}
+
+	/**
+	 * Suelta un grupo prisionero sin devolver las tropas a ninguna parte: es el caso en
+	 * el que ya no queda aldea de origen a la que volver. Libera las trampas ocupadas y
+	 * borra la fila, que si no se queda cobrando cereal y ocupando trampas para siempre.
+	 */
+	function discardPrisonersAtomic($id,$wref) {
+		$id = (int)$id;
+		$wref = (int)$wref;
+		if($id <= 0 || $wref <= 0) {
+			return false;
+		}
+		$locked = mysqli_query(
+			$this->connection,
+			"LOCK TABLES ".TB_PREFIX."prisoners WRITE, ".TB_PREFIX."units WRITE"
+		);
+		if(!$locked) {
+			return false;
+		}
+		try {
+			$result = mysqli_query(
+				$this->connection,
+				"SELECT * FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref LIMIT 1"
+			);
+			$prisoner = $result ? mysqli_fetch_assoc($result) : false;
+			if(!$prisoner) {
+				return false;
+			}
+			$captured = 0;
+			for($i = 1; $i <= 11; $i++) {
+				$captured += max(0,(int)$prisoner['t'.$i]);
+			}
+			$removed = mysqli_query(
+				$this->connection,
+				"DELETE FROM ".TB_PREFIX."prisoners WHERE id = $id AND wref = $wref"
+			);
+			if(!$removed || mysqli_affected_rows($this->connection) !== 1) {
+				return false;
+			}
+			// La fila de unidades puede no existir si la aldea captora ya fue arrasada:
+			// el grupo igual tiene que desaparecer, así que el UPDATE es best effort.
+			mysqli_query(
+				$this->connection,
+				"UPDATE ".TB_PREFIX."units SET u99o = GREATEST(0,u99o - $captured) WHERE vref = $wref"
+			);
+			return true;
+		} finally {
+			mysqli_query($this->connection,"UNLOCK TABLES");
+		}
 	}
 
 	function areAlliancesAllied($firstAlliance,$secondAlliance) {

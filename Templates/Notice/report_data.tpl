@@ -28,6 +28,17 @@ if($reportTrapStart !== null) {
 	}
 }
 
+// Tropas que la venda del héroe revivió. Vuelven en su propio movimiento y mucho más
+// tarde que el ejército, así que sin esta línea el atacante las veía llegar sin ninguna
+// explicación. Solo viaja en su copia del informe, nunca en la del defensor.
+$reportHealedTroops = 0;
+foreach($dataarray as $reportIndex => $reportField) {
+	if($reportField === 'heal-v1' && isset($dataarray[$reportIndex + 1])) {
+		$reportHealedTroops = max(0, (int)$dataarray[$reportIndex + 1]);
+		break;
+	}
+}
+
 // Desglose de defensores por jugador. Va en un único campo detrás del marcador
 // `defenders-v1`, con los bandos separados por "|" y sus valores por ";". El bucle de
 // arriba corta en `trap-data-v1`, que aparece antes, así que hace falta buscarlo aparte.
