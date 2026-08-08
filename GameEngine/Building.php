@@ -649,13 +649,15 @@ class Building {
 		return false;
 	}
 	
-	private function checkResource($tid,$id) {
+	private function checkResource($tid,$id,$plus=null) {
 		$name = "bid".$tid;
 		global $village,$$name,$database;
-		$plus = 1;
-		foreach($this->buildArray as $job) {
-			if($job['type'] == $tid && $job['field'] == $id) {
-				$plus = 2;
+		if($plus === null) {
+			$plus = 1;
+			foreach($this->buildArray as $job) {
+				if($job['type'] == $tid && $job['field'] == $id) {
+					$plus = 2;
+				}
 			}
 		}
 		$dataarray = $$name;
@@ -693,14 +695,27 @@ class Building {
 		}
 	}
 	
+	/**
+	 * Cuántos niveles por encima del actual ya están pagos y en la cola de este campo.
+	 * El badge y el tooltip del mapa hablan de la próxima mejora que todavía se puede
+	 * pedir, así que arrancan a contar desde ahí y no desde el nivel construido.
+	 */
+	private function queuedLevelOffset($field) {
+		global $village;
+		$current = (int)$village->resarray['f'.$field];
+		$queued = $this->constructionTargetLevel($field);
+		return ($queued !== false && $queued > $current) ? $queued - $current : 0;
+	}
+
 	public function badgeUpgradeState($id,$tid) {
 		if(!$tid) {
 			return "cannotUpgrade";
 		}
-		if($this->isMax($tid,$id)) {
+		$offset = $this->queuedLevelOffset($id);
+		if($this->isMax($tid,$id,$offset)) {
 			return "maxLevel";
 		}
-		return ($this->checkResource($tid,$id) == 4) ? "canUpgrade" : "cannotUpgrade";
+		return ($this->checkResource($tid,$id,$offset+1) == 4) ? "canUpgrade" : "cannotUpgrade";
 	}
 
 	/**
@@ -713,12 +728,13 @@ class Building {
 		$name = $this->procResType($tid);
 		$title = "<div style=color:#FFF><b>".$name."</b></div>";
 
-		if($this->isMax($tid,$field)) {
+		$offset = $this->queuedLevelOffset($field);
+		$nextLevel = (int)$village->resarray['f'.$field] + $offset + 1;
+		if($this->isMax($tid,$field,$offset) || !isset($GLOBALS['bid'.$tid][$nextLevel])) {
 			return $title."Nivel máximo";
 		}
 
-		$required = $this->resourceRequired($field,$tid);
-		$nextLevel = (int)$village->resarray['f'.$field] + 1;
+		$required = $this->resourceRequired($field,$tid,$offset+1);
 		return $title."Costo para nivel ".$nextLevel."<br>"
 			."<img class='r1' src='img/x.gif' alt='Madera'> ".number_format($required['wood'],0,',','.')
 			." &nbsp;<img class='r2' src='img/x.gif' alt='Barro'> ".number_format($required['clay'],0,',','.')
