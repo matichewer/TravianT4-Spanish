@@ -5308,6 +5308,126 @@ class Automation {
         return true;
     }
 
+    private function weeklyMedalCategoryLabel($category, $allianceMedal) {
+        $category = (int)$category;
+        if($allianceMedal) {
+            $labels = array(
+                1 => "Ataque de alianza",
+                2 => "Defensa de alianza",
+                3 => "Crecimiento de alianza",
+                4 => "Saqueo de alianza"
+            );
+        } else {
+            $labels = array(
+                1 => "Ataque",
+                2 => "Defensa",
+                3 => "Crecimiento",
+                4 => "Saqueo",
+                5 => "Ataque y defensa",
+                6 => "Racha de ataque en el top 3",
+                7 => "Racha de defensa en el top 3",
+                8 => "Racha de crecimiento en el top 3",
+                9 => "Racha de saqueo en el top 3",
+                10 => "Crecimiento",
+                11 => "Racha de crecimiento en el top 3",
+                12 => "Racha de ataque en el top 10",
+                13 => "Racha de defensa en el top 10",
+                14 => "Racha de crecimiento en el top 10",
+                15 => "Racha de saqueo en el top 10",
+                16 => "Racha de crecimiento en el top 10"
+            );
+        }
+        return isset($labels[$category]) ? $labels[$category] : "Medalla";
+    }
+
+    private function weeklyMedalWinnerLink($medal, $allianceMedal) {
+        if($allianceMedal) {
+            $allianceID = (int)$medal['allyid'];
+            $name = isset($medal['name']) && trim($medal['name']) !== ''
+                ? $medal['name']
+                : 'Alianza #'.$allianceID;
+            $tag = isset($medal['tag']) && trim($medal['tag']) !== ''
+                ? ' ['.$medal['tag'].']'
+                : '';
+            return '<a href="allianz.php?aid='.$allianceID.'">'
+                .htmlspecialchars($name.$tag, ENT_QUOTES, 'UTF-8').'</a>';
+        }
+
+        $userID = (int)$medal['userid'];
+        $username = isset($medal['username']) && trim($medal['username']) !== ''
+            ? $medal['username']
+            : 'Jugador #'.$userID;
+        return '<a href="spieler.php?uid='.$userID.'">'
+            .htmlspecialchars($username, ENT_QUOTES, 'UTF-8').'</a>';
+    }
+
+    private function formatWeeklyMedalNotificationLine($medal, $allianceMedal) {
+        $line = $this->weeklyMedalWinnerLink($medal, $allianceMedal)
+            .' - '.$this->weeklyMedalCategoryLabel($medal['categorie'], $allianceMedal)
+            .": puesto #".(int)$medal['plaats']." - ".number_format((int)$medal['points'], 0, ',', '.')." puntos";
+        return "• ".$line;
+    }
+
+    private function notifyWeeklyMedalResults($week) {
+        global $database;
+        $week = max(1, (int)$week);
+        $personalLines = array();
+        $allianceLines = array();
+
+        $personalMedals = $database->query_return(
+            "SELECT m.userid, m.categorie, m.plaats, m.points, u.username "
+            ."FROM ".TB_PREFIX."medal m "
+            ."LEFT JOIN ".TB_PREFIX."users u ON u.id = m.userid "
+            ."WHERE m.week = ".$week." AND m.plaats = 1 AND m.categorie IN (1,2,10,4) "
+            ."ORDER BY FIELD(m.categorie,1,2,10,4)"
+        );
+        foreach($personalMedals as $medal) {
+            $personalLines[] = $this->formatWeeklyMedalNotificationLine($medal, false);
+        }
+
+        $allianceMedals = $database->query_return(
+            "SELECT am.allyid, am.categorie, am.plaats, am.points, a.name, a.tag "
+            ."FROM ".TB_PREFIX."allimedal am "
+            ."LEFT JOIN ".TB_PREFIX."alidata a ON a.id = am.allyid "
+            ."WHERE am.week = ".$week." AND am.plaats = 1 AND am.categorie IN (1,2,3,4) "
+            ."ORDER BY FIELD(am.categorie,1,2,3,4)"
+        );
+        foreach($allianceMedals as $medal) {
+            $allianceLines[] = $this->formatWeeklyMedalNotificationLine($medal, true);
+        }
+
+        $sections = array();
+        if(count($personalLines) > 0) {
+            $sections[] = "[b]Jugadores[/b]\n".implode("\n", $personalLines);
+        }
+        if(count($allianceLines) > 0) {
+            $sections[] = "[b]Alianzas[/b]\n".implode("\n", $allianceLines);
+        }
+        if(count($sections) === 0) {
+            $sections[] = 'Esta semana no se entregaron medallas.';
+        }
+
+        $message = "[message][b]Resultados de la semana ".$week."[/b]\n\n"
+            .implode("\n\n", $sections)
+            ."\n\n¡Felicitaciones a todos los ganadores![/message]";
+        $recipients = $database->query_return(
+            "SELECT id FROM ".TB_PREFIX."users WHERE id > 3 ORDER BY id"
+        );
+        foreach($recipients as $recipient) {
+            $database->sendMessage(
+                (int)$recipient['id'],
+                4,
+                "Medallas de la semana ".$week,
+                addslashes($message),
+                0,
+                0,
+                0,
+                0,
+                0
+            );
+        }
+    }
+
     private function weeklyMedals() {
         $schedule = $this->weeklyMedalSchedule(time());
         if($schedule === false) {
@@ -5690,6 +5810,8 @@ class Automation {
             $img = "a1_" . ($i) . "";
             mysql_query("insert into " . TB_PREFIX . "allimedal(allyid, categorie, plaats, week, points, img) values('" . $row['id'] . "', '3', '" . ($i) . "', '" . $allyweek . "', '" . $row['clp'] . "', '" . $img . "')");
         }
+
+        $this->notifyWeeklyMedalResults($week);
 
         $result = mysql_query("SELECT * FROM ".TB_PREFIX."alidata ORDER BY id+0 DESC");
         while($row = mysql_fetch_array($result)) {
