@@ -43,7 +43,7 @@ oasis_counts AS (
     FROM candidates c
     LEFT JOIN s1_wdata o
         ON o.oasistype IN (10, 11, 12)
-       -- Coincide con el alcance usado por canConquerOasis().
+       -- Coincide con el radio de Automation::oasisWithinAnnexationRange().
        AND ABS(o.x - c.x) <= 3
        AND ABS(o.y - c.y) <= 3
     LEFT JOIN s1_odata od

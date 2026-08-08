@@ -109,9 +109,16 @@ $savedHeld = array();
 $r = q("SELECT wref, owner FROM {$P}odata WHERE conqured = $VILLAGE");
 while($row = mysqli_fetch_assoc($r)) { $savedHeld[] = $row; }
 $savedHero = one("SELECT dead, health, wref, home FROM {$P}hero WHERE uid = $UID");
+// Qué lleva el héroe en la bolsa: con jaulas equipadas el ataque toma el camino de
+// captura de animales y nunca llega a la batalla, así que tampoco anexa. El mundo
+// local es compartido y puede tener jaulas puestas de otras pruebas.
+$savedBag = one("SELECT bag FROM {$P}heroinventory WHERE uid = $UID");
 
 function restore() {
-    global $P, $VILLAGE, $OASIS, $UID, $savedField, $savedVillage, $savedOasis, $savedUnits, $savedHero, $savedHeld;
+    global $P, $VILLAGE, $OASIS, $UID, $savedField, $savedVillage, $savedOasis, $savedUnits, $savedHero, $savedHeld, $savedBag;
+    if($savedBag) {
+        q("UPDATE {$P}heroinventory SET bag = ".(int)$savedBag['bag']." WHERE uid = $UID");
+    }
     q("UPDATE {$P}odata SET conqured = 0, owner = 3 WHERE conqured = $VILLAGE");
     q("UPDATE {$P}wdata SET occupied = 0 WHERE id = $OASIS");
     foreach($savedHeld as $held) {
@@ -161,6 +168,7 @@ q("DELETE FROM {$P}enforcement WHERE vref = $OASIS");
 // natal, no sobre dónde está parado, así que atado acá aporta lo mismo antes y
 // después del ataque y no ensucia la comparación.
 q("UPDATE {$P}hero SET dead = 0, health = 100, wref = $VILLAGE, home = $VILLAGE WHERE uid = $UID");
+q("UPDATE {$P}heroinventory SET bag = 0 WHERE uid = $UID");
 
 q("DELETE FROM {$P}movement");
 q("DELETE FROM {$P}attacks");
