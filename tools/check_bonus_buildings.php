@@ -354,10 +354,14 @@ foreach(array_merge($sources,array('GameEngine/Database/db_MYSQLi.php')) as $sou
 }
 
 $automation = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
-check(strpos($automation,'accrueProductionBeforeLevelChange($indi[\'wid\'], $indi[\'timestamp\'])') !== false,
+check(strpos($automation,'accrueProductionBeforeChange($indi[\'wid\'], $indi[\'timestamp\'])') !== false,
 	'al terminar una construcción se cobra la producción vieja hasta ese instante');
-check(strpos($automation,'accrueProductionBeforeLevelChange($vil[\'vref\'], $vil[\'timetofinish\'])') !== false,
+check(strpos($automation,'accrueProductionBeforeChange($vil[\'vref\'], $vil[\'timetofinish\'])') !== false,
 	'al terminar una demolición también');
+check(strpos($automation,'$this->accrueProductionBeforeChange($data[\'from\'], $conquestTime)') !== false,
+	'al conquistar un oasis se cierra el tramo de producción de la aldea que lo gana');
+check(strpos($automation,'$this->accrueProductionBeforeChange($o_conqured, $conquestTime)') !== false,
+	'y también el de la aldea que lo pierde');
 check(preg_match('/if\(\(int\)\$indi\[.type.\] >= 1 && \(int\)\$indi\[.type.\] <= 9\)/',$automation) === 1,
 	'la corrección alcanza a los campos de recursos y a los cinco edificios de bonus');
 check(strpos($automation,'$database->accrueVillageResources($bountywid, $lastupdate, $now,') !== false,

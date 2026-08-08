@@ -16,6 +16,45 @@ if(isset($_GET['gid'], $_GET['del']) && (int)$_GET['gid'] === 37) {
 	}
 }
 
+// Las dos tablas describían el tipo de oasis con el mismo par de switch copiados, y
+// ninguno tenía `default`: un tipo inesperado dejaba en pie el nombre y el bonus de
+// la fila anterior. Una sola definición, que además coincide con el reparto real de
+// villageOasisCounter() en Production.php (cada unidad = 25%).
+if(!function_exists('oasisResourceName')) {
+	function oasisResourceName($type) {
+		switch((int)$type) {
+			case 1: case 2: case 3: return "Madera";
+			case 4: case 5: case 6: return "Barro";
+			case 7: case 8: case 9: return "Hierro";
+			case 10: case 11: case 12: return "Cereal";
+		}
+		return "Desconocido";
+	}
+}
+
+if(!function_exists('oasisResourceBonus')) {
+	function oasisResourceBonus($type) {
+		$wood = "<span><img class='r1' src='img/x.gif' title='Madera'> ";
+		$clay = "<span><img class='r2' src='img/x.gif' title='Barro'> ";
+		$iron = "<span><img class='r3' src='img/x.gif' title='Hierro'> ";
+		$crop = "<span><img class='r4' src='img/x.gif' title='Cereal'> ";
+		switch((int)$type) {
+			case 1: return $wood."25%</span>";
+			case 2: return $wood."50%</span>";
+			case 3: return $wood."25%</span>".$crop."25%</span>";
+			case 4: return $clay."25%</span>";
+			case 5: return $clay."50%</span>";
+			case 6: return $clay."25%</span>".$crop."25%</span>";
+			case 7: return $iron."25%</span>";
+			case 8: return $iron."50%</span>";
+			case 9: return $iron."25%</span>".$crop."25%</span>";
+			case 10: case 11: return $crop."25%</span>";
+			case 12: return $crop."50%</span>";
+		}
+		return "";
+	}
+}
+
 ?>
 <div class="clear"></div>
 <h4>Oasis ocupado por la aldea <?php echo $village->vname; ?></h4>
@@ -51,30 +90,7 @@ while($row = mysql_fetch_array($sql)){
 			})()">
 						<img class="del" src="img/x.gif" alt="eliminar">
 					</a>
-<?php
-switch($type) {
-case 1:
-case 2:
-case 3:
-$tname =  "Madera";
-break;
-case 4:
-case 5:
-case 6:
-$tname =  "Barro";
-break;
-case 7:
-case 8:
-case 9:
-$tname =  "Hierro";
-break;
-case 10:
-case 11:
-case 12:
-$tname =  "Cereal";
-break;
-}
-?>
+<?php $tname = oasisResourceName($type); ?>
 					<a href="karte.php?d=<?php echo $wref; ?>&c=<?php echo $generator->getMapCheck($wref); ?>"><?php echo $tname; ?></a>
 				</td>
 				<td class="zp"><?php echo $loyalty; ?>%</td>
@@ -82,42 +98,7 @@ break;
 				<td class="coords">
                 <?php
 $coor = $database->getCoor($wref);
-switch($type) {
-case 1:
-$tt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 25%</span>";
-break;
-case 2:
-$tt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 50%</span>";
-break;
-case 3:
-$tt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-break;
-case 4:
-$tt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 25%</span>";
-break;
-case 5:
-$tt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 50%</span>";
-break;
-case 6:
-$tt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-break;
-case 7:
-$tt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 25%</span>";
-break;
-case 8:
-$tt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 50%</span>";
-break;
-case 9:
-$tt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-break;
-case 10:
-case 11:
-$tt =  "<span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-break;
-case 12:
-$tt =  "<span><img class='r4' src='img/x.gif' title='Cereal'> 50%</span>";
-break;
-}
+$tt = oasisResourceBonus($type);
 ?>
                 <a class="" href="karte.php?x=<?php echo $coor['y']; ?>&amp;y=<?php echo $coor['x']; ?>">
                 <span class="coordinates coordinatesAligned">
@@ -153,121 +134,88 @@ break;
 	<thead><tr><td>Tipo</td><td>Propietario</td><td>Aldea</td><td>Coordenadas</td><td>Recurso</td></tr></thead>
     <tbody>
 <?php
-    $getoasis = mysql_query("SELECT * FROM ".TB_PREFIX."wdata WHERE oasistype > 0");
-    $coor2 = $database->getCoor($village->wid);
+	// Sólo los oasis que esta aldea podría anexar, o sea los del cuadrado de 3
+	// casillas que usa Automation::oasisAnnexationOutcome. Antes esto listaba "los
+	// 10 más cercanos" del mundo entero, y encima los juntaba en $rows[$dist]: como
+	// $dist es un float, PHP truncaba la clave a entero y cada oasis pisaba al
+	// anterior de su misma distancia redondeada, así que sobrevivía uno solo por
+	// anillo (1, 2, 3, ... casillas) y la tabla mezclaba oasis inalcanzables a 10
+	// casillas mientras escondía vecinos anexables.
+	$coor2 = $database->getCoor($village->wid);
+	$windowX = implode(',', array_map('intval', Automation::oasisAnnexationAxisWindow($coor2['x'])));
+	$windowY = implode(',', array_map('intval', Automation::oasisAnnexationAxisWindow($coor2['y'])));
 
-	if(!function_exists('getDistance')) {
-	function getDistance($coorx1, $coory1, $coorx2, $coory2) {
-		$max = 2 * WORLD_MAX + 1;
-		$x1 = intval($coorx1);
-		$y1 = intval($coory1);
-		$x2 = intval($coorx2);
-		$y2 = intval($coory2);
-		$distanceX = min(abs($x2 - $x1), abs($max - abs($x2 - $x1)));
-		$distanceY = min(abs($y2 - $y1), abs($max - abs($y2 - $y1)));
-		$dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
-		return round($dist, 1);
-	}
+	$getoasis = mysql_query(
+		"SELECT w.id, w.x, w.y, w.oasistype, o.type, o.owner, o.conqured"
+		." FROM ".TB_PREFIX."wdata w"
+		." LEFT JOIN ".TB_PREFIX."odata o ON o.wref = w.id"
+		." WHERE w.oasistype > 0 AND w.x IN ($windowX) AND w.y IN ($windowY)"
+	);
+
+	$rows = array();
+	while($row2 = mysql_fetch_assoc($getoasis)) {
+		if(!Automation::oasisWithinAnnexationRange($coor2['x'], $coor2['y'], $row2['x'], $row2['y'])) {
+			continue;
+		}
+		// Los propios ya salen en la tabla de arriba.
+		if((int)$row2['conqured'] === (int)$village->wid) {
+			continue;
+		}
+		$rows[] = $row2;
 	}
 
-        
-		while($row2 = mysql_fetch_array($getoasis)) {
-			$dist = getDistance($coor2['x'], $coor2['y'], $row2['x'], $row2['y']);
-			$rows[$dist] = $row2;
-        }
-        
-        ksort($rows);  
-        
-        $limit = 1;
-        foreach($rows as $dist => $row2) {
-        	if($limit <= 10){
-            $basearray = $database->getOMInfo($row2['id']);
-            echo "<tr><td class=\"type\">";
-            switch($basearray['type']) {
-                case 1:
-                case 2:
-                case 3:
-                $tname =  "Madera";
-                break;
-                case 4:
-                case 5:
-                case 6:
-                $tname =  "Barro";
-                break;
-                case 7:
-                case 8:
-                case 9:
-                $tname =  "Hierro";
-                break;
-                case 10:
-                case 11:
-                case 12:
-                $tname =  "Cereal";
-                break;
-            }
-            echo "<a href=\"position_details.php?x=".$row2['x']."&y=".$row2['y']."\">".$tname."</a></td>";
-            
-            if($basearray['owner']==3){
-                $oOwner = "-";
-            }else{
-                $oOwner = $database->getUserField($basearray['owner'],'username',0);
-            }
-            echo "<td class=\"nam\">".$oOwner."</td>";
-            if($basearray['conqured']==0){
-                $oVillage = "-";
-            }else{
-                $tempVillage = $database->getVillage($basearray['conqured']);
-                $oVillage = $tempVillage['name'];
-            }
-            echo "<td class=\"vil\">".$oVillage."</td>";
-            echo "<td class=\"coords\">";
-            echo "<a href=\"karte.php?d=".$row2['id']."&c=".$generator->getMapCheck($row2['id'])."\">
-                  <span class=\"coordinates coordinatesAligned\"><span class=\"coordinatesWrapper\">
-                  <span class=\"coordinateY\">(".$row2['x']."</span>
-                  <span class=\"coordinatePipe\">|</span>
-                  <span class=\"coordinateX\">".$row2['y'].")</span></span></span><span class=\"clear\">‎</span></a>";
-            echo "</td>";
-            switch($basearray['type']) {
-                case 1:
-                $ttt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 25%</span>";
-                break;
-                case 2:
-                $ttt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 50%</span>";
-                break;
-                case 3:
-                $ttt =  "<span><img class='r1' src='img/x.gif' title='Madera'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-                break;
-                case 4:
-                $ttt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 25%</span>";
-                break;
-                case 5:
-                $ttt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 50%</span>";
-                break;
-                case 6:
-                $ttt =  "<span><img class='r2' src='img/x.gif' title='Barro'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-                break;
-                case 7:
-                $ttt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 25%</span>";
-                break;
-                case 8:
-                $ttt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 50%</span>";
-                break;
-                case 9:
-                $ttt =  "<span><img class='r3' src='img/x.gif' title='Hierro'> 25%</span><span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-                break;
-                case 10:
-                case 11:
-                $ttt =  "<span><img class='r4' src='img/x.gif' title='Cereal'> 25%</span>";
-                break;
-                case 12:
-                $ttt =  "<span><img class='r4' src='img/x.gif' title='Cereal'> 50%</span>";
-                break;
-            }
-            echo "<td class=\"res\">".$ttt."</td>";
-            echo "</tr>";
-           	$limit++;
-        }
-        }
+	// Ordenar por cercanía real, con el id de desempate para que el orden no cambie
+	// entre recargas cuando dos oasis están a la misma distancia.
+	$worldSize = 2 * WORLD_MAX + 1;
+	$squaredDistance = function($row) use ($coor2, $worldSize) {
+		$dx = abs((int)$row['x'] - (int)$coor2['x']);
+		$dy = abs((int)$row['y'] - (int)$coor2['y']);
+		$dx = min($dx, $worldSize - $dx);
+		$dy = min($dy, $worldSize - $dy);
+		return $dx * $dx + $dy * $dy;
+	};
+	usort($rows, function($a, $b) use ($squaredDistance) {
+		$byDistance = $squaredDistance($a) - $squaredDistance($b);
+		return $byDistance !== 0 ? $byDistance : ((int)$a['id'] - (int)$b['id']);
+	});
+
+	foreach($rows as $row2) {
+		// odata puede faltar si el oasis todavía no fue poblado; wdata.oasistype es
+		// la misma clasificación y evita heredar el tipo de la fila anterior.
+		$otype = (int)$row2['type'] > 0 ? (int)$row2['type'] : (int)$row2['oasistype'];
+		$tname = oasisResourceName($otype);
+		$ttt = oasisResourceBonus($otype);
+
+		echo "<tr><td class=\"type\">";
+		echo "<a href=\"position_details.php?x=".(int)$row2['x']."&y=".(int)$row2['y']."\">".$tname."</a></td>";
+
+		if((int)$row2['owner'] == 3 || (int)$row2['owner'] == 0){
+			$oOwner = "-";
+		}else{
+			$oOwner = $database->getUserField($row2['owner'],'username',0);
+		}
+		echo "<td class=\"nam\">".$oOwner."</td>";
+		if((int)$row2['conqured'] == 0){
+			$oVillage = "-";
+		}else{
+			$tempVillage = $database->getVillage($row2['conqured']);
+			$oVillage = $tempVillage['name'];
+		}
+		echo "<td class=\"vil\">".$oVillage."</td>";
+		echo "<td class=\"coords\">";
+		echo "<a href=\"karte.php?d=".(int)$row2['id']."&c=".$generator->getMapCheck($row2['id'])."\">
+              <span class=\"coordinates coordinatesAligned\"><span class=\"coordinatesWrapper\">
+              <span class=\"coordinateY\">(".(int)$row2['x']."</span>
+              <span class=\"coordinatePipe\">|</span>
+              <span class=\"coordinateX\">".(int)$row2['y'].")</span></span></span><span class=\"clear\">‎</span></a>";
+		echo "</td>";
+		echo "<td class=\"res\">".$ttt."</td>";
+		echo "</tr>";
+	}
+
+	if(empty($rows)) {
+		echo "<tr><td class=\"none\" colspan=\"5\">No hay más oasis a menos de 3 casillas de esta aldea.</td></tr>";
+	}
 ?>
 
 	</tbody>

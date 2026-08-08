@@ -608,6 +608,43 @@ class Automation {
         return round($dist, 1);
     }
 
+    // Radio de anexión de oasis, en casillas.
+    const OASIS_ANNEX_RANGE = 3;
+
+    /**
+     * Único lugar donde vive el radio de anexión: un oasis pertenece a una aldea
+     * sólo si está dentro del cuadrado de 3 casillas (no de un círculo de radio 3),
+     * contando la vuelta del mapa. Lo comparten la conquista y la lista de "otros
+     * oasis" de la mansión del héroe, que antes ordenaba por distancia euclídea y
+     * terminaba ofreciendo oasis inalcanzables.
+     */
+    public static function oasisWithinAnnexationRange($villageX, $villageY, $oasisX, $oasisY) {
+        $worldSize = 2 * WORLD_MAX + 1;
+        $distanceX = abs((int)$oasisX - (int)$villageX);
+        $distanceY = abs((int)$oasisY - (int)$villageY);
+        $distanceX = min($distanceX, $worldSize - $distanceX);
+        $distanceY = min($distanceY, $worldSize - $distanceY);
+        return $distanceX <= self::OASIS_ANNEX_RANGE && $distanceY <= self::OASIS_ANNEX_RANGE;
+    }
+
+    /**
+     * Las 7 coordenadas que un eje puede tomar dentro del radio, ya normalizadas a
+     * la vuelta del mapa. Sirve para acotar el SELECT a las 49 casillas del cuadrado
+     * en vez de traerse todos los oasis del mundo.
+     */
+    public static function oasisAnnexationAxisWindow($center) {
+        $worldSize = 2 * WORLD_MAX + 1;
+        $window = array();
+        for($offset = -self::OASIS_ANNEX_RANGE; $offset <= self::OASIS_ANNEX_RANGE; $offset++) {
+            $coordinate = ((int)$center + $offset + WORLD_MAX) % $worldSize;
+            if($coordinate < 0) {
+                $coordinate += $worldSize;
+            }
+            $window[] = $coordinate - WORLD_MAX;
+        }
+        return $window;
+    }
+
     /**
      * Decides what a successful hero raid does to the attacked oasis. Pure: the
      * caller reads the state and applies the resulting database changes.
@@ -626,13 +663,7 @@ class Automation {
             'needed_mansion' => (int)$village['oases'] * 5 + 10
         );
 
-        $worldSize = 2 * WORLD_MAX + 1;
-        $distanceX = abs((int)$oasis['x'] - (int)$village['x']);
-        $distanceY = abs((int)$oasis['y'] - (int)$village['y']);
-        $distanceX = min($distanceX, $worldSize - $distanceX);
-        $distanceY = min($distanceY, $worldSize - $distanceY);
-
-        if($distanceX > 3 || $distanceY > 3) {
+        if(!self::oasisWithinAnnexationRange($village['x'], $village['y'], $oasis['x'], $oasis['y'])) {
             $result['status'] = 'out_of_range';
             return $result;
         }
@@ -1175,39 +1206,6 @@ class Automation {
         return (int)$rows[0]['endtime'];
     }
 
-    /**
-     * Termina ya mismo las construcciones que el jugador pagó con oro.
-     *
-     * `Building::finishAll()` repetía acá su propia versión del fin de obra y se le
-     * escapaban cosas: los puntos de cultura salían del nivel viejo cuando había dos
-     * mejoras encoladas en el mismo campo, la capacidad del almacén no se actualizaba
-     * y la población del ranking quedaba sin sincronizar. Ahora sólo adelanta el reloj
-     * de esos trabajos y los hace pasar por el mismo camino que los que terminan solos.
-     *
-     * Devuelve cuántos trabajos se adelantaron.
-     */
-    public function finishBuildingsNow($villageId, $jobIds) {
-        global $database;
-        $villageId = (int)$villageId;
-        $ids = array();
-        foreach((array)$jobIds as $jobId) {
-            $jobId = (int)$jobId;
-            if($jobId > 0) {
-                $ids[] = $jobId;
-            }
-        }
-        if($villageId <= 0 || empty($ids)) {
-            return 0;
-        }
-        $now = time();
-        $database->query(
-            "UPDATE ".TB_PREFIX."bdata SET timestamp = ".($now - 1)
-            ." WHERE wid = ".$villageId." AND master = 0 AND id IN (".implode(',',$ids).")"
-        );
-        $this->buildComplete($now, false);
-        return count($ids);
-    }
-
     private function buildComplete($throughTime = null, $managePreventionFile = true) {
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             @unlink("GameEngine/Prevention/build.txt");
@@ -1244,7 +1242,7 @@ class Automation {
             // la próxima visita del jugador aplica el nivel nuevo a todas las horas
             // que estuvo desconectado y regala el bono hacia atrás.
             if((int)$indi['type'] >= 1 && (int)$indi['type'] <= 9) {
-                $this->accrueProductionBeforeLevelChange($indi['wid'], $indi['timestamp']);
+                $this->accrueProductionBeforeChange($indi['wid'], $indi['timestamp']);
             }
             $q = "UPDATE ".TB_PREFIX."fdata set f".$indi['field']." = ".$indi['level'].", f".$indi['field']."t = ".$indi['type']." where vref = ".$indi['wid'];
             if($database->query($q)) {
@@ -2947,7 +2945,17 @@ class Automation {
                             switch($annexation['status']) {
                                 case 'conquered':
                                     $a_uid = $database->getVillageField($data['from'], "owner");
-                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".time()."', `lastupdated2`='".time()."' WHERE `wref`='".$data['to']."' ");
+                                    // Cambiar de mano un oasis cambia la producción de las dos
+                                    // aldeas, así que hay que cerrar el tramo viejo antes del
+                                    // UPDATE: si no, la que lo gana cobra el +25% por las horas
+                                    // que llevaba sin actualizarse (medido: +30 de cereal por
+                                    // una hora previa) y la que lo pierde se lo ve descontado.
+                                    $conquestTime = time();
+                                    $this->accrueProductionBeforeChange($data['from'], $conquestTime);
+                                    if($o_conqured != 0) {
+                                        $this->accrueProductionBeforeChange($o_conqured, $conquestTime);
+                                    }
+                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".$conquestTime."', `lastupdated2`='".$conquestTime."' WHERE `wref`='".$data['to']."' ");
                                     mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
                                     $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
                                     break;
@@ -4078,10 +4086,13 @@ class Automation {
     }
 
     /**
-     * Cierra el tramo de producción de una aldea justo antes de que cambie el
-     * nivel de un edificio o un campo que altera la producción.
+     * Cierra el tramo de producción de una aldea justo antes de que cambie algo que
+     * altera su producción: el nivel de un campo o de un edificio de bonus, o el
+     * conjunto de oasis anexados. Sin esto la aldea acredita las horas ya pasadas a
+     * la tarifa nueva, así que un oasis recién conquistado paga retroactivamente su
+     * +25% sobre el tiempo en que todavía no era suyo (y al perderlo se lo descuenta).
      */
-    private function accrueProductionBeforeLevelChange($villageId, $until) {
+    private function accrueProductionBeforeChange($villageId, $until) {
         global $database;
         $villageId = (int)$villageId;
         if($villageId <= 0) {
@@ -4446,7 +4457,7 @@ class Automation {
                 // Igual que al construir: se cobra lo producido con el nivel viejo
                 // hasta el momento en que termina la demolición.
                 if((int)$type >= 1 && (int)$type <= 9) {
-                    $this->accrueProductionBeforeLevelChange($vil['vref'], $vil['timetofinish']);
+                    $this->accrueProductionBeforeChange($vil['vref'], $vil['timetofinish']);
                 }
                 $this->applyStorageCapacityDelta($vil['vref'], $type, $level, $level - 1);
                 if($type == 18) {
