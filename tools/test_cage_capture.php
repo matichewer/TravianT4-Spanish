@@ -87,7 +87,10 @@ function setupAttack($oasisWref, $attackType, $conqured) {
     q("DELETE FROM {$P}movement");
     q("DELETE FROM {$P}attacks");
     q("DELETE FROM {$P}enforcement");
-    q("DELETE FROM {$P}ndata WHERE uid = $UID");
+    // Los informes no se borran: se marca desde dónde mirar. Borrarlos dejaba sin
+    // material a tools/test_cage_report_render.php, que necesita el ntype=25 que crea
+    // el primer escenario de este mismo archivo.
+    $GLOBALS['noticeWatermark'] = (int)one("SELECT COALESCE(MAX(id),0) AS id FROM {$P}ndata")['id'];
     q("DELETE FROM {$P}heroitems WHERE uid = $UID");
 
     q("UPDATE {$P}odata SET conqured = $conqured, owner = " . ($conqured ? 2 : 3) . " WHERE wref = $oasisWref");
@@ -124,7 +127,8 @@ function animalsNow($oasisWref) {
 function notices() {
     global $P, $UID;
     $out = array();
-    $r = q("SELECT ntype, topic, data FROM {$P}ndata WHERE uid = $UID ORDER BY id");
+    $since = isset($GLOBALS['noticeWatermark']) ? (int)$GLOBALS['noticeWatermark'] : 0;
+    $r = q("SELECT ntype, topic, data FROM {$P}ndata WHERE uid = $UID AND id > $since ORDER BY id");
     while($n = mysqli_fetch_assoc($r)) { $out[] = $n; }
     return $out;
 }

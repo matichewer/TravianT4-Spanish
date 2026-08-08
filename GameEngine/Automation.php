@@ -1880,8 +1880,11 @@ class Automation {
                     $cage = array('id' => 0, 'type' => 0, 'num' => 0);
                 }
                 $cageID = (int)$cage['id'];
-                $cage['type'] = max(0, (int)$cage['type']);
+                // Mismo acotado que las vendas: `type` es lo cargado en la bolsa y nunca
+                // puede superar al stock `num`, o el bucle de captura descontaría más
+                // jaulas de las que el héroe lleva encima.
                 $cage['num'] = max(0, (int)$cage['num']);
+                $cage['type'] = min($cage['num'], max(0, (int)$cage['type']));
 
                 // Las jaulas solo capturan en oasis sin ocupar y en ataques reales:
                 // sobre un oasis conquistado o en un espionaje se resuelve la batalla normal.

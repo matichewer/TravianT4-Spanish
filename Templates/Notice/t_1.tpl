@@ -100,8 +100,9 @@ $limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
 $sql2 = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive=0 $limit2 and del = 0 ORDER BY time DESC $limit");
 
 $paginationDisplay = "";
-$nextPage = $_GET['page'] + 1;
-$previous = $_GET['page'] - 1;
+// $page ya viene acotado a [1, ultima pagina]; $_GET['page'] puede no existir.
+$nextPage = $page + 1;
+$previous = $page - 1;
 
 if ($page == "1" && $lastPage == "1"){
 $paginationDisplay .=  '<img alt="Primera" src="img/x.gif" class="first disabled"> ';
@@ -122,7 +123,7 @@ $paginationDisplay .=  '<img alt="Primera" src="img/x.gif" class="first disabled
 $paginationDisplay .=  '<img alt="Anterior" src="img/x.gif" class="previous disabled">';
 $paginationDisplay .= $centerPages;
 $paginationDisplay .=  '<a class="next" href="' . $_SERVER['PHP_SELF'] . '?t=' . $_GET['t'] . '&page=2"><img alt="Siguiente" src="img/x.gif"></a> ';
-$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?t=' . $_GET['t'] . '&page=3"><img alt="Última" src="img/x.gif"></a>';
+$paginationDisplay .=  '<a class="last" href="' . $_SERVER['PHP_SELF'] . '?t=' . $_GET['t'] . '&page=' . $lastPage . '"><img alt="Última" src="img/x.gif"></a>';
 
 }elseif ($page != "1" && $page != $lastPage){
 $paginationDisplay .=  '<a class="first" href="' . $_SERVER['PHP_SELF'] . '?t=' . $_GET['t'] . '&page=1"><img alt="Primera" src="img/x.gif"></a> ';
