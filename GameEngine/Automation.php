@@ -1175,6 +1175,39 @@ class Automation {
         return (int)$rows[0]['endtime'];
     }
 
+    /**
+     * Termina ya mismo las construcciones que el jugador pagó con oro.
+     *
+     * `Building::finishAll()` repetía acá su propia versión del fin de obra y se le
+     * escapaban cosas: los puntos de cultura salían del nivel viejo cuando había dos
+     * mejoras encoladas en el mismo campo, la capacidad del almacén no se actualizaba
+     * y la población del ranking quedaba sin sincronizar. Ahora sólo adelanta el reloj
+     * de esos trabajos y los hace pasar por el mismo camino que los que terminan solos.
+     *
+     * Devuelve cuántos trabajos se adelantaron.
+     */
+    public function finishBuildingsNow($villageId, $jobIds) {
+        global $database;
+        $villageId = (int)$villageId;
+        $ids = array();
+        foreach((array)$jobIds as $jobId) {
+            $jobId = (int)$jobId;
+            if($jobId > 0) {
+                $ids[] = $jobId;
+            }
+        }
+        if($villageId <= 0 || empty($ids)) {
+            return 0;
+        }
+        $now = time();
+        $database->query(
+            "UPDATE ".TB_PREFIX."bdata SET timestamp = ".($now - 1)
+            ." WHERE wid = ".$villageId." AND master = 0 AND id IN (".implode(',',$ids).")"
+        );
+        $this->buildComplete($now, false);
+        return count($ids);
+    }
+
     private function buildComplete($throughTime = null, $managePreventionFile = true) {
         if($managePreventionFile && file_exists("GameEngine/Prevention/build.txt")) {
             @unlink("GameEngine/Prevention/build.txt");

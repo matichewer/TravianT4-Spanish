@@ -66,21 +66,34 @@ class Building {
 		}
 		else {
 			if($this->allocated <= $this->maxConcurrent) {
-				$resRequired = $this->resourceRequired($id,$tid);
+				// El nivel que se encolaría es el siguiente al último pedido para ese
+				// campo, no siempre el actual + 1.
+				$queuedHere = count($database->getBuildingByField($village->wid,$id));
+				$resRequired = $this->resourceRequired($id,$tid,1 + $queuedHere);
 				$resRequiredPop = $resRequired['pop'];
-				if ($resRequiredPop == "") {
-					$buildarray = $GLOBALS["bid".$tid];
-					$resRequiredPop = $buildarray[1]['pop'];
+				if ($resRequiredPop === null || $resRequiredPop === "") {
+					$buildarray = isset($GLOBALS["bid".$tid]) ? $GLOBALS["bid".$tid] : array();
+					$resRequiredPop = isset($buildarray[1]['pop']) ? $buildarray[1]['pop'] : 0;
 				}
+				// Consumo que van a sumar las construcciones ya encoladas. Antes tomaba
+				// siempre el nivel actual + 1, así que con dos mejoras encoladas en el
+				// mismo campo contaba dos veces la primera y nunca la segunda; el nivel
+				// al que apunta cada trabajo ya está guardado en la cola.
+				$soonPop = 0;
 				$jobs = $database->getJobs($village->wid);
-				if ($jobs > 0) {
-					$soonPop = 0;
+				if(is_array($jobs)) {
 					foreach ($jobs as $j) {
-						$buildarray = $GLOBALS["bid".$j['type']];
-						$soonPop += $buildarray[$database->getFieldLevel($village->wid,$j['field'])+1]['pop'];
+						$buildarray = isset($GLOBALS["bid".$j['type']]) ? $GLOBALS["bid".$j['type']] : array();
+						$jobLevel = (int)$j['level'];
+						if(isset($buildarray[$jobLevel]['pop'])) {
+							$soonPop += $buildarray[$jobLevel]['pop'];
+						}
 					}
 				}
-				if(($village->getProd("crop") - $soonPop - $resRequiredPop) <= -68 && $village->resarray['f'.$id.'t'] <> 4) {  
+				// No se encola nada que deje la aldea produciendo cereal en negativo:
+				// con la hambruna activa eso se paga con tropas. Mejorar una plantación
+				// de cereal siempre se permite, porque es justamente la salida.
+				if(($village->getProd("crop") - $soonPop - $resRequiredPop) < 0 && $village->resarray['f'.$id.'t'] <> 4) {
 					return 4;
 				}
 				else {
@@ -885,79 +898,58 @@ class Building {
 		return !empty($demolition);
 	}
 	
+	/**
+	 * Termina todas las construcciones en curso a cambio de 2 de oro.
+	 *
+	 * El fin de obra en sí lo resuelve Automation, el mismo camino que usan las
+	 * construcciones que terminan solas: acá sólo se elige qué trabajos entran
+	 * (residencia, palacio y maravilla del mundo nunca), se cobra el oro y se
+	 * reordena lo que haya quedado en la cola.
+	 */
 	public function finishAll() {
-		global $database,$session,$logging,$village,$bid18,$bid10,$bid11,$technology,$_SESSION;
-		if($session->access!=BANNED){
+		global $database,$session,$logging,$village,$automation;
+		if($session->access==BANNED) {
+			header("Location: banned.php");
+			return;
+		}
 		if($database->getUserField($session->uid, 'gold', 0) < 2 || !$this->canFinishAll()) {
 			header("Location: ".$session->referrer);
 			return;
 		}
-		$finished = false;
+		$jobIds = array();
 		foreach($this->buildArray as $jobs) {
-		if($jobs['wid']==$village->wid){
-		$wwvillage = $database->getResourceLevel($jobs['wid']);
-			if($wwvillage['f99t']!=40){
-				$level = $jobs['level'];
-				if($jobs['master'] == 0 && $jobs['type'] != 25 AND $jobs['type'] != 26 AND $jobs['type'] != 40) {
-					if((int)$jobs['type'] >= 1 && (int)$jobs['type'] <= 4 && (int)$level > 10
-						&& (int)$database->getVillageField($jobs['wid'],'capital') !== 1) {
-						$fieldData = $GLOBALS['bid'.(int)$jobs['type']];
-						$cost = $fieldData[(int)$level];
-						$database->query("UPDATE ".TB_PREFIX."vdata SET "
-							."wood=LEAST(maxstore,wood+".(int)$cost['wood']."), "
-							."clay=LEAST(maxstore,clay+".(int)$cost['clay']."), "
-							."iron=LEAST(maxstore,iron+".(int)$cost['iron']."), "
-							."crop=LEAST(maxcrop,crop+".(int)$cost['crop'].") "
-							."WHERE wref=".(int)$jobs['wid']);
-						$database->query("DELETE FROM ".TB_PREFIX."bdata WHERE id=".(int)$jobs['id']);
-						continue;
-					}
-					$resource = $this->resourceRequired($jobs['field'],$jobs['type']);
-				$q = "UPDATE ".TB_PREFIX."fdata set f".$jobs['field']." = ".$jobs['level'].", f".$jobs['field']."t = ".$jobs['type']." where vref = ".$jobs['wid'];
-				if($database->query($q)) {
-					$database->modifyPop($jobs['wid'],$resource['pop'],0);
-					$database->addCP($jobs['wid'],$resource['cp']);
-					$q = "DELETE FROM ".TB_PREFIX."bdata where id = ".$jobs['id'];
-					$database->query($q);
-					$finished = true;
-					if($jobs['type'] == 18) {
-						$owner = $database->getVillageField($jobs['wid'],"owner");
-						$max = $bid18[$level]['attri'];
-						$q = "UPDATE ".TB_PREFIX."alidata set max = $max where leader = $owner";
-						$database->query($q);
-					}
-				}
-				if(($jobs['field'] >= 19 && ($session->tribe == 1 || ALLOW_ALL_TRIBE)) || (!ALLOW_ALL_TRIBE && $session->tribe != 1)) { $innertimestamp = $jobs['timestamp']; }
+			if((int)$jobs['wid'] !== (int)$village->wid || (int)$jobs['master'] !== 0) {
+				continue;
 			}
+			if(in_array((int)$jobs['type'], array(25,26,40), true)) {
+				continue;
+			}
+			$jobIds[] = (int)$jobs['id'];
 		}
-		}
+		$finished = false;
+		if(!empty($jobIds) && is_object($automation) && method_exists($automation,'finishBuildingsNow')) {
+			$finished = $automation->finishBuildingsNow($village->wid, $jobIds) > 0;
 		}
 		$demolition = $database->getDemolition($village->wid);
 		if(!empty($demolition)) {
 			$database->finishDemolition($village->wid);
 			$finished = true;
 		}
-		if($finished){
-		$logging->goldFinLog($village->wid);
-		$database->modifyGold($session->uid,2,0);
-		$stillbuildingarray = $database->getJobs($village->wid);
-		if(count($stillbuildingarray) == 1 && isset($innertimestamp)) {
-			if($stillbuildingarray[0]['loopcon'] == 1) {
-				$q = "UPDATE ".TB_PREFIX."bdata SET loopcon=0,timestamp=".(time()+$stillbuildingarray[0]['timestamp']-$innertimestamp)." WHERE id=".$stillbuildingarray[0]['id'];
-				$database->query($q);
+		if($finished) {
+			$logging->goldFinLog($village->wid);
+			$database->modifyGold($session->uid,2,0);
+			// Lo que no se puede terminar (una residencia, un palacio) queda en la cola:
+			// se reordena para que arranque ya y no herede el reloj de lo que terminó.
+			if(method_exists($database,'resequenceBuildingQueue')) {
+				$database->resequenceBuildingQueue($village->wid,1);
+				$database->resequenceBuildingQueue($village->wid,19);
 			}
 		}
+		if(isset($_GET['id'])) {
+			header("Location: ".$session->referrer . "?id=" . $_GET['id']);
 		}
-		if(isset($_GET['id']))
-        {
-            header("Location: ".$session->referrer . "?id=" . $_GET['id']);
-        }
-        else
-        {
-            header("Location: ".$session->referrer);
-        }
-		}else{
-		header("Location: banned.php");
+		else {
+			header("Location: ".$session->referrer);
 		}
 	}
 	

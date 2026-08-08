@@ -2722,7 +2722,7 @@
         	 * estaba esperando, y cada uno de los siguientes termina detrás del anterior.
         	 * Los pedidos del constructor maestro no entran: los activa MasterBuilder.
         	 */
-        	private function resequenceBuildingQueue($wid, $field) {
+        	public function resequenceBuildingQueue($wid, $field) {
                 global $building,$session;
                 $wid = (int)$wid;
                 $field = (int)$field;
@@ -2745,8 +2745,12 @@
                 foreach($queue as $index => $job) {
                     $duration = $this->buildingJobDuration($job);
                     if($index === 0) {
-                        if((int)$job['loopcon'] === 1) {
-                            $cursor = time() + $duration;
+                        // Un trabajo realmente en obra no puede terminar más tarde que su
+                        // propia duración contada desde ahora: si lo hace es porque estaba
+                        // esperando detrás de otro y heredó aquel fin, así que arranca ya.
+                        $ownFinish = time() + $duration;
+                        if((int)$job['loopcon'] === 1 || (int)$job['timestamp'] > $ownFinish) {
+                            $cursor = $ownFinish;
                             mysqli_query(
                                 $this->connection,
                                 "UPDATE " . TB_PREFIX . "bdata SET loopcon = 0, timestamp = " . (int)$cursor
