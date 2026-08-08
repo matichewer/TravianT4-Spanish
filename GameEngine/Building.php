@@ -261,7 +261,11 @@ class Building {
 		global $database,$village;
 		foreach($this->buildArray as $jobs) {
 			if($jobs['id'] == $d) {
-				$uprequire = $this->resourceRequired($jobs['field'],$jobs['type']);
+				// Se devuelve lo que costó el nivel que se cancela, no siempre el
+				// siguiente al actual: cancelar el segundo trabajo encolado de un campo
+				// reembolsaba de menos.
+				$plus = max(1,(int)$jobs['level'] - (int)$village->resarray['f'.$jobs['field']]);
+				$uprequire = $this->resourceRequired($jobs['field'],$jobs['type'],$plus);
 				if($database->removeBuilding($d)) {
 					if($jobs['master'] == 0){
 					$database->modifyResource($village->wid,$uprequire['wood'],$uprequire['clay'],$uprequire['iron'],$uprequire['crop'],1);

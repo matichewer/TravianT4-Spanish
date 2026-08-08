@@ -2660,116 +2660,129 @@
 				}
 			}
 
+        	/**
+        	 * Cancela un trabajo de la cola de construcción.
+        	 *
+        	 * La versión anterior intentaba resolver a mano cada combinación de dos, tres
+        	 * y cuatro trabajos con una cadena de condiciones que comparaban un número de
+        	 * campo contra un booleano (`$jobs[0]['field'] == ($jobs[1]['field'] ==
+        	 * $jobs[2]['field'])`), o sea "el primer trabajo está en el campo 1". Con eso
+        	 * el trabajo que quedaba detrás podía heredar el nivel o el reloj equivocados.
+        	 *
+        	 * Ahora son tres reglas, sin casos especiales:
+        	 *   - los trabajos del mismo campo que apuntaban más arriba bajan un nivel;
+        	 *   - el solar se libera si el campo se queda sin trabajos y sin edificio;
+        	 *   - la cola de esa zona se recalcula en orden: el primero pasa a estar en
+        	 *     obra desde ahora y los demás se encadenan detrás.
+        	 */
         	function removeBuilding($d) {
                 global $building;
-                $jobLoopconID = -1;
-                $SameBuildCount = 0;
-                $jobs = $building->buildArray;
-                for($i = 0; $i < sizeof($jobs); $i++) {
-                    if($jobs[$i]['id'] == $d) {
-                        $jobDeleted = $i;
-                    }
-                    if($jobs[$i]['loopcon'] == 1) {
-                        $jobLoopconID = $i;
-                    }
-                    if($jobs[$i]['master'] == 1) {
-                        $jobMaster = $i;
-                    }
-                }
-                if(count($jobs) > 1 && ($jobs[0]['field'] == $jobs[1]['field'])) {
-                    $SameBuildCount = 1;
-                }
-                if(count($jobs) > 2 && ($jobs[0]['field'] == $jobs[2]['field'])) {
-                    $SameBuildCount = 2;
-                }
-                if(count($jobs) > 2 && ($jobs[1]['field'] == $jobs[2]['field'])) {
-                    $SameBuildCount = 3;
-                }
-				if(count($jobs) > 2 && ($jobs[0]['field'] == ($jobs[1]['field'] == $jobs[2]['field']))) {
-                    $SameBuildCount = 4;
-                }
-				if(count($jobs) > 3 && ($jobs[0]['field'] == ($jobs[1]['field'] == $jobs[3]['field']))) {
-                    $SameBuildCount = 5;
-                }
-				if(count($jobs) > 3 && ($jobs[0]['field'] == ($jobs[2]['field'] == $jobs[3]['field']))) {
-                    $SameBuildCount = 6;
-                }
-				if(count($jobs) > 3 && ($jobs[1]['field'] == ($jobs[2]['field'] == $jobs[3]['field']))) {
-                    $SameBuildCount = 7;
-                }
-				if(count($jobs) > 3 && ($jobs[0]['field'] == $jobs[3]['field'])) {
-                    $SameBuildCount = 8;
-                }
-                if(count($jobs) > 3 && ($jobs[1]['field'] == $jobs[3]['field'])) {
-                    $SameBuildCount = 9;
-                }
-                if(count($jobs) > 3 && ($jobs[2]['field'] == $jobs[3]['field'])) {
-                    $SameBuildCount = 10;
-                }
-                if($SameBuildCount > 0) {
-					if($SameBuildCount > 3){
-					if($SameBuildCount == 4 or $SameBuildCount == 5){
-					if($jobDeleted == 0){
-					$uprequire = $building->resourceRequired($jobs[1]['field'],$jobs[1]['type'],1);
-					$time = $uprequire['time'];
-					$timestamp = $time+time();
-					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[1]['id']."";
-                        mysqli_query($this->connection,$q);
-					}
-					}else if($SameBuildCount == 6){
-					if($jobDeleted == 0){
-					$uprequire = $building->resourceRequired($jobs[2]['field'],$jobs[2]['type'],1);
-					$time = $uprequire['time'];
-					$timestamp = $time+time();
-					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[2]['id']."";
-                        mysqli_query($this->connection,$q);
-					}
-					}else if($SameBuildCount == 7){
-					if($jobDeleted == 1){
-					$uprequire = $building->resourceRequired($jobs[2]['field'],$jobs[2]['type'],1);
-					$time = $uprequire['time'];
-					$timestamp = $time+time();
-					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[2]['id']."";
-                        mysqli_query($this->connection,$q);
-					}
-					}
-					if($SameBuildCount < 8){
-					$uprequire1 = $building->resourceRequired($jobs[$jobMaster]['field'],$jobs[$jobMaster]['type'],2);
-					$time1 = $uprequire1['time'];
-					$timestamp1 = $time1;
-					$q1 = "UPDATE " . TB_PREFIX . "bdata SET level=level-1,timestamp=".$timestamp1." WHERE id=".$jobs[$jobMaster]['id']."";
-                        mysqli_query($this->connection,$q1);
-					}else{
-					$uprequire1 = $building->resourceRequired($jobs[$jobMaster]['field'],$jobs[$jobMaster]['type'],1);
-					$time1 = $uprequire1['time'];
-					$timestamp1 = $time1;
-					$q1 = "UPDATE " . TB_PREFIX . "bdata SET level=level-1,timestamp=".$timestamp1." WHERE id=".$jobs[$jobMaster]['id']."";
-                        mysqli_query($this->connection,$q1);
-					}
-					}else if($d == $jobs[floor($SameBuildCount / 3)]['id'] || $d == $jobs[floor($SameBuildCount / 2) + 1]['id']) {
-                        $q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=" . $jobs[floor($SameBuildCount / 3)]['timestamp'] . " WHERE master = 0 AND id > ".$d." and (ID=" . $jobs[floor($SameBuildCount / 3)]['id'] . " OR ID=" . $jobs[floor($SameBuildCount / 2) + 1]['id'] . ")";
-                        mysqli_query($this->connection,$q);
-                    }
-                } else {
-                    if($jobs[$jobDeleted]['field'] >= 19) {
-                        $x = "SELECT f" . $jobs[$jobDeleted]['field'] . " FROM " . TB_PREFIX . "fdata WHERE vref=" . $jobs[$jobDeleted]['wid'];
-                        $result = mysqli_query($this->connection,$x) or die(mysqli_error());
-                        $fieldlevel = mysqli_fetch_row($result);
-                        if($fieldlevel[0] == 0) {
-                            $x = "UPDATE " . TB_PREFIX . "fdata SET f" . $jobs[$jobDeleted]['field'] . "t=0 WHERE vref=" . $jobs[$jobDeleted]['wid'];
-                            mysqli_query($this->connection,$x) or die(mysqli_error());
-                        }
-                    }
-                    if(($jobLoopconID >= 0) && ($jobs[$jobDeleted]['loopcon'] != 1)) {
-                        if(($jobs[$jobLoopconID]['field'] <= 18 && $jobs[$jobDeleted]['field'] <= 18) || ($jobs[$jobLoopconID]['field'] >= 19 && $jobs[$jobDeleted]['field'] >= 19) || sizeof($jobs) < 3) {
-                            $uprequire = $building->resourceRequired($jobs[$jobLoopconID]['field'], $jobs[$jobLoopconID]['type']);
-                            $x = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,timestamp=" . (time() + $uprequire['time']) . " WHERE wid=" . $jobs[$jobDeleted]['wid'] . " AND loopcon=1 AND master=0";
-                            mysqli_query($this->connection,$x) or die(mysqli_error());
+                $d = (int)$d;
+                $deleted = null;
+                if(is_object($building) && is_array($building->buildArray)) {
+                    foreach($building->buildArray as $job) {
+                        if((int)$job['id'] === $d) {
+                            $deleted = $job;
                         }
                     }
                 }
-                $q = "DELETE FROM " . TB_PREFIX . "bdata where id = $d";
-                return mysqli_query($this->connection,$q);
+                if($deleted === null) {
+                    return mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "bdata where id = $d");
+                }
+                $wid = (int)$deleted['wid'];
+                $field = (int)$deleted['field'];
+                $level = (int)$deleted['level'];
+
+                if(!mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "bdata where id = $d")) {
+                    return false;
+                }
+                mysqli_query(
+                    $this->connection,
+                    "UPDATE " . TB_PREFIX . "bdata SET level = level - 1"
+                    . " WHERE wid = $wid AND field = $field AND level > $level"
+                );
+
+                $remaining = mysqli_query($this->connection,"SELECT id FROM " . TB_PREFIX . "bdata WHERE wid = $wid AND field = $field LIMIT 1");
+                if($field >= 19 && (!$remaining || mysqli_num_rows($remaining) === 0)) {
+                    $levelRow = mysqli_query($this->connection,"SELECT f" . $field . " FROM " . TB_PREFIX . "fdata WHERE vref = $wid");
+                    $fieldLevel = $levelRow ? mysqli_fetch_row($levelRow) : false;
+                    if($fieldLevel && (int)$fieldLevel[0] === 0) {
+                        mysqli_query($this->connection,"UPDATE " . TB_PREFIX . "fdata SET f" . $field . "t = 0 WHERE vref = $wid");
+                    }
+                }
+
+                $this->resequenceBuildingQueue($wid,$field);
+                return true;
+            }
+
+        	/**
+        	 * Reencadena la cola de construcción de una zona (los campos de recursos y el
+        	 * centro de la aldea son colas separadas para los romanos, y una sola para el
+        	 * resto). El primer trabajo queda en obra con su reloj corriendo desde ahora si
+        	 * estaba esperando, y cada uno de los siguientes termina detrás del anterior.
+        	 * Los pedidos del constructor maestro no entran: los activa MasterBuilder.
+        	 */
+        	private function resequenceBuildingQueue($wid, $field) {
+                global $building,$session;
+                $wid = (int)$wid;
+                $field = (int)$field;
+                $splitQueues = (defined('ALLOW_ALL_TRIBE') && ALLOW_ALL_TRIBE)
+                    || (is_object($session) && (int)$session->tribe === 1);
+                $zone = "";
+                if($splitQueues) {
+                    $zone = $field <= 18 ? " AND field <= 18" : " AND field >= 19";
+                }
+                $result = mysqli_query(
+                    $this->connection,
+                    "SELECT * FROM " . TB_PREFIX . "bdata WHERE wid = $wid AND master = 0" . $zone
+                    . " ORDER BY timestamp ASC, id ASC"
+                );
+                if(!$result) {
+                    return;
+                }
+                $queue = $this->mysqli_fetch_all($result);
+                $cursor = time();
+                foreach($queue as $index => $job) {
+                    $duration = $this->buildingJobDuration($job);
+                    if($index === 0) {
+                        if((int)$job['loopcon'] === 1) {
+                            $cursor = time() + $duration;
+                            mysqli_query(
+                                $this->connection,
+                                "UPDATE " . TB_PREFIX . "bdata SET loopcon = 0, timestamp = " . (int)$cursor
+                                . " WHERE id = " . (int)$job['id']
+                            );
+                        }
+                        else {
+                            // Ya estaba en obra: su reloj no se reinicia por cancelar otro.
+                            $cursor = (int)$job['timestamp'];
+                        }
+                        continue;
+                    }
+                    $cursor += $duration;
+                    mysqli_query(
+                        $this->connection,
+                        "UPDATE " . TB_PREFIX . "bdata SET loopcon = 1, timestamp = " . (int)$cursor
+                        . " WHERE id = " . (int)$job['id']
+                    );
+                }
+            }
+
+        	/**
+        	 * Duración de un trabajo encolado, con el descuento del edificio principal.
+        	 */
+        	private function buildingJobDuration($job) {
+                global $building;
+                if(!is_object($building) || !method_exists($building,'resourceRequired')) {
+                    return 0;
+                }
+                $currentLevel = (int)$this->getFieldLevel($job['wid'],$job['field']);
+                $plus = (int)$job['level'] - $currentLevel;
+                if($plus < 1) {
+                    $plus = 1;
+                }
+                $uprequire = $building->resourceRequired($job['field'],$job['type'],$plus);
+                return isset($uprequire['time']) ? max(0,(int)$uprequire['time']) : 0;
             }
 
         	function addDemolition($wid, $field) {

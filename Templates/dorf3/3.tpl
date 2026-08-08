@@ -55,11 +55,16 @@ foreach($varray as $vil){
 	if($percentI >= $cr) {$critI = 'crit';} else {$critI = '';}
 	if($percentCr >= $cr) {$critCR = 'crit';} else {$critCR = '';}
 
-	$timerwood = floor(($maxs-$wood)/$prod_wood*3600);
-	$timerclay = floor(($maxs-$clay)/$prod_clay*3600);
-	$timeriron = floor(($maxs-$iron)/$prod_iron*3600);
-	$timer1 = $generator->getTimeFormat(min($timerwood,$timerclay,$timeriron));
-	$timer2 = $generator->getTimeFormat(floor(($maxc-$crop)/$prod_crop*3600));
+	// Un recurso que no produce nunca llena el almacén: dividir por su producción
+	// daba INF y colgaba la página al formatear el tiempo. Sólo cuentan los que suben.
+	$fillTimes = array();
+	foreach(array(array($prod_wood,$maxs,$wood),array($prod_clay,$maxs,$clay),array($prod_iron,$maxs,$iron)) as $fill) {
+		if($fill[0] > 0) {
+			$fillTimes[] = floor(max(0,$fill[1]-$fill[2])/$fill[0]*3600);
+		}
+	}
+	$timer1 = $generator->getTimeFormat(empty($fillTimes) ? 0 : min($fillTimes));
+	$timer2 = $generator->getTimeFormat($prod_crop > 0 ? floor(max(0,$maxc-$crop)/$prod_crop*3600) : 0);
 
 	echo '<tr class="'.$class.'">
 		<td class="vil fc"><a href="dorf1.php?newdid='.$vid.'">'.$vdata['name'].'</a></td>

@@ -127,25 +127,29 @@ class GeneratorX {
 		return round(($effectiveDistance/$speed) * 3600 / INCREASE_SPEED);
 	}
    
+   /**
+    * Segundos a "h:mm:ss".
+    *
+    * Restaba de a 60 en un while, así que un INF —lo que devuelve una división por
+    * una producción de cero, por ejemplo el tiempo de llenado de un almacén que no
+    * produce— dejaba el proceso girando para siempre y colgaba la página entera.
+    * Un valor no finito o negativo no es un tiempo: vale cero.
+    */
    public function getTimeFormat($time) {
-	   $min = 0;
-	   $hr = 0;
-	   $days = 0;
-	   while($time >= 60) :
-		   $time -= 60;
-		   $min += 1;
-	   endwhile;
-	   while ($min >= 60) :
-		   $min -= 60;
-		   $hr += 1;
-	   endwhile;
-	   if ($min < 10) {
+	   if(!is_numeric($time) || !is_finite((float)$time) || $time < 0) {
+		   $time = 0;
+	   }
+	   $time = (int)$time;
+	   $hr = intdiv($time, 3600);
+	   $min = intdiv($time % 3600, 60);
+	   $sec = $time % 60;
+	   if($min < 10) {
 		   $min = "0".$min;
 	   }
-	   if($time < 10) {
-		   $time = "0".$time;
+	   if($sec < 10) {
+		   $sec = "0".$sec;
 	   }
-		return $hr.":".$min.":".$time;
+	   return $hr.":".$min.":".$sec;
    }
 
 	public function procMtime($time) {
