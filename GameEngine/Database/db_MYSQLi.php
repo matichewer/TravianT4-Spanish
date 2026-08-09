@@ -1,5 +1,10 @@
 <?php
 //author: https://github.com/Lorex
+        // Hero.php son puras funciones sin efectos al incluirse. Se carga acá para que
+        // addHero() cree la columna `autoregen` con heroBaseRegeneration() en vez de un
+        // 10 suelto: el reconciliador y la fórmula de regeneración leen el mismo valor.
+        require_once __DIR__."/../Hero.php";
+
         class mysqli_DB {
         	var $connection;
 
@@ -5317,8 +5322,9 @@ break;
 			function addHero($uid){
 				$time = time();
 				$hash = md5($time);
+				$autoregen = heroBaseRegeneration();
 				$q = "INSERT into " . TB_PREFIX . "hero (`uid`, `wref`, `level`, `speed`, `points`, `experience`, `dead`, `health`, `power`, `offBonus`, `defBonus`, `product`, `r0`, `autoregen`, `lastupdate`, `lastadv`, `hash`) values
-				('$uid', 0, 0, '7', 0, '2', 0, '100', '0', 0, 0, '4', '1', '10', '$time', '$time', '$hash')";
+				('$uid', 0, 0, '7', 0, '2', 0, '100', '0', 0, 0, '4', '1', '$autoregen', '$time', '$time', '$hash')";
         		return mysqli_query($this->connection,$q) or die(mysqli_error());
 			}
 

@@ -4690,7 +4690,7 @@ class Automation {
 	        if(!empty($harray)) {
 	            foreach ($harray as $hdata) {
 	                if((int)$hdata['dead']===0 && $hdata['health'] < 100) {
-	                    $health = $hdata['health'] + $hdata['autoregen'] * SPEED / 86400 * (time() - $hdata['lastupdate']);
+	                    $health = $hdata['health'] + heroRegenerationPerDay($hdata['autoregen']) / 86400 * (time() - $hdata['lastupdate']);
 	                    if($health > 100) {
 	                        $health = 100;
                     }

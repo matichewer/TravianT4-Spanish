@@ -1,5 +1,34 @@
 <?php
 
+if(!function_exists('heroBaseRegeneration')){
+	// Puntos de vida por día que regenera un héroe sin ningún objeto puesto. Es el valor
+	// con el que `addHero` crea la columna `autoregen`, así que todo lo que exceda esto
+	// viene de un objeto equipado.
+	function heroBaseRegeneration(){
+		return 10;
+	}
+}
+
+if(!function_exists('heroRegenerationPerDay')){
+	// `hero.autoregen` guarda la base más los bonos de los objetos equipados, todo en la
+	// misma columna. Solo la base escala con la velocidad del servidor: los cascos (4-6),
+	// las armaduras (82-87) y las botas (94-96) prometen puntos planos por día y eso es
+	// lo que valen. Multiplicar la columna entera hacía que unas botas de "+20 puntos de
+	// salud/día" dieran 60 en un x3, y el combo máximo curaba 270 puntos por día.
+	//
+	// Tanto `Automation::updateHero` como el cartel de la ficha del héroe pasan por acá:
+	// cuando cada uno tenía su propia fórmula, una usaba SPEED y la otra INCREASE_SPEED.
+	function heroRegenerationPerDay($autoRegen, $speed = null){
+		$base = heroBaseRegeneration();
+		$items = max(0, (int)$autoRegen - $base);
+		if($speed === null){
+			$speed = defined('SPEED') ? (int)SPEED : 1;
+		}
+
+		return $base * max(1, (int)$speed) + $items;
+	}
+}
+
 if(!function_exists('getHeroHorseSpeedBonus')){
 	function getHeroHorseSpeedBonus($type){
 		$bonuses = array(103 => 7, 104 => 10, 105 => 13);

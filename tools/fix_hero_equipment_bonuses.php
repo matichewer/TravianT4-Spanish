@@ -32,7 +32,7 @@ $itemTable = TB_PREFIX.'heroitems';
 // Valores con los que addHero() crea al héroe: todo lo que exceda esto tiene que
 // venir de un objeto equipado. `itempower` no se inserta, así que arranca en 0.
 $baseSpeed = 7;
-$baseAutoRegen = 10;
+$baseAutoRegen = heroBaseRegeneration();
 $baseItemPower = 0;
 
 $rows = $database->query_return("SELECT uid, speed, autoregen, itempower FROM $heroTable ORDER BY uid");

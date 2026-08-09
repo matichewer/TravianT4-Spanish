@@ -179,7 +179,7 @@ ob_start();
   </div>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
 
-<div class="attribute health tooltip" title="Regeneración de tu héroe: <?php echo $hero['autoregen']*SPEED; ?>% por día">
+<div class="attribute health tooltip" title="Regeneración de tu héroe: <?php echo heroRegenerationPerDay($hero['autoregen']); ?>% por día">
 <?php if($hero['dead']==0){ ?>
 			<div class="element attribName">Salud</div>
 			<div class="element current power"><span class="value"><?php echo round($hero['health']); ?></span>%</div>

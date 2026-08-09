@@ -1,5 +1,5 @@
 <?php
-// `updateHero` regenera vida con `autoregen * SPEED / 86400 * (now - lastupdate)`. Si el
+// `updateHero` regenera vida con `heroRegenerationPerDay(autoregen) / 86400 * (now - lastupdate)`. Si el
 // reloj solo avanzaba estando herido, un héroe que pasó días al 100% arrastraba un
 // `lastupdate` viejo y la primera herida se curaba entera en la siguiente pasada.
 
@@ -13,6 +13,7 @@ function heroClockAssert($condition, $message) {
 
 require_once dirname(__DIR__).'/config/connection.php';
 require_once dirname(__DIR__).'/GameEngine/Database.php';
+require_once dirname(__DIR__).'/GameEngine/Hero.php';
 
 $heroTable = TB_PREFIX.'hero';
 $sourceTable = SQL_DB.'.'.TB_PREFIX.'hero';
@@ -34,7 +35,7 @@ heroClockAssert(
 
 // Regeneración tal cual la calcula Automation::updateHero.
 $regenerated = function($hero, $speed) {
-	return $hero['health'] + $hero['autoregen'] * $speed / 86400 * (time() - $hero['lastupdate']);
+	return $hero['health'] + heroRegenerationPerDay($hero['autoregen'], $speed) / 86400 * (time() - $hero['lastupdate']);
 };
 
 $before = $database->getHeroData($uid);
