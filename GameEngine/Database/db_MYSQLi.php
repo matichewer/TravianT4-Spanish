@@ -3444,7 +3444,7 @@
 				} elseif($mode==1){
 					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value WHERE heroid = $heroid";
 				} elseif($mode==2){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value WHERE heroid = $heroid";
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = GREATEST(0, $column - $value) WHERE heroid = $heroid";
 				}
 				return mysqli_query($this->connection,$q);
 			}
@@ -3482,7 +3482,13 @@
 				} elseif($mode==1){
 					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column + $value$clock WHERE uid = $uid";
 				} elseif($mode==2){
-					$q = "UPDATE ".TB_PREFIX."hero SET $column = $column - $value$clock WHERE uid = $uid";
+					// Restar no puede cruzar el cero. El único modo 2 que existe es la
+					// salud, y el camino de muerte por aventura resta un daño mayor o
+					// igual a la vida que quedaba. Hoy el resultado ya queda en 0, pero
+					// por dos accidentes: la columna es `unsigned` y el server corre en
+					// modo no estricto, así que MariaDB pisa el negativo en silencio. En
+					// modo estricto el UPDATE fallaría y la resta se perdería entera.
+					$q = "UPDATE ".TB_PREFIX."hero SET $column = GREATEST(0, $column - $value)$clock WHERE uid = $uid";
 				}
 					return mysqli_query($this->connection,$q);
 				}
