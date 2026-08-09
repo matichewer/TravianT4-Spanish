@@ -11,6 +11,10 @@ if(isset($_GET['gid'], $_GET['del']) && (int)$_GET['gid'] === 37) {
 		if(is_array($oasisInfo)
 			&& (int)$oasisInfo['conqured'] === (int)$village->wid
 			&& (int)$database->getVillageField($village->wid, 'owner') === (int)$session->uid) {
+			// Los refuerzos se van a casa antes de soltarlo: después el oasis ya no es
+			// de nadie y las tropas quedarían defendiéndolo sin dueño. Va primero porque
+			// necesita las coordenadas y la fila de odata todavía en pie.
+			$automation->returnOasisReinforcements($oasisToRelease);
 			$database->removeOases($oasisToRelease);
 		}
 	}

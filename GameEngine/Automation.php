@@ -683,6 +683,117 @@ class Automation {
     }
 
     /**
+     * Manda a casa los refuerzos parados en un oasis. Se llama al soltarlo desde la
+     * Mansión del Héroe: el oasis vuelve a no ser de nadie, y sin esto las tropas se
+     * quedaban defendiendo un oasis ajeno —comiendo cereal de su aldea y peleando
+     * contra cualquiera que intentara conquistarlo— hasta que el dueño se acordara de
+     * traerlas a mano desde el punto de reunión.
+     *
+     * Reusa el mismo camino que el botón "Devolver" (Units::sendTroopsBack): descuenta
+     * del refuerzo, crea el ataque de vuelta y el movimiento de tipo 4, así que viajan
+     * el tiempo que les corresponde y el héroe regresa por donde regresa siempre.
+     *
+     * Devuelve cuántos refuerzos mandó de vuelta.
+     */
+    public function returnOasisReinforcements($oasisWref) {
+        global $database, $generator, $technology;
+
+        $oasisWref = (int)$oasisWref;
+        if($oasisWref <= 0) {
+            return 0;
+        }
+        $oasisCoor = $database->getCoor($oasisWref);
+        if(!is_array($oasisCoor)) {
+            return 0;
+        }
+
+        $sent = 0;
+        foreach($database->getEnforceVillage($oasisWref, 0) as $enforce) {
+            // `from` = 0 son los animales del propio oasis, que no vuelven a ninguna parte.
+            $homeVillage = (int)$enforce['from'];
+            if($homeVillage <= 0) {
+                continue;
+            }
+            $owner = (int)$database->getVillageField($homeVillage, 'owner');
+            $tribe = $owner > 0 ? (int)$database->getUserField($owner, 'tribe', 0) : 0;
+            if($tribe < 1 || $tribe > 5) {
+                continue;
+            }
+
+            // Las columnas del refuerzo son ids globales de unidad; el ataque de vuelta
+            // las quiere como los diez huecos de la tribu del dueño de las tropas, que no
+            // tiene por qué ser la del dueño del oasis.
+            $troops = array();
+            $speeds = array();
+            $carries = false;
+            for($slot = 1; $slot <= 10; $slot++) {
+                $unitId = ($tribe - 1) * 10 + $slot;
+                $amount = max(0, (int)$enforce['u'.$unitId]);
+                $troops[$slot] = $amount;
+                if($amount > 0) {
+                    $carries = true;
+                    if(isset($GLOBALS['u'.$unitId]['speed'])) {
+                        $speeds[] = $GLOBALS['u'.$unitId]['speed'];
+                    }
+                }
+            }
+            $hero = max(0, (int)$enforce['hero']);
+            if($hero > 0) {
+                $carries = true;
+                $heroData = $database->getHeroData($owner);
+                if(isset($heroData['speed'])) {
+                    $speeds[] = $heroData['speed'];
+                }
+            }
+            if(!$carries) {
+                // Fila vacía: no hay nada que mandar, pero tampoco razón para dejarla.
+                $technology->checkReinf($enforce['id']);
+                continue;
+            }
+            if(!$speeds) {
+                continue;
+            }
+
+            $homeCoor = $database->getCoor($homeVillage);
+            if(!is_array($homeCoor)) {
+                continue;
+            }
+            $bootsBonus = $hero > 0 ? heroEquippedBootsSpeedBonus($database, $owner) : 0;
+            $travelBonus = $hero > 0
+                ? heroEquippedTravelSpeedBonus($database, $owner, $oasisWref, $homeVillage, true)
+                : 0;
+            $travelTime = $generator->procDistanceTime(
+                array('x' => $oasisCoor['x'], 'y' => $oasisCoor['y']),
+                array('x' => $homeCoor['x'], 'y' => $homeCoor['y']),
+                min($speeds),
+                1,
+                $bootsBonus,
+                $travelBonus
+            );
+
+            for($slot = 1; $slot <= 10; $slot++) {
+                if($troops[$slot] > 0) {
+                    $database->modifyEnforce($enforce['id'], ($tribe - 1) * 10 + $slot, $troops[$slot], 0);
+                }
+            }
+            if($hero > 0) {
+                $database->modifyEnforce($enforce['id'], 'hero', $hero, 0);
+            }
+
+            $reference = $database->addAttack(
+                $homeVillage,
+                $troops[1], $troops[2], $troops[3], $troops[4], $troops[5],
+                $troops[6], $troops[7], $troops[8], $troops[9], $troops[10],
+                $hero, 2, 0, 0, 0
+            );
+            $database->addMovement(4, $oasisWref, $homeVillage, $reference, 0, time() + $travelTime);
+            $technology->checkReinf($enforce['id']);
+            $sent++;
+        }
+        return $sent;
+    }
+
+    /**
      * Decides what a successful hero raid does to the attacked oasis. Pure: the
      * caller reads the state and applies the resulting database changes.
      *
