@@ -7,6 +7,7 @@
 
         class mysqli_DB {
         	var $connection;
+        	var $worldRadiusCache = null;
 
         	function __construct() {
 				$this->connection = mysqli_connect(SQL_SERVER, SQL_USER, SQL_PASS);
@@ -5305,24 +5306,94 @@ break;
         		return $dbarray['wref'];
         	}
 
+			// Radio real del mundo, leído de wdata una sola vez por request.
+			//
+			// No se usa WORLD_MAX: esa constante está fija en config/config.php y no
+			// tiene por qué coincidir con el mapa que generó el instalador. Cuando no
+			// coinciden, cualquier cuenta que la use apunta a otra casilla.
+			function getWorldRadius() {
+				if($this->worldRadiusCache === null) {
+					$q = "SELECT MAX(ABS(x)) AS rx, MAX(ABS(y)) AS ry FROM " . TB_PREFIX . "wdata";
+					$result = mysqli_query($this->connection,$q);
+					$row = $result ? mysqli_fetch_assoc($result) : false;
+					$this->worldRadiusCache = is_array($row) ? max((int)$row['rx'], (int)$row['ry']) : 0;
+				}
+				return $this->worldRadiusCache;
+			}
+
+			// Elige la casilla de una aventura alrededor de la aldea $homeWref.
+			//
+			// Antes se sorteaba el id del tile (`rand($wref-10000, $wref+10000)`) contra
+			// un tamaño de mundo escrito a mano ($lastw = 641601, o sea un mapa 801x801).
+			// Eso traía dos problemas: en un mapa más chico el id sorteado no existe y la
+			// aventura queda muerta —se lista pero al entrar rebota a la plaza de
+			// reuniones—, y el id no sabe de distancias: sumarle 10000 corre ~50 filas en
+			// Y pero cruza el mapa entero en X, así que una aldea contra el borde este
+			// recibía aventuras en el borde oeste, al doble de distancia que una del
+			// centro.
+			//
+			// Se conserva la banda histórica (±radio en X, ±medio radio en Y, que es lo
+			// que daban esos 10000 ids desde una aldea central) para no cambiarle los
+			// tiempos de viaje a los jugadores, pero medida desde la aldea y resuelta en
+			// coordenadas reales. Las casillas ocupadas quedan afuera: `occupied` cubre
+			// aldeas y oasis tomados por igual.
+			function pickAdventureField($homeWref) {
+				$homeWref = (int) $homeWref;
+				if($homeWref <= 0) {
+					return 0;
+				}
+				$home = $this->getCoor($homeWref);
+				if(!is_array($home)) {
+					return 0;
+				}
+				$radius = $this->getWorldRadius();
+				if($radius <= 0) {
+					return 0;
+				}
+				$x1 = (int)$home['x'] - $radius;
+				$x2 = (int)$home['x'] + $radius;
+				$y1 = (int)$home['y'] - (int)round($radius / 2);
+				$y2 = (int)$home['y'] + (int)round($radius / 2);
+				$q = "SELECT id FROM " . TB_PREFIX . "wdata WHERE occupied = 0
+					AND x BETWEEN $x1 AND $x2 AND y BETWEEN $y1 AND $y2 ORDER BY RAND() LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				if(!$result || !mysqli_num_rows($result)) {
+					return 0;
+				}
+				$row = mysqli_fetch_assoc($result);
+				return (int) $row['id'];
+			}
+
 			function addAdventure($wref, $uid){
+				$uid = (int) $uid;
+				$w1 = $this->pickAdventureField($wref);
+				if($w1 <= 0) {
+					// Sin casilla libre no se inserta nada: una aventura sin destino
+					// válido es la que después no se puede jugar.
+					return false;
+				}
 				$time = time()+(3600*120);
 				$ddd = rand(0,3);
 				if($ddd == 1){ $dif = 1; }else{ $dif = 0; }
-				$sql = mysqli_query($this->connection,"SELECT * FROM ".TB_PREFIX."wdata ORDER BY id DESC LIMIT 1");
-				$lastw = 641601;
-				if(($wref-10000)<=10){
-					$w1 = rand(10,($wref+10000));
-				}
-				elseif(($wref+10000) >= $lastw){
-					$w1 = rand(($wref-10000),($lastw-1000));
-				}
-				else{
-					$w1 = rand(($wref-10000),($wref+10000));
-				}
 
 				$q = "INSERT into " . TB_PREFIX . "adventure (`wref`, `uid`, `dif`, `time`, `end`) values ('$w1', '$uid', '$dif', '$time', 0)";
-        		return mysqli_query($this->connection,$q) or die(mysqli_error());
+        		return mysqli_query($this->connection,$q);
+			}
+
+			// Cierra la aventura de UN jugador en esa casilla.
+			//
+			// Antes se hacía con editTableField(...,'wref',$wref), que filtra sólo por
+			// casilla: si dos jugadores tenían aventura en el mismo tile, al completarla
+			// uno se le cerraba también al otro.
+			function closeAdventure($uid, $wref) {
+				$uid = (int) $uid;
+				$wref = (int) $wref;
+				if($uid <= 0 || $wref <= 0) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "adventure SET `end` = 1
+					WHERE uid = $uid AND wref = $wref AND `end` = 0 ORDER BY id LIMIT 1";
+				return mysqli_query($this->connection,$q);
 			}
 
 			function addHero($uid){
@@ -5386,7 +5457,10 @@ break;
 			function getAdventure($uid, $wref) {
 				$uid = (int) $uid;
 				$wref = (int) $wref;
-				$q = "SELECT * FROM " . TB_PREFIX . "adventure WHERE uid = $uid AND wref = $wref ORDER BY id DESC LIMIT 1";
+				// La abierta gana: si el jugador ya jugó una aventura en esa casilla, la
+				// cerrada vieja no tiene que tapar a la que está en curso (de ahí sale la
+				// dificultad con la que se resuelve la llegada).
+				$q = "SELECT * FROM " . TB_PREFIX . "adventure WHERE uid = $uid AND wref = $wref ORDER BY `end` ASC, id DESC LIMIT 1";
         		$result = mysqli_query($this->connection,$q);
 				if(mysqli_num_rows($result)) {
         			return mysqli_fetch_array($result);
@@ -5397,7 +5471,11 @@ break;
 
 			function getAdventureCount($uid) {
 				$uid = (int) $uid;
-				$q = "SELECT COUNT(1) AS count FROM " . TB_PREFIX . "adventure WHERE uid = $uid AND end = 0";
+				// El JOIN contra wdata deja afuera las aventuras cuya casilla no existe:
+				// no se pueden jugar, así que contarlas hacía que el cartel del costado
+				// prometiera más aventuras de las que la lista podía ofrecer.
+				$q = "SELECT COUNT(1) AS count FROM " . TB_PREFIX . "adventure a
+					JOIN " . TB_PREFIX . "wdata w ON w.id = a.wref WHERE a.uid = $uid AND a.`end` = 0";
 				$result = mysqli_query($this->connection, $q);
 				$row = mysqli_fetch_assoc($result);
 				return (int) $row['count'];

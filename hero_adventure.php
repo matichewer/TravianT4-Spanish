@@ -88,6 +88,12 @@ include "Templates/Auction/alt.tpl";
 $herodetail = $database->getHeroData($session->uid);
 $eigen = $database->getCoor($herodetail['wref']);
 $coor = $database->getCoor($row['wref']);
+// Una aventura cuya casilla no existe no se puede jugar: a2b la rechaza y manda
+// de vuelta a la plaza de reuniones. Listarla mostraba coordenadas vacías, un
+// tiempo de viaje calculado contra (0|0) y un botón que no lleva a ningún lado.
+if(!is_array($eigen) || !is_array($coor)) {
+	continue;
+}
 $from = array('x'=>$eigen['x'], 'y'=>$eigen['y']);
 $to = array('x'=>$coor['x'], 'y'=>$coor['y']);
 $speed = $herodetail['speed'];
@@ -101,6 +107,9 @@ if($isoasis){
 	$get = $database->getMInfo($row['wref']);
 	$type = $get['fieldtype'];
 }
+// El while comparte scope: sin reiniciarlo, una casilla que no matchea ningún
+// case (un tile que ya no existe) hereda el nombre de la aventura anterior.
+$tname = "";
 switch($type) {
 case 1:
 case 2:
@@ -126,11 +135,11 @@ break;
 
 	$outputList .= "<tr><td class=\"location\">".$tname."</td>";
 	
-	$outputList .= '<td class="coords"><a href="karte.php?x='.$coor['y'].'&amp;y='.$coor['x'].'">
+	$outputList .= '<td class="coords"><a href="karte.php?x='.$coor['x'].'&amp;y='.$coor['y'].'">
         <span class="coordinates coordinatesAligned">
-        <span class="coordinateY">('.$coor['y'].'</span>
+        <span class="coordinateY">('.$coor['x'].'</span>
         <span class="coordinatePipe">|</span>
-        <span class="coordinateX">'.$coor['x'].')</span>
+        <span class="coordinateX">'.$coor['y'].')</span>
         </span><span class="clear"></span>
         </a></td>';
     $outputList .= "<td class=\"moveTime\"> ".$generator->getTimeFormat($time)." </td>";
@@ -143,6 +152,11 @@ break;
 	$outputList .= "<td class=\"goTo\"><a class=\"gotoAdventure arrow\" href=\"a2b.php?id=".$row['wref']."&h=1\">Ir a la aventura</a></td></tr>";	
     $timer++;
 	}
+}
+// Puede quedar vacío aunque la consulta trajera filas, si todas apuntaban a
+// casillas inexistentes y se saltearon arriba.
+if($outputList === '') {
+	$outputList = "<td colspan=\"6\" class=\"none\"><center>No se encontraron aventuras.</center></td>";
 }
 echo $outputList;
 ?>

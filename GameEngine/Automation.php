@@ -4179,7 +4179,7 @@ class Automation {
                     $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
                     $database->setMovementProc($data['moveid']);
-                    $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);
+                    $database->closeAdventure($ownerID, $data['to']);
 
                     if(($getHero['health'] - $health) <= 0) {
                         $database->modifyHero2('dead', 1, $ownerID, 0);
@@ -4250,7 +4250,7 @@ class Automation {
                     $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                     $database->modifyHero2('experience', $exp, $ownerID, 1);
                     $database->setMovementProc($data['moveid']);
-                    $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);
+                    $database->closeAdventure($ownerID, $data['to']);
 
                     if(($getHero['health'] - $health) <= 0) {
                         $database->modifyHero2('dead', 1, $ownerID, 0);
@@ -4283,7 +4283,7 @@ class Automation {
                 $exp = heroExperienceWithHelmet($database, $ownerID, $exp);
                 $database->modifyHero2('experience', $exp, $ownerID, 1);
                 $database->setMovementProc($data['moveid']);
-                $database->editTableField('adventure', 'end', 1, 'wref', $data['to']);
+                $database->closeAdventure($ownerID, $data['to']);
 
                 if(($getHero['health'] - $health) <= 0) {
                     $database->modifyHero2('dead', 1, $ownerID, 0);
@@ -5016,7 +5016,14 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."hero where $time - lastadv > $adv_time";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
-            $database->addAdventure($database->getVFH($data['uid']), $data['uid']);
+            // getVFH() busca la capital, y un jugador puede no tener ninguna marcada:
+            // ahí devolvía null y la aventura se sorteaba alrededor de la nada. La
+            // aldea donde está el héroe es además desde donde se mide el viaje.
+            $home = (int)$database->getVFH($data['uid']);
+            if($home <= 0) {
+                $home = (int)$data['wref'];
+            }
+            $database->addAdventure($home, $data['uid']);
             $database->modifyHero('lastadv', $time, $data['heroid']);
         }
     }
