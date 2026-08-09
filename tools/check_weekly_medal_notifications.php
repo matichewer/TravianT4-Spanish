@@ -106,7 +106,8 @@ list($playerSection, $allianceSection) = explode("[b]Alianzas[/b]", $announcemen
 check(substr_count($playerSection, "\n• ") === 4, 'la sección Jugadores debe tener exactamente cuatro ganadores');
 check(substr_count($allianceSection, "\n• ") === 4, 'la sección Alianzas debe tener exactamente cuatro ganadores');
 check(strpos($announcement, '<a href="spieler.php?uid=10">Atacante Uno</a> - Ataque: puesto #1 - 123.456 puntos') !== false, 'debe enlazar al jugador e indicar categoría, puesto y valor con guiones');
-check(strpos($announcement, '<a href="allianz.php?aid=6">Alianza Central [DEF]</a> - Defensa de alianza: puesto #1 - 500.000 puntos') !== false, 'el nombre y la etiqueta deben enlazar a la alianza real');
+check(strpos($announcement, '<a href="allianz.php?aid=6">Alianza Central [DEF]</a> - Defensa: puesto #1 - 500.000 puntos') !== false, 'el nombre y la etiqueta deben enlazar a la alianza real con la categoría simplificada');
+check(strpos($announcement, 'de alianza') === false, 'las categorías de la sección Alianzas no deben repetir de alianza');
 check(strpos($announcement, 'Racha') === false, 'no debe incluir medallas especiales o de racha');
 check(strpos($announcement, '—') === false, 'no debe usar separadores de raya larga');
 check(strpos($announcement, 'Saqueador &lt;script&gt;') !== false, 'debe escapar los nombres de jugadores antes de incluirlos');

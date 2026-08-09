@@ -5426,35 +5426,15 @@ class Automation {
         return true;
     }
 
-    private function weeklyMedalCategoryLabel($category, $allianceMedal) {
+    private function weeklyMedalCategoryLabel($category) {
         $category = (int)$category;
-        if($allianceMedal) {
-            $labels = array(
-                1 => "Ataque de alianza",
-                2 => "Defensa de alianza",
-                3 => "Crecimiento de alianza",
-                4 => "Saqueo de alianza"
-            );
-        } else {
-            $labels = array(
-                1 => "Ataque",
-                2 => "Defensa",
-                3 => "Crecimiento",
-                4 => "Saqueo",
-                5 => "Ataque y defensa",
-                6 => "Racha de ataque en el top 3",
-                7 => "Racha de defensa en el top 3",
-                8 => "Racha de crecimiento en el top 3",
-                9 => "Racha de saqueo en el top 3",
-                10 => "Crecimiento",
-                11 => "Racha de crecimiento en el top 3",
-                12 => "Racha de ataque en el top 10",
-                13 => "Racha de defensa en el top 10",
-                14 => "Racha de crecimiento en el top 10",
-                15 => "Racha de saqueo en el top 10",
-                16 => "Racha de crecimiento en el top 10"
-            );
-        }
+        $labels = array(
+            1 => "Ataque",
+            2 => "Defensa",
+            3 => "Crecimiento",
+            4 => "Saqueo",
+            10 => "Crecimiento"
+        );
         return isset($labels[$category]) ? $labels[$category] : "Medalla";
     }
 
@@ -5481,7 +5461,7 @@ class Automation {
 
     private function formatWeeklyMedalNotificationLine($medal, $allianceMedal) {
         $line = $this->weeklyMedalWinnerLink($medal, $allianceMedal)
-            .' - '.$this->weeklyMedalCategoryLabel($medal['categorie'], $allianceMedal)
+            .' - '.$this->weeklyMedalCategoryLabel($medal['categorie'])
             .": puesto #".(int)$medal['plaats']." - ".number_format((int)$medal['points'], 0, ',', '.')." puntos";
         return "• ".$line;
     }
