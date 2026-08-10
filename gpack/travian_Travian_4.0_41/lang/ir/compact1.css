@@ -204,7 +204,7 @@ div#build.gid17 table.send_res{width:40%;background-color:#FFF;float:left;}div#b
 div#build.gid17 table.send_res td.ico{width:5%;}div#build.gid17 table.send_res td.val{width:30%;text-align:right;}
 div#build.gid17 table.send_res td.val input.text{width:90%;}div#build.gid17 table.send_res td.max{width:25%;white-space:nowrap;}
 div#build.gid17 table#send_validate input.disabled{border-color:#AAA;width:50px;margin-left:5px;}
-div#build.gid17 table.res_target{box-sizing:border-box;float:left;width:60%;table-layout:fixed;background-color:#FFF;margin-left:0;padding-left:20px;}
+div#build.gid17 table.res_target{box-sizing:border-box;float:left;width:60%;table-layout:fixed;background-color:#FFF;margin-left:0;padding-left:8px;}
 div#build.gid17 table.res_target th,div#build.gid17 table.res_target td{vertical-align:top;}
 div#build.gid17 table.res_target th{width:20%;}div#build.gid17 table#target_validate th,div#build.gid17 table#target_validate td{padding-top:4px;}
 div#build.gid17 table#target_validate td.vil{white-space:nowrap;}div#build.gid17 table#target_validate td.vil a{display:block;overflow:hidden;text-overflow:ellipsis;}div#build.gid17 div.run_dropdown{float:left;margin-left:20px;margin-top:15px;width:40%;}
