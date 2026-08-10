@@ -154,17 +154,19 @@ while($row = mysql_fetch_array($sql)){
     // Naturaleza y necesita una descripción propia.
     if((int)$ntype === 25) {
         $nn = " captura animales en ";
+        $attackerId = isset($dataarray[1]) ? (int)$dataarray[1] : 0;
         $defenderId = 3;
     } else {
         $nn = in_array((int)$ntype, array(0,22,23,24), true) ? " espía a " : " ataca ";
+        $attackerId = (int)$dataarray[0];
         $defenderId = isset($dataarray[30]) ? (int)$dataarray[30] : 0;
     }
 
-    $outputList .= $allianceEventPlayerName($dataarray[0]);
+    $outputList .= $allianceEventPlayerName($attackerId);
 
     $outputList .= $nn;
     $outputList .= $allianceEventPlayerName($defenderId);
-    $allyName = $allianceEventAlliance((int)$dataarray[0], $defenderId);
+    $allyName = $allianceEventAlliance($attackerId, $defenderId);
 
     $outputList .= "<td class=\"al\">".$allyName."</td>";
     $date = $generator->procMtime($time);
