@@ -149,13 +149,20 @@ while($row = mysql_fetch_array($sql)){
     $outputList .= "</a>";
     $outputList .= "<div><a href=\"berichte.php?id=".$id."&aid=".$ally."\">";
     // Los cuatro tipos de espionaje se leen igual desde las dos puntas, que es
-    // como los nombra el propio juego al armar el topic del informe.
-    $nn = in_array((int)$ntype, array(0,22,23,24), true) ? " espía a " : " ataca ";
+    // como los nombra el propio juego al armar el topic del informe. El informe
+    // de jaulas no guarda un defensor en data[30]: su destino siempre es
+    // Naturaleza y necesita una descripción propia.
+    if((int)$ntype === 25) {
+        $nn = " captura animales en ";
+        $defenderId = 3;
+    } else {
+        $nn = in_array((int)$ntype, array(0,22,23,24), true) ? " espía a " : " ataca ";
+        $defenderId = isset($dataarray[30]) ? (int)$dataarray[30] : 0;
+    }
 
     $outputList .= $allianceEventPlayerName($dataarray[0]);
 
     $outputList .= $nn;
-    $defenderId = isset($dataarray[30]) ? (int)$dataarray[30] : 0;
     $outputList .= $allianceEventPlayerName($defenderId);
     $allyName = $allianceEventAlliance((int)$dataarray[0], $defenderId);
 
