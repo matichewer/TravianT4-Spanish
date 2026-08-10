@@ -24,15 +24,15 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>Medal Information</th>
+			<th>Resumen de medallas</th>
 		</tr>
 	</thead> 
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Week</td>
-			<td>Medals</td>
+			<td>Semana</td>
+			<td>Medallas</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -55,15 +55,15 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>Medal Week by Week</th>
+			<th>Medallas semana por semana</th>
 		</tr>
 	</thead> 
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Week</td>
-			<td>Medals</td>
+			<td>Semana</td>
+			<td>Medallas</td>
 			<td></td>
 		</tr>
 	</thead>
@@ -93,49 +93,35 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>All Medals (<?php echo $nummedals; ?>)</th>
+			<th>Todas las medallas (<?php echo $nummedals; ?>)</th>
 		</tr>
-	</thead> 
+	</thead>
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Medal</td>
-			<td>BB-Code</td>
-			<td>Type</td>
-			<td>Player</td>
-			<td>Rank</td>
-			<td>Week</td>
-			<td>Points</td>
+			<td>Nº</td>
+			<td>Código BB</td>
+			<td>Medalla</td>
+			<td>Categoría</td>
+			<td>Jugador</td>
+			<td>Puesto</td>
+			<td>Semana</td>
+			<td>Puntos</td>
 		</tr>
 	</thead>
 	<tbody>
 		<?php
+			require_once(__DIR__."/../../GameEngine/MedalLabels.php");
 			$query = "SELECT * FROM ".TB_PREFIX."medal ORDER BY id DESC";
 			$result = mysql_query($query);
 			while($row = mysql_fetch_array($result))
 			{
 				$i = $i + 1;
-				$titel="Bonus";
-				switch ($row['categorie']) 
-				{
-					case "1": 	$titel="Attackers"; break;
-					case "2": 	$titel="Defenders"; break;
-					case "3":	$titel="Climbers"; break;
-					case "4":	$titel="Robbers"; break;
-					case "5":	$titel="Top 10 Att and Def"; break;
-					case "6":	$titel="Top 3 Att, ".$medal['points']." in a row"; break;
-					case "7":	$titel="Top 3 Def,".$medal['points']." in a row"; break;
-					case "8":	$titel="Top 3 Climber, ".$medal['points']." in a row"; break;
-					case "9":	$titel="Top 3 Robber, ".$medal['points']." in a row"; break;
-					case "10":	$titel="Climber of the week"; break;
-					case "11":	$titel="Top 3 Climber,  ".$medal['points']." in a row"; break;
-					case "12":	$titel="Top 10 Attacker, ".$medal['points']." in a row"; break;
-				}
-				$title = $titel;
-				$rank = $row['plaats'];
+				$title = medalCategoryLabel($row['categorie'], $row['points']);
+				$rank = medalIsBonus($row['categorie']) ? "" : $row['plaats'];
 				$week = $row['week'];
-				$points = $row['points'];
+				$points = medalIsBonus($row['categorie']) ? "" : $row['points'];
 				$bb = $row['id'];
 				$playerid = $row['userid'];
 				
@@ -149,6 +135,7 @@ $nummedals = mysql_num_rows($sql);
 					<td>$i</td>
 					<td>[#$bb]</td>
 					<td><img src=\"../../gpack/travian_default/img/t/".$row['img'].".jpg\"></td>
+					<td>$title</td>
 					<td>$player</td>
 					<td>$rank</td>
 					<td>$week</td>

@@ -7,35 +7,28 @@
 	<table id="profile"> 
 		<thead>
 			<tr>
-				<th colspan="6">Alliance Medals (<?php echo sizeof($varmedal); ?>)</th>
+				<th colspan="6">Medallas de la alianza (<?php echo sizeof($varmedal); ?>)</th>
 			</tr>
 			<tr>
-				<td>Category</td>
-				<td>Rank</td>
-				<td>Week</td>
-				<td>Points</td>
-				<td>Medal</td>
+				<td>Categoría</td>
+				<td>Puesto</td>
+				<td>Semana</td>
+				<td>Puntos</td>
+				<td>Medalla</td>
 				<td></td>
 			</tr>
 		</thead>
 			<?php
 				if(sizeof($varmedal) ==0)
 				{ ?>
-					<td colspan="5"><center>This alliance has no medals yet</center></td><?php 
+					<td colspan="5"><center>Esta alianza todavía no tiene medallas</center></td><?php 
 				}
 				elseif(sizeof($varmedal) >0)
 				{
-					foreach($varmedal as $medal) 
+					require_once(__DIR__."/../../GameEngine/MedalLabels.php");
+					foreach($varmedal as $medal)
 					{
-						$titel="Bonus";
-						switch ($medal['categorie']) 
-						{
-							case "1": 	$titel="Attackers"; break;
-							case "2": 	$titel="Defenders"; break;
-							case "3":	$titel="Climbers"; break;
-							case "4":	$titel="Robbers"; break;
-						}
-						$title = $titel;
+						$title = medalCategoryLabel($medal['categorie'], $medal['points'], true);
 						$rank = $medal['plaats'];
 						if($rank == '0') { $rank = "<p>Bonus</p>"; } else { $rank = $rank; }
 						$week = $medal['week'];
@@ -73,7 +66,7 @@
 							}
 						}
 						$average = $averagerank / $i;
-						echo "</form><tr><td><b>Average Rank</b></td><td>$average</td><td></td><td></td><td>Delete All</td>"; 
+						echo "</form><tr><td><b>Puesto promedio</b></td><td>$average</td><td></td><td></td><td>Eliminar todas</td>"; 
 					}
 				?>
 				<td>

@@ -1,52 +1,37 @@
+<?php require_once(__DIR__."/../../GameEngine/MedalLabels.php"); ?>
 <form action="../GameEngine/Admin/Mods/medals.php" method="POST">
 			<input type="hidden" name="uid" value="<?php echo $_GET['uid']; ?>">
 			<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 			<table id="profile"> 
 				<thead>
 					<tr>
-						<th colspan="6">Player Medals (<?php echo sizeof($varmedal); ?>)</th>
+						<th colspan="6">Medallas del jugador (<?php echo sizeof($varmedal); ?>)</th>
 					</tr>
 					<tr>
-						<td>Category</td>
-						<td>Rank</td>
-						<td>Week</td>
-						<td>Points</td>
-						<td>Medal</td>
+						<td>Categoría</td>
+						<td>Puesto</td>
+						<td>Semana</td>
+						<td>Puntos</td>
+						<td>Medalla</td>
 						<td></td>
 					</tr>
 				</thead>
 				<?php
 					if(sizeof($varmedal) ==0)
 					{ ?>
-						<td colspan="5"><center>This player has no medals yet</center></td><?php 
+						<td colspan="5"><center>Este jugador todavía no tiene medallas</center></td><?php 
 					}
 					elseif(sizeof($varmedal) >0)
 					{
-						foreach($varmedal as $medal) 
+						foreach($varmedal as $medal)
 						{
-							$titel="Bonus";
-							switch ($medal['categorie']) 
-							{
-								case "1": 	$titel="Attackers"; break;
-								case "2": 	$titel="Defenders"; break;
-								case "3":	$titel="Climbers"; break;
-								case "4":	$titel="Robbers"; break;
-								case "5":	$titel="Top 10 Att and Def"; break;
-								case "6":	$titel="Top 3 Att, ".$medal['points']." in a row"; break;
-								case "7":	$titel="Top 3 Def,".$medal['points']." in a row"; break;
-								case "8":	$titel="Top 3 Climber, ".$medal['points']." in a row"; break;
-								case "9":	$titel="Top 3 Robber, ".$medal['points']." in a row"; break;
-								case "10":	$titel="Climber of the week"; break;
-								case "11":	$titel="Top 3 Climber,  ".$medal['points']." in a row"; break;
-								case "12":	$titel="Top 10 Attacker, ".$medal['points']." in a row"; break;
-							}
-							$title = $titel;
+							$title = medalCategoryLabel($medal['categorie'], $medal['points']);
 							$rank = $medal['plaats'];
 							if($rank == '0') { $rank = "<p>Bonus</p>"; } else { $rank = $rank; }
 							$week = $medal['week'];
 							$points = $medal['points'];
-							if($points == '') { $points = "<p>Bonus</p>"; } else { $points = $points; }
-							
+							if(medalIsBonus($medal['categorie'])) { $points = "<p>Bonus</p>"; }
+
 							echo"
 								<tr>
 									<td>$title</td>
@@ -78,7 +63,7 @@
 							}
 						}
 						$average = $averagerank / $i;
-						echo "</form><tr><td><b>Average Rank</b></td><td>$average</td><td></td><td></td><td>Delete All</td>"; 
+						echo "</form><tr><td><b>Puesto promedio</b></td><td>$average</td><td></td><td></td><td>Eliminar todas</td>";
 					}
 				?>
 				<td>

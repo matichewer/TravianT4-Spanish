@@ -56,7 +56,7 @@ $varmedal = $database->getProfileMedal($session->uid);  ?>
 		<table cellpadding="1" cellspacing="1" id="medals" class="hide">
 			<thead>
 				<tr>
-					<td>Categoría/td>
+					<td>Categoría</td>
 					<td>Puesto</td>
 					<td>Semana</td>
 					<td>Código BB</td>
@@ -70,64 +70,14 @@ $varmedal = $database->getProfileMedal($session->uid);  ?>
 													<td class="bb">[#0]</td>
 											</tr>
             <?php
-/******************************
-INDELING CATEGORIEEN:
-=======================================
-== 1. Attackers top 10               ==
-== 2. Defenders top 10               ==
-== 3. Climbers top 10                ==
-== 4. Raiders top 10                 ==
-== 5. Defenders and Attackers top 10 ==
-== 6. in top 3 - Attackers           ==
-== 7. in top 3 - Defenders           ==
-== 8. in top 3 - Climbers            ==
-== 9. in top 3 - Raiders             ==
-******************************/				
-				
-				
+	require_once(__DIR__."/../../GameEngine/MedalLabels.php");
+
 	foreach($varmedal as $medal) {
-	$titel="Medalla";
-	switch ($medal['categorie']) {
-    case "1":
-        $titel="Top 10 atacantes de la semana";
-        break;
-    case "2":
-        $titel="Top 10 defensores de la semana";
-        break;
-    case "3":
-            $titel="Top 10 crecimientos de la semana";
-        break;
-    case "4":
-        $titel="Top 10 saqueadores de la semana";
-        break;
-    case "5":
-        $titel="Top 10 en ataque y defensa de la semana";
-        break;
-    case "6":
-        $titel="Top atacantes de la semana ".$medal['points']." top 3.";
-        break;
-    case "7":
-        $titel="Top defensores de la semana ".$medal['points']." top 3.";
-        break;
-    case "8":
-        $titel="Top en crecimiento de la semana ".$medal['points']." top 3.";
-        break;
-    case "9":
-        $titel="Top saqueadores de la semana  ".$medal['points']." top 3.";
-        break;
-    case "10":
-        $titel="Top 10 crecimientos de la semana";
-        break;
-    case "11":
-        $titel="Crecimiento de la semana ".$medal['points']." top 3.";
-        break;
-    case "12":
-        $titel="Atacante de la semana ".$medal['points']." top 10.";
-        break;
-	}			
+	$titel = medalCategoryLabel($medal['categorie'], $medal['points']);
+	$puesto = medalIsBonus($medal['categorie']) ? "" : $medal['plaats'];
 				 echo"<tr>
 				   <td class=\"typ\"> ".$titel."</td>
-				   <td class=\"ra\">".$medal['plaats']."</td>
+				   <td class=\"ra\">".$puesto."</td>
 				   <td class=\"we\">".$medal['week']."</td>
 				   <td class=\"bb\">[#".$medal['id']."]</td>
 			 	 </tr>";

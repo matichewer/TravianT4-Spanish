@@ -101,39 +101,25 @@ if(isset($id))
 	<table cellspacing="1" cellpadding="2" id="member">
 		<thead>
 			<tr>
-				<th colspan="4">Medals</th>
+				<th colspan="4">Medallas</th>
 			</tr>
 			<tr>
-				<td>Category</td>
-				<td>Rank</td>
-				<td>Week</td>
-				<td>BB-Code</td>
+				<td>Categoría</td>
+				<td>Puesto</td>
+				<td>Semana</td>
+				<td>Código BB</td>
 			</tr>
 		</thead>
 		<tbody>
 			<?php
+				require_once(__DIR__."/../../GameEngine/MedalLabels.php");
 				foreach($varmedal as $medal)
 				{
-					$titel="Bonus";
-					switch ($medal['categorie']) 
-					{
-						case "1":
-							$titel="Attacker of the Week";
-						break;
-						case "2":
-							$titel="Defender of the Week";
-						break;
-						case "3":
-							$titel="Climber of the week";
-						break;
-						case "4":
-							$titel="Robber of the week";
-						break;
-					}			
+					$titel = medalCategoryLabel($medal['categorie'], $medal['points']);
 					echo"
 					<tr>
 						<td> ".$titel."</td>
-						<td>".$medal['plaats']."</td>
+						<td>".(medalIsBonus($medal['categorie']) ? "" : $medal['plaats'])."</td>
 						<td>".$medal['week']."</td>
 						<td>[#".$medal['id']."]</td>
 					</tr>";

@@ -23,15 +23,15 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>Medal Information</th>
+			<th>Resumen de medallas</th>
 		</tr>
 	</thead> 
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Week</td>
-			<td>Medals</td>
+			<td>Semana</td>
+			<td>Medallas</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -54,15 +54,15 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>Medal Week by Week</th>
+			<th>Medallas semana por semana</th>
 		</tr>
 	</thead> 
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Week</td>
-			<td>Medals</td>
+			<td>Semana</td>
+			<td>Medallas</td>
 			<td></td>
 		</tr>
 	</thead>
@@ -88,38 +88,32 @@ $nummedals = mysql_num_rows($sql);
 <table id="member">
 	<thead>
 		<tr>
-			<th>All Medals (<?php echo $nummedals; ?>)</th>
+			<th>Todas las medallas (<?php echo $nummedals; ?>)</th>
 		</tr>
-	</thead> 
+	</thead>
 </table>
 <table id="profile">
 	<thead>
 		<tr>
-			<td>Medal</td>
-			<td>BB-Code</td>
-			<td>Type</td>
-			<td>Player</td>
-			<td>Rank</td>
-			<td>Week</td>
-			<td>Points</td>
+			<td>Nº</td>
+			<td>Código BB</td>
+			<td>Medalla</td>
+			<td>Categoría</td>
+			<td>Alianza</td>
+			<td>Puesto</td>
+			<td>Semana</td>
+			<td>Puntos</td>
 		</tr>
 	</thead>
 	<tbody>
 		<?php
+			require_once(__DIR__."/../../GameEngine/MedalLabels.php");
 			$query = "SELECT * FROM ".TB_PREFIX."allimedal ORDER BY id DESC";
 			$result = mysql_query($query);
 			while($row = mysql_fetch_array($result))
 			{
 				$i = $i + 1;
-				$titel="Bonus";
-				switch ($row['categorie']) 
-				{
-					case "1": 	$titel="Attackers"; break;
-					case "2": 	$titel="Defenders"; break;
-					case "3":	$titel="Climbers"; break;
-					case "4":	$titel="Robbers"; break;
-				}
-				$title = $titel;
+				$title = medalCategoryLabel($row['categorie'], $row['points'], true);
 				$rank = $row['plaats'];
 				$week = $row['week'];
 				$points = $row['points'];
@@ -136,6 +130,7 @@ $nummedals = mysql_num_rows($sql);
 					<td>$i</td>
 					<td>[#$bb]</td>
 					<td><img src=\"../../gpack/travian_default/img/t/".$row['img'].".jpg\"></td>
+					<td>$title</td>
 					<td>$alliance</td>
 					<td>$rank</td>
 					<td>$week</td>

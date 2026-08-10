@@ -24,89 +24,14 @@ $profiel = preg_replace("/\[#natars]/is",'<img src="gpack/travian_Travian_4.0_41
 }
 
 //de lintjes
-/******************************
-INDELING CATEGORIEEN:
-===============================
-== 1. Attackers top 10       ==
-== 2. Defence top 10         ==
-== 3. Climbers top 10        ==
-== 4. Raiders top 10 	     ==
-== 5. attackers and defences ==
-== 6. in top 3 - Attackers   ==
-== 7. in top 3 - Defence 	 ==
-== 8. in top 3 - Climbers    ==
-== 9. in top 3 - Raiders     ==
-******************************/
+require_once(__DIR__."/../../GameEngine/MedalLabels.php");
 
 foreach($varmedal as $medal) {
 
-switch ($medal['categorie']) {
-    case "1":
-        $titel="Top 10 atacantes de la semana";
-		$woord="Puntuación";
-        break;
-    case "2":
-        $titel="Top 10 defensores de la semana";
- 		$woord="Puntuación";
-       break;
-    case "3":
-        $titel="Top 10 crecimientos de la semana";
- 		$woord="Puntuación";
-       break;
-    case "4":
-        $titel="Top 10 saqueadores de la semana";
-		$woord="Puntuación";
-        break;
-	 case "5":
-        $titel="Top 10 en ataque y defensa de la semana";
-        $bonus[$medal['id']]=1;
-		break;
-	 case "6":
-        $titel="Top atacantes de la semana ".$medal['points']." (top 3).";
-        $bonus[$medal['id']]=1;
-		break;
-	 case "7":
-        $titel="Top defensores de la semana ".$medal['points']." (top 3).";
-        $bonus[$medal['id']]=1;
-		break;
-	 case "8":
-        $titel="Top en crecimiento de la semana ".$medal['points']." (top 3).";
-        $bonus[$medal['id']]=1;
-		break;
-	 case "9":
-        $titel="Top saqueadores de la semana  ".$medal['points']." (top 3).";
-        $bonus[$medal['id']]=1;
-		break;
-     case "10":
-        $titel="Top 10 crecimientos de la semana";
-        $woord="Puntuación"; 
-        break;
-     case "11":
-        $titel="Crecimiento de la semana ".$medal['points']." (top 3).";
-        $bonus[$medal['id']]=1;
-        break;
-     case "12":
-        $titel="Atacantes de la semana ".$medal['points']." (top 10).";
-        $bonus[$medal['id']]=1;
-        break;
-        case "13":
-        $titel="Defensores de la semana ".$medal['points']." (top 10).";
-        $bonus[$medal['id']]=1;
-        break;
-        case "14":
-        $titel="Crecimiento de la semana ".$medal['points']." (top 10).";
-        $bonus[$medal['id']]=1;
-        break;
-        case "15":
-        $titel="Saqueadores de la semana ".$medal['points']." (top 10).";
-        $bonus[$medal['id']]=1;
-        break;
-        case "16":
-        $titel="Crecimiento de la semana ".$medal['points']." (top 10).";
-        $bonus[$medal['id']]=1;
-        break;
-        
-
+$titel = medalCategoryLabel($medal['categorie'], $medal['points']);
+$woord = "Puntuación";
+if(medalIsBonus($medal['categorie'])) {
+	$bonus[$medal['id']]=1;
 }
 
 if(isset($bonus[$medal['id']])){
