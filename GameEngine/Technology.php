@@ -497,8 +497,8 @@ class Technology {
 			$end = 30;
 			break;
 			case 4:
-			// Los animales sí consumen cereal en la aldea (getAllUnits los suma con type 0),
-			// así que el informe tiene que mostrar el mismo número que la barra de recursos.
+			// Los animales de un oasis capturados con jaulas defienden la aldea,
+			// pero no consumen cereal.
 			$start = 31;
 			$end = 40;
 			break;
@@ -509,6 +509,9 @@ class Technology {
 		}	
 		if($nocrop == 0){
 		for($i=$start;$i<=$end;$i++) {
+			if($i >= 31 && $i <= 40) {
+				continue;
+			}
 			$hdt = 0;
 			if($session->tribe == 1 && $i>=4 && $i<=6) {
 				if(

@@ -4471,7 +4471,7 @@ class Automation {
                 $end = 30;
                 break;
             case 4:
-                // Ver Technology::getUpkeep: los animales sí consumen cereal en la aldea.
+                // Los animales capturados con jaulas defienden, pero no consumen cereal.
                 $start = 31;
                 $end = 40;
                 break;
@@ -4482,6 +4482,9 @@ class Automation {
         }
         if($nocrop == 0) {
             for ($i = $start; $i <= $end; $i++) {
+                if($i >= 31 && $i <= 40) {
+                    continue;
+                }
                 $k = $i - $start + 1;
                 $unit = "u".$i;
                 $unit2 = "t".$k;
