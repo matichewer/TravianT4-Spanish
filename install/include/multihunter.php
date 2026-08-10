@@ -48,6 +48,9 @@ if($StartNatars){
         	$database->addTech($wid);
         	$database->addABTech($wid);
         }
+        // Esta es la aldea desde la que parten las oleadas contra las Maravillas.
+        // Debe ser la capital natar; las 13 aldeas de Maravilla no lo son.
+        mysql_query("UPDATE " . TB_PREFIX . "vdata SET capital = IF(wref = " . (int)$wid . ", 1, 0) WHERE owner = $uid") or die(mysql_error());
         mysql_query("UPDATE " . TB_PREFIX . "vdata SET pop = '781' WHERE owner = $uid") or die(mysql_error());
         if(SPEED > 3) {
         	$speed = 5;

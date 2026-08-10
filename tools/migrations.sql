@@ -276,3 +276,14 @@ WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop;
 -- llevandose puesta la del arma. Hay que reconciliar una vez, despues del deploy, con
 --   docker compose exec -T web php /var/www/html/tools/fix_hero_equipment_bonuses.php --apply
 -- que ahora recalcula tambien `itempower` a partir del peto, el escudo y el arma.
+
+-- 2026-08-10 - Capital natar para las oleadas contra la Maravilla
+-- El instalador creo la aldea central de Natars (0|0) sin marcarla como capital y
+-- Automation buscaba por error una capital del usuario Nature. El codigo nuevo
+-- encuentra a Natars por nombre y tolera instalaciones viejas, pero reconciliamos
+-- la marca para que el estado del mundo tambien sea correcto.
+UPDATE s1_vdata AS v
+INNER JOIN s1_users AS u ON u.id = v.owner
+INNER JOIN s1_wdata AS w ON w.id = v.wref
+SET v.capital = IF(w.x = 0 AND w.y = 0 AND v.natar = 0, 1, 0)
+WHERE u.username = 'Natars';

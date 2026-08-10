@@ -1625,9 +1625,19 @@ class Automation {
             return false;
         }
 
-        // get the capital village from the natars
-        $query = mysql_query('SELECT `wref` FROM `'.TB_PREFIX.'vdata` WHERE `owner` = 3 and `capital` = 1 LIMIT 1') or die(mysql_error());
+        // Las instalaciones actuales crean a Natars con uid 2. Algunos mundos
+        // antiguos dejaron su aldea central sin la marca de capital, por lo que
+        // usamos como respaldo la unica aldea natar que no es una aldea WW.
+        $query = mysql_query(
+            'SELECT v.`wref` FROM `'.TB_PREFIX.'vdata` v '
+            .'INNER JOIN `'.TB_PREFIX.'users` u ON u.`id` = v.`owner` '
+            .'WHERE u.`username` = \'Natars\' '
+            .'ORDER BY v.`capital` DESC, v.`natar` ASC, v.`wref` ASC LIMIT 1'
+        ) or die(mysql_error());
         $row = mysql_fetch_assoc($query);
+        if(!$row || empty($row['wref'])) {
+            return false;
+        }
 
         // start the attacks
         $endtime = time() + round((60 * 60 * 24) / INCREASE_SPEED);
