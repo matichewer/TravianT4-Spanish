@@ -193,4 +193,17 @@ spyDetectionAssert(
 	'Un espionaje enviado sin espías muere entero y se detecta aun sin espías defendiendo.'
 );
 
+// 7. El aviso del propietario del refuerzo usa el informe defensivo completo ($data2)
+// y se genera una sola vez por jugador, aunque tenga varias partidas reforzando.
+$automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
+spyDetectionAssert(
+	strpos($automationSource, '$spyReinforcementReportOwners[(int)$reinforcementOwner] = true') !== false,
+	'Los propietarios de refuerzos se deduplican antes de recibir el informe.'
+);
+spyDetectionAssert(
+	strpos($automationSource, '$database->addNotice($reinforcementOwner, $to[\'wref\'], 0, 0') !== false
+		&& strpos($automationSource, "' espía a '.addslashes(\$to['name']).'', \$data2, \$AttackArrivalTime") !== false,
+	'El espionaje entrega al propietario del refuerzo el informe defensivo completo y no el resumen.'
+);
+
 echo "Todas las comprobaciones de detección de espionaje pasaron.\n";

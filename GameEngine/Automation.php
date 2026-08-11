@@ -1848,6 +1848,7 @@ class Automation {
             // el bloque de curación ni se ejecuta.
             $totalheal = 0;
             $spyReinforcements = array();
+            $spyReinforcementReportOwners = array();
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
             $breweryActive = false;
@@ -2567,9 +2568,14 @@ class Automation {
                         $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
                         //NEED TO SEND A RAPPORTAGE!!!
                         $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($this->reportSafeField($to['name'])).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1,reinforcement-context-v1,'.$from['owner'].','.$from['wref'].','.($scout ? 1 : 0).','.($spyDetected ? 1 : 0);
-                        //Notify the reinforcement owner on any real attack, and on a spy attempt only if it was detected (i.e. the village had at least one defending spy, own or reinforced) - an undetected spy attempt stays invisible to everyone, as with a normal attack.
+                        // En un ataque normal el propietario conserva el aviso resumido de
+                        // sus bajas. En un espionaje detectado se difiere el aviso hasta que
+                        // exista $data2: así recibe el mismo informe defensivo completo que
+                        // el dueño de la aldea, no sólo la fila de su refuerzo.
                         if($reinforcementOwner > 0 && (int)$reinforcementOwner !== (int)$to['owner'] && (!$scout || $spyDetected)) {
-                            if($totalnotlife == 0) {
+                            if($scout) {
+                                $spyReinforcementReportOwners[(int)$reinforcementOwner] = true;
+                            } else if($totalnotlife == 0) {
                                 $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                             } else if($totallife > $totalnotlife) {
                                 $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
@@ -3306,6 +3312,11 @@ class Automation {
                     if($spyDetected) {
                         $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                         $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        foreach(array_keys($spyReinforcementReportOwners) as $reinforcementOwner) {
+                            // La copia es personal (ally = 0): el informe original del dueño
+                            // ya alimenta los eventos de la alianza y no debe duplicarse allí.
+                            $database->addNotice($reinforcementOwner, $to['wref'], 0, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        }
                     }
                 } else {
                     $data2 = $data2.','.addslashes($info_trap).',,';
