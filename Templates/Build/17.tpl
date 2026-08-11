@@ -151,7 +151,7 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 			<input class="text" type="text" name="r1" id="r1" value="<?php echo $_POST['r1']; ?>" maxlength="5" onKeyUp="upd_res(1)" tabindex="1"> 
 		</td> 
 		<td class="max"> 
-			/ <a href="#" onMouseUp="add_res(1);" onClick="return false;"><?php echo $market->maxcarry; ?></a> 
+			/ <a href="#" id="marketQuickAdd1" onMouseUp="add_res(1);" onClick="return false;"><?php echo $market->maxcarry; ?></a>
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
@@ -165,7 +165,7 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 			<input class="text" type="text" name="r2" id="r2" value="<?php echo $_POST['r2']; ?>" maxlength="5" onKeyUp="upd_res(2)" tabindex="2"> 
 		</td> 
 		<td class="max"> 
-			/ <a href="#" onMouseUp="add_res(2);" onClick="return false;"><?php echo$market->maxcarry; ?></a> 
+			/ <a href="#" id="marketQuickAdd2" onMouseUp="add_res(2);" onClick="return false;"><?php echo$market->maxcarry; ?></a>
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
@@ -179,7 +179,7 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 			<input class="text" type="text" name="r3" id="r3" value="<?php echo $_POST['r3']; ?>" maxlength="5" onKeyUp="upd_res(3)" tabindex="3"> 
 		</td> 
 		<td class="max"> 
-			/ <a href="#" onMouseUp="add_res(3);" onClick="return false;"><?php echo $market->maxcarry; ?></a> 
+			/ <a href="#" id="marketQuickAdd3" onMouseUp="add_res(3);" onClick="return false;"><?php echo $market->maxcarry; ?></a>
 		</td> 
 	</tr><tr> 
 		<td class="ico"> 
@@ -193,7 +193,7 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 			<input class="text" type="text" name="r4" id="r4" value="<?php echo $_POST['r4']; ?>" maxlength="5" onKeyUp="upd_res(4)" tabindex="4"> 
 		</td> 
 		<td class="max"> 
-			/ <a href="#" onMouseUp="add_res(4);" onClick="return false;"><?php echo $market->maxcarry; ?></a>  
+			/ <a href="#" id="marketQuickAdd4" onMouseUp="add_res(4);" onClick="return false;"><?php echo $market->maxcarry; ?></a>
 
 		</td> 
 	</tr></table> 
@@ -284,6 +284,7 @@ if($marketFormType === 'check'){
 	window.addEvent('domready', function()
 	{
 		$('r1').focus();
+		updateQuickAddState();
 	});
 	var haendler = <?php echo $market->merchantAvail(); ?>;
 	var carry = <?php echo $market->maxcarry; ?>;
@@ -305,6 +306,18 @@ if($marketFormType === 'check'){
 		}
 		return total;
 	}
+	function updateQuickAddState()
+	{
+		var capacityUsed = selectedResources(0) >= haendler * carry;
+		for (var i = 1; i <= 4; i++)
+		{
+			var link = $('marketQuickAdd' + i);
+			if (link)
+			{
+				link.style.color = capacityUsed ? '#999999' : '';
+			}
+		}
+	}
 	function add_res(resNr)
 	{
 		var currentRes = resources['l' + resNr].value;
@@ -316,6 +329,7 @@ if($marketFormType === 'check'){
 		}
 		merchantRes[resNr] = res_max(inputRes, currentRes, merchantMax, carry);
 		$('r' + resNr).value = merchantRes[resNr];
+		updateQuickAddState();
 	}
 	function upd_res(resNr, max)
 	{
@@ -336,6 +350,7 @@ if($marketFormType === 'check'){
 		}
 		merchantRes[resNr] = res_max(parseInt(inputRes), currentRes, merchantMax, 0);
 		$('r' + resNr).value = merchantRes[resNr];
+		updateQuickAddState();
 	}
 	function res_max(_merchantRes, _actualRes , _merchantMax , _carry)
 	{
