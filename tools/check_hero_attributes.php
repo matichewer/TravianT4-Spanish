@@ -75,12 +75,30 @@ heroAttributeAssert(
 	'Current hero resource bonus is missing its hourly unit'
 );
 heroAttributeAssert(
-	strpos($heroTemplate,'<span class="current">+<?php echo $allResourceRate; ?>/h</span>')!==false,
+	strpos($heroTemplate,'<span class="current">+<span class="allResourceRate"><?php echo $allResourceRate; ?></span>/h</span>')!==false,
 	'All-resource option is missing its positive hourly label'
 );
 heroAttributeAssert(
-	substr_count($heroTemplate,'<span class="current">+<?php echo $focusedResourceRate; ?>/h</span>')===4,
+	substr_count($heroTemplate,'<span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>')===4,
 	'Focused resource options are missing positive hourly labels'
+);
+heroAttributeAssert(
+	strpos($heroTemplate,'id="heroAttributeForm"')!==false
+	&& strpos($heroTemplate,'data-add-attribute="power"')!==false
+	&& strpos($heroTemplate,'class="heroAttributeApply disabled" disabled="disabled"')!==false
+	&& strpos($heroTemplate,'class="heroAttributeCancel disabled" disabled="disabled"')!==false
+	&& strpos($heroTemplate,'<div class="button-contents">Aplicar</div>')!==false
+	&& strpos($heroTemplate,'<div class="button-contents">Cancelar</div>')!==false
+	&& strpos($heroTemplate,"(int)\$hero['points']>0 ? ' hasPoints' : ''")!==false
+	&& strpos($heroTemplate,"(remaining>0 ? ' hasPoints' : '')")!==false
+	&& substr_count($heroTemplate,'data-add-attribute=')===4
+	&& strpos($heroTemplate,'data-add-attribute="power" title=')===false
+	&& substr_count($heroTemplate,'class="element attribName tooltip"')===5
+	&& strpos($heroTemplate,'class="attribute power tooltip"')===false
+	&& strpos($heroTemplate,'class="attribute offBonus tooltip"')===false
+	&& strpos($heroTemplate,"addCell.addEvent('mouseenter'")===false
+	&& strpos($heroTemplate,"setButtonEnabled(form.querySelector('.heroAttributeApply'),hasPendingPoints)")!==false,
+	'Batch attribute preview controls are incomplete'
 );
 heroAttributeAssert(
 	strpos($heroTemplate,'<div class="element attribName">Aldea natal</div>')!==false
@@ -95,7 +113,9 @@ heroAttributeAssert(
 	'Hero revival is not tied to the home village'
 );
 heroAttributeAssert(
-	strpos($heroTemplate,'<?php if($canSpendPoint){ ?><div class="availableAttributePoints">Puntos disponibles para asignar:')!==false
+	strpos($heroTemplate,'<div class="attributeAllocationFooter">')!==false
+	&& strpos($heroTemplate,'availableAttributePoints<?php echo')!==false
+	&& strpos($heroTemplate,'Puntos disponibles para asignar:')!==false
 	&& strpos($heroTemplate,'<div class="pointsHeadline">Puntos</div>')!==false,
 	'Available hero attribute points are not clearly identified'
 );
@@ -138,9 +158,9 @@ heroAttributeAssert(count(array_unique($horseNames))===3,'Two horses share the s
 
 foreach(array(
 	'<div class="changeResourcesHeadline"><b>Recursos</b></div>',
-	'Como tienes <?php echo $productPoints; ?> puntos en Recursos',
-	'el héroe produce <?php echo $allResourceRate; ?> de cada recurso',
-	'o <?php echo $focusedResourceRate; ?> de un recurso específico',
+	'Como tienes <span class="productPointsValue"><?php echo $productPoints; ?></span> puntos en Recursos',
+	'el héroe produce <span class="allResourceRate"><?php echo $allResourceRate; ?></span> de cada recurso',
+	'o <span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span> de un recurso específico',
 	'Este extra de producción se otorga a la aldea natal del héroe',
 	'Puedes cambiar la aldea natal del héroe enviándolo entre tus aldeas'
 ) as $explanationPart){
@@ -227,6 +247,41 @@ heroAttributeAssert((int)$state['points']===0 && (int)$state['power']===100,'Att
 heroAttributeAssert(!$database->allocateHeroAttributePoint(900001,'power',100),'Attribute allocation exceeded the cap or reused a spent point');
 $state = $database->getHeroData(900001);
 heroAttributeAssert((int)$state['points']===0 && (int)$state['power']===100,'Rejected allocation changed hero state');
+
+$batchState = "UPDATE $temporaryHeroTable SET points=6,power=95,offBonus=10,defBonus=20,product=30 WHERE uid=900001";
+heroAttributeAssert(mysqli_query($database->connection,$batchState),'Could not prepare batch allocation state');
+$validBatch = array('power'=>2,'offBonus'=>1,'defBonus'=>1,'product'=>2);
+heroAttributeAssert($database->allocateHeroAttributePoints(900001,$validBatch,100),'Valid batch allocation was rejected');
+$state = $database->getHeroData(900001);
+heroAttributeAssert(
+	(int)$state['points']===0 && (int)$state['power']===97 && (int)$state['offBonus']===11
+		&& (int)$state['defBonus']===21 && (int)$state['product']===32,
+	'Batch allocation did not apply the complete distribution'
+);
+
+$batchState = "UPDATE $temporaryHeroTable SET points=10,power=99,offBonus=10,defBonus=20,product=30 WHERE uid=900001";
+heroAttributeAssert(mysqli_query($database->connection,$batchState),'Could not prepare capped batch state');
+heroAttributeAssert(
+	!$database->allocateHeroAttributePoints(900001,array('power'=>2,'offBonus'=>1,'defBonus'=>0,'product'=>0),100),
+	'Batch allocation exceeded an attribute cap'
+);
+$state = $database->getHeroData(900001);
+heroAttributeAssert((int)$state['points']===10 && (int)$state['power']===99 && (int)$state['offBonus']===10,'Capped batch was partially applied');
+
+$batchState = "UPDATE $temporaryHeroTable SET points=2,power=10,offBonus=10,defBonus=20,product=30 WHERE uid=900001";
+heroAttributeAssert(mysqli_query($database->connection,$batchState),'Could not prepare insufficient-points batch state');
+$staleBatch = array('power'=>1,'offBonus'=>1,'defBonus'=>0,'product'=>0);
+heroAttributeAssert($database->allocateHeroAttributePoints(900001,$staleBatch,100),'First concurrent-style batch was rejected');
+heroAttributeAssert(!$database->allocateHeroAttributePoints(900001,$staleBatch,100),'Stale batch reused already allocated points');
+$state = $database->getHeroData(900001);
+heroAttributeAssert(
+	(int)$state['points']===0 && (int)$state['power']===11 && (int)$state['offBonus']===11,
+	'Stale batch changed hero state after the first complete allocation'
+);
+heroAttributeAssert(
+	!$database->allocateHeroAttributePoints(900001,array('power'=>-1,'offBonus'=>0,'defBonus'=>0,'product'=>0),100),
+	'Batch allocation accepted a negative increment'
+);
 
 heroAttributeAssert($database->advanceHeroLevel(1,98,99),'Final hero level was not applied');
 $state = $database->getHeroData(900001);

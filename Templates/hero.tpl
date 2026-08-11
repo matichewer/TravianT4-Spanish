@@ -19,6 +19,7 @@ $resourceRates = heroResourceRates($hero,SPEED);
 $allResourceRate = 3*SPEED*$productPoints;
 $focusedResourceRate = 10*SPEED*$productPoints;
 $canSpendPoint = (int)$hero['points']>0;
+$heroStrengthPerPoint = $tribe===1 ? 100 : 80;
 $powerPointStyle = $canSpendPoint && $powerPoints<$attributeLimit ? "" : " hidden";
 $offBonusPointStyle = $canSpendPoint && $offBonusPoints<$attributeLimit ? "" : " hidden";
 $defBonusPointStyle = $canSpendPoint && $defBonusPoints<$attributeLimit ? "" : " hidden";
@@ -56,20 +57,26 @@ if($displayHeroLevel>=$maximumHeroLevel){
 }
 ob_start();
 ?>
-<div id="attributes"><div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
+<div id="attributes"><form id="heroAttributeForm" method="post" action="hero_inventory.php" data-available="<?php echo (int)$hero['points']; ?>" data-limit="<?php echo $attributeLimit; ?>" data-strength-per-point="<?php echo $heroStrengthPerPoint; ?>" data-speed="<?php echo (float)SPEED; ?>">
+	<input type="hidden" name="a" value="allocateHeroAttributes">
+	<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
+	<input type="hidden" name="power" value="0">
+	<input type="hidden" name="offBonus" value="0">
+	<input type="hidden" name="defBonus" value="0">
+	<input type="hidden" name="product" value="0">
+	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     	<div class="attribute headline">
 			<div class="attributesHeadline">Atributos</div>
-			<?php if($canSpendPoint){ ?><div class="availableAttributePoints">Puntos disponibles para asignar: <strong><?php echo (int)$hero['points']; ?></strong></div><?php } ?>
 			<div class="pointsHeadline">Puntos</div>
 			<div class="clear"></div>
 		</div>
 			<div class="clear"></div>
-			<?php if($hero['itempower']==0){ ?>
-	  <div class="attribute power tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $heroStrengthWithoutItems; ?> del héroe</font>">
+	  <div class="attribute power" data-attribute="power" data-points="<?php echo $powerPoints; ?>">
+				<?php if($hero['itempower']==0){ ?>
+				<div class="element attribName tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $heroStrengthWithoutItems; ?> del héroe</font>">Fuerza de lucha</div>
 				<?php }else{ ?>
-	  <div class="attribute power tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $heroStrengthWithoutItems; ?> del héroe + <?php echo $itemPower; ?> de bonificación por objetos</font>">
+				<div class="element attribName tooltip" title="La fuerza de lucha se combina con el ataque y la defensa de tu héroe. Cuanto más alta sea, mejor te irá en las batallas.<br><font color='#5dcbfb'>Fuerza de lucha: <?php echo $heroStrengthWithoutItems; ?> del héroe + <?php echo $itemPower; ?> de bonificación por objetos</font>">Fuerza de lucha</div>
 				<?php } ?>
-				<div class="element attribName">Fuerza de lucha</div>
 				<div class="element current power"><?php echo $heroStrength; ?></div>
 				<div class="element progress">
 					<div class="bar-bg">
@@ -77,14 +84,14 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="?add=power&a=<?php echo $plevel; ?>&c=<?php echo $heroWrefC; ?>"></a>
+	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="#" role="button" data-add-attribute="power"></a>
 				</div>
 				<div class="element points"><?php echo $powerPoints; ?></div>
 			</div>
 
 	  <div class="clear"></div>
-	  <div class="attribute offBonus tooltip" title="La bonificación de ataque otorga un bono al atacar.<br><font color='#5dcbfb'>Bonificación de ataque <?php echo $offBonusPercent; ?>%</font>">
-				<div class="element attribName">Bonificación de ataque</div>
+	  <div class="attribute offBonus" data-attribute="offBonus" data-points="<?php echo $offBonusPoints; ?>">
+				<div class="element attribName tooltip" title="La bonificación de ataque otorga un bono al atacar.<br><font color='#5dcbfb'>Bonificación de ataque <?php echo $offBonusPercent; ?>%</font>">Bonificación de ataque</div>
 				<div class="element current power"><span class="value"><?php echo $offBonusPercent; ?></span>%</div>
 				<div class="element progress">
 					<div class="bar-bg">
@@ -92,15 +99,15 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="?add=offBonus&a=<?php echo $plevel; ?>&c=<?php echo $heroWrefC; ?>"></a>
+	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="#" role="button" data-add-attribute="offBonus"></a>
 				</div>
 				<div class="element points"><?php echo $offBonusPoints; ?></div>
 			</div>
 
 		<div class="clear"></div>
 
-	  <div class="attribute defBonus tooltip" title="La bonificación de defensa otorga un bono extra al ser atacado.<br><font color='#5dcbfb'>Bonificación de defensa: <?php echo $defBonusPercent; ?>%</font>">
-				<div class="element attribName">Bonificación de defensa</div>
+	  <div class="attribute defBonus" data-attribute="defBonus" data-points="<?php echo $defBonusPoints; ?>">
+				<div class="element attribName tooltip" title="La bonificación de defensa otorga un bono extra al ser atacado.<br><font color='#5dcbfb'>Bonificación de defensa: <?php echo $defBonusPercent; ?>%</font>">Bonificación de defensa</div>
 				<div class="element current power"><span class="value"><?php echo $defBonusPercent; ?></span>%</div>
 				<div class="element progress">
 					<div class="bar-bg">
@@ -108,15 +115,15 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="?add=defBonus&a=<?php echo $plevel; ?>&c=<?php echo $heroWrefC; ?>"></a>
+	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="#" role="button" data-add-attribute="defBonus"></a>
 				</div>
 				<div class="element points"><?php echo $defBonusPoints; ?></div>
 			</div>
 
 		<div class="clear"></div>
 
-	  <div class="attribute productionPoints tooltip" title="El héroe recolecta recursos de forma continua. Cuantos más puntos asignes, mayor será la producción.<br><font color='#5dcbfb'>Aporte directo actual: +<?php echo $selectedResourceRate; ?>/h</font>">
-				<div class="element attribName">Recursos</div>
+	  <div class="attribute productionPoints" data-attribute="product" data-points="<?php echo $productPoints; ?>">
+				<div class="element attribName tooltip" title="El héroe recolecta recursos de forma continua. Cuantos más puntos asignes, mayor será la producción.<br><font color='#5dcbfb'>Aporte directo actual: +<?php echo $selectedResourceRate; ?>/h</font>">Recursos</div>
 				<div class="element current power"><?php echo $productPoints; ?></div>
 				<div class="element progress">
 					<div class="bar-bg">
@@ -125,52 +132,61 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	             <a class="setPoint<?php echo $productPointStyle; ?>" href="?add=productionPoints&a=<?php echo $plevel; ?>&c=<?php echo $heroWrefC; ?>"></a>
+	             <a class="setPoint<?php echo $productPointStyle; ?>" href="#" role="button" data-add-attribute="product"></a>
 				</div>
 				<div class="element points"><?php echo $productPoints; ?></div>
 		</div>
 
 		<div class="clear"></div>
+		<div class="attributeAllocationFooter">
+			<div class="availableAttributePoints<?php echo (int)$hero['points']>0 ? ' hasPoints' : ''; ?>">Puntos disponibles para asignar: <strong><?php echo (int)$hero['points']; ?></strong></div>
+			<div class="attributeAllocationActions">
+				<button type="submit" class="heroAttributeApply disabled" disabled="disabled"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Aplicar</div></div></button>
+				<button type="button" class="heroAttributeCancel disabled" disabled="disabled"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Cancelar</div></div></button>
+			</div>
 		</div>
-  </div>
+		<div class="clear"></div>
+		</div>
+	</div>
+	</form>
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">
     <div class="attribute res" id="setResource">
 		<div class="changeResourcesHeadline"><b>Recursos</b></div>
-		<p class="resourceProductionHelp">Como tienes <?php echo $productPoints; ?> puntos en Recursos, el héroe produce <?php echo $allResourceRate; ?> de cada recurso o <?php echo $focusedResourceRate; ?> de un recurso específico. Este extra de producción se otorga a la aldea natal del héroe. Puedes cambiar la aldea natal del héroe enviándolo entre tus aldeas.</p>
+		<p class="resourceProductionHelp">Como tienes <span class="productPointsValue"><?php echo $productPoints; ?></span> puntos en Recursos, el héroe produce <span class="allResourceRate"><?php echo $allResourceRate; ?></span> de cada recurso o <span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span> de un recurso específico. Este extra de producción se otorga a la aldea natal del héroe. Puedes cambiar la aldea natal del héroe enviándolo entre tus aldeas.</p>
 		<div class="clear"></div>
 		<div class="resource">
 		  <input type="radio" onclick="window.location.href = '?product=r0';" name="resource" value="0" id="resourceHero0" <?php if($hero['r0']!=0){ echo $checked="checked"; } ?>>
 			<label for="resourceHero0">
 					<img title="Todos los recursos" class="r0" src="img/x.gif">
-	                <span class="current">+<?php echo $allResourceRate; ?>/h</span>
+	                <span class="current">+<span class="allResourceRate"><?php echo $allResourceRate; ?></span>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r1';" name="resource" value="1" id="resourceHero1" <?php if($hero['r1']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',1); ?>>
 			<label for="resourceHero1">
 					<img title="Madera" class="r1" src="img/x.gif">
-	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
+	                <span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r2';" name="resource" value="2" id="resourceHero2" <?php if($hero['r2']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',2); ?>>
 			<label for="resourceHero2">
 					<img title="Barro" class="r2" src="img/x.gif">
-	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
+	                <span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r3';" name="resource" value="3" id="resourceHero3" <?php if($hero['r3']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',3); ?>>
 			<label for="resourceHero3">
 					<img title="Hierro" class="r3" src="img/x.gif">
-	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
+	                <span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>
 			</label>
 		</div>
 				<div class="resource">
 			<input type="radio" onclick="window.location.href = '?product=r4';" name="resource" value="4" id="resourceHero4" <?php if($hero['r4']!=0){ echo $checked="checked"; } ?> <?php echo $form->getRadio('resource',4); ?>>
 			<label for="resourceHero4">
 					<img title="Cereal" class="r4" src="img/x.gif">
-	                <span class="current">+<?php echo $focusedResourceRate; ?>/h</span>
+	                <span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>
 			</label>
 		</div>
 			</div>
@@ -301,6 +317,104 @@ if(!$checkT){
 		</div>
   </div></div>
 
+<script type="text/javascript">
+window.addEvent('domready',function(){
+	var form = document.getElementById('heroAttributeForm');
+	if(!form){ return; }
+	var attributes = ['power','offBonus','defBonus','product'];
+	var available = parseInt(form.getAttribute('data-available'),10) || 0;
+	var limit = parseInt(form.getAttribute('data-limit'),10) || 100;
+	var strengthPerPoint = parseInt(form.getAttribute('data-strength-per-point'),10) || 0;
+	var speed = parseFloat(form.getAttribute('data-speed')) || 0;
+	var baseStrength = <?php echo (int)$heroStrength; ?>;
+	var rows = {};
+	var basePoints = {};
+
+	function setHidden(element,hidden){
+		if(!element){ return; }
+		var classes = element.className.replace(/\s*hidden\b/g,'');
+		element.className = hidden ? classes+' hidden' : classes;
+	}
+
+	function setText(selector,value){
+		var elements = document.querySelectorAll(selector);
+		for(var i=0;i<elements.length;i++){
+			elements[i].textContent = value;
+		}
+	}
+
+	function setButtonEnabled(button,enabled){
+		button.disabled = !enabled;
+		button.className = button.className.replace(/\s*disabled\b/g,'')+(enabled ? '' : ' disabled');
+	}
+
+	for(var i=0;i<attributes.length;i++){
+		var name = attributes[i];
+		rows[name] = form.querySelector('[data-attribute="'+name+'"]');
+		basePoints[name] = parseInt(rows[name].getAttribute('data-points'),10) || 0;
+	}
+
+	function render(){
+		var spent = 0;
+		for(var i=0;i<attributes.length;i++){
+			spent += parseInt(form.elements[attributes[i]].value,10) || 0;
+		}
+		var remaining = available-spent;
+		var availableElement = form.querySelector('.availableAttributePoints strong');
+		if(availableElement){ availableElement.textContent = remaining; }
+
+		for(var j=0;j<attributes.length;j++){
+			var attribute = attributes[j];
+			var points = basePoints[attribute]+(parseInt(form.elements[attribute].value,10) || 0);
+			var row = rows[attribute];
+			row.querySelector('.points').textContent = points;
+			row.querySelector('.bar').style.width = points+'%';
+			setHidden(row.querySelector('.setPoint'),remaining<1 || points>=limit);
+			if(attribute==='power'){
+				row.querySelector('.current.power').textContent = baseStrength+(points-basePoints.power)*strengthPerPoint;
+			}else if(attribute==='offBonus' || attribute==='defBonus'){
+				row.querySelector('.current.power .value').textContent = points/5;
+			}else{
+				row.querySelector('.current.power').textContent = points;
+				setText('.productPointsValue',points);
+				setText('.allResourceRate',3*speed*points);
+				setText('.focusedResourceRate',10*speed*points);
+			}
+		}
+		var hasPendingPoints = spent>0;
+		var balance = form.querySelector('.availableAttributePoints');
+		balance.className = balance.className.replace(/\s*hasPoints\b/g,'')+(remaining>0 ? ' hasPoints' : '');
+		setButtonEnabled(form.querySelector('.heroAttributeApply'),hasPendingPoints);
+		setButtonEnabled(form.querySelector('.heroAttributeCancel'),hasPendingPoints);
+	}
+
+	var addButtons = form.querySelectorAll('[data-add-attribute]');
+	for(var buttonIndex=0;buttonIndex<addButtons.length;buttonIndex++){
+		addButtons[buttonIndex].addEventListener('click',function(event){
+			event.preventDefault();
+			var attribute = this.getAttribute('data-add-attribute');
+			var input = form.elements[attribute];
+			var spent = 0;
+			for(var i=0;i<attributes.length;i++){
+				spent += parseInt(form.elements[attributes[i]].value,10) || 0;
+			}
+			if(spent<available && basePoints[attribute]+parseInt(input.value,10)<limit){
+				input.value = (parseInt(input.value,10) || 0)+1;
+				render();
+			}
+		});
+	}
+
+	form.querySelector('.heroAttributeCancel').addEventListener('click',function(){
+		for(var i=0;i<attributes.length;i++){
+			form.elements[attributes[i]].value = 0;
+		}
+		render();
+	});
+	render();
+});
+</script>
+
 <?php
 $heroid = $hero['heroid'];
 // El botón se muestra con los recursos justos (>=), así que acá se compara igual: con
@@ -319,19 +433,6 @@ if(isset($_GET['revive']) && $_GET['revive'] == 1 && (int)$hero['dead'] !== 0 &&
     $database->modifyHero2('wref', $heroHomeVillageId, $session->uid, 0);
     header("Location: hero_inventory.php");
 }
-if(isset($_GET['add'])){
-	$attributeMap = array(
-		'power'=>'power',
-		'offBonus'=>'offBonus',
-		'defBonus'=>'defBonus',
-		'productionPoints'=>'product'
-	);
-	if(isset($attributeMap[$_GET['add']])){
-		$database->allocateHeroAttributePoint($session->uid,$attributeMap[$_GET['add']],$attributeLimit);
-	}
-	header("Location: hero_inventory.php");
-}
-
 if(isset($_GET['product'])){
 	if(preg_match('/^r([0-4])$/',$_GET['product'],$resourceMatch)){
 		$database->setHeroResourceMode($session->uid,(int)$resourceMatch[1]);

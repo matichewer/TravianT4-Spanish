@@ -898,7 +898,7 @@ div.hero_inventory #hero_inventory{width:269px;float:right;}.ie6 div.hero_invent
 .ie6 div.hero_inventory #hero_inventory{background-color:#E5E5E5;}div.hero_inventory .attributesHeadline{font-weight:bold;float:left;text-align:left;width:100px;margin-bottom:8px;}
 div.hero_inventory .reviveHeadline{width:auto;white-space:nowrap;}
 div.hero_inventory #hero_inventory .boxes-contents{padding:4px 0;}div.hero_inventory .pointsHeadline{float:right;font-weight:bold;width:70px;text-align:center;margin-bottom:8px;}
-div.hero_inventory .availableAttributePoints{float:left;margin:-3px 0 6px 12px;padding:3px 8px;color:#3f5f00;background-color:#f1f8df;border:1px solid #9bc43d;border-radius:3px;}
+div.hero_inventory .availableAttributePoints{float:left;margin:2px 0 0;padding:4px 8px;color:#777;background-color:#eee;border:1px solid #bbb;border-radius:3px;}div.hero_inventory .availableAttributePoints.hasPoints{color:#3f5f00;background-color:#f1f8df;border-color:#9bc43d;}
 div.hero_inventory .changeResourcesHeadline{margin-bottom:6px;}div.hero_inventory .heroStatus{padding-bottom:6px;}
 div.hero_inventory .boxes .headline{padding-bottom:3px;}div.hero_inventory #hero_body_content .content div.draggable{width:60px;height:60px;}
 div.hero_inventory .attribute .element{float:left;margin:0 8px 6px 0;}div.hero_inventory .attribute .attribName{width:145px;white-space:nowrap;}
@@ -908,7 +908,7 @@ div.hero_inventory .attribute.power .attribName,div.hero_inventory .attribute.of
 div.hero_inventory .attribute.power .progress,div.hero_inventory .attribute.offBonus .progress,div.hero_inventory .attribute.defBonus .progress,div.hero_inventory .attribute.productionPoints .progress{width:192px;}
 div.hero_inventory .attribute .add{width:16px;}.ie6 div.hero_inventory .attribute .add{height:16px;position:relative;}
 div.hero_inventory .attribute .setPoint{height:16px;width:16px;display:inline-block;background-image:url(../../img/a/plus.gif);background-position:top left;}
-div.hero_inventory .attribute .hidden{display:none;}div.hero_inventory .attribute .points{width:50px;text-align:center;}
+div.hero_inventory .attribute .hidden{display:none;}div.hero_inventory .attribute .points{width:50px;text-align:center;}div.hero_inventory .attributeAllocationFooter{margin:4px 14px 7px;padding-top:7px;border-top:1px solid #ccc;overflow:hidden;}div.hero_inventory .attributeAllocationActions{float:right;}div.hero_inventory .attributeAllocationActions button{margin-left:6px;vertical-align:middle;}
 div.hero_inventory #attributes .attribute{margin:0 15px;}div.hero_inventory #attributes .boxes{margin-bottom:10px;padding:1px;}
 div.hero_inventory #attributes .boxes-contents{padding-top:8px;}div.hero_inventory #attributes{margin-bottom:19px;width:100%;}
 .ie6 div.hero_inventory #attributes .boxes{background:none;}.ie6 div.hero_inventory #attributes{background-color:#E5E5E5;}

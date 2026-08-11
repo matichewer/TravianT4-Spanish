@@ -24,6 +24,23 @@ if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
 	exit;
 }
 
+if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
+	&& isset($_POST['a']) && $_POST['a'] === 'allocateHeroAttributes'){
+	$tokenIsValid = isset($_POST['c']) && is_scalar($_POST['c'])
+		&& hash_equals((string)$session->mchecker, (string)$_POST['c']);
+	if($tokenIsValid){
+		$increments = array(
+			'power' => isset($_POST['power']) ? $_POST['power'] : 0,
+			'offBonus' => isset($_POST['offBonus']) ? $_POST['offBonus'] : 0,
+			'defBonus' => isset($_POST['defBonus']) ? $_POST['defBonus'] : 0,
+			'product' => isset($_POST['product']) ? $_POST['product'] : 0
+		);
+		$database->allocateHeroAttributePoints((int)$session->uid,$increments,heroAttributeLimit());
+	}
+	header("Location: hero_inventory.php");
+	exit;
+}
+
 include "Templates/html.tpl";
 
 if(isset($_GET['inventory'])){

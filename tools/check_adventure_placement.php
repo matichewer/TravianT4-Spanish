@@ -41,10 +41,10 @@ $radius = $database->getWorldRadius();
 echo "Mundo: radio $radius\n\n";
 check($radius > 0, 'el radio del mundo sale de wdata, no de WORLD_MAX');
 
-// La banda histórica: ±radio en X, ±medio radio en Y. Es lo que daban los 10000
-// ids desde una aldea central, y es el tope que tiene que valer para todos.
-$yspan = (int) round($radius / 2);
-$maxDist = sqrt(pow($radius, 2) + pow($yspan, 2));
+// Las aventuras se sortean como máximo a diez casillas por eje. En un servidor
+// x3, un héroe base tarda unos 40 minutos al rincón más lejano del cuadro.
+$adventureRadius = min(10, $radius);
+$maxDist = sqrt(2 * pow($adventureRadius, 2));
 
 echo "\n== Posicionamiento ==\n";
 
@@ -77,7 +77,7 @@ foreach($spots as $label => $xy) {
 		if((int)$tile['occupied'] !== 0) { $ocupadas++; }
 		$dx = abs((int)$tile['x'] - $vx);
 		$dy = abs((int)$tile['y'] - $vy);
-		if($dx > $radius || $dy > $yspan) { $fueraDeBanda++; }
+		if($dx > $adventureRadius || $dy > $adventureRadius) { $fueraDeBanda++; }
 		$peor = max($peor, sqrt($dx * $dx + $dy * $dy));
 	}
 
@@ -85,7 +85,7 @@ foreach($spots as $label => $xy) {
 	check($inexistentes === 0, "$label: ninguna aventura cae fuera del mapa");
 	check($ocupadas === 0, "$label: ninguna aventura cae en casilla ocupada");
 	check($sinLugar === 0, "$label: siempre encuentra lugar");
-	check($fueraDeBanda === 0, "$label: ninguna se sale de la banda historica");
+	check($fueraDeBanda === 0, "$label: ninguna se aleja mas de $adventureRadius casillas por eje");
 	check($peor <= $maxDist + 1, sprintf('%s: mismo tope que el centro (%.0f campos)', $label, $maxDist));
 }
 

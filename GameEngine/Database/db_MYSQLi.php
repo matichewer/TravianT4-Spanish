@@ -3524,6 +3524,42 @@
 					return $result && mysqli_affected_rows($this->connection)===1;
 				}
 
+				function allocateHeroAttributePoints($uid,$increments,$limit=100) {
+					$attributes = array('power','offBonus','defBonus','product');
+					if(!is_array($increments)){
+						return false;
+					}
+
+					$uid = (int)$uid;
+					$limit = max(1,(int)$limit);
+					$values = array();
+					$total = 0;
+					foreach($attributes as $attribute){
+						$value = isset($increments[$attribute]) ? $increments[$attribute] : 0;
+						if(!is_scalar($value) || !preg_match('/^\d+$/',(string)$value)){
+							return false;
+						}
+						$values[$attribute] = (int)$value;
+						$total += $values[$attribute];
+					}
+					if($uid<1 || $total<1){
+						return false;
+					}
+
+					$updates = array();
+					$conditions = array("points >= $total");
+					foreach($attributes as $attribute){
+						$value = $values[$attribute];
+						$updates[] = "$attribute = $attribute + $value";
+						$conditions[] = "$attribute + $value <= $limit";
+					}
+					$updates[] = "points = points - $total";
+					$q = "UPDATE ".TB_PREFIX."hero SET ".implode(', ',$updates)
+						." WHERE uid = $uid AND ".implode(' AND ',$conditions);
+					$result = mysqli_query($this->connection,$q);
+					return $result && mysqli_affected_rows($this->connection)===1;
+				}
+
 				function advanceHeroLevel($heroid,$currentLevel,$targetLevel) {
 					$heroid = (int)$heroid;
 					$currentLevel = max(0,(int)$currentLevel);
@@ -5348,11 +5384,12 @@ break;
 			// recibía aventuras en el borde oeste, al doble de distancia que una del
 			// centro.
 			//
-			// Se conserva la banda histórica (±radio en X, ±medio radio en Y, que es lo
-			// que daban esos 10000 ids desde una aldea central) para no cambiarle los
-			// tiempos de viaje a los jugadores, pero medida desde la aldea y resuelta en
-			// coordenadas reales. Las casillas ocupadas quedan afuera: `occupied` cubre
-			// aldeas y oasis tomados por igual.
+			// Las aventuras tienen que quedar cerca de la aldea del héroe. La vieja banda
+			// abarcaba casi todo el mapa y, aun con un servidor x3, producía viajes de más
+			// de una hora. Un cuadro de 10 casillas conserva una duración apreciable (el
+			// peor destino está a 14,1 casillas) sin convertir cada aventura en una
+			// expedición de larga distancia. Las casillas ocupadas quedan afuera:
+			// `occupied` cubre aldeas y oasis tomados por igual.
 			function pickAdventureField($homeWref) {
 				$homeWref = (int) $homeWref;
 				if($homeWref <= 0) {
@@ -5362,14 +5399,15 @@ break;
 				if(!is_array($home)) {
 					return 0;
 				}
-				$radius = $this->getWorldRadius();
-				if($radius <= 0) {
+				$worldRadius = $this->getWorldRadius();
+				if($worldRadius <= 0) {
 					return 0;
 				}
-				$x1 = (int)$home['x'] - $radius;
-				$x2 = (int)$home['x'] + $radius;
-				$y1 = (int)$home['y'] - (int)round($radius / 2);
-				$y2 = (int)$home['y'] + (int)round($radius / 2);
+				$adventureRadius = min(10, $worldRadius);
+				$x1 = (int)$home['x'] - $adventureRadius;
+				$x2 = (int)$home['x'] + $adventureRadius;
+				$y1 = (int)$home['y'] - $adventureRadius;
+				$y2 = (int)$home['y'] + $adventureRadius;
 				$q = "SELECT id FROM " . TB_PREFIX . "wdata WHERE occupied = 0
 					AND x BETWEEN $x1 AND $x2 AND y BETWEEN $y1 AND $y2 ORDER BY RAND() LIMIT 1";
 				$result = mysqli_query($this->connection,$q);
