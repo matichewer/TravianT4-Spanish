@@ -18,6 +18,10 @@
  *      comprometido por otras rutas), no contra la capacidad total del edificio.
  *   E. La vista 17_4.tpl no ofrece borrar/editar una ruta cuyo origen es otra aldea
  *      del mismo jugador (antes fallaba en silencio).
+ *   F. El worker dedicado dispara rutas además de completar viajes, y el calendario
+ *      salta al próximo horario futuro sin ráfagas de días atrasados.
+ *   G. Los fallos transitorios se reintentan y los mercaderes de rutas quedan
+ *      realmente reservados frente a envíos manuales.
  */
 
 error_reporting(E_ALL);
@@ -78,8 +82,8 @@ section('B. Capa de datos: reclamo atómico y capacidad comprometida');
 // ---------------------------------------------------------------------------
 $dbSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
 check(strpos($dbSource,'function claimTradeRoute(') !== false,'existe claimTradeRoute()');
-check(preg_match('/UPDATE\s+"\s*\.\s*TB_PREFIX\s*\.\s*"route SET timestamp = timestamp \+ 86400 WHERE id = \$id AND timestamp = \$timestamp/',$dbSource) === 1,
-	'claimTradeRoute() avanza el timestamp con un WHERE sobre el valor leído (reclamo optimista)');
+check(strpos($dbSource,'SET timestamp = $nextTimestamp WHERE id = $id AND timestamp = $timestamp') !== false,
+	'claimTradeRoute() fija el próximo horario con un WHERE sobre el valor leído (reclamo optimista)');
 check(strpos($dbSource,"mysqli_affected_rows(\$this->connection) === 1") !== false
 	&& strpos($dbSource,'function claimTradeRoute(') !== false,
 	'claimTradeRoute() solo confirma éxito si afectó exactamente una fila');
@@ -91,6 +95,9 @@ check(strpos($dbSource,'AND id <> $excludeRouteId') !== false,
 	'getVillageRouteMerchantTotal() puede excluir la propia ruta al editarla');
 
 check(strpos($dbSource,'function deleteTradeRoute(') !== false,'sigue existiendo deleteTradeRoute() (borrado sin dueño, para limpieza del sistema)');
+check(strpos($dbSource,'function retryTradeRoute(') !== false,'existe retryTradeRoute() para fallos transitorios');
+check(strpos($dbSource,'WHERE id = $id AND timestamp = $claimedTimestamp') !== false,
+	'el reintento sólo revierte el reclamo que sigue perteneciendo a esta ejecución');
 
 // ---------------------------------------------------------------------------
 section('C. Automation::TradeRoute(): reclamo atómico y limpieza de huérfanas');
@@ -99,7 +106,7 @@ check(preg_match('/private function TradeRoute\(\)\s*\{.*?\n    \}/s',$automatio
 $tradeRouteBody = $m[1] ?? '';
 if($tradeRouteBody === '' && isset($m[0])) { $tradeRouteBody = $m[0]; }
 
-check(strpos($tradeRouteBody,'claimTradeRoute($data[\'id\'], $data[\'timestamp\'])') !== false,
+check(strpos($tradeRouteBody,"claimTradeRoute(\$data['id'], \$data['timestamp'], \$nextTimestamp)") !== false,
 	'TradeRoute() reclama cada fila antes de procesarla');
 check(strpos($tradeRouteBody,'if(!$database->claimTradeRoute') !== false,
 	'si el reclamo falla (otro request ya la tomó), la fila se salta con continue');
@@ -113,6 +120,9 @@ check(strpos($tradeRouteBody,'!== (int)$data[\'uid\']') !== false,
 	'la comprobación de dueño compara contra el uid guardado en la ruta');
 check(strpos($tradeRouteBody,"\$database->deleteTradeRoute(\$data['id'])") !== false,
 	'una ruta huérfana (aldea borrada o conquistada) se elimina en vez de reintentar para siempre');
+check(strpos($tradeRouteBody,'if(!$this->sendResource2(') !== false
+	&& strpos($tradeRouteBody,'retryTradeRoute(') !== false,
+	'un envío fallido se reprograma para reintento en vez de perder el día');
 
 // ---------------------------------------------------------------------------
 section('D. Market::procTradeRoutes(): capacidad libre, no capacidad total');
@@ -138,6 +148,39 @@ check(preg_match('/if\(\$isOwnVillage\)\{ \?><a href="build\.php\?id=<\?php echo
 	'el enlace de editar solo aparece si la ruta es de esta aldea');
 check(strpos($tplSource,'gestionar desde esa aldea') !== false,
 	'las rutas de otra aldea muestran cómo gestionarlas en vez de un enlace que siempre falla');
+
+// ---------------------------------------------------------------------------
+section('F. Worker y calendario de ejecución');
+// ---------------------------------------------------------------------------
+define('TRAVIAN_SKIP_AUTOMATION_BOOTSTRAP',true);
+require_once dirname(__DIR__).'/GameEngine/Automation.php';
+
+$timezone = date_default_timezone_get();
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+$morning = strtotime('2026-08-11 09:30:00');
+$afterStart = strtotime('2026-08-11 10:30:00');
+check(Automation::nextTradeRouteTimestamp(10,$morning) === strtotime('2026-08-11 10:00:00'),
+	'antes del horario devuelve la ejecución del mismo día');
+check(Automation::nextTradeRouteTimestamp(10,$afterStart) === strtotime('2026-08-12 10:00:00'),
+	'después del horario devuelve directamente el día siguiente');
+check(Automation::nextTradeRouteTimestamp(10,strtotime('2026-08-08 10:00:00')) === strtotime('2026-08-09 10:00:00'),
+	'el cálculo siempre produce una única próxima ejecución futura');
+date_default_timezone_set($timezone);
+
+check(strpos($automationSource,'if($marketOnly) {') !== false
+	&& preg_match('/if\(\$marketOnly\)\s*\{\s*\$this->marketComplete\(\);\s*\$this->TradeRoute\(\);/s',$automationSource) === 1,
+	'el modo usado por market_worker procesa entregas y también dispara rutas');
+check(strpos($tradeRouteBody,'timestamp <= $time ORDER BY timestamp ASC') !== false,
+	'el segundo exacto del horario ya cuenta como vencido y se respeta el orden cronológico');
+
+// ---------------------------------------------------------------------------
+section('G. Reserva efectiva y reintentos');
+// ---------------------------------------------------------------------------
+check(strpos($marketSource,'$database->totalMerchantUsed($village->wid)') !== false
+	&& strpos($marketSource,'+ $database->getVillageRouteMerchantTotal($village->wid)') !== false,
+	'merchantAvail descuenta tanto movimientos reales como mercaderes reservados por rutas');
+check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,
+	'los fallos transitorios usan una espera acotada antes del siguiente intento');
 
 // ---------------------------------------------------------------------------
 echo "\n";

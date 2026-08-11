@@ -12,6 +12,7 @@ class Automation {
     // tiene, y el cupo se repone entero en 10 minutos.
     const OASIS_RAID_SHARE = 0.10;
     const OASIS_RAID_WINDOW = 600;
+    const TRADE_ROUTE_RETRY_DELAY = 60;
 
     private $bountyresarray = array();
     private $bountyinfoarray = array();
@@ -556,6 +557,7 @@ class Automation {
     public function __construct($marketOnly = false) {
         if($marketOnly) {
             $this->marketComplete();
+            $this->TradeRoute();
             return;
         }
         if(!file_exists("GameEngine/Prevention/cleardeleting.txt") or time() - filemtime("GameEngine/Prevention/cleardeleting.txt") > 50) {
@@ -1675,15 +1677,27 @@ class Automation {
         return array($pop, $cp);
     }
 
+    public static function nextTradeRouteTimestamp($startHour, $now = null) {
+        $startHour = max(0, min(23, (int)$startHour));
+        $now = $now === null ? time() : (int)$now;
+        $next = strtotime('today '.sprintf('%02d',$startHour).':00:00', $now);
+        if($next <= $now) {
+            $next = strtotime('tomorrow '.sprintf('%02d',$startHour).':00:00', $now);
+        }
+        return (int)$next;
+    }
+
     private function TradeRoute() {
         global $database;
         $time = time();
-        $q = "SELECT * FROM ".TB_PREFIX."route where timestamp < $time";
+        $q = "SELECT * FROM ".TB_PREFIX."route where timestamp <= $time ORDER BY timestamp ASC";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
-            // claimTradeRoute avanza el timestamp de forma atomica (WHERE timestamp = valor leido),
-            // asi solo un request concurrente gana la fila y ninguna ruta se entrega por duplicado.
-            if(!$database->claimTradeRoute($data['id'], $data['timestamp'])) {
+            // Se reclama la fila avanzándola directamente al próximo horario futuro.
+            // Así un segundo worker no puede duplicarla y tampoco se recuperan varios
+            // días atrasados en una ráfaga de envíos.
+            $nextTimestamp = self::nextTradeRouteTimestamp($data['start'], $time);
+            if(!$database->claimTradeRoute($data['id'], $data['timestamp'], $nextTimestamp)) {
                 continue;
             }
             $fromOwner = (int)$database->getVillageField($data['from'], "owner");
@@ -1694,7 +1708,13 @@ class Automation {
                 continue;
             }
             $targettribe = $database->getUserField($fromOwner, "tribe", 0);
-            $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
+            if(!$this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries'])) {
+                // Recursos o mercaderes pueden faltar transitoriamente. El reclamo ya
+                // evita duplicados; devolver la fila a una espera corta evita perder
+                // por completo el envío de este día.
+                $retryTimestamp = min($time + self::TRADE_ROUTE_RETRY_DELAY, $nextTimestamp - 1);
+                $database->retryTradeRoute($data['id'], $nextTimestamp, max($time, $retryTimestamp));
+            }
         }
     }
 

@@ -145,7 +145,11 @@ class Market {
         $this->sending = $database->getMovement(0,$village->wid,0); 
         $this->return  = $database->getMovement(2,$village->wid,1); 
         $this->merchant = ($building->getTypeLevel(17) > 0)? $bid17[$building->getTypeLevel(17)]['attri'] : 0; 
-        $this->used = $database->totalMerchantUsed($village->wid); 
+        // Los mercaderes asignados a rutas quedan reservados. Sin incluirlos aca,
+        // un envio manual podia ocuparlos justo antes del horario de la ruta y esta
+        // fallaba silenciosamente.
+        $this->used = $database->totalMerchantUsed($village->wid)
+            + $database->getVillageRouteMerchantTotal($village->wid);
         $this->onmarket = $database->getMarket($village->wid,0); 
         $this->maxcarry = ($session->tribe == 1)? 500 : (($session->tribe == 2)? 1000 : 750); 
 		$this->maxcarry *= TRADER_CAPACITY; 

@@ -2539,10 +2539,26 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-			function claimTradeRoute($id,$timestamp) {
+			function claimTradeRoute($id,$timestamp,$nextTimestamp) {
 				$id = (int) $id;
 				$timestamp = (int) $timestamp;
-				$q = "UPDATE " . TB_PREFIX . "route SET timestamp = timestamp + 86400 WHERE id = $id AND timestamp = $timestamp";
+				$nextTimestamp = (int) $nextTimestamp;
+				if($id <= 0 || $timestamp <= 0 || $nextTimestamp <= $timestamp) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "route SET timestamp = $nextTimestamp WHERE id = $id AND timestamp = $timestamp";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			function retryTradeRoute($id,$claimedTimestamp,$retryTimestamp) {
+				$id = (int) $id;
+				$claimedTimestamp = (int) $claimedTimestamp;
+				$retryTimestamp = (int) $retryTimestamp;
+				if($id <= 0 || $claimedTimestamp <= 0 || $retryTimestamp <= 0 || $retryTimestamp >= $claimedTimestamp) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "route SET timestamp = $retryTimestamp WHERE id = $id AND timestamp = $claimedTimestamp";
 				$result = mysqli_query($this->connection,$q);
 				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
