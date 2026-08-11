@@ -197,9 +197,9 @@ $paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last d
 		}
 		echo "<td class=\"al \" ><a href=\"allianz.php?aid=".$row['id']."\">".$database->getAllianceName($row['id'])."</a></td>";
        
-		echo "<td class=\"pla \" >".$totalusers."</td>";
-        echo "<td class=\"av \">".round($totalpoints/$totalusers)."</td>";
-    	echo "<td class=\"po lc\">".$totalpoints."</td></tr>";
+		echo "<td class=\"pla \" >".number_format($totalusers, 0, ',', '.')."</td>";
+        echo "<td class=\"av \">".number_format(round($totalpoints/$totalusers), 0, ',', '.')."</td>";
+		echo "<td class=\"po lc\">".number_format($totalpoints, 0, ',', '.')."</td></tr>";
 		$rank++;
 	}
 

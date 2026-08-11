@@ -49,7 +49,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-		echo "<td class=\"val lc\">".$row['ap']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -69,7 +69,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['ap']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
     if($session->alliance == 0){
@@ -100,7 +100,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-		echo "<td class=\"val lc\">".$row['dp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -121,7 +121,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['dp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
     if($session->alliance == 0){
@@ -156,7 +156,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-		echo "<td class=\"val lc\">".$row['clp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -176,7 +176,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['clp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
     if($session->alliance == 0){
@@ -208,7 +208,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-		echo "<td class=\"val lc\">".$row['RR']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -228,7 +228,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['RR']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
     if($session->alliance == 0){

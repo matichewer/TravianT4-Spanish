@@ -195,8 +195,8 @@ $paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last d
 		}else {
 			echo "<td class=\"al\" >-</td>";
 		}
-		echo "<td class=\"pop\" >".$row['totalpop']."</td>";
-        echo "<td class=\"vil\">".$row['totalvillages']."</td></tr>";
+		echo "<td class=\"pop\" >".number_format((int)$row['totalpop'], 0, ',', '.')."</td>";
+        echo "<td class=\"vil\">".number_format((int)$row['totalvillages'], 0, ',', '.')."</td></tr>";
     
 		$rank++;
 	}

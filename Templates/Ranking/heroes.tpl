@@ -166,7 +166,7 @@ $paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last d
 		echo "<td class=\"pla \" ><a href=\"spieler.php?uid=".$row['userid']."\">".$database->getUserField($row['userid'], 'username', 0)."</a></td>"; 
 		echo "<td class=\"lev \" >".$row['hlevel']."</td>";
         
-        echo "<td class=\"xp \">".$row['experience']."</td></tr>";
+        echo "<td class=\"xp \">".number_format((int)$row['experience'], 0, ',', '.')."</td></tr>";
     
 		$rank++;
 	}

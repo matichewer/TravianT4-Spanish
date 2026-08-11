@@ -165,7 +165,7 @@ $paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last d
 		}
         echo "<td class=\"vil \" ><a href=\"position_details.php?x=".$coor['x']."&amp;y=".$coor['y']."\">".$row['name']."</a></td>";
 		echo "<td class=\"pla \" ><a href=\"spieler.php?uid=".$row['owner']."\">".$database->getUserField($row['owner'], 'username', 0)."</a></td>"; 
-		echo "<td class=\"hab \" >".$row['pop']."</td>";
+		echo "<td class=\"hab \" >".number_format((int)$row['pop'], 0, ',', '.')."</td>";
         
         echo "<td class=\"coords \"><a class=\"\" href=\"position_details.php?x=".$coor['x']."&amp;y=".$coor['y']."\"><span class=\"coordinates coordinatesAligned\"><span class=\"coordinatesWrapper\"><span class=\"coordinateY\">(".$coor['x']."</span><span class=\"coordinatePipe\">|</span><span class=\"coordinateX\">".$coor['y'].")</span></span></span><span class=\"clear\"> </span></a></td></tr>";
     

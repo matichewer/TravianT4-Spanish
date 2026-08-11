@@ -187,9 +187,9 @@ $paginationDisplay .=  '<img alt="Última página" src="img/x.gif" class="last d
 			echo "<tr class=\"hover\"><td class=\"ra \" >".$rank.".</td>";
 		}
 		echo "<td class=\"pla \" ><a href=\"spieler.php?uid=".$row['userid']."\">".$row['username']."</a></td>";
-		echo "<td class=\"pop\" >".$row['totalpop']."</td>";
-		echo "<td class=\"vil\">".$row['totalvillages']."</td>";
-        echo "<td class=\"dp\">".$row['dpall']."</td></tr>";
+		echo "<td class=\"pop\" >".number_format((int)$row['totalpop'], 0, ',', '.')."</td>";
+		echo "<td class=\"vil\">".number_format((int)$row['totalvillages'], 0, ',', '.')."</td>";
+        echo "<td class=\"dp\">".number_format((int)$row['dpall'], 0, ',', '.')."</td></tr>";
     
 		$rank++;
 	}

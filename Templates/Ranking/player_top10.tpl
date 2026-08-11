@@ -52,7 +52,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-		echo "<td class=\"val lc\">".$row['ap']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -72,7 +72,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['ap']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -104,7 +104,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-		echo "<td class=\"val lc\">".$row['dp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -124,7 +124,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['dp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -159,7 +159,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-		echo "<td class=\"val lc\">".$row['clp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -179,7 +179,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['clp']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -211,7 +211,7 @@
 		}
 		echo "<td class=\"ra fc\">".$i++.".&nbsp;</td>";
 		echo "<td class=\"pla hl\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-		echo "<td class=\"val lc\">".$row['RR']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>
@@ -231,7 +231,7 @@
         } else {
         	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
         }
-		echo "<td class=\"val lc\">".$row['RR']."</td>";
+		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
 		echo "</tr>";
 	}
 ?>

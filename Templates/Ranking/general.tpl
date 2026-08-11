@@ -11,19 +11,19 @@
      <tbody>
      <tr>
       <th>Jugadores registrados</th>
-      <td><?php echo $users; ?></td>
+      <td><?php echo number_format($users, 0, ',', '.'); ?></td>
      </tr>
      <tr>
       <th>Jugadores activos</th>
       <td><?php
                    $active = mysql_num_rows(mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$statisticsAccessLimit." AND ".time()."-timestamp < (3600*24)"));
-                   echo $active; ?></td>
+                   echo number_format($active, 0, ',', '.'); ?></td>
      </tr>     <tr>
       <th>Jugadores en línea</th>
       <td><?php
 				$result = mysql_query("SELECT o.* FROM ".TB_PREFIX."online AS o INNER JOIN ".TB_PREFIX."users AS u ON u.username = o.name WHERE u.tribe <= 3 AND u.access < ".$statisticsAccessLimit);
 				$num_rows = mysql_num_rows($result);
-				echo $num_rows;
+				echo number_format($num_rows, 0, ',', '.');
 				?></td>
      </tr>
     </tbody>
@@ -40,7 +40,7 @@
      <tbody>
      <tr class="hover">
       <td>Romanos</td>
-      <td><?php echo $tribes[0]; ?></td>
+      <td><?php echo number_format($tribes[0], 0, ',', '.'); ?></td>
       <td><?php
 $percents = 100*($tribes[0] / $users);
 echo $percents = intval ($percents);
@@ -48,7 +48,7 @@ echo "%"; ?></td>
      </tr>
      <tr class="hover">
       <td>Germanos</td>
-      <td><?php echo $tribes[1]; ?></td>
+      <td><?php echo number_format($tribes[1], 0, ',', '.'); ?></td>
       <td><?php
 $percents = 100*($tribes[1] / $users);
 echo $percents = intval ($percents);
@@ -56,7 +56,7 @@ echo "%"; ?></td>
      </tr>
      <tr class="hover">
       <td>Galos</td>
-      <td><?php echo $tribes[2]; ?></td>
+      <td><?php echo number_format($tribes[2], 0, ',', '.'); ?></td>
       <td><?php
 $percents = 100*($tribes[2] / $users);
 echo $percents = intval ($percents);
@@ -76,56 +76,56 @@ echo "%"; ?></td>
      </thead>
         <tbody>
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M"); ?></td>
             </tr>
 			
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*1)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*1)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*1)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*1)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*1)); ?></td>
             </tr>
 
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*2)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*2)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*2)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*2)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*2)); ?></td>
             </tr>
 
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*3)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*3)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*3)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*3)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*3)); ?></td>
             </tr>
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*4)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*4)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*4)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*4)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*4)); ?></td>
             </tr>
 
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*5)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*5)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*5)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*5)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*5)); ?></td>
             </tr>
 
             <tr class="hover">
-                <td><?php echo $database->getAttackByDate(time()-(86400*6)); ?></td>
+                <td><?php echo number_format($database->getAttackByDate(time()-(86400*6)), 0, ',', '.'); ?></td>
 
-                <td><?php echo $database->getAttackCasualties(time()-(86400*6)); ?></td>
+                <td><?php echo number_format($database->getAttackCasualties(time()-(86400*6)), 0, ',', '.'); ?></td>
 
                 <td><?php echo date("j. M",time()-(86400*6)); ?></td>
             </tr>
