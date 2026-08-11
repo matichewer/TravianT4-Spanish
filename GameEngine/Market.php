@@ -14,6 +14,7 @@ class Market {
     // quedaba en null y disparaba warnings de count() al abrir el mercado por una
     // pestaña que no carga los datos.
     public $onsale = array(), $onmarket = array(), $sending = array(), $recieving = array(), $return = array();
+    public $offerDraft = array();
     public $maxcarry,$merchant,$used; 
      
     public function procMarket($post) { 
@@ -151,6 +152,9 @@ class Market {
         $this->used = $database->totalMerchantUsed($village->wid)
             + $database->getVillageRouteMerchantTotal($village->wid);
         $this->onmarket = $database->getMarket($village->wid,0); 
+        if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
+            $this->offerDraft = $_SESSION['marketOfferDraft'][$village->wid];
+        }
         $this->maxcarry = ($session->tribe == 1)? 500 : (($session->tribe == 2)? 1000 : 750); 
 		$this->maxcarry *= TRADER_CAPACITY; 
         if($building->getTypeLevel(28) != 0) { 
@@ -217,6 +221,18 @@ class Market {
             $time = $hours * 3600;
         }
 
+        $playerAlliance = (int)$session->userinfo['alliance'];
+        $alliance = (isset($post['ally']) && (string)$post['ally'] === '1' && $playerAlliance > 0) ? $playerAlliance : 0;
+        $_SESSION['marketOfferDraft'][$village->wid] = array(
+            'gtype' => $gtype,
+            'gamt' => $gamt,
+            'wtype' => $wtype,
+            'wamt' => $wamt,
+            'limited' => $time > 0,
+            'hours' => $time > 0 ? (int)($time / 3600) : 2,
+            'alliance' => $alliance > 0
+        );
+
         $resource = $this->resourceArray($gtype,$gamt);
         $reqMerc = $this->requiredMerchants($gamt);
         if($reqMerc == 0 || $reqMerc > $this->merchantAvail()) {
@@ -224,8 +240,6 @@ class Market {
         }
 
         if($database->deductResourcesIfAvailable($village->wid,$resource[1],$resource[2],$resource[3],$resource[4])) {
-            $playerAlliance = (int)$session->userinfo['alliance'];
-            $alliance = (isset($post['ally']) && (string)$post['ally'] === '1' && $playerAlliance > 0) ? $playerAlliance : 0;
             $offerId = $database->addMarket($village->wid,$gtype,$gamt,$wtype,$wamt,$time,$alliance,$reqMerc,0);
             if(!$offerId) {
                 $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);

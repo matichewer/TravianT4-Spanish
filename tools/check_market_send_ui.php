@@ -21,6 +21,8 @@ function checkMarketUi($condition,$message) {
 }
 
 $template = file_get_contents(dirname(__DIR__).'/Templates/Build/17.tpl');
+$offerTemplate = file_get_contents(dirname(__DIR__).'/Templates/Build/17_2.tpl');
+$marketEngine = file_get_contents(dirname(__DIR__).'/GameEngine/Market.php');
 
 checkMarketUi(strpos($template,'function selectedResources(excludeResNr)') !== false,
 	'el formulario suma los otros tres recursos seleccionados');
@@ -34,8 +36,21 @@ checkMarketUi(substr_count($template,'updateQuickAddState();') >= 3,
 	'el color se actualiza al cargar la página, sumar o editar recursos');
 checkMarketUi(strpos($template,'$canSend = $market->maxcarry * $market->merchantAvail();') !== false,
 	'la confirmación del formulario conserva el límite total del lado del servidor');
-checkMarketUi(strpos(file_get_contents(dirname(__DIR__).'/GameEngine/Market.php'),'$reqMerc > $this->merchantAvail()') !== false,
+checkMarketUi(strpos($marketEngine,'$reqMerc > $this->merchantAvail()') !== false,
 	'el envío definitivo también rechaza pedidos sin mercaderes suficientes');
+checkMarketUi(strpos($marketEngine,"\$_SESSION['marketOfferDraft'][\$village->wid]") !== false,
+	'la última oferta se conserva por aldea después de la redirección');
+checkMarketUi(strpos($offerTemplate,"(int)\$offerDraft['gamt']") !== false
+	&& strpos($offerTemplate,"(int)\$offerDraft['wamt']") !== false,
+	'el formulario vuelve a cargar las dos cantidades de la oferta');
+checkMarketUi(substr_count($offerTemplate,"\$offerDraft['gtype']") === 4
+	&& substr_count($offerTemplate,"\$offerDraft['wtype']") === 4,
+	'el formulario vuelve a seleccionar los recursos ofrecido y buscado');
+checkMarketUi(strpos($offerTemplate,"\$offerDraft['limited']") !== false
+	&& strpos($offerTemplate,"\$offerDraft['alliance']") !== false,
+	'el formulario conserva los límites de tiempo y alianza');
+checkMarketUi(strpos($offerTemplate,'name="a" value="<?php echo $session->mchecker; ?>"') !== false,
+	'cada oferta repetida sigue usando el token de seguridad actual');
 
 if(empty($fails)) {
 	echo "Market send UI checks passed ($checks comprobaciones).\n";

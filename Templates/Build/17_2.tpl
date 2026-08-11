@@ -14,6 +14,17 @@ include("upgrade.tpl");
 include("17_menu.tpl");
 ?>
 <div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Mercaderes <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div></div><div class="clear"></div>
+<?php
+$offerDraft = array_merge(array(
+	'gtype' => 1,
+	'gamt' => '',
+	'wtype' => 2,
+	'wamt' => '',
+	'limited' => false,
+	'hours' => 2,
+	'alliance' => false
+),$market->offerDraft);
+?>
 
 <form method="POST" name="snd" action="build.php"> 
 			<input type="hidden" name="id" value="<?php echo (int)$id; ?>">
@@ -25,32 +36,32 @@ include("17_menu.tpl");
 <tr> 
 	<th>
 Ofrezco</th> 
-	<td class="val"><input class="text" tabindex="1" name="m1" value="" maxlength="6" /></td> 
+	<td class="val"><input class="text" tabindex="1" name="m1" value="<?php echo (int)$offerDraft['gamt'] ?: ''; ?>" maxlength="6" /></td>
 	<td class="res"> 
 		<select name="rid1" tabindex="2" class="dropdown"> 
-			<option value="1" selected="selected">Madera</option> 
-			<option value="2">Barro</option> 
-			<option value="3">Hierro</option> 
-			<option value="4">Cereal</option> 
+			<option value="1"<?php if((int)$offerDraft['gtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
+			<option value="2"<?php if((int)$offerDraft['gtype'] === 2) echo ' selected="selected"'; ?>>Barro</option>
+			<option value="3"<?php if((int)$offerDraft['gtype'] === 3) echo ' selected="selected"'; ?>>Hierro</option>
+			<option value="4"<?php if((int)$offerDraft['gtype'] === 4) echo ' selected="selected"'; ?>>Cereal</option>
 		</select> 
 	</td> 
-	<td class="tra"><input class="check" type="checkbox" tabindex="5" name="d1" value="1" /> Tiempo máximo: <input class="text" tabindex="6" name="d2" value="2" maxlength="2" /> horas</td>
+	<td class="tra"><input class="check" type="checkbox" tabindex="5" name="d1" value="1"<?php if($offerDraft['limited']) echo ' checked="checked"'; ?> /> Tiempo máximo: <input class="text" tabindex="6" name="d2" value="<?php echo (int)$offerDraft['hours']; ?>" maxlength="2" /> horas</td>
 </tr> 
 <tr> 
 	<th>Busco</th> 
-	<td class="val"><input class="text" tabindex="3" name="m2" value="" maxlength="6" /></td> 
+	<td class="val"><input class="text" tabindex="3" name="m2" value="<?php echo (int)$offerDraft['wamt'] ?: ''; ?>" maxlength="6" /></td>
 	<td class="res"> 
 		<select name="rid2" tabindex="4" class="dropdown"> 
-			<option value="1">Madera</option> 
-			<option value="2" selected="selected">Barro</option> 
-			<option value="3">Hierro</option> 
-			<option value="4">Cereal</option> 
+			<option value="1"<?php if((int)$offerDraft['wtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
+			<option value="2"<?php if((int)$offerDraft['wtype'] === 2) echo ' selected="selected"'; ?>>Barro</option>
+			<option value="3"<?php if((int)$offerDraft['wtype'] === 3) echo ' selected="selected"'; ?>>Hierro</option>
+			<option value="4"<?php if((int)$offerDraft['wtype'] === 4) echo ' selected="selected"'; ?>>Cereal</option>
 		</select> 
 	</td> 
 	<td class="al">
     <?php 
     if((int)$session->alliance > 0) {
-    echo "<label><input class=\"check\" type=\"checkbox\" tabindex=\"7\" name=\"ally\" value=\"1\" /> Solo para miembros de mi alianza</label>";
+    echo '<label><input class="check" type="checkbox" tabindex="7" name="ally" value="1"'.($offerDraft['alliance'] ? ' checked="checked"' : '').' /> Solo para miembros de mi alianza</label>';
     }
     ?> 
     </td>
