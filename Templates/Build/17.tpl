@@ -288,17 +288,40 @@ if($marketFormType === 'check'){
 	var haendler = <?php echo $market->merchantAvail(); ?>;
 	var carry = <?php echo $market->maxcarry; ?>;
 	var merchantRes = new Array(0,0,0,0,0);
+	function selectedResources(excludeResNr)
+	{
+		var total = 0;
+		for (var i = 1; i <= 4; i++)
+		{
+			if (i == excludeResNr)
+			{
+				continue;
+			}
+			var value = parseInt($('r' + i).value);
+			if (!isNaN(value) && value > 0)
+			{
+				total += value;
+			}
+		}
+		return total;
+	}
 	function add_res(resNr)
 	{
-		currentRes = resources['l' + resNr].value;
-		merchantMax = haendler * carry;
-		merchantRes[resNr] = res_max(merchantRes[resNr], currentRes , merchantMax , carry);
+		var currentRes = resources['l' + resNr].value;
+		var merchantMax = Math.max(0, haendler * carry - selectedResources(resNr));
+		var inputRes = parseInt($('r' + resNr).value);
+		if (isNaN(inputRes))
+		{
+			inputRes = 0;
+		}
+		merchantRes[resNr] = res_max(inputRes, currentRes, merchantMax, carry);
 		$('r' + resNr).value = merchantRes[resNr];
 	}
 	function upd_res(resNr, max)
 	{
-		currentRes = resources['l' + resNr].value;
-		merchantMax = haendler * carry;
+		var currentRes = resources['l' + resNr].value;
+		var merchantMax = Math.max(0, haendler * carry - selectedResources(resNr));
+		var inputRes;
 		if (max)
 		{
 			inputRes = currentRes;
@@ -311,7 +334,7 @@ if($marketFormType === 'check'){
 		{
 			inputRes = 0;
 		}
-		merchantRes[resNr] = res_max(parseInt(inputRes), currentRes , merchantMax , 0);
+		merchantRes[resNr] = res_max(parseInt(inputRes), currentRes, merchantMax, 0);
 		$('r' + resNr).value = merchantRes[resNr];
 	}
 	function res_max(_merchantRes, _actualRes , _merchantMax , _carry)
