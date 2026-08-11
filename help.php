@@ -33,7 +33,10 @@ include "Templates/html.tpl";
 
 <div class="helpInfoBlock">
 	<div class="helpHeadLine">Enlaces útiles</div>
-	<div class="helpText"><a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas</a></div>
+	<div class="helpText">
+		<a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas</a><br />
+		<a class="helpUsefulLink" href="building_stats.php">Edificios</a>
+	</div>
 </div>
 <div class="helpInfoBlock helpInfoLinkLess helpCredits">
 	<div class="helpHeadLine"><?php echo $lang['HELP1']['Partie_7']; ?></div>
