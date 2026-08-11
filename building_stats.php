@@ -98,7 +98,7 @@ include "Templates/html.tpl";
 								$buildingStatsEffectLabel = isset($buildingStatsAttributeLabels[$buildingStatsGid]) ? $buildingStatsAttributeLabels[$buildingStatsGid] : 'Efecto';
 							?>
 							<section class="buildingStatsSection" id="edificio-<?php echo $buildingStatsGid; ?>">
-								<h2><span class="building g<?php echo $buildingStatsGid; ?>" aria-hidden="true"></span><?php echo $buildingStatsBuilding['name']; ?> <small>(GID <?php echo $buildingStatsGid; ?>)</small></h2>
+								<h2><span class="building g<?php echo $buildingStatsGid; ?>" aria-hidden="true"></span><?php echo $buildingStatsBuilding['name']; ?></h2>
 								<div class="troopStatsTableWrapper">
 									<table class="troopStatsTable buildingStatsTable" cellpadding="1" cellspacing="1">
 										<thead><tr>
