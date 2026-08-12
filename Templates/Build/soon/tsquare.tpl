@@ -10,7 +10,7 @@ $uprequire = $building->resourceRequired($id,$bid);
 
 
 	</a>
-	En la plaza de torneos tus tropas pueden entrenar su resistencia. Cuanto más se mejore el edificio, más rápido viajarán tus tropas en distancias largas (distancia mínima de 20 casillas).</div>
+	En la plaza de torneos tus tropas pueden entrenar su resistencia. Cuanto más se mejore el edificio, más rápido viajarán tus tropas en distancias de más de <?php echo defined('TS_THRESHOLD') ? TS_THRESHOLD : 30; ?> casillas.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">
@@ -31,7 +31,7 @@ $uprequire = $building->resourceRequired($id,$bid);
 	<div class="contractLink">
     <div class="contractText">Necesario:</div>
     <span class="buildingCondition">
-    <a href="#" onclick="return Travian.Game.iPopup(15,4, 'gid');">Plaza de reuniones</a> <span>Nivel 15</span></span>
+    <a href="#" onclick="return Travian.Game.iPopup(16,4, 'gid');">Plaza de reuniones</a> <span>Nivel 15</span></span>
     </div>
 	<div class="clear"></div>
 </div>

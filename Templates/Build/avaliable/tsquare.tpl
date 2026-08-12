@@ -3,7 +3,7 @@
 	<a href="#" onclick="return Travian.Game.iPopup(14,4);" class="build_logo">
 		<img class="building big white g14" src="img/x.gif" alt="Plaza de torneos">
 	</a>
-	En la plaza de torneos tus tropas pueden mejorar su resistencia. Cuanto mayor sea el nivel, más rápido se moverán tus tropas a más de 20 casillas de distancia.</div>
+	En la plaza de torneos tus tropas pueden mejorar su resistencia. Cuanto mayor sea el nivel, más rápido se moverán tus tropas a más de <?php echo defined('TS_THRESHOLD') ? TS_THRESHOLD : 30; ?> casillas de distancia.</div>
 		<?php
         $_GET['bid'] = 14;
         include("availupgrade.tpl");

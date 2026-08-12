@@ -114,8 +114,7 @@ if ($buildingHelpType === 'rally-point') {
 		1 => 'Configura una bonificación de velocidad para la parte de los viajes que supera '.(defined('TS_THRESHOLD') ? TS_THRESHOLD : 30).' casillas.',
 		20 => 'Alcanza la bonificación máxima configurada: 300% de velocidad en el tramo de larga distancia.'
 	);
-	$buildingHelpNote = 'Cada nivel añade 10 puntos porcentuales: nivel 1 configura 110%, nivel 10 configura 200% y nivel 20 configura 300%. Atención: el cálculo principal de salida de tropas tiene esta bonificación desactivada actualmente en el código del servidor.';
-	$buildingHelpWarning = true;
+	$buildingHelpNote = 'Cada nivel añade 10 puntos porcentuales: nivel 1 configura 110%, nivel 10 configura 200% y nivel 20 configura 300%. La bonificación se aplica tanto a la ida como al regreso y solo acelera el tramo que supera el umbral.';
 } elseif ($buildingHelpType === 'horse-drinking-trough') {
 	$buildingHelpTitle = 'Ventajas del Abrevadero';
 	$buildingHelpItems = array(

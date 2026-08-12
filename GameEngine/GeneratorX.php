@@ -21,8 +21,11 @@ if(!function_exists('tournamentSquareSpeedFactor')){
 	// Conserva la fórmula histórica y su umbral propio (TS_THRESHOLD, distinto al de
 	// las botas de mercenario) para no cambiarle los tiempos a quien ya la construyó.
 	function tournamentSquareSpeedFactor($originCoor, $distance){
-		global $bid14, $database, $generator;
-		if($distance <= TS_THRESHOLD || !is_array($originCoor) || !isset($originCoor['x'], $originCoor['y'])){
+		global $bid14, $database;
+		$distance = is_numeric($distance) ? (float)$distance : 0;
+		if(!is_finite($distance) || $distance <= TS_THRESHOLD || !is_array($originCoor)
+			|| !isset($originCoor['x'], $originCoor['y'])
+			|| !is_numeric($originCoor['x']) || !is_numeric($originCoor['y'])){
 			return 1;
 		}
 		if(!is_object($database) || !method_exists($database, 'getResourceLevel')
@@ -32,7 +35,7 @@ if(!function_exists('tournamentSquareSpeedFactor')){
 		// La aldea se resuelve por coordenada contra `wdata` en vez de calcular el id
 		// con getBaseID(): esa fórmula depende de que WORLD_MAX coincida con el radio
 		// real del mundo generado, y si no coinciden devuelve el id de otra aldea.
-		$originId = (int)$database->getVilWref($originCoor['x'], $originCoor['y']);
+		$originId = (int)$database->getVilWref((int)$originCoor['x'], (int)$originCoor['y']);
 		if($originId<=0){
 			return 1;
 		}
@@ -44,7 +47,9 @@ if(!function_exists('tournamentSquareSpeedFactor')){
 		for($field = 19; $field <= 40; $field++){
 			if(isset($fields['f'.$field.'t']) && (int)$fields['f'.$field.'t'] === 14){
 				$level = (int)$fields['f'.$field];
-				$attri = isset($bid14[$level]['attri']) ? (int)$bid14[$level]['attri'] : 0;
+				// Una base dañada no debería poder quitar el bono de una Plaza válida si
+				// aparecen dos edificios del mismo tipo: se conserva el nivel efectivo mayor.
+				$attri = max($attri, isset($bid14[$level]['attri']) ? (int)$bid14[$level]['attri'] : 0);
 			}
 		}
 		if($attri <= 0){

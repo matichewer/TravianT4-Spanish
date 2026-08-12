@@ -19,10 +19,10 @@ if(!defined('WORLD_MAX')){ define('WORLD_MAX', 200); }
 if(!defined('INCREASE_SPEED')){ define('INCREASE_SPEED', 1); }
 if(!defined('TS_THRESHOLD')){ define('TS_THRESHOLD', 30); }
 
-// bid14: el `attri` de la Plaza de Torneos va de 110 (nivel 1) a 200 (nivel 10).
+// bid14: el `attri` de la Plaza de Torneos va de 110 (nivel 1) a 300 (nivel 20).
 $bid14 = array();
 for($level = 1; $level <= 20; $level++){
-	$bid14[$level] = array('attri' => min(200, 100 + $level * 10));
+	$bid14[$level] = array('attri' => 100 + $level * 10);
 }
 
 class FakeTsDatabase
@@ -76,6 +76,39 @@ $expected = (TS_THRESHOLD + (100 - TS_THRESHOLD) * 200 / 100) / 100;
 tsAssert(abs($factor-$expected)<0.000001, 'The Tournament Square factor changed');
 tsAssert($factor>1, 'The Tournament Square made troops slower');
 
+// Todos los niveles deben crecer de forma monótona y el nivel 20 debe llegar a 300%.
+$previousFactor = 1;
+for($level = 1; $level <= 20; $level++){
+	$withSquare['f27'] = $level;
+	$database->fields = array($originId => $withSquare);
+	$levelFactor = tournamentSquareSpeedFactor($origin, 100);
+	$levelExpected = (TS_THRESHOLD + (100 - TS_THRESHOLD) * (100 + $level * 10) / 100) / 100;
+	tsAssert(abs($levelFactor-$levelExpected)<0.000001, "Level $level produced an incorrect factor");
+	tsAssert($levelFactor>$previousFactor, "Level $level did not improve on the previous level");
+	$previousFactor = $levelFactor;
+}
+tsAssert(abs($previousFactor-2.4)<0.000001, 'Level 20 did not apply 300% to the long-distance leg');
+
+// Datos corruptos o entradas no finitas no pueden producir bonus, warnings ni divisiones inválidas.
+$withSquare['f27'] = 0;
+$database->fields = array($originId => $withSquare);
+tsAssert(tournamentSquareSpeedFactor($origin, 100)===1, 'A level-zero Tournament Square got a bonus');
+$withSquare['f27'] = 21;
+$database->fields = array($originId => $withSquare);
+tsAssert(tournamentSquareSpeedFactor($origin, 100)===1, 'An out-of-range Tournament Square got a bonus');
+tsAssert(tournamentSquareSpeedFactor(array('x' => 'bad', 'y' => 0), 100)===1, 'Invalid coordinates got a bonus');
+tsAssert(tournamentSquareSpeedFactor($origin, INF)===1, 'An infinite distance got a bonus');
+tsAssert(tournamentSquareSpeedFactor($origin, NAN)===1, 'A NaN distance got a bonus');
+
+// Si una base dañada contiene dos plazas, se toma la válida de mayor nivel sin depender
+// del orden de los huecos.
+$withSquare['f20t'] = 14;
+$withSquare['f20'] = 20;
+$withSquare['f27'] = 1;
+$database->fields = array($originId => $withSquare);
+tsAssert(abs(tournamentSquareSpeedFactor($origin, 100)-2.4)<0.000001, 'Duplicate squares did not keep the highest valid bonus');
+$withSquare['f20t'] = 1;
+
 // Una aldea que no existe no puede romper el cálculo ni regalar bono.
 $database->fields = array();
 tsAssert(tournamentSquareSpeedFactor($origin, 100)===1, 'A village missing from fdata produced a bonus');
@@ -85,19 +118,29 @@ $database->villages = array('0:0' => $originId);
 
 // El viaje completo: con Plaza de Torneos tarda menos, y por debajo del umbral no.
 $database->fields = array($originId => $withSquare);
+$withSquare['f27'] = 10;
+$database->fields = array($originId => $withSquare);
 $far = array('x' => 100, 'y' => 0);
 $near = array('x' => 10, 'y' => 0);
 $withBonus = $generator->procDistanceTime($origin, $far, 10, 1);
+$nearWithBonus = $generator->procDistanceTime($origin, $near, 10, 1);
 $database->fields = array($originId => $withoutSquare);
 $without = $generator->procDistanceTime($origin, $far, 10, 1);
+$nearWithoutBonus = $generator->procDistanceTime($origin, $near, 10, 1);
 tsAssert($withBonus<$without, 'The Tournament Square did not shorten an outbound trip');
-tsAssert($generator->procDistanceTime($origin, $far, 300, 0)===$generator->procDistanceTime($origin, $far, 300, 0), 'Resource movements became unstable');
-
+tsAssert($nearWithBonus===$nearWithoutBonus, 'The Tournament Square shortened a trip below the threshold');
 $database->fields = array($originId => $withSquare);
-tsAssert(
-	$generator->procDistanceTime($origin, $near, 10, 1)===$generator->procDistanceTime($origin, $near, 10, 1),
-	'Short trips became unstable'
-);
+$merchantWithSquare = $generator->procDistanceTime($origin, $far, 300, 0);
+$database->fields = array($originId => $withoutSquare);
+$merchantWithoutSquare = $generator->procDistanceTime($origin, $far, 300, 0);
+tsAssert($merchantWithSquare===$merchantWithoutSquare, 'The Tournament Square affected merchants');
+
+// El mapa envuelve sus bordes: de x=200 a x=-200 hay una sola casilla.
+$edgeOrigin = array('x' => WORLD_MAX, 'y' => 0);
+$edgeTarget = array('x' => -WORLD_MAX, 'y' => 0);
+$database->villages = array(WORLD_MAX.':0' => $originId);
+$database->fields = array($originId => $withSquare);
+tsAssert($generator->procDistanceTime($edgeOrigin, $edgeTarget, 10, 1)===360.0, 'Map wrapping produced the wrong one-tile trip');
 
 // Ninguna de las dos copias puede volver a tener su propia versión del bono.
 $sources = array(
