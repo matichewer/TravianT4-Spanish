@@ -425,6 +425,25 @@ if(!function_exists('travianCultureThresholds')) {
 		return isset($thresholds[$villageCount]) ? (int)$thresholds[$villageCount] : null;
 	}
 
+	/*
+	 * One-time existing-world normalization. It is deliberately a cap rather than
+	 * an assignment: moving to a stricter curve must not grant culture to an account
+	 * that has not yet earned the allowance for its next village.
+	 */
+	function travianCultureNormalization($culturePoints, $ownedVillages, $mode) {
+		$culturePoints = max(0, (int)$culturePoints);
+		$ownedVillages = max(0, (int)$ownedVillages);
+		$cap = travianCultureRequiredForVillageCount($ownedVillages + 1, $mode);
+
+		return array(
+			'currentPoints' => $culturePoints,
+			'ownedVillages' => $ownedVillages,
+			'cap' => $cap,
+			'newPoints' => $cap === null ? $culturePoints : min($culturePoints, $cap),
+			'changed' => $cap !== null && $culturePoints > $cap
+		);
+	}
+
 	function travianCultureExpansionEligibility($culturePoints, $ownedVillages, $pendingSettlements, $mode) {
 		$culturePoints = max(0, (int)$culturePoints);
 		$ownedVillages = max(0, (int)$ownedVillages);

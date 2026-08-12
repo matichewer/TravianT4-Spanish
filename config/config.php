@@ -92,9 +92,10 @@ define("CRANNY_CAPACITY","1");
 define("TRAPPER_CAPACITY","1");
 
 // ***** Village Expand
+// 2 = normal village expanding
 // 1 = slow village expanding - more Cultural Points needed for every new village
 // 0 = fast village expanding - less Cultural Points needed for every new village
-define("CP", 2);
+define("CP", 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

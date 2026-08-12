@@ -12,7 +12,7 @@ define('U0','Hero');
 define('BANNED',0);
 define('SPEED',1);
 define('TRAPPER_CAPACITY',1);
-define('CP',2);
+define('CP',1);
 
 require dirname(__DIR__).'/GameEngine/Data/unitdata.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
@@ -174,31 +174,31 @@ settlerAssert(
 	'Negative settler quantities must be rejected.'
 );
 
-$eligibility = travianCultureExpansionEligibility(4600,2,0,CP);
-settlerAssert($eligibility['eligible'] && $eligibility['nextVillageCount'] === 3, '4,600 PC must allow a third village.');
-$eligibility = travianCultureExpansionEligibility(4600,2,1,CP);
-settlerAssert(!$eligibility['eligible'] && $eligibility['requiredPoints'] === 12000, 'A pending third village must reserve capacity account-wide.');
-$eligibility = travianCultureExpansionEligibility(12000,2,1,CP);
-settlerAssert($eligibility['eligible'], '12,000 PC must allow owned and pending villages plus a fourth village.');
+$eligibility = travianCultureExpansionEligibility(8000,2,0,CP);
+settlerAssert($eligibility['eligible'] && $eligibility['nextVillageCount'] === 3, '8,000 PC must allow a third village on the slow curve.');
+$eligibility = travianCultureExpansionEligibility(8000,2,1,CP);
+settlerAssert(!$eligibility['eligible'] && $eligibility['requiredPoints'] === 20000, 'A pending third village must reserve slow-curve capacity account-wide.');
+$eligibility = travianCultureExpansionEligibility(20000,2,1,CP);
+settlerAssert($eligibility['eligible'], '20,000 PC must allow owned and pending villages plus a fourth village.');
 
-$cultureStatus = travianCultureStatus(1016,1,CP);
+$cultureStatus = travianCultureStatus(2016,1,CP);
 settlerAssert(
 	$cultureStatus['cultureCapacity'] === 2
-		&& $cultureStatus['currentRequiredPoints'] === 1000
-		&& $cultureStatus['nextRequiredPoints'] === 4600,
+		&& $cultureStatus['currentRequiredPoints'] === 2000
+		&& $cultureStatus['nextRequiredPoints'] === 8000,
 	'Culture progress must use the thresholds for the current and next village capacity.'
 );
 settlerAssert(
 	$cultureStatus['progressPoints'] === 16
-		&& $cultureStatus['progressRequiredPoints'] === 3600
-		&& abs($cultureStatus['progressPercent'] - (16 / 3600 * 100)) < 0.0001,
+		&& $cultureStatus['progressRequiredPoints'] === 6000
+		&& abs($cultureStatus['progressPercent'] - (16 / 6000 * 100)) < 0.0001,
 	'Culture progress must measure only the current threshold segment.'
 );
-$cultureStatus = travianCultureStatus(4600,2,CP);
+$cultureStatus = travianCultureStatus(8000,2,CP);
 settlerAssert(
 	$cultureStatus['cultureCapacity'] === 3
 		&& $cultureStatus['progressPoints'] === 0
-		&& $cultureStatus['progressRequiredPoints'] === 7400
+		&& $cultureStatus['progressRequiredPoints'] === 12000
 		&& (float)$cultureStatus['progressPercent'] === 0.0,
 	'Culture progress must restart when a new village capacity is unlocked.'
 );
@@ -236,7 +236,7 @@ class SettlerFoundingDatabaseStub {
 	}
 
 	public function getUserField($uid, $field, $mode) {
-		return $field === 'cp' ? 4600 : 0;
+		return $field === 'cp' ? 8000 : 0;
 	}
 
 	public function getVillagesID($uid) {
