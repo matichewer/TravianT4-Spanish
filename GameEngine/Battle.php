@@ -283,6 +283,10 @@ class Battle {
 		if(!is_array($attackerUnits) || !is_array($defenderUnits)) {
 			return false;
 		}
+		$attackerUpgrades = $database->getABTech($villageId);
+		if(!is_array($attackerUpgrades)) {
+			$attackerUpgrades = array();
+		}
 
 		$input = array(
 			'a1_v' => $attackerTribe,
@@ -297,6 +301,12 @@ class Battle {
 			$input['a1_'.$position] = !in_array($unitId, $scoutingUnits, true) && isset($attackerUnits[$unitField])
 				? max(0, (int)$attackerUnits[$unitField])
 				: 0;
+			if($position <= 8) {
+				$upgradeField = 'b'.$position;
+				$input['f1_'.$position] = isset($attackerUpgrades[$upgradeField])
+					? max(0, min(20, (int)$attackerUpgrades[$upgradeField]))
+					: 0;
+			}
 		}
 
 		$input['a1_hero'] = 1;

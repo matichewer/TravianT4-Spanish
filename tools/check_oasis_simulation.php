@@ -14,7 +14,9 @@ class OasisSimulationDatabaseStub {
 	public $tiles = array();
 	public $units = array();
 	public $hero = array();
+	public $upgrades = array();
 	public $unitReads = array();
+	public $upgradeReads = array();
 
 	public function getOMInfo($id) {
 		return isset($this->tiles[$id]) ? $this->tiles[$id] : false;
@@ -27,6 +29,11 @@ class OasisSimulationDatabaseStub {
 
 	public function getHeroData($uid) {
 		return $this->hero;
+	}
+
+	public function getABTech($id) {
+		$this->upgradeReads[] = (int)$id;
+		return $this->upgrades;
 	}
 }
 
@@ -80,6 +87,16 @@ $database->hero = array(
 	'health' => 77,
 	'offBonus' => 25
 );
+$database->upgrades = array(
+	'b1' => 3,
+	'b2' => 7,
+	'b3' => 0,
+	'b4' => 12,
+	'b5' => 20,
+	'b6' => 2,
+	'b7' => 6,
+	'b8' => 99
+);
 
 require dirname(__DIR__).'/GameEngine/Data/unitdata.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
@@ -99,6 +116,11 @@ oasisSimulationAssert(is_array($input), 'acepta un oasis desocupado');
 oasisSimulationAssert($input['a1_v'] === 2 && $input['a2_v4'] === 1 && $input['ktyp'] === 1, 'configura Germanos contra Naturaleza como saqueo');
 oasisSimulationAssert($input['a1_1'] === 12 && $input['a1_2'] === 7 && $input['a1_10'] === 3, 'mapea todas las tropas de la aldea seleccionada');
 oasisSimulationAssert($input['a1_4'] === 0, 'excluye a los Emisarios germanos');
+oasisSimulationAssert(
+	$input['f1_1'] === 3 && $input['f1_2'] === 7 && $input['f1_4'] === 12 && $input['f1_8'] === 20,
+	'precarga y limita los niveles de herrería de la aldea seleccionada'
+);
+oasisSimulationAssert($database->upgradeReads === array(100), 'lee las mejoras de la aldea atacante');
 oasisSimulationAssert($input['a1_hero'] === 1, 'incluye al héroe por defecto');
 oasisSimulationAssert($input['a2_31'] === 3 && $input['a2_33'] === 4 && $input['a2_40'] === 2, 'mapea los animales actuales del oasis');
 
@@ -119,10 +141,12 @@ foreach($scoutCases as $tribe => $case) {
 $session->tribe = 2;
 
 $database->unitReads = array();
+$database->upgradeReads = array();
 oasisSimulationAssert($battle->getOasisSimulationInput(901) === false, 'rechaza un oasis ocupado');
 oasisSimulationAssert($battle->getOasisSimulationInput(902) === false, 'rechaza una casilla que no es oasis');
 oasisSimulationAssert($battle->getOasisSimulationInput(999) === false, 'rechaza un objetivo inexistente');
 oasisSimulationAssert(count($database->unitReads) === 0, 'no lee unidades de objetivos inválidos');
+oasisSimulationAssert(count($database->upgradeReads) === 0, 'no lee mejoras para objetivos inválidos');
 
 $database->units[100]['hero'] = 0;
 $withoutHero = $battle->getOasisSimulationInput(900);
@@ -138,6 +162,7 @@ $form->valuearray = array();
 $battle->procSim($input);
 oasisSimulationAssert(isset($_POST['result']), 'calcula automáticamente el escenario precargado');
 oasisSimulationAssert($form->valuearray['a1_1'] === 12 && $form->valuearray['a2_31'] === 3, 'conserva las cantidades precargadas');
+oasisSimulationAssert($form->valuearray['f1_1'] === 3 && $form->valuearray['f1_8'] === 20, 'conserva las mejoras precargadas al simular');
 
 $editedInput = $input;
 $editedInput['displayed_attacker'] = 2;
