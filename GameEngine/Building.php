@@ -170,11 +170,10 @@ class Building {
 	}
 
 	public function walling() {
-		global $session;
 		$wall = array(31,32,33);
 		foreach($this->buildArray as $job) {
-			if(in_array($job['type'],$wall)) {
-				return "3".$session->tribe;
+			if(in_array((int)$job['type'],$wall,true)) {
+				return (int)$job['type'];
 			}
 		}
 		return false;

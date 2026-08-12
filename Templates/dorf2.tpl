@@ -11,11 +11,13 @@
 ?>
 <div id="village_map">
 <?php
-if($building->walling()) {
-	$wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
+$queuedWallType = $building->walling();
+$wallType = $queuedWallType ?: (int)$village->resarray['f40t'];
+if($queuedWallType) {
+	$wtitle = $building->procResType($queuedWallType)." Nivel ".$village->resarray['f40'];
 }
 else {
-	$wtitle = ($village->resarray['f40'] == 0)? "Terreno exterior" : $building->procResType($village->resarray['f40t'],0)." Nivel ".$village->resarray['f40'];
+	$wtitle = ($village->resarray['f40'] == 0)? "Terreno exterior" : $building->procResType($wallType)." Nivel ".$village->resarray['f40'];
 }
 ?>
 <map name="clickareas" id="clickareas">
@@ -62,16 +64,16 @@ else {
 ?>
 <?php
  if($village->resarray['f40'] == 0) { 
-if($building->walling()) {
-    $wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
-    echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Top \" alt=\"$wtitle\">";
-     echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."bBottom \" alt=\"$wtitle\">";
+if($queuedWallType) {
+    $wtitle = $building->procResType($queuedWallType)." Nivel ".$village->resarray['f40'];
+    echo "<img src=\"img/x.gif\" class=\"wall g".$queuedWallType."Top \" alt=\"$wtitle\">";
+    echo "<img src=\"img/x.gif\" class=\"wall g".$queuedWallType."Bottom \" alt=\"$wtitle\">";
 
     }
 }else {
-          $wtitle = $building->procResType($building->walling())." Nivel ".$village->resarray['f40'];
-    echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Top \" alt=\"$wtitle\">";
-    echo "<img src=\"img/x.gif\" class=\"wall g3".$session->tribe."Bottom \" alt=\"$wtitle\">";
+    $wtitle = $building->procResType($wallType)." Nivel ".$village->resarray['f40'];
+    echo "<img src=\"img/x.gif\" class=\"wall g".$wallType."Top \" alt=\"$wtitle\">";
+    echo "<img src=\"img/x.gif\" class=\"wall g".$wallType."Bottom \" alt=\"$wtitle\">";
 }
 ?>
 </map>
