@@ -3632,7 +3632,11 @@
 				function advanceHeroLevel($heroid,$currentLevel,$targetLevel) {
 					$heroid = (int)$heroid;
 					$currentLevel = max(0,(int)$currentLevel);
-					$targetLevel = max($currentLevel,(int)$targetLevel);
+					$maximumLevel = isset($GLOBALS['hero_levels']) && is_array($GLOBALS['hero_levels'])
+						? count($GLOBALS['hero_levels'])-1
+						: 100;
+					$currentLevel = min($maximumLevel,$currentLevel);
+					$targetLevel = min($maximumLevel,max($currentLevel,(int)$targetLevel));
 					if($heroid<1 || $targetLevel===$currentLevel){
 						return false;
 					}

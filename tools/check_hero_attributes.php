@@ -19,8 +19,13 @@ heroAttributeAssert(abs(heroArmyBonusFactor(150)-1.20)<0.000001,'Army bonus poin
 
 include dirname(__DIR__).'/GameEngine/Data/hero_full.php';
 heroAttributeAssert(heroLevelForExperience(750,0,$hero_levels)===5,'Multiple earned levels were not resolved together');
-heroAttributeAssert(heroLevelForExperience(247500,98,$hero_levels)===99,'Final configured hero level was not reached');
-heroAttributeAssert(heroLevelForExperience(999999,99,$hero_levels)===99,'Hero progression exceeded the experience table');
+heroAttributeAssert(count($hero_levels)===101 && $hero_levels[100]===252500,'Level 100 experience threshold is missing');
+heroAttributeAssert(heroLevelForExperience(247500,98,$hero_levels)===99,'Level 99 was not reached');
+heroAttributeAssert(heroLevelForExperience(252500,99,$hero_levels)===100,'Final configured hero level was not reached');
+heroAttributeAssert(heroLevelForExperience(999999,100,$hero_levels)===100,'Hero progression exceeded the experience table');
+foreach(array($hero_t1,$hero_t2,$hero_t3) as $revivalTable){
+	heroAttributeAssert(count($revivalTable)===101 && isset($revivalTable[100]),'Level 100 revival data is missing');
+}
 
 $allResourceHero = array(
 	'product'=>4,
@@ -283,12 +288,13 @@ heroAttributeAssert(
 	'Batch allocation accepted a negative increment'
 );
 
-heroAttributeAssert($database->advanceHeroLevel(1,98,99),'Final hero level was not applied');
+heroAttributeAssert($database->advanceHeroLevel(1,98,100),'Final hero level was not applied');
 $state = $database->getHeroData(900001);
-heroAttributeAssert((int)$state['level']===99 && (int)$state['points']===4,'Level advancement awarded the wrong state');
-heroAttributeAssert(!$database->advanceHeroLevel(1,98,99),'Stale concurrent level update was accepted');
+heroAttributeAssert((int)$state['level']===100 && (int)$state['points']===8,'Level advancement awarded the wrong state');
+heroAttributeAssert(!$database->advanceHeroLevel(1,98,100),'Stale concurrent level update was accepted');
 $state = $database->getHeroData(900001);
-heroAttributeAssert((int)$state['level']===99 && (int)$state['points']===4,'Stale level update awarded duplicate points');
+heroAttributeAssert((int)$state['level']===100 && (int)$state['points']===8,'Stale level update awarded duplicate points');
+heroAttributeAssert(!$database->advanceHeroLevel(1,100,101),'Hero progression exceeded level 100');
 
 $resetState = "UPDATE $temporaryHeroTable SET points=10,power=10,offBonus=5,defBonus=5,product=10,"
 	."r0=0,r1=1,r2=0,r3=0,r4=0 WHERE uid=900001";
