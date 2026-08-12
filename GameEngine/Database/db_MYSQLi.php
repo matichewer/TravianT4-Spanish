@@ -5522,6 +5522,77 @@ break;
 				return $this->worldRadiusCache;
 			}
 
+			/*
+			 * Consume una obra de arte bajo un lock por cuenta. `users` y `heroitems`
+			 * siguen siendo MyISAM en mundos viejos, así que una transacción no puede
+			 * proteger el cooldown: el lock nombrado serializa las peticiones y las
+			 * compensaciones restauran el estado si falla una escritura posterior.
+			 */
+			function consumeArtwork($uid,$itemId,$culturePoints,$now = null) {
+				$uid = (int)$uid;
+				$itemId = (int)$itemId;
+				$culturePoints = max(0,(int)$culturePoints);
+				$now = $now === null ? time() : max(0,(int)$now);
+				if($uid<=0 || $itemId<=0){
+					return array('ok'=>false,'status'=>'invalid','remaining'=>0);
+				}
+
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'artwork_'.$uid);
+				$lockResult = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',5) AS acquired");
+				$lockRow = $lockResult ? mysqli_fetch_assoc($lockResult) : false;
+				if(!$lockRow || (int)$lockRow['acquired']!==1){
+					return array('ok'=>false,'status'=>'busy','remaining'=>0);
+				}
+
+				try {
+					$userResult = mysqli_query($this->connection,"SELECT artwork_last_used FROM ".TB_PREFIX."users WHERE id=$uid LIMIT 1");
+					$user = $userResult ? mysqli_fetch_assoc($userResult) : false;
+					if(!$user){
+						return array('ok'=>false,'status'=>'invalid','remaining'=>0);
+					}
+					$lastUsed = max(0,(int)$user['artwork_last_used']);
+					$remaining = artworkCooldownRemaining($lastUsed,$now);
+					if($remaining>0){
+						return array('ok'=>false,'status'=>'cooldown','remaining'=>$remaining);
+					}
+
+					$itemResult = mysqli_query($this->connection,"SELECT num FROM ".TB_PREFIX."heroitems WHERE id=$itemId AND uid=$uid AND btype=15 AND proc=0 AND num>=1 LIMIT 1");
+					$item = $itemResult ? mysqli_fetch_assoc($itemResult) : false;
+					if(!$item){
+						return array('ok'=>false,'status'=>'invalid','remaining'=>0);
+					}
+
+					$cutoff = $now-artworkCooldownSeconds();
+					mysqli_query($this->connection,"UPDATE ".TB_PREFIX."users SET artwork_last_used=$now WHERE id=$uid AND artwork_last_used<=$cutoff");
+					if(mysqli_affected_rows($this->connection)!==1){
+						return array('ok'=>false,'status'=>'cooldown','remaining'=>artworkCooldownSeconds());
+					}
+
+					$stack = (int)$item['num'];
+					$itemSql = $stack>1
+						? "UPDATE ".TB_PREFIX."heroitems SET num=num-1 WHERE id=$itemId AND uid=$uid AND btype=15 AND proc=0 AND num=$stack"
+						: "UPDATE ".TB_PREFIX."heroitems SET proc=1 WHERE id=$itemId AND uid=$uid AND btype=15 AND proc=0 AND num=1";
+					mysqli_query($this->connection,$itemSql);
+					if(mysqli_affected_rows($this->connection)!==1){
+						mysqli_query($this->connection,"UPDATE ".TB_PREFIX."users SET artwork_last_used=$lastUsed WHERE id=$uid AND artwork_last_used=$now");
+						return array('ok'=>false,'status'=>'invalid','remaining'=>0);
+					}
+
+					if(!mysqli_query($this->connection,"UPDATE ".TB_PREFIX."users SET cp=cp+$culturePoints WHERE id=$uid")){
+						$restoreItem = $stack>1
+							? "UPDATE ".TB_PREFIX."heroitems SET num=num+1 WHERE id=$itemId AND uid=$uid AND btype=15 AND proc=0"
+							: "UPDATE ".TB_PREFIX."heroitems SET proc=0 WHERE id=$itemId AND uid=$uid AND btype=15 AND proc=1";
+						mysqli_query($this->connection,$restoreItem);
+						mysqli_query($this->connection,"UPDATE ".TB_PREFIX."users SET artwork_last_used=$lastUsed WHERE id=$uid AND artwork_last_used=$now");
+						return array('ok'=>false,'status'=>'failed','remaining'=>0);
+					}
+
+					return array('ok'=>true,'status'=>'consumed','remaining'=>artworkCooldownSeconds(),'points'=>$culturePoints);
+				} finally {
+					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+				}
+			}
+
 			// Elige la casilla de una aventura alrededor de la aldea $homeWref.
 			//
 			// Antes se sorteaba el id del tile (`rand($wref-10000, $wref+10000)`) contra

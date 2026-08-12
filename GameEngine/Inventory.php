@@ -328,16 +328,16 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 	elseif($data['btype']==15){
-		if($data['amount'] > 0 && $data['amount'] <= $itemData['num']){
-			$value = ($data['amount']*artworkCulturePoints($database, $uid));
-			if($data['amount'] < $itemData['num']){
-				$database->updateUserField($uid, 'cp', $value, 2);
-				$database->editHeroNum($data['id'], $data['amount'], 0);
-			}else{
-				$database->editProcItem($data['id'], 1);
-				$database->updateUserField($uid, 'cp', $value, 2);
-			}
+		$result = array('ok'=>false,'status'=>'invalid','remaining'=>0);
+		if($data['amount']===1 && (int)$itemData['num']>=1 && method_exists($database,'consumeArtwork')){
+			$result = $database->consumeArtwork($uid,$data['id'],artworkCulturePoints($database,$uid));
 		}
+		$_SESSION['artwork_feedback'] = $result;
+		if(PHP_SAPI!=='cli'){
+			header("Location: hero_inventory.php");
+			exit;
+		}
+		$artworkFeedback = $result;
 	}
 
 }

@@ -388,7 +388,7 @@ if(!function_exists('getHeroHelmetBonuses')){
 	function getHeroHelmetBonuses($type){
 		$experience = array(1 => 15, 2 => 20, 3 => 25);
 		$autoRegen = array(4 => 10, 5 => 15, 6 => 20);
-		$culture = array(7 => 100, 8 => 400, 9 => 800);
+		$culture = array(7 => 25, 8 => 100, 9 => 200);
 		$stable = array(10 => 10, 11 => 15, 12 => 20);
 		$barracks = array(13 => 10, 14 => 15, 15 => 20);
 		$type = (int)$type;
@@ -471,15 +471,43 @@ if(!function_exists('heroHelmetCulturePoints')){
 }
 
 if(!function_exists('accountCulturePointsPerDay')){
+	function villageCultureProductionFactor(){
+		return 0.25;
+	}
+
+	function villageCulturePointsPerDay($rawCulturePoints){
+		return max(0,(int)$rawCulturePoints)*villageCultureProductionFactor();
+	}
+
+	function accountVillageCulturePointsPerDay($database,$uid){
+		$uid = (int)$uid;
+		$rawVillages = (int)$database->getVSumField($uid,'cp');
+
+		return (int)round(villageCulturePointsPerDay($rawVillages));
+	}
+
 	// Producción diaria de PC de toda la cuenta: la suma de las aldeas más el casco de
 	// cultura. Vive acá porque el casco es lo que la hace distinta de un getVSumField,
 	// y tiene que ser una sola definición: la usan el crédito diario, el panel de
 	// cultura y las obras de arte, que conceden justamente un día de producción.
 	function accountCulturePointsPerDay($database, $uid){
 		$uid = (int)$uid;
-		$villages = (int)$database->getVSumField($uid, 'cp');
+		$villages = accountVillageCulturePointsPerDay($database,$uid);
 
 		return $villages+heroHelmetCulturePoints($database, $uid);
+	}
+}
+
+if(!function_exists('artworkCooldownSeconds')){
+	function artworkCooldownSeconds(){
+		return 86400;
+	}
+
+	function artworkCooldownRemaining($lastUsed,$now = null){
+		$lastUsed = max(0,(int)$lastUsed);
+		$now = $now === null ? time() : max(0,(int)$now);
+
+		return max(0,$lastUsed+artworkCooldownSeconds()-$now);
 	}
 }
 

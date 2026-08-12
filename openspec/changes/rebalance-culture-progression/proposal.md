@@ -6,14 +6,17 @@ Culture capacity currently advances faster than players can found villages, remo
 
 - Switch the server from the normal culture threshold curve to the existing slow curve.
 - Add a repeatable, preview-first migration that caps each existing player's culture points at the slow-curve requirement for one village beyond their current village count, while leaving lower balances unchanged.
-- Preserve the current natural culture production and celebration rewards while documenting the balance impact of culture helmets and artwork for a separate decision.
+- Reduce recurring culture production from fields and buildings to 25% of its raw value while preserving the raw per-village totals already stored by the game.
+- Reduce culture helmet bonuses from 100/400/800 to 25/100/200 points per day.
+- Keep celebration rewards at 500/2000 points so Town Hall investment regains strategic value.
+- Make artwork grant the newly balanced daily production and limit its use to one per account in any rolling 24-hour period.
 - Provide explicit production deployment commands and verification output.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `culture-balance-migration`: Preview and apply the one-time normalization of existing player culture balances safely.
+- `culture-balance-migration`: Balance recurring culture sources and safely normalize existing player balances.
 
 ### Modified Capabilities
 
@@ -24,4 +27,5 @@ Culture capacity currently advances faster than players can found villages, remo
 - `config/config.php` selects the slow curve for all expansion eligibility and progress displays.
 - A new standalone tool reads the authoritative culture table and updates eligible player accounts only when invoked with an explicit apply flag.
 - Existing accounts above their one-next-village threshold lose only the excess; accounts below it are unchanged.
-- No database schema changes or static asset cache bumps are required.
+- Culture displays, daily credit, helmets, artwork dialogs and artwork consumption are affected.
+- Artwork cooldown state requires a database schema migration for existing worlds and installer schema support for new worlds.

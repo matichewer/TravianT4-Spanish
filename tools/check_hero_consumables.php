@@ -25,13 +25,14 @@ class ConsumableDatabase {
 	public $userCp = 1000;
 	public $villageLoyalty = 50;
 	public $dailyProduction = 100;
+	public $artworkLastUsed = 0;
 	public $revived = false;
 
 	public function getHeroData($uid){ return $this->hero; }
 	public function getItemData($id){ return isset($this->items[$id]) ? $this->items[$id] : false; }
 	public function getHeroInventory($uid){ return $this->inventory; }
 	public function getVSumField($uid,$field){ return $this->dailyProduction; }
-	public function getUserField($uid,$field,$mode){ return $this->userCp; }
+	public function getUserField($uid,$field,$mode){ return $field==='artwork_last_used' ? $this->artworkLastUsed : $this->userCp; }
 	public function modifyHero2($field,$value,$uid,$mode){
 		if($mode==0){ $this->hero[$field]=$value; }
 		elseif($mode==1){ $this->hero[$field]+=$value; }
@@ -55,6 +56,19 @@ class ConsumableDatabase {
 	}
 	public function editTableField($t,$f,$v,$rf,$r){ $this->revived = true; return true; }
 	public function consumeBookOfWisdom($uid,$id){ return true; }
+	public function consumeArtwork($uid,$id,$points,$now=null){
+		$now = $now===null ? time() : (int)$now;
+		$remaining = artworkCooldownRemaining($this->artworkLastUsed,$now);
+		if($remaining>0){ return array('ok'=>false,'status'=>'cooldown','remaining'=>$remaining); }
+		if(!isset($this->items[$id]) || (int)$this->items[$id]['num']<1 || (int)$this->items[$id]['proc']!==0){
+			return array('ok'=>false,'status'=>'invalid','remaining'=>0);
+		}
+		$this->artworkLastUsed=$now;
+		if((int)$this->items[$id]['num']>1){ $this->items[$id]['num']--; }
+		else{ $this->items[$id]['proc']=1; }
+		$this->userCp+=(int)$points;
+		return array('ok'=>true,'status'=>'consumed','remaining'=>artworkCooldownSeconds(),'points'=>(int)$points);
+	}
 }
 
 // Usa un consumible y devuelve el estado resultante.
@@ -167,20 +181,29 @@ consumableAssert($r['proc'] === 0, 'el balde se gastó con el héroe vivo');
 
 consumableAssert(artworkCulturePointsCap() === 5000, 'el tope de la obra de arte dejó de ser 5000');
 
-// Producción por debajo del tope: se otorga la producción.
+// Solo una obra por petición: intentar usar varias no concede PC ni consume el stack.
 $r = useItem(15, 2, 10, function($db){ $db->dailyProduction = 100; });
-consumableAssert($r['cp'] === 1200, 'dos obras con 100/día no dieron 200 PC: '.$r['cp']);
+consumableAssert($r['cp'] === 1000 && $r['stack']===10, 'se pudieron usar varias obras en una petición');
 
-// Producción por encima del tope: se recorta a 5000 por obra.
+// La obra concede la producción balanceada: 25% de la producción base de aldeas.
 $r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 9000; });
-consumableAssert($r['cp'] === 6000, 'una obra con 9000/día no se recortó a 5000: '.$r['cp']);
+consumableAssert($r['cp'] === 3250, 'una obra con 9000 base/día no dio 2250 PC: '.$r['cp']);
 
-$r = useItem(15, 3, 10, function($db){ $db->dailyProduction = 9000; });
-consumableAssert($r['cp'] === 16000, 'tres obras con 9000/día no dieron 15000: '.$r['cp']);
+// La producción balanceada por encima de 5000 conserva el tope existente.
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 30000; });
+consumableAssert($r['cp'] === 6000, 'una obra con 7500 balanceados no se recortó a 5000: '.$r['cp']);
 
 // Justo en el tope no se recorta nada.
-$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 5000; });
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 20000; });
 consumableAssert($r['cp'] === 6000, 'una obra con exactamente 5000/día no dio 5000');
+
+// Un uso dentro de las 24 horas se rechaza sin efecto ni consumo.
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction=4000; $db->artworkLastUsed=time()-3600; });
+consumableAssert($r['cp']===1000 && $r['stack']===10 && $r['proc']===0, 'el cooldown consumió una obra o concedió PC');
+
+// Al cumplirse exactamente las 24 horas vuelve a estar disponible.
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction=4000; $db->artworkLastUsed=time()-86400; });
+consumableAssert($r['cp']===2000 && $r['stack']===9, 'la obra siguió bloqueada después de 24 horas');
 
 // El diálogo del inventario tiene que anunciar el valor ya recortado.
 $dialog = file_get_contents(dirname(__DIR__).'/hero_inventory.php');

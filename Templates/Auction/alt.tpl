@@ -35,17 +35,17 @@
         }
         if($type==7){
         	$name = "Casco del Gladiador";
-			$title = "+100 puntos de cultura/día";
+			$title = "+25 puntos de cultura/día";
             $item = "7";
             $effect = "100";
 		}elseif($type==8){
         	$name = "Casco del Tribuno";
-			$title = "+400 puntos de cultura/día";
+			$title = "+100 puntos de cultura/día";
             $item = "8";
             $effect = "400";
 		}elseif($type==9){
         	$name = "Casco del Cónsul";
-			$title = "+800 puntos de cultura/día";
+			$title = "+200 puntos de cultura/día";
             $item = "9";
             $effect = "800";
 		}
@@ -591,7 +591,7 @@
 		$item = "109";
 	}elseif($btype==15){
 		$name = "Obra de arte";
-		$title = "Otorga al instante tantos puntos de cultura como la producción diaria, hasta un máximo de 5000. Se puede apilar.";
+		$title = "Otorga al instante tantos puntos de cultura como la producción diaria, hasta un máximo de 5000. Solo se puede usar una cada 24 horas.";
         $item = "111";
 	}
 

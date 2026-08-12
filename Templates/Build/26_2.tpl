@@ -19,11 +19,11 @@ include("26_menu.tpl");
 <table cellpadding="1" cellspacing="1" id="build_value">
 <tr>
 	<th>Producción de esta aldea</th>
-	<td><b><?php echo $database->getVillageField($village->wid, 'cp'); ?></b> puntos de cultura</td>
+	<td><b><?php echo rtrim(rtrim(number_format(villageCulturePointsPerDay($database->getVillageField($village->wid,'cp')),2,',','.'),'0'),','); ?></b> puntos de cultura</td>
 </tr>
 <tr>
 	<th>Producción de todas las aldeas:	</th>
-	<td><b><?php echo $database->getVSumField($session->uid, 'cp'); ?></b> puntos de cultura</td>
+	<td><b><?php echo number_format(accountVillageCulturePointsPerDay($database,$session->uid),0,',','.'); ?></b> puntos de cultura</td>
 </tr>
 </table><?php
 $totalVillages = count($session->villages);

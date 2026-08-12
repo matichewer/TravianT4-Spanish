@@ -1572,6 +1572,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%users` (
   `b3` int(11) unsigned NOT NULL DEFAULT '0',
   `b4` int(11) unsigned NOT NULL DEFAULT '0',
   `brewery` int(11) unsigned NOT NULL DEFAULT '0',
+  `artwork_last_used` int(11) unsigned NOT NULL DEFAULT '0',
   `sit1` int(11) unsigned NOT NULL DEFAULT '0',
   `sit2` int(11) unsigned NOT NULL DEFAULT '0',
   `alliance` int(11) unsigned NOT NULL DEFAULT '0',

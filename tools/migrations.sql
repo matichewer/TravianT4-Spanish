@@ -51,6 +51,11 @@ CREATE TABLE IF NOT EXISTS s1_auction_bids (
 ALTER TABLE s1_users
   ADD COLUMN IF NOT EXISTS brewery int(11) unsigned NOT NULL DEFAULT 0 AFTER b4;
 
+-- 2026-08-12 - Enfriamiento de las obras de arte
+-- Impide consumir más de una obra por cuenta dentro de una ventana móvil de 24 h.
+ALTER TABLE s1_users
+  ADD COLUMN IF NOT EXISTS artwork_last_used int(11) unsigned NOT NULL DEFAULT 0 AFTER brewery;
+
 -- 2026-07-26 - Soporte de emojis (utf8mb4)
 -- El servidor usaba utf8mb3, que no puede guardar caracteres de 4 bytes:
 -- los emojis se guardaban como "????" en mensajes, reportes, perfiles, etc.

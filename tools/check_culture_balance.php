@@ -5,6 +5,7 @@
 
 error_reporting(E_ALL);
 require dirname(__DIR__).'/GameEngine/Data/cp.php';
+require dirname(__DIR__).'/GameEngine/Hero.php';
 
 $errors = array();
 function cultureBalanceAssert($condition, $message){
@@ -20,6 +21,29 @@ cultureBalanceAssert(
 		&& travianCultureRequiredForVillageCount(4, 1) === 20000,
 	'La progresión lenta inicial dejó de ser 2.000 / 8.000 / 20.000.'
 );
+
+class CultureProductionDatabaseStub {
+	public $rawCulture = 5575;
+	public function getVSumField($uid,$field){ return $this->rawCulture; }
+	public function getHeroData($uid){ return array('dead'=>1); }
+}
+$productionDatabase = new CultureProductionDatabaseStub();
+cultureBalanceAssert(villageCultureProductionFactor()===0.25, 'La producción pasiva dejó de usar el factor 25%.');
+cultureBalanceAssert(villageCulturePointsPerDay(2365)===591.25, 'El desglose por aldea no conserva cuartos de PC.');
+cultureBalanceAssert(
+	accountVillageCulturePointsPerDay($productionDatabase,5)===1394
+		&& accountCulturePointsPerDay($productionDatabase,5)===1394,
+	'La suma base de 5575 PC no se redondeó una sola vez a 1394.'
+);
+cultureBalanceAssert(
+	getHeroHelmetBonuses(7)['culture']===25
+		&& getHeroHelmetBonuses(8)['culture']===100
+		&& getHeroHelmetBonuses(9)['culture']===200,
+	'Los cascos de cultura dejaron de aportar 25/100/200 PC.'
+);
+cultureBalanceAssert(artworkCooldownSeconds()===86400, 'El cooldown de obra de arte dejó de ser 24 horas.');
+cultureBalanceAssert(artworkCooldownRemaining(100000,100100)===86300, 'El tiempo restante de la obra es incorrecto.');
+cultureBalanceAssert(artworkCooldownRemaining(100000,186400)===0, 'La obra no se habilitó exactamente a las 24 horas.');
 
 $surplus = travianCultureNormalization(50000, 3, 1);
 cultureBalanceAssert(

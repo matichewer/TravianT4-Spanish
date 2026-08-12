@@ -2,6 +2,10 @@
 include("GameEngine/Village.php");
 include("GameEngine/Inventory.php");
 $start = $generator->pageLoadTimeStart();
+$artworkFeedback = isset($_SESSION['artwork_feedback']) && is_array($_SESSION['artwork_feedback'])
+	? $_SESSION['artwork_feedback']
+	: (isset($artworkFeedback) && is_array($artworkFeedback) ? $artworkFeedback : null);
+unset($_SESSION['artwork_feedback']);
 
 if(isset($_GET['newdid'])){
 	$newVillageId = (int)$_GET['newdid'];
@@ -125,6 +129,21 @@ if(isset($_GET['inventory'])){
 					});
 </script>
 <div class="clear"></div>
+<?php if(is_array($artworkFeedback)) { ?>
+	<div class="boxes boxesColor <?php echo !empty($artworkFeedback['ok']) ? 'green' : 'red'; ?>">
+		<div class="boxes-contents">
+		<?php if(!empty($artworkFeedback['ok'])) { ?>
+			Obra de arte utilizada: obtuviste <?php echo number_format((int)$artworkFeedback['points'],0,',','.'); ?> puntos de cultura.
+		<?php } elseif(isset($artworkFeedback['status']) && $artworkFeedback['status']==='cooldown') { ?>
+			Solo puedes usar una obra de arte cada 24 horas. Falta <?php echo $generator->getTimeFormat((int)$artworkFeedback['remaining']); ?>.
+		<?php } elseif(isset($artworkFeedback['status']) && $artworkFeedback['status']==='busy') { ?>
+			La obra de arte se está procesando. Inténtalo nuevamente en unos segundos.
+		<?php } else { ?>
+			No se pudo utilizar la obra de arte. El objeto no fue consumido.
+		<?php } ?>
+		</div>
+	</div>
+<?php } ?>
 <?php
 include("Templates/hero.tpl");
 ?>
@@ -290,6 +309,8 @@ for($i=$inv;$i<=12;$i++){
 // cultura) recortada por el tope de 5000 que promete el objeto.
 $currentCulturePoints = (int)$database->getUserField($session->uid, 'cp', 0);
 $cultureDailyProduction = artworkCulturePoints($database, (int)$session->uid);
+$artworkLastUsed = (int)$database->getUserField($session->uid,'artwork_last_used',0);
+$artworkCooldownRemaining = artworkCooldownRemaining($artworkLastUsed);
 $equippedHelmet = heroEquippedItem($database, (int)$session->uid, 1);
 $helmetExperienceBonus = is_array($equippedHelmet)
 	? getHeroHelmetBonuses((int)$equippedHelmet['type'])['experience']
@@ -301,7 +322,7 @@ $scrollExperience = heroExperienceWithHelmet($database, (int)$session->uid, 10);
 	{
 		b10: '<p><div style="color:#F90">Experiencia actual del héroe: <?php echo $hero['experience']; ?><br>Experiencia obtenida: <?php echo $scrollExperience; ?><br>Experiencia después de usarlo: <?php echo ($hero['experience']+$scrollExperience); ?><br></div>',
 
-		b15: '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Puntos de cultura actuales:</th><td><?php echo $currentCulturePoints; ?></td></tr><tr class="rowUseValue"><th>Puntos de cultura obtenidos al usar la obra de arte:</th><td class="displayUseValue"><?php echo $cultureDailyProduction; ?></td></tr><tr class="rowAfterUse"><th>Puntos de cultura después de usar la obra de arte:</th><td class="displayAfterUse"><?php echo ($currentCulturePoints+$cultureDailyProduction); ?></td></tr></tbody></table>',
+	b15: '<table id="heroInventoryDataDialog" class="transparent" cellspacing="0" cellpadding="0"><tbody><tr class="rowBeforeUse"><th>Puntos de cultura actuales:</th><td><?php echo $currentCulturePoints; ?></td></tr><tr class="rowUseValue"><th>Puntos de cultura obtenidos al usar la obra de arte:</th><td class="displayUseValue"><?php echo $cultureDailyProduction; ?></td></tr><tr class="rowAfterUse"><th>Puntos de cultura después de usar la obra de arte:</th><td class="displayAfterUse"><?php echo ($currentCulturePoints+$cultureDailyProduction); ?></td></tr><tr><th>Límite:</th><td>Una obra de arte cada 24 horas<?php if($artworkCooldownRemaining>0){ echo ' (disponible en '.$generator->getTimeFormat($artworkCooldownRemaining).')'; } ?></td></tr></tbody></table>',
 		
 		alreadyOpen: false,
 		lastTouchActivation: 0,
@@ -413,6 +434,7 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 				return;
 			}
 			this.alreadyOpen = true;
+			if(btype == 15){ amount = 1; }
 			$('HeroInventory').id.value = id;
 			$('HeroInventory').amount.value = amount;
 			$('HeroInventory').btype.value = btype;

@@ -46,10 +46,10 @@ transparente por fuera del cartel y dejaria ver el pergamino por detras. */ ?>
 			<span class="cultureProgressTitle" aria-describedby="cultureProgressTooltip">Puntos de Cultura</span>
 			<span id="cultureProgressTooltip" class="cultureProgressTooltip" role="tooltip">
 				<strong>Cómo funcionan los puntos de cultura</strong>
-				<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel completado aumenta la producción de PC. La producción de todas tus aldeas se suma y se acredita una vez cada 24 horas.</span>
+				<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel completado aumenta la producción base. Se acredita el 25% de la suma de todas tus aldeas una vez cada 24 horas.</span>
 				<span class="cultureProgressTooltipLine"><b>Ayuntamiento:</b> una celebración pequeña entrega 500 PC y una grande 2000 PC cuando finaliza.</span>
-				<span class="cultureProgressTooltipLine"><b>Casco del héroe:</b> el Casco del Gladiador, del Tribuno y del Cónsul suman 100, 400 y 800 PC a la producción diaria mientras el héroe esté vivo.</span>
-				<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden inmediatamente tantos PC como tu producción diaria total.</span>
+				<span class="cultureProgressTooltipLine"><b>Casco del héroe:</b> el Casco del Gladiador, del Tribuno y del Cónsul suman 25, 100 y 200 PC a la producción diaria mientras el héroe esté vivo.</span>
+				<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden inmediatamente tantos PC como tu producción diaria total. Solo puedes usar una cada 24 horas.</span>
 				<span class="cultureProgressTooltipFoot">Los PC pertenecen a toda la cuenta y permiten fundar o conquistar más aldeas. Con Plus, el desglose por aldea está en Resumen de aldeas → Puntos de cultura.</span>
 			</span>
 		</span>

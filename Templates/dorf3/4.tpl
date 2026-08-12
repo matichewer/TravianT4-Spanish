@@ -21,7 +21,8 @@ $timer = 0;
 $varray = $database->getProfileVillages($session->uid); 
 foreach($varray as $vil){
 	$vid = $vil['wref'];
-	$cp = $database->getVillageField($vid, 'cp');
+	$rawCp = (int)$database->getVillageField($vid,'cp');
+	$cp = villageCulturePointsPerDay($rawCp);
 	$exp = 0;
 	for($i=1;$i<=3;$i++) {
 		${'slot'.$i} = $database->getVillageField($vid, 'exp'.$i);
@@ -37,7 +38,7 @@ foreach($varray as $vil){
 	if($vil['capital'] == 1) { $class = 'hl'; } else {$class = 'hover'; }              
 
 	echo '<tr class="'.$class.'"><td class="vil fc"><a href="dorf1.php?newdid='.$vid.'">'.$vil['name'].'</a></td>';
-	echo '<td class="cps">'.$cp.'</td>';
+	echo '<td class="cps">'.rtrim(rtrim(number_format($cp,2,',','.'),'0'),',').'</td>';
 	echo '<td class="cel">'.($lvlTH>0?'<a href="build.php?newdid='.$vid.'&amp;gid=24">'.($hasCel<>0?'<span id="timer'.$timer.'">'.$generator->getTimeFormat($hasCel-time()).'</span>':'<span class="dot">●</span>').'</a>':'<span class="none">-</span>').'</td>';
 	echo '<td class="tro"><span class="">';
 	$unit = $database->getUnit($vid);
@@ -56,7 +57,7 @@ foreach($varray as $vil){
 	echo '<td class="slo lc">'.$exp.'/'.$maxslots.'</td>';
 	$gesexp = $gesexp + $exp;
 	$gesdorf = $gesdorf + $maxslots;
-	$gescp = $gescp + $cp;
+	$gescp = $gescp + $rawCp;
 	$gesSiedler = $gesSiedler + $siedler;
 	$gesSenator = $gesSenator + $senator;
 	echo '</tr>';    
@@ -67,7 +68,7 @@ foreach($varray as $vil){
 
 <tr class="sum">
 	<th class="vil">Total</th>
-	<td class="cps"><?php echo $gescp;?></td>
+	<td class="cps"><?php echo number_format((int)round(villageCulturePointsPerDay($gescp)),0,',','.');?></td>
 	<td class="cel none">-</td>
 
 	<td class="tro">
