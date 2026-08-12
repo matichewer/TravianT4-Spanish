@@ -115,35 +115,37 @@ foreach(array(1, 7, 10, 13) as $type){
 $expected = array(7 => 25, 8 => 100, 9 => 200);
 foreach($expected as $type => $bonus){
 	$db = withHelmet($type);
-	check(heroHelmetCulturePoints($db, 7)===$bonus,
-		"el casco $type aportó ".heroHelmetCulturePoints($db, 7)." PC en vez de $bonus");
-	check(accountCulturePointsPerDay($db, 7)===63+$bonus,
+	check(heroHelmetCulturePoints($db,7,1)===$bonus,
+		"el casco $type aportó ".heroHelmetCulturePoints($db,7,1)." PC x1 en vez de $bonus");
+	check(accountCulturePointsPerDay($db,7,1)===63+$bonus,
 		"la producción diaria con el casco $type no sumó el bono");
 
 	// A diferencia de la regeneración, el bono no se guarda en ninguna columna.
 	check((int)$db->hero['autoregen']===10, "el casco $type tocó la regeneración");
 
 	check(unequipHeroItem($db, 7, 1, 1), "no se pudo sacar el casco $type");
-	check(heroHelmetCulturePoints($db, 7)===0, "sacar el casco $type dejó PC fantasma");
-	check(accountCulturePointsPerDay($db, 7)===63, "la producción diaria quedó inflada");
+	check(heroHelmetCulturePoints($db,7,1)===0, "sacar el casco $type dejó PC fantasma");
+	check(accountCulturePointsPerDay($db,7,1)===63, "la producción diaria quedó inflada");
 }
 
 // Un héroe muerto no aporta cultura, igual que no regenera ni produce recursos.
 $db = withHelmet(9);
-check(accountCulturePointsPerDay($db, 7)===263, 'el casco del Cónsul no sumó estando vivo');
+check(accountCulturePointsPerDay($db,7,1)===263, 'el casco del Cónsul no sumó estando vivo');
+check(heroHelmetCulturePoints($db,7,3)===600, 'el casco del Cónsul no escaló a 600 PC en x3');
+check(accountCulturePointsPerDay($db,7,3)===788, 'la cuenta x3 no combinó 188 PC pasivos y 600 del casco');
 $db->hero['dead'] = 1;
-check(heroHelmetCulturePoints($db, 7)===0, 'un héroe muerto siguió aportando cultura');
-check(accountCulturePointsPerDay($db, 7)===63, 'un héroe muerto infló la producción diaria');
+check(heroHelmetCulturePoints($db,7,3)===0, 'un héroe muerto siguió aportando cultura');
+check(accountCulturePointsPerDay($db,7,1)===63, 'un héroe muerto infló la producción diaria');
 
 // Un casco de otra familia no aporta cultura.
 foreach(array(1, 4, 10, 13) as $type){
 	$db = withHelmet($type);
-	check(heroHelmetCulturePoints($db, 7)===0, "el casco $type aportó cultura");
+	check(heroHelmetCulturePoints($db,7,1)===0, "el casco $type aportó cultura");
 }
 
 $db = new FakeHelmetDatabase();
-check(heroHelmetCulturePoints($db, 7)===0, 'sin casco apareció cultura');
-check(accountCulturePointsPerDay($db, 7)===63, 'sin casco no aplicó el factor pasivo');
+check(heroHelmetCulturePoints($db,7,1)===0, 'sin casco apareció cultura');
+check(accountCulturePointsPerDay($db,7,1)===63, 'sin casco no aplicó el factor pasivo');
 
 // --- Tiempo de entrenamiento (types 10-15) ------------------------------------
 

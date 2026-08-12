@@ -5,9 +5,10 @@ Culture capacity currently advances faster than players can found villages, remo
 ## What Changes
 
 - Switch the server from the normal culture threshold curve to the existing slow curve.
+- Make the slow curve an installer invariant so every fresh or reset world receives the balanced progression without an operator choice.
 - Add a repeatable, preview-first migration that caps each existing player's culture points at the slow-curve requirement for one village beyond their current village count, while leaving lower balances unchanged.
-- Reduce recurring culture production from fields and buildings to 25% of its raw value while preserving the raw per-village totals already stored by the game.
-- Reduce culture helmet bonuses from 100/400/800 to 25/100/200 points per day.
+- Reduce recurring culture production from fields and buildings to 25% of its raw value per world-speed unit, preserving the same progression pace on x1, x3, x10 and future speeds.
+- Reduce culture helmet bonuses to base values of 25/100/200 points per day and multiply their effective contribution by world speed.
 - Keep celebration rewards at 500/2000 points so Town Hall investment regains strategic value.
 - Make artwork grant the newly balanced daily production and limit its use to one per account in any rolling 24-hour period.
 - Provide explicit production deployment commands and verification output.
@@ -24,7 +25,7 @@ Culture capacity currently advances faster than players can found villages, remo
 
 ## Impact
 
-- `config/config.php` selects the slow curve for all expansion eligibility and progress displays.
+- `config/config.php` and the installer template select the slow curve for all expansion eligibility and progress displays.
 - A new standalone tool reads the authoritative culture table and updates eligible player accounts only when invoked with an explicit apply flag.
 - Existing accounts above their one-next-village threshold lose only the excess; accounts below it are unchanged.
 - Culture displays, daily credit, helmets, artwork dialogs and artwork consumption are affected.

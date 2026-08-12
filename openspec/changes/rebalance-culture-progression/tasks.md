@@ -30,3 +30,16 @@
 
 - [x] 6.1 Run syntax checks, focused culture/item tests, every standalone checker, page smoke tests, diff checks, and strict OpenSpec validation
 - [x] 6.2 Provide the exact production schema, deploy, verification, preview, and apply command order
+
+## 7. Permanent new-world defaults
+
+- [x] 7.1 Remove the installer culture-mode override and hard-code the balanced slow curve in generated configuration
+- [x] 7.2 Add regression coverage proving fresh and reset worlds cannot select normal or fast progression
+- [x] 7.3 Run syntax checks, focused and complete regression checkers, OpenSpec validation, and diff checks
+
+## 8. World-speed adaptation
+
+- [x] 8.1 Multiply balanced passive village culture and culture-helmet contributions by the configured world speed in the authoritative calculation
+- [x] 8.2 Update player-facing production, helmet, and artwork explanations to reflect effective speed-adjusted values
+- [x] 8.3 Add regression coverage for x1, x3, x10, rounding, artwork caps, and unchanged celebration behavior
+- [x] 8.4 Run syntax checks, focused and complete regression checkers, page smoke tests, strict OpenSpec validation, and diff checks

@@ -87,9 +87,9 @@ define("CRANNY_CAPACITY","%CRANNYCAP%");
 define("TRAPPER_CAPACITY","%TRAPPERCAP%");
 
 // ***** Village Expand
-// 1 = slow village expanding - more Cultural Points needed for every new village
-// 0 = fast village expanding - less Cultural Points needed for every new village
-define("CP", %VILLAGE_EXPAND%);
+// Permanently balanced: slow village expansion curve.
+// This is intentionally not configurable by the installer.
+define("CP", 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

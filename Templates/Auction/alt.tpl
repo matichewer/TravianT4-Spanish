@@ -35,19 +35,19 @@
         }
         if($type==7){
         	$name = "Casco del Gladiador";
-			$title = "+25 puntos de cultura/día";
+			$title = "+".number_format(25*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (25 × velocidad del mundo)";
             $item = "7";
-            $effect = "100";
+			$effect = (string)round(25*cultureWorldSpeed());
 		}elseif($type==8){
         	$name = "Casco del Tribuno";
-			$title = "+100 puntos de cultura/día";
+			$title = "+".number_format(100*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (100 × velocidad del mundo)";
             $item = "8";
-            $effect = "400";
+			$effect = (string)round(100*cultureWorldSpeed());
 		}elseif($type==9){
         	$name = "Casco del Cónsul";
-			$title = "+200 puntos de cultura/día";
+			$title = "+".number_format(200*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (200 × velocidad del mundo)";
             $item = "9";
-            $effect = "800";
+			$effect = (string)round(200*cultureWorldSpeed());
 		}
         if($type==10){
         	$name = "Casco del Jinete";
@@ -591,7 +591,7 @@
 		$item = "109";
 	}elseif($btype==15){
 		$name = "Obra de arte";
-		$title = "Otorga al instante tantos puntos de cultura como la producción diaria, hasta un máximo de 5000. Solo se puede usar una cada 24 horas.";
+		$title = "Otorga al instante tantos puntos de cultura como la producción diaria adaptada a la velocidad del mundo, hasta un máximo de 5000. Solo se puede usar una cada 24 horas.";
         $item = "111";
 	}
 

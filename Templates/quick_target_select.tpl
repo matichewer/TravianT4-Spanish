@@ -4,7 +4,19 @@
 // El select no tiene name: solo completa los campos x/y del formulario "snd",
 // asi que el POST y la validacion del servidor siguen siendo los de siempre.
 $quickTargetOwn = '';
+$quickTargetOwnById = array();
 foreach($database->getOwnVillagesWithCoor($session->uid) as $quickTargetVillage) {
+	$quickTargetOwnById[(int)$quickTargetVillage['wref']] = $quickTargetVillage;
+}
+// La barra lateral es la referencia del orden de aldeas de la cuenta. Recorremos
+// exactamente el mismo arreglo para que el mercado y la plaza de reuniones no
+// vuelvan a ordenar los destinos por poblacion.
+foreach($session->villages as $quickTargetVillageId) {
+	$quickTargetVillageId = (int)$quickTargetVillageId;
+	if(!isset($quickTargetOwnById[$quickTargetVillageId])) {
+		continue;
+	}
+	$quickTargetVillage = $quickTargetOwnById[$quickTargetVillageId];
 	if((int)$quickTargetVillage['wref'] == (int)$village->wid) {
 		continue;
 	}

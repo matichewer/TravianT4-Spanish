@@ -443,6 +443,16 @@ if(!function_exists('heroTrainingTimeFactor')){
 	}
 }
 
+if(!function_exists('cultureWorldSpeed')){
+	function cultureWorldSpeed($speed = null){
+		if($speed===null){
+			$speed = defined('SPEED') ? SPEED : 1;
+		}
+
+		return max(1,(float)$speed);
+	}
+}
+
 if(!function_exists('heroHelmetCulturePoints')){
 	// Puntos de cultura por día que aporta el casco puesto. A diferencia de la
 	// regeneración, no se guarda en ninguna columna: se lee del objeto equipado cada
@@ -451,7 +461,7 @@ if(!function_exists('heroHelmetCulturePoints')){
 	// Un héroe muerto no aporta nada, que es como el resto del motor trata su equipo:
 	// updateHero() tampoco lo regenera y heroVillageResourceBonus() le corta los
 	// recursos.
-	function heroHelmetCulturePoints($database, $uid){
+	function heroHelmetCulturePoints($database, $uid, $speed = null){
 		$uid = (int)$uid;
 		if($uid<=0 || !method_exists($database, 'getHeroData')){
 			return 0;
@@ -466,7 +476,7 @@ if(!function_exists('heroHelmetCulturePoints')){
 		}
 		$bonuses = getHeroHelmetBonuses((int)$helmet['type']);
 
-		return $bonuses['culture'];
+		return (int)round($bonuses['culture']*cultureWorldSpeed($speed));
 	}
 }
 
@@ -475,26 +485,26 @@ if(!function_exists('accountCulturePointsPerDay')){
 		return 0.25;
 	}
 
-	function villageCulturePointsPerDay($rawCulturePoints){
-		return max(0,(int)$rawCulturePoints)*villageCultureProductionFactor();
+	function villageCulturePointsPerDay($rawCulturePoints, $speed = null){
+		return max(0,(int)$rawCulturePoints)*villageCultureProductionFactor()*cultureWorldSpeed($speed);
 	}
 
-	function accountVillageCulturePointsPerDay($database,$uid){
+	function accountVillageCulturePointsPerDay($database,$uid,$speed = null){
 		$uid = (int)$uid;
 		$rawVillages = (int)$database->getVSumField($uid,'cp');
 
-		return (int)round(villageCulturePointsPerDay($rawVillages));
+		return (int)round(villageCulturePointsPerDay($rawVillages,$speed));
 	}
 
 	// Producción diaria de PC de toda la cuenta: la suma de las aldeas más el casco de
 	// cultura. Vive acá porque el casco es lo que la hace distinta de un getVSumField,
 	// y tiene que ser una sola definición: la usan el crédito diario, el panel de
 	// cultura y las obras de arte, que conceden justamente un día de producción.
-	function accountCulturePointsPerDay($database, $uid){
+	function accountCulturePointsPerDay($database, $uid, $speed = null){
 		$uid = (int)$uid;
-		$villages = accountVillageCulturePointsPerDay($database,$uid);
+		$villages = accountVillageCulturePointsPerDay($database,$uid,$speed);
 
-		return $villages+heroHelmetCulturePoints($database, $uid);
+		return $villages+heroHelmetCulturePoints($database,$uid,$speed);
 	}
 }
 
@@ -523,8 +533,8 @@ if(!function_exists('artworkCulturePointsCap')){
 if(!function_exists('artworkCulturePoints')){
 	// Puntos de cultura que otorga **una** obra de arte. Una sola definición para que el
 	// diálogo del inventario anuncie lo mismo que después se acredita.
-	function artworkCulturePoints($database, $uid){
-		return min(artworkCulturePointsCap(), accountCulturePointsPerDay($database, $uid));
+	function artworkCulturePoints($database, $uid, $speed = null){
+		return min(artworkCulturePointsCap(), accountCulturePointsPerDay($database,$uid,$speed));
 	}
 }
 

@@ -352,11 +352,8 @@ echo "<div class=\"headline\"><span class=\"f10 c5\">Error creating constant.php
                         <option value="20">20</option></select></td>
             </tr>
             <tr class="hover">
-                <td><div title="How much Cultural Points needed for every new village. Slow - more, fast - less. Normal sits halfway between the two.">Village Expand:</div></td>
-                <td><select name="village_expand" dir="ltr" class="text">
-                        <option value="1" selected="selected">Slow</option>
-                        <option value="2">Normal</option>
-                        <option value="0">Fast</option></select></td>
+                <td><div title="The balanced culture progression is fixed for every new world.">Village Expand:</div></td>
+                <td><strong>Slow (balanced)</strong></td>
             </tr>
             <tr class="hover">
                 <td><div title="Tracks who is online. Needed for the Online Users list in the admin panel.">Track online users:</div></td>

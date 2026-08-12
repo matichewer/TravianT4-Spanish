@@ -54,7 +54,6 @@ class Process {
         $text = preg_replace("'%STARTTIME%'", time(), $text);
         $text = preg_replace("'%LIMIT_MAILBOX%'", $_POST['limit_mailbox'], $text);
         $text = preg_replace("'%MAX_MAILS%'", $_POST['max_mails'], $text);
-        $text = preg_replace("'%VILLAGE_EXPAND%'", $_POST['village_expand'], $text);
         $text = preg_replace("'%ERROR%'", $_POST['error'], $text);
         $text = preg_replace("'%GREAT_WKS%'", $_POST['great_wks'], $text);
         $text = preg_replace("'%TS_THRESHOLD%'", $_POST['ts_threshold'], $text);
