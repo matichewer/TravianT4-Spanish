@@ -501,6 +501,40 @@
 						return $row && (int)$row[0] === 1;
 				}
 
+				function acquireResearchLock($vid, $timeout = 5) {
+					$vid = (int)$vid;
+					$timeout = max(0,min(10,(int)$timeout));
+					if($vid <= 0) { return false; }
+					$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'research_'.$vid);
+					$result = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',$timeout)");
+					$row = $result ? mysqli_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
+				function releaseResearchLock($vid) {
+					$vid = (int)$vid;
+					if($vid <= 0) { return false; }
+					$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'research_'.$vid);
+					$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+					$row = $result ? mysqli_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
+				function acquireResearchCompletionLock($timeout = 0) {
+					$timeout = max(0,min(10,(int)$timeout));
+					$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'research_completion');
+					$result = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',$timeout)");
+					$row = $result ? mysqli_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
+				function releaseResearchCompletionLock() {
+					$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'research_completion');
+					$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+					$row = $result ? mysqli_fetch_row($result) : false;
+					return $row && (int)$row[0] === 1;
+				}
+
 				function releaseTrainingCompletionLock() {
 						$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX."training_completion");
 						$result = mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");

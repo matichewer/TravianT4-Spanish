@@ -22,6 +22,11 @@
 <a href=\"#\" onclick=\"return Travian.Game.iPopup(".$i.",1);\">".$technology->getUnitName($i)."</a>
 <span class=\"level\">Nivel ".$abdata['b'.$j]."</span>
 </div>";
+if((int)$abdata['b'.$j] >= 20) {
+	echo "<div class=\"contractLink\"><span class=\"none\">Completamente desarrollado</span></div>
+</div><div class=\"clear\"></div></div><hr>";
+	continue;
+}
 if($abdata['b'.$j] != 20) {
 echo "<div class=\"costs\">
 <div class=\"showCosts\">

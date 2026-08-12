@@ -351,7 +351,7 @@ class Technology {
 	
 	public function getTech($tech) {
 		global $village;
-		return ($village->techarray['t'.$tech] == 1);
+		return isset($village->techarray['t'.$tech]) && (int)$village->techarray['t'.$tech] === 1;
 	}
 
 	// Tiempo de entrenamiento de una unidad en segundos, para cuartel (19), gran cuartel
@@ -806,20 +806,69 @@ class Technology {
 	
 	private function upgradeSword($get) {
 		global $database,$session,$bid12,$building,$village,$logging;
-		$ABTech = $database->getABTech($village->wid);
-		$CurrentTech = $ABTech["b".$get['a']];
-		$unit = ($session->tribe-1)*10+intval($get['a']);
-		if(($this->getTech($unit) || ($unit % 10) == 1) && ($CurrentTech < $building->getTypeLevel(12)) && $get['c'] == $session->mchecker) {
-			global ${'ab'.strval($unit)};
-			$data = ${'ab'.strval($unit)};
-			$time = time() + round(($data[$CurrentTech+1]['time'] * ($bid12[$building->getTypeLevel(12)]['attri'] / 100))/SPEED);
-			if ($database->modifyResource($village->wid,$data[$CurrentTech+1]['wood'],$data[$CurrentTech+1]['clay'],$data[$CurrentTech+1]['iron'],$data[$CurrentTech+1]['crop'],0)) {
-				$database->addResearch($village->wid,"b".$get['a'],$time);
-				$logging->addTechLog($village->wid,"b".$get['a'],$CurrentTech+1);
-			}
+		$fieldId = isset($get['id']) && is_scalar($get['id']) && ctype_digit((string)$get['id'])
+			? (int)$get['id'] : 0;
+		$redirect = "build.php?id=".($fieldId >= 1 && $fieldId <= 40 ? $fieldId : 1);
+		$tokenIsValid = isset($get['c']) && is_scalar($get['c'])
+			&& hash_equals((string)$session->mchecker,(string)$get['c']);
+		if(!$tokenIsValid) {
+			header("Location: ".$redirect);
+			return;
 		}
 		$session->changeChecker();
-		header("Location: build.php?id=".$get['id']);
+
+		$position = isset($get['a']) && is_scalar($get['a']) && ctype_digit((string)$get['a'])
+			? (int)$get['a'] : 0;
+		$smithyLevel = (int)$building->getTypeLevel(12);
+		$unit = ((int)$session->tribe-1)*10+$position;
+		$dataName = 'ab'.$unit;
+		if($fieldId < 1 || $fieldId > 40
+			|| !isset($village->resarray['f'.$fieldId.'t']) || (int)$village->resarray['f'.$fieldId.'t'] !== 12
+			|| !isset($village->resarray['f'.$fieldId]) || (int)$village->resarray['f'.$fieldId] < 1
+			|| $position < 1 || $position > 8 || $smithyLevel < 1 || $smithyLevel > 20
+			|| !isset($bid12[$smithyLevel]['attri']) || !isset($GLOBALS[$dataName])
+			|| (!$this->getTech($unit) && $position !== 1)) {
+			header("Location: ".$redirect);
+			return;
+		}
+
+		if(!$database->acquireResearchLock($village->wid,5)) {
+			header("Location: ".$redirect);
+			return;
+		}
+		try {
+			do {
+			$ABTech = $database->getABTech($village->wid);
+			$currentTech = is_array($ABTech) && isset($ABTech['b'.$position]) ? (int)$ABTech['b'.$position] : 20;
+			$running = $database->getResearching($village->wid);
+			$hasSmithyOrder = false;
+			foreach(is_array($running) ? $running : array() as $research) {
+				if(isset($research['tech']) && substr((string)$research['tech'],0,1) === 'b') {
+					$hasSmithyOrder = true;
+					break;
+				}
+			}
+			$nextLevel = $currentTech+1;
+			$data = $GLOBALS[$dataName];
+			if($hasSmithyOrder || $currentTech < 0 || $currentTech >= 20
+				|| $currentTech >= $smithyLevel || !isset($data[$nextLevel])) {
+				break;
+			}
+			$cost = $data[$nextLevel];
+			$time = time()+max(1,(int)round(($cost['time']*($bid12[$smithyLevel]['attri']/100))/SPEED));
+			if(!$database->deductResourcesIfAvailable($village->wid,$cost['wood'],$cost['clay'],$cost['iron'],$cost['crop'])) {
+				break;
+			}
+			if(!$database->addResearch($village->wid,'b'.$position,$time)) {
+				$database->modifyResource($village->wid,$cost['wood'],$cost['clay'],$cost['iron'],$cost['crop'],1);
+				break;
+			}
+			$logging->addTechLog($village->wid,'b'.$position,$nextLevel);
+			} while(false);
+		} finally {
+			$database->releaseResearchLock($village->wid);
+		}
+		header("Location: ".$redirect);
 	}
 	
 	public function getUnitName($i) {

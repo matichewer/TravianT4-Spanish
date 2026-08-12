@@ -4375,29 +4375,32 @@ class Automation {
             @unlink("GameEngine/Prevention/research.txt");
         }
         global $database;
-        $time = time();
-        $ourFileHandle = @fopen("GameEngine/Prevention/research.txt", 'w');
-        @fclose($ourFileHandle);
-        $q = "SELECT * FROM ".TB_PREFIX."research where timestamp < $time";
-        $dataarray = $database->query_return($q);
-        foreach ($dataarray as $data) {
-            $sort_type = substr($data['tech'], 0, 1);
-            switch($sort_type) {
-                case "t":
-                    $q = "UPDATE ".TB_PREFIX."tdata set ".$data['tech']." = 1 where vref = ".$data['vref'];
-                    break;
-                case "a":
-                case "b":
-                    $q = "UPDATE ".TB_PREFIX."abdata set ".$data['tech']." = ".$data['tech']." + 1 where vref = ".$data['vref'];
-                    break;
-            }
-            $database->query($q);
-            $q = "DELETE FROM ".TB_PREFIX."research where id = ".$data['id'];
-            $database->query($q);
-        }
-        if(file_exists("GameEngine/Prevention/research.txt")) {
-            @unlink("GameEngine/Prevention/research.txt");
-        }
+		if(!$database->acquireResearchCompletionLock(0)) {
+			return;
+		}
+		try {
+			$time = time();
+			$ourFileHandle = @fopen("GameEngine/Prevention/research.txt", 'w');
+			@fclose($ourFileHandle);
+			$q = "SELECT * FROM ".TB_PREFIX."research where timestamp < $time";
+			$dataarray = $database->query_return($q);
+			foreach ($dataarray as $data) {
+				$tech = isset($data['tech']) ? (string)$data['tech'] : '';
+				$vref = isset($data['vref']) ? (int)$data['vref'] : 0;
+				if(preg_match('/^t(?:[1-9]|[1-4][0-9]|50)$/D',$tech)) {
+					$database->query("UPDATE ".TB_PREFIX."tdata set ".$tech." = 1 where vref = ".$vref);
+				} elseif(preg_match('/^[ab][1-8]$/D',$tech)) {
+					$database->query("UPDATE ".TB_PREFIX."abdata set ".$tech." = LEAST(20,".$tech." + 1) where vref = ".$vref);
+				}
+				$q = "DELETE FROM ".TB_PREFIX."research where id = ".(int)$data['id'];
+				$database->query($q);
+			}
+		} finally {
+			$database->releaseResearchCompletionLock();
+			if(file_exists("GameEngine/Prevention/research.txt")) {
+				@unlink("GameEngine/Prevention/research.txt");
+			}
+		}
     }
 
     /**
