@@ -181,7 +181,7 @@ class Automation {
         $database->setVillageCapacity((int)$villageId, $column, max($base, $capacity));
     }
 
-    private function refreshCatapultEmbassyCapacity($villageId) {
+    private function refreshEmbassyCapacity($villageId) {
         global $database, $bid18;
         $leader = (int)$database->getVillageField((int)$villageId, 'owner');
         if($leader <= 0) {
@@ -318,7 +318,7 @@ class Automation {
             }
             $this->applyStorageCapacityDelta($villageId, $buildingType, $oldLevel, $newLevel);
             if($buildingType === 18) {
-                $this->refreshCatapultEmbassyCapacity($villageId);
+                $this->refreshEmbassyCapacity($villageId);
             }
             if($buildingType === 36) {
                 $this->syncTrapperCapacity($villageId);
@@ -1440,23 +1440,7 @@ class Automation {
                 $this->procClimbers($database->getVillageField($indi['wid'], 'owner'));
                 $database->addCP($indi['wid'], $pop[1]);
                 if($indi['type'] == 18) {
-                    $allyleader = $database->getVillageField($indi['wid'], "owner");
-                    $allyvillages = $database->getVillagesID2($allyleader);
-                    $allymax = 0;
-                    foreach ($allyvillages as $allyvillage) {
-                        $allyfield = $database->getResourceLevel($allyvillage['wref']);
-                        for ($i = 19; $i <= 40; $i++) {
-                            if($allyfield['f'.$i.'t'] == 18) {
-                                $allylevel = $allyfield['f'.$i];
-                                $allyattri = $bid18[$allylevel]['attri'];
-                            }
-                        }
-                        if($allyattri > $allymax) {
-                            $allymax = $allyattri;
-                        }
-                    }
-                    $q = "UPDATE ".TB_PREFIX."alidata set max = $allymax where leader = $allyleader";
-                    $database->query($q);
+                    $this->refreshEmbassyCapacity($indi['wid']);
                 }
 
                 $this->applyStorageCapacityDelta($indi['wid'], $indi['type'], $level - 1, $level);
@@ -4794,25 +4778,6 @@ class Automation {
                     $this->accrueProductionBeforeChange($vil['vref'], $vil['timetofinish']);
                 }
                 $this->applyStorageCapacityDelta($vil['vref'], $type, $level, $level - 1);
-                if($type == 18) {
-                    $allyleader = $database->getVillageField($data['to'], "owner");
-                    $allyvillages = $database->getVillagesID2($allyleader);
-                    $allymax = 0;
-                    foreach ($allyvillages as $allyvillage) {
-                        $allyfield = $database->getResourceLevel($allyvillage['wref']);
-                        for ($i = 19; $i <= 40; $i++) {
-                            if($allyfield['f'.$i.'t'] == 18) {
-                                $allylevel = $allyfield['f'.$i];
-                                $allyattri = $bid18[$allylevel]['attri'];
-                            }
-                        }
-                        if($allyattri > $allymax) {
-                            $allymax = $allyattri;
-                        }
-                    }
-                    $q = "UPDATE ".TB_PREFIX."alidata set max = $allymax where leader = $allyleader";
-                    $database->query($q);
-                }
                 if($level == 1) {
                     $clear = ",f".$vil['buildnumber']."t=0";
                 } else {
@@ -4820,6 +4785,9 @@ class Automation {
                 }
                 $q = "UPDATE ".TB_PREFIX."fdata SET f".$vil['buildnumber']."=".($level - 1).$clear." WHERE vref=".$vil['vref'];
                 $database->query($q);
+                if($type == 18) {
+                    $this->refreshEmbassyCapacity($vil['vref']);
+                }
                 if($type == 36) {
                     $this->syncTrapperCapacity($vil['vref']);
                 }

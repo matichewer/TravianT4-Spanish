@@ -39,10 +39,9 @@ echo "
     ?>
     <div class="clear"></div>
     <h4 class="round">Invitaciones</h4>
-<table cellpadding="1" cellspacing="1" id="join" class="transparent">
 <form method="post" action="build.php">
+<table cellpadding="1" cellspacing="1" id="join" class="transparent">
 <input type="hidden" name="id" value="<?php echo $id ?>">
-<input type="hidden" name="a" value="2">
 
 <thead></thead>
 <tbody><tr>
@@ -51,9 +50,9 @@ echo "
     	foreach($alliance->inviteArray as $invite) {
         	 echo "
              <div>
-             <button type=\"button\" value=\"npc\" class=\"icon\" onclick=\"window.location.href = 'build.php?id=".$id."&a=2&d=".$invite['id']."'; return false;\"><img class=\"del\" src=\"img/x.gif\" alt=\"Eliminar\" title=\"Eliminar\" /></button>
+             <button type=\"submit\" name=\"a\" value=\"2\" class=\"icon\" formaction=\"build.php?id=".$id."&amp;d=".(int)$invite['id']."\"><img class=\"del\" src=\"img/x.gif\" alt=\"Eliminar\" title=\"Eliminar\" /></button>
         <a href=\"allianz.php?aid=".$invite['alliance']."\">&nbsp;".$database->getAllianceName($invite['alliance'])."</a>
-         <button type=\"button\" value=\"Upgrade level\" class=\"build\" onclick=\"window.location.href = 'build.php?id=".$id."&a=3&d=".$invite['id']."'; return false;\">
+         <button type=\"submit\" name=\"a\" value=\"3\" class=\"build\" formaction=\"build.php?id=".$id."&amp;d=".(int)$invite['id']."\">
 <div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div>
 <div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div>
 </div><div class=\"button-contents\">Aceptar</div></div></button></div>";
@@ -66,7 +65,7 @@ echo "
 	</tr></tbody></table>
     <?php 
         if($alliance->gotInvite) {
-        echo "<p class=\"error2\"></p>";
+        echo "<p class=\"error2\">".$form->getError("ally_accept")."</p>";
         } 
     }
 ?></form><div class="clear"></div><br />

@@ -57,7 +57,11 @@ if(isset($_GET['id'])) {
 		$market->procRemove($_GET);
 	}
 	if($village->resarray['f'.$_GET['id'].'t'] == 18) {
-		$alliance->procAlliance($_GET);
+		$allianceRequest = $_POST;
+		if(isset($_POST['a'], $_GET['d']) && is_scalar($_GET['d'])) {
+			$allianceRequest['d'] = $_GET['d'];
+		}
+		$alliance->procAlliance($allianceRequest);
 	}
 	if($village->resarray['f'.$_GET['id'].'t'] == 12 || $village->resarray['f'.$_GET['id'].'t'] == 13 || $village->resarray['f'.$_GET['id'].'t'] == 22) {
 		$technology->procTechno($_GET);

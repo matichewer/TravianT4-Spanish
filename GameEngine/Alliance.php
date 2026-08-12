@@ -119,7 +119,7 @@
 				$form->addError("name3", SAME_NAME);
 			}elseif($database->getInvitation2($UserData['id'],$session->alliance)) {
 				$form->addError("name4", $post['a_name'].ALREADY_INVITED);
-			}elseif($UserData['alliance'] == $session->alliance) {
+			}elseif((int)$UserData['alliance'] !== 0) {
 				$form->addError("name5", $post['a_name'].ALREADY_IN_ALLY);
 			}else{
 				// Obtenemos la informacion necesaria
@@ -177,21 +177,24 @@
        	*****************************************/
 		private function acceptInvite($get) {
 			global $form, $database, $session;
+			$accept_error = 0;
+			$max = 0;
 			if($session->access != BANNED){
+			$requestedId = isset($get['d']) && is_scalar($get['d']) ? (int)$get['d'] : 0;
 			foreach($this->inviteArray as $invite) {
 			if($session->alliance == 0){
-				if($invite['id'] == $get['d'] && $invite['uid'] == $session->uid) {
+				if((int)$invite['id'] === $requestedId && (int)$invite['uid'] === (int)$session->uid) {
 				$memberlist = $database->getAllMember($invite['alliance']);
 				$alliance_info = $database->getAlliance($invite['alliance']);
-				if(count($memberlist) < $alliance_info['max']){
-					$database->removeInvitation($database->RemoveXSS($get['d']));
+				if(is_array($alliance_info) && (int)$alliance_info['max'] > 0 && count($memberlist) < (int)$alliance_info['max']){
+					$database->removeInvitationsForUser($session->uid);
 					$database->updateUserField($database->RemoveXSS($invite['uid']), "alliance", $database->RemoveXSS($invite['alliance']), 1);
 					$database->createAlliPermissions($database->RemoveXSS($invite['uid']), $database->RemoveXSS($invite['alliance']), '', '0', '0', '0', '0', '0', '0', '0', '0');
 					// Log the notice
 					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> se unió a la alianza.');
 				}else{
 				$accept_error = 1;
-				$max = $alliance_info['max'];
+				$max = is_array($alliance_info) ? (int)$alliance_info['max'] : 0;
 				}
 				}
 			}
@@ -209,35 +212,56 @@
        	/*****************************************
        	Function to create an alliance
        	*****************************************/
-       	private function createAlliance($post) {
-       		global $form, $database, $session, $bid18, $village;
-       		if(!isset($post['ally1']) || $post['ally1'] == "") {
-       			$form->addError("ally1", ATAG_EMPTY);
-       		}
-       		if(!isset($post['ally2']) || $post['ally2'] == "") {
-       			$form->addError("ally2", ANAME_EMPTY);
-       		}
-       		if($database->aExist($post['ally1'], "tag")) {
-       			$form->addError("ally1", ATAG_EXIST);
-       		}
-       		if($database->aExist($post['ally2'], "name")) {
+		private function createAlliance($post) {
+			global $form, $database, $session, $bid18, $village;
+			$field = isset($post['id']) && is_scalar($post['id']) && ctype_digit((string)$post['id']) ? (int)$post['id'] : 0;
+			$tag = isset($post['ally1']) && is_scalar($post['ally1']) ? trim((string)$post['ally1']) : '';
+			$name = isset($post['ally2']) && is_scalar($post['ally2']) ? trim((string)$post['ally2']) : '';
+			$post['ally1'] = $tag;
+			$post['ally2'] = $name;
+			if($session->access == BANNED || $session->is_sitter != 0 || (int)$session->alliance !== 0
+				|| $field < 19 || $field > 40
+				|| (int)$village->resarray['f'.$field.'t'] !== 18
+				|| (int)$village->resarray['f'.$field] < 3) {
+				$form->addError("ally1", "No puedes fundar una alianza desde esta Embajada.");
+			}
+			if($tag === "") {
+				$form->addError("ally1", ATAG_EMPTY);
+			}
+			if($name === "") {
+				$form->addError("ally2", ANAME_EMPTY);
+			}
+			if(strlen($tag) > 8) {
+				$form->addError("ally1", "La abreviatura puede tener hasta 8 caracteres.");
+			}
+			if(strlen($name) > 25) {
+				$form->addError("ally2", "El nombre puede tener hasta 25 caracteres.");
+			}
+			if($tag !== '' && $database->aExist($tag, "tag")) {
+				$form->addError("ally1", ATAG_EXIST);
+			}
+			if($name !== '' && $database->aExist($name, "name")) {
        			$form->addError("ally2", ANAME_EXIST);
        		}
        		if($form->returnErrors() != 0) {
        			$_SESSION['errorarray'] = $form->getErrors();
        			$_SESSION['valuearray'] = $post;
 
-       			header("Location: build.php?id=" . $post['id']);
+				header("Location: build.php?id=" . ($field > 0 ? $field : 1));
        		} else {
-       			$max = $bid18[$village->resarray['f' . $post['id']]]['attri'];
-       			$aid = $database->createAlliance($database->RemoveXSS($post['ally1']), $database->RemoveXSS($post['ally2']), $session->uid, $max);
+			$max = $bid18[(int)$village->resarray['f'.$field]]['attri'];
+			$aid = $database->createAlliance($database->RemoveXSS($tag), $database->RemoveXSS($name), $session->uid, $max);
+			if(!$aid) {
+				$form->addError("ally1", "No se pudo crear la alianza. Volvé a intentarlo.");
+				return;
+			}
        			$database->updateUserField($database->RemoveXSS($session->uid), "alliance", $database->RemoveXSS($aid), 1);
 				$database->procAllyPop($aid);
        			// Asign Permissions
        			$database->createAlliPermissions($database->RemoveXSS($session->uid), $database->RemoveXSS($aid), 'Fundador de la alianza', '1', '1', '1', '1', '1', '1', '1', '1');
        			// log the notice
-       			$database->insertAlliNotice($session->alliance, 'La alianza fue fundada por <a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a>.');
-       			header("Location: build.php?id=" . $post['id']);
+			$database->insertAlliNotice($aid, 'La alianza fue fundada por <a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a>.');
+			header("Location: build.php?id=" . $field);
        		}
        	}
 

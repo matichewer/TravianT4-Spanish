@@ -2025,8 +2025,14 @@
 	}
 
 	function removeInvitation($id) {
+		$id = (int)$id;
 		$q = "DELETE FROM " . TB_PREFIX . "ali_invite where id = $id";
 		return mysqli_query($this->connection,$q);
+	}
+
+	function removeInvitationsForUser($uid) {
+		$uid = (int)$uid;
+		return mysqli_query($this->connection,"DELETE FROM " . TB_PREFIX . "ali_invite WHERE uid = $uid");
 	}
 
 			function delNotice($id, $uid) {
