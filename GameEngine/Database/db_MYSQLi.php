@@ -3673,12 +3673,15 @@
         		return $row[0];
         	}
 
-			function trainUnit($vid, $unit, $amt, $pop, $each, $time, $mode) {
-				global $village, $building, $session, $technology;
+			function trainUnit($vid, $unit, $amt, $pop, $each, $time, $mode, $alreadyLocked = false) {
 
 		if(!$mode) {
-			if(!$this->acquireTrainingLock($vid,5)) {
+			$lockAcquired = (bool)$alreadyLocked;
+			if(!$lockAcquired && !$this->acquireTrainingLock($vid,5)) {
 				return false;
+			}
+			if(!$lockAcquired) {
+				$lockAcquired = true;
 			}
 			try {
 			$barracks = array(1,2,3,11,12,13,14,21,22,31,32,33,34,41,42,43,44);
@@ -3690,40 +3693,49 @@
 			$residence = array(9,10,19,20,29,30,39,40,49,50);
 			$trapper = array(99);
 
-			if(in_array($unit, $barracks)) {
-				$queued = $technology->getTrainingList(1);
-			} elseif(in_array($unit, $stables)) {
-				$queued = $technology->getTrainingList(2);
-			} elseif(in_array($unit, $workshop)) {
-				$queued = $technology->getTrainingList(3);
-			} elseif(in_array($unit, $residence)) {
-				$queued = $technology->getTrainingList(4);
-			} elseif(in_array($unit, $greatstables)) {
-				$queued = $technology->getTrainingList(6);
-			} elseif(in_array($unit, $greatbarracks)) {
-				$queued = $technology->getTrainingList(5);
-			} elseif(in_array($unit, $greatworkshop)) {
-				$queued = $technology->getTrainingList(7);
-			} elseif(in_array($unit, $trapper)) {
-				$queued = $technology->getTrainingList(8);
+			$queueUnits = array();
+			foreach(array($barracks,$stables,$workshop,$residence,$greatstables,$greatbarracks,$greatworkshop,$trapper) as $family) {
+				if(in_array($unit,$family,true)) {
+					$queueUnits = $family;
+					break;
+				}
+			}
+			if(empty($queueUnits)) {
+				return false;
+			}
+			$queued = array();
+			foreach($this->getTraining($vid) as $row) {
+				if(in_array((int)$row['unit'],$queueUnits,true)) {
+					$queued[] = $row;
+				}
 			}
 			$now = time();
 
-			if($each == 0){ $each = 1; }
-			$time2 = $now+$each;
-			if(count($queued) > 0) {
-			$time += $queued[count($queued) - 1]['timestamp'] - $now;
-			$time2 += $queued[count($queued) - 1]['timestamp'] - $now;
+			$amt = max(0,(int)$amt);
+			$each = max(1,(int)$each);
+			if($amt === 0) {
+				return false;
 			}
-			if(!empty($queued) && $queued[count($queued) - 1]['unit'] == $unit){
-			$time = $amt*$queued[count($queued) - 1]['eachtime'];
-					$q = "UPDATE " . TB_PREFIX . "training SET amt = amt + $amt, timestamp = timestamp + $time WHERE id = ".$queued[count($queued) - 1]['id']."";
+			$time2 = $now+$each;
+			$time = $now+($each*$amt);
+			if(count($queued) > 0) {
+				$lastQueued = $queued[count($queued) - 1];
+				$time += (int)$lastQueued['timestamp'] - $now;
+				$time2 += (int)$lastQueued['timestamp'] - $now;
+			}
+			if(!empty($queued)
+				&& (int)$lastQueued['unit'] === (int)$unit
+				&& (int)$lastQueued['eachtime'] === $each){
+				$extension = $amt*$each;
+				$q = "UPDATE " . TB_PREFIX . "training SET amt = amt + $amt, timestamp = timestamp + $extension WHERE id = ".(int)$lastQueued['id'];
 			}else{
 					$q = "INSERT INTO " . TB_PREFIX . "training values (0,$vid,$unit,$amt,$pop,$time,$each,$time2)";
 			}
 				return mysqli_query($this->connection,$q);
 			} finally {
-				$this->releaseTrainingLock($vid);
+				if(!$alreadyLocked && $lockAcquired) {
+					$this->releaseTrainingLock($vid);
+				}
 			}
 				} else {
 					$q = "DELETE FROM " . TB_PREFIX . "training where id = $vid";

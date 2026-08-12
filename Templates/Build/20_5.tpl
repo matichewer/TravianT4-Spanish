@@ -39,6 +39,6 @@ echo "&nbsp;&nbsp;<button type=\"button\" value=\"npc\" class=\"icon\" onclick=\
     }
     }
 if($success == 0) {
-	echo "<tr><td colspan=\"3\"><div class=\"none\"><center>No hay unidades disponibles. Investiga en la academia</center></div></td></tr>";
+	echo "<div class=\"none\">No hay unidades disponibles. Investiga en la academia.</div>";
 }
 ?>

@@ -446,13 +446,15 @@ class Technology {
 		$start = ($session->tribe-1)*10+1;
 		$end = ($session->tribe*10);
 		for($i=$start;$i<=$end;$i++) {
-			$amt = isset($post['t'.$i]) ? (int)$post['t'.$i] : 0;
+			$value = isset($post['t'.$i]) ? $post['t'.$i] : null;
+			$amt = is_scalar($value) && ctype_digit((string)$value) ? (int)$value : 0;
 			if($amt > 0) {
 				$this->trainUnit($i,$amt,$great,$fieldId);
 			}
 		}
 		if($session->tribe == 3) {
-			$amt = isset($post['t99']) ? (int)$post['t99'] : 0;
+			$value = isset($post['t99']) ? $post['t99'] : null;
+			$amt = is_scalar($value) && ctype_digit((string)$value) ? (int)$value : 0;
 			if($amt > 0) {
 				$this->trainUnit(99,$amt,$great,$fieldId);
 			}
@@ -541,8 +543,11 @@ class Technology {
 		$unit = (int)$unit;
 		$amt = (int)$amt;
 		$fieldId = (int)$fieldId;
+		$tribeStart = ((int)$session->tribe - 1) * 10 + 1;
+		$tribeEnd = (int)$session->tribe * 10;
 		if($amt <= 0 || $fieldId < 1 || $fieldId > 40
-			|| !($this->getTech($unit) || $unit%10 <= 1 || $unit == 99)) {
+			|| ($unit !== 99 && ($unit < $tribeStart || $unit > $tribeEnd))
+			|| !($unit == 99 || $unit%10 <= 1 || $this->getTech($unit))) {
 			return false;
 		}
 
@@ -576,15 +581,23 @@ class Technology {
 			return false;
 		}
 
-		$lockAcquired = false;
+		$settlementLockAcquired = false;
+		$trainingLockAcquired = false;
 		if($isExpansionUnit) {
-			$lockAcquired = $database->acquireSettlementLock($session->uid,5);
-			if(!$lockAcquired) {
+			$settlementLockAcquired = $database->acquireSettlementLock($session->uid,5);
+			if(!$settlementLockAcquired) {
 				return false;
 			}
 		}
 
 		try {
+			if(method_exists($database,'acquireTrainingLock')) {
+				$trainingLockAcquired = $database->acquireTrainingLock($village->wid,5);
+				if(!$trainingLockAcquired) {
+					return false;
+				}
+			}
+
 			$each = 0;
 			if(in_array($unit,$footies,true)) {
 				$each = $this->getUnitTrainingTime($unit,$great ? 29 : 19);
@@ -640,13 +653,16 @@ class Technology {
 			if(!$database->deductResourcesIfAvailable($village->wid,$wood,$clay,$iron,$crop)) {
 				return false;
 			}
-			if(!$database->trainUnit($village->wid,$unit+($great?60:0),$amt,${'u'.$unit}['pop'],$each,time()+$time,0)) {
+			if(!$database->trainUnit($village->wid,$unit+($great?60:0),$amt,${'u'.$unit}['pop'],$each,time()+$time,0,$trainingLockAcquired)) {
 				$database->modifyResource($village->wid,$wood,$clay,$iron,$crop,1);
 				return false;
 			}
 			return true;
 		} finally {
-			if($lockAcquired) {
+			if($trainingLockAcquired) {
+				$database->releaseTrainingLock($village->wid);
+			}
+			if($settlementLockAcquired) {
 				$database->releaseSettlementLock($session->uid);
 			}
 		}

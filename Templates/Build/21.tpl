@@ -60,54 +60,23 @@ if ($building->getTypeLevel(21) > 0) { ?>
 					<div class=\"clear\"></div><br />";
                       $success += 1;
                 }
-            }
-            if($success == 0) {
-	echo "<tr><td colspan=\"3\"><div class=\"none\"><center>Hay que investigar las unidades primero</center></div></td></tr>";
-            }
+	            }
+	            if($success == 0) {
+	echo "<div class=\"none\">No hay unidades disponibles. Investiga en la academia.</div>";
+	            }
             ?>
 </div><div class="clear"></div>
-			<button type="submit" value="ok" name="s1" id="btn_train" value="ok" class="startTraining"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Entrenar</div></div></button>
+			<?php if($success > 0) { ?><button type="submit" value="ok" name="s1" id="btn_train" class="startTraining"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Entrenar</div></div></button><?php } ?>
 		</form>
 <?php
 	    } else {
 			echo "<b>El entrenamiento puede comenzar cuando el Taller esté terminado.</b><br>\n";
 		}
 
-    $trainlist = $technology->getTrainingList(3);
-    if(count($trainlist) > 0) {
-    //$timer = 2*count($trainlist);
-    	echo "
-    <table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\">
-		<thead><tr>
-			<td>Unidad</td>
-			<td>Duración</td>
-			<td>Finaliza</td>
-		</tr></thead>
-		<tbody>";
-        $TrainCount = 0;
-        foreach($trainlist as $train) {
-		$TrainCount++;
-	        echo "<tr><td class=\"desc\">";
-		echo "<img class=\"unit u".$train['unit']."\" src=\"img/x.gif\" alt=\"".$train['name']."\" title=\"".$train['name']."\" />";
-		echo $train['amt']." ".$train['name']."</td><td class=\"dur\">";
-		if ($TrainCount == 1 ) {
-			$NextFinished = $generator->getTimeFormat($train['timestamp2']-time());
-			echo "<span id=timer1>".$generator->getTimeFormat($train['timestamp']-time())."</span>";
-		} else {
-			echo $generator->getTimeFormat($train['eachtime']*$train['amt']);
-		}
-		echo "</td><td class=\"fin\">";
-		$time = $generator->procMTime($train['timestamp']);
-		if($time[0] != "hoy") {
-			echo "el ".$time[0]." a las ";
-            	}
-		echo $time[1]."</td></tr>";
-		} ?>
-		<tr class="next"><td colspan="3">La próxima unidad estará lista en <span id="timer2"><?php echo $NextFinished; ?></span> </td></tr>
-        </tbody></table>
-    <?php }
-?>  
-    </p></div>
+	$trainingQueueType = 3;
+	include("training_queue.tpl");
+?>
+</div>
 
 <div class="clear">&nbsp;</div>
     <div class="clear"></div>
