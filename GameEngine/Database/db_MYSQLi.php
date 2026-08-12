@@ -2504,9 +2504,38 @@
 			}
 
 			function getUnreadNoticeCount($uid) {
+				$uid = (int)$uid;
 				$q = "SELECT COUNT(1) 'count' FROM " . TB_PREFIX . "ndata where uid = $uid and viewed = 0";
 				$result = mysqli_query($this->connection,$q);
 				return mysqli_fetch_assoc($result)['count'];
+			}
+
+			function getUnreadNoticeCountsByCategory($uid) {
+				$uid = (int)$uid;
+				$counts = array(
+					'attack' => 0,
+					'spy' => 0,
+					'trade' => 0,
+					'reinforcement' => 0,
+					'misc' => 0
+				);
+				$q = "SELECT CASE"
+					." WHEN ntype IN (1,2,3,4,5,6,7,25) THEN 'attack'"
+					." WHEN ntype IN (0,22,23,24) THEN 'spy'"
+					." WHEN ntype IN (10,11,12,13) THEN 'trade'"
+					." WHEN ntype = 8 THEN 'reinforcement'"
+					." WHEN ntype IN (9,15,16,17,18,19,20,21) THEN 'misc'"
+					." END AS category, COUNT(1) AS count"
+					." FROM " . TB_PREFIX . "ndata"
+					." WHERE uid = $uid AND viewed = 0"
+					." GROUP BY category";
+				$result = mysqli_query($this->connection, $q);
+				while($result && $row = mysqli_fetch_assoc($result)) {
+					if(isset($counts[$row['category']])) {
+						$counts[$row['category']] = (int)$row['count'];
+					}
+				}
+				return $counts;
 			}
 
 			function createTradeRoute($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time) {

@@ -32,18 +32,35 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
 		$unmsg = $database->getUnreadMessageCount($session->uid);
     	if($unmsg > 1000) { $unmsg = "+1000"; }
 		
-		$unnotice = $database->getUnreadNoticeCount($session->uid);
-		$hasUnreadNotices = (int)$unnotice > 0;
-    	if($unnotice > 1000) { $unnotice = "+1000"; }
+		$unreadNoticeCategories = $database->getUnreadNoticeCountsByCategory($session->uid);
+		$unnotice = array_sum($unreadNoticeCategories);
+		$hasUnreadNotices = $unnotice > 0;
+		$noticeCategoryLabels = array(
+			'attack' => 'Ataque o defensa',
+			'spy' => 'Espionaje',
+			'trade' => 'Comercio',
+			'reinforcement' => 'Refuerzo',
+			'misc' => 'Varios'
+		);
+		$unnoticeDisplay = $unnotice > 1000 ? '+1000' : $unnotice;
 	?>
 	<li id="n5" class="reports"> 
-		<a class="<?php echo $activeNavigation == 'reports' ? 'active' : ''; ?>" href="berichte.php" accesskey="5" title="<?php echo HEADER_NOTICES; ?><?php if($hasUnreadNotices){ echo' ('.$unnotice.')'; } ?>"></a>
+		<a class="<?php echo $activeNavigation == 'reports' ? 'active' : ''; ?>" href="berichte.php" accesskey="5" title="<?php echo HEADER_NOTICES; ?><?php if($hasUnreadNotices){ echo' ('.$unnoticeDisplay.')'; } ?>"></a>
 		<?php
 		if($hasUnreadNotices){
-			echo "<div class=\"ltr bubble\" title=\"".$unnotice." ".HEADER_NOTICES_NEW."\" style=\"display:block\">
-					<div class=\"bubble-background-l\"></div>
-					<div class=\"bubble-background-r\"></div>
-					<div class=\"bubble-content\">".$unnotice."</div></div>";
+			echo '<div class="report-badges">';
+			foreach($unreadNoticeCategories as $category => $count) {
+				if($count <= 0) {
+					continue;
+				}
+				$countDisplay = $count > 9 ? '9+' : $count;
+				$title = $count.' '.HEADER_NOTICES_NEW.' · '.$noticeCategoryLabels[$category];
+				echo '<span class="report-badge report-badge-'.$category.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'
+					.'<span class="report-badge-background report-badge-background-l"></span>'
+					.'<span class="report-badge-background report-badge-background-r"></span>'
+					.'<span class="report-badge-content">'.$countDisplay.'</span></span>';
+			}
+			echo '</div>';
 		}
 		?>
 	</li>

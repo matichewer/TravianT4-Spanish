@@ -1551,3 +1551,15 @@ div.village2 div#village_map .l19{left:290px;top:365px;}
 div.village2 div#village_map .l20{left:410px;top:360px;}
 div.village2 div#village_map .l39{left:404px;top:222px;}
 div.village2 div#village_map .l40{left:310px;top:470px;}
+
+/* Unread report counts, grouped by the same categories as berichte.php. */
+#navigation .report-badges{display:flex;flex-flow:row wrap;justify-content:flex-end;gap:1px;position:absolute;z-index:6;top:-4px;right:-4px;width:62px;pointer-events:none;}
+#navigation .report-badge{display:block;position:relative;width:20px;height:21px;color:#fff;font-size:10px;font-weight:bold;text-align:center;}
+#navigation .report-badge-background{position:absolute;top:0;height:21px;background-image:url("../../img/layout/speechBalloon_small-rtl.png");}
+#navigation .report-badge-background-l{left:0;width:15px;background-position:left top;}
+#navigation .report-badge-background-r{left:15px;width:5px;background-position:right top;}
+#navigation .report-badge-content{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:17px;line-height:1;}
+#navigation .report-badge-attack .report-badge-background{filter:hue-rotate(-95deg) saturate(3) brightness(.72);}
+#navigation .report-badge-spy .report-badge-background{filter:hue-rotate(135deg) saturate(2) brightness(.78);}
+#navigation .report-badge-trade .report-badge-background{filter:grayscale(1) brightness(.78);}
+#navigation .report-badge-reinforcement .report-badge-background{filter:hue-rotate(200deg) saturate(1.8) brightness(.72);}
