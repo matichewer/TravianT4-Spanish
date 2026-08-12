@@ -1,6 +1,46 @@
 <?php
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
+
+if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']==='POST'
+	&& isset($_POST['a']) && $_POST['a']==='disposeHeroItem'){
+	$tokenIsValid = isset($_POST['c']) && is_scalar($_POST['c'])
+		&& hash_equals((string)$session->mchecker,(string)$_POST['c']);
+	if(!$tokenIsValid){
+		$message = "La solicitud expiró. Vuelve a intentarlo.";
+	}else{
+		$itemId = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+		$amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
+		$action = isset($_POST['disposalAction']) && is_scalar($_POST['disposalAction'])
+			? (string)$_POST['disposalAction'] : '';
+		$result = $database->disposeHeroItem((int)$session->uid,$itemId,$amount,$action);
+		switch($result['status']){
+			case 'success':
+				$message = $result['action']==='liquidate'
+					? "Objeto liquidado. Recibiste ".(int)$result['silver']." de plata."
+					: "Objeto descartado definitivamente.";
+				break;
+			case 'too_small':
+				$message = "Debes liquidar al menos ".(int)$result['minimum']." unidades para recibir 1 de plata.";
+				break;
+			case 'invalid_amount':
+				$message = "La cantidad elegida no es válida para este objeto.";
+				break;
+			case 'unavailable':
+				$message = "El objeto o la cantidad ya no están disponibles.";
+				break;
+			case 'busy':
+				$message = "El inventario está procesando otra operación. Inténtalo nuevamente.";
+				break;
+			default:
+				$message = "No se pudo completar la operación. El objeto no fue procesado.";
+		}
+	}
+	$_SESSION['auctionBidMessage'] = $message;
+	header("Location: hero_auction.php?action=sell");
+	exit;
+}
+
 include "Templates/html.tpl";
 
 // avoid division by zero

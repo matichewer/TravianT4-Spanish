@@ -5091,7 +5091,7 @@ break;
 						$btype = (int)$itemData['btype'];
 						$type = (int)$itemData['type'];
 						$itemAmount = (int)$itemData['num'];
-						$stackable = in_array($btype,array(7,8,9,10,11,13,14),true);
+						$stackable = heroItemIsAuctionStackable($btype);
 						if(!$stackable && $amount!==$itemAmount){
 							return false;
 						}
@@ -5110,7 +5110,7 @@ break;
 						}
 
 						$time = time()+AUCTIONTIME;
-						$silver = $stackable ? $amount : 100;
+						$silver = heroItemAuctionStartingPrice($btype,$amount);
 						$q = "INSERT INTO ".TB_PREFIX."auction"
 							." (`owner`, `itemid`, `btype`, `type`, `num`, `uid`, `bids`, `silver`, `newsilver`, `time`, `finish`)"
 							." VALUES ($owner, $itemid, $btype, $type, $amount, 0, 0, $silver, $silver, $time, 0)";
@@ -5133,6 +5133,80 @@ break;
 						$this->releaseAuctionLock();
 					}
 				}
+
+			function disposeHeroItem($owner,$itemid,$amount,$action){
+				$owner = (int)$owner;
+				$itemid = (int)$itemid;
+				$amount = (int)$amount;
+				$action = (string)$action;
+				if($owner<1 || $itemid<1 || $amount<1 || !in_array($action,array('liquidate','discard'),true)){
+					return array('status'=>'invalid');
+				}
+				if(!$this->acquireAuctionLock()){
+					return array('status'=>'busy');
+				}
+
+				try {
+					$q = "SELECT * FROM ".TB_PREFIX."heroitems"
+						." WHERE id = $itemid AND uid = $owner AND proc = 0 LIMIT 1";
+					$result = mysqli_query($this->connection,$q);
+					$item = $result ? mysqli_fetch_assoc($result) : false;
+					if(!$item){
+						return array('status'=>'unavailable');
+					}
+
+					$currentAmount = (int)$item['num'];
+					$btype = (int)$item['btype'];
+					$type = (int)$item['type'];
+					$stackable = heroItemIsAuctionStackable($btype);
+					if($amount>$currentAmount || (!$stackable && $amount!==$currentAmount)){
+						return array('status'=>'invalid_amount','minimum'=>$stackable && $action==='liquidate' ? 10 : 1);
+					}
+
+					$reward = $action==='liquidate' ? heroItemLiquidationReward($btype,$amount) : 0;
+					if($action==='liquidate' && $reward<1){
+						return array('status'=>'too_small','minimum'=>10);
+					}
+
+					$removedWholeItem = ($amount===$currentAmount);
+					if($removedWholeItem){
+						$q = "DELETE FROM ".TB_PREFIX."heroitems"
+							." WHERE id = $itemid AND uid = $owner AND proc = 0 AND num = $currentAmount";
+					}else{
+						$q = "UPDATE ".TB_PREFIX."heroitems SET num = num - $amount"
+							." WHERE id = $itemid AND uid = $owner AND proc = 0 AND num = $currentAmount";
+					}
+					$removed = mysqli_query($this->connection,$q);
+					if(!$removed || mysqli_affected_rows($this->connection)!==1){
+						return array('status'=>'unavailable');
+					}
+
+					if($reward>0){
+						$credited = mysqli_query($this->connection,
+							"UPDATE ".TB_PREFIX."users SET silver = silver + $reward WHERE id = $owner");
+						if(!$credited || mysqli_affected_rows($this->connection)!==1){
+							if($removedWholeItem){
+								$restored = mysqli_query($this->connection,
+									"INSERT INTO ".TB_PREFIX."heroitems (id,uid,btype,type,num,proc)"
+									." VALUES ($itemid,$owner,$btype,$type,$currentAmount,0)");
+							}else{
+								$restored = mysqli_query($this->connection,
+									"UPDATE ".TB_PREFIX."heroitems SET num = num + $amount"
+									." WHERE id = $itemid AND uid = $owner AND proc = 0 AND num = ".($currentAmount-$amount));
+							}
+							if(!$restored || mysqli_affected_rows($this->connection)!==1){
+								error_log("hero_item_disposal compensation_failed uid=$owner item=$itemid amount=$amount");
+							}
+							return array('status'=>'error');
+						}
+					}
+
+					error_log("hero_item_disposal action=$action uid=$owner item=$itemid btype=$btype type=$type amount=$amount silver=$reward");
+					return array('status'=>'success','action'=>$action,'amount'=>$amount,'silver'=>$reward);
+				} finally {
+					$this->releaseAuctionLock();
+				}
+			}
 
 			function placeAuctionBid($id, $bidder, $maxBid) {
 				$id = (int) $id;

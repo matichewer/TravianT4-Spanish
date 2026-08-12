@@ -72,6 +72,7 @@ $sql2 = mysql_query("SELECT * FROM $prefix WHERE proc = 0 AND uid = $session->ui
 $query2 = mysql_num_rows($sql2);
 
 $outputList = '';
+$disposalItems = array();
 if($query2==0){
 	$outputList .= "<span class='none'>Subastas finalizadas.</span>";
 }else{
@@ -79,6 +80,12 @@ while($row = mysql_fetch_array($sql2)){
 $id = $row["id"];$uid = $row["uid"];$btype = $row["btype"];$type = $row["type"];$num = $row["num"];$proc = $row["proc"];
 
 include "Templates/Auction/alt.tpl";
+$disposalItems[] = array(
+	'id'=>(int)$id,
+	'name'=>(string)$name,
+	'num'=>(int)$num,
+	'stackable'=>heroItemIsAuctionStackable($btype)
+);
 
    	$outputList .= "<div class=\"\" title=\"".$name."||".$title."\" id=\"item_".$id."\">";
 	$outputList .= "<div class=\"itemInInventory item item_".$item." inventory\">";
@@ -101,6 +108,75 @@ include "Templates/Auction/alt.tpl";
 
 	</div>
 				</div><div class="clear"></div>
+<?php if(!empty($disposalItems)){ ?>
+<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
+	<h4>Gestionar objetos no deseados</h4>
+	<p>Liquidar paga el 10 % del precio inicial. Los objetos apilables requieren al menos 10 unidades. Descartar no entrega plata.</p>
+	<form id="disposeHeroItemForm" method="post" action="hero_auction.php?action=sell">
+		<input type="hidden" name="a" value="disposeHeroItem">
+		<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
+		<input type="hidden" name="disposalAction" value="">
+		<label for="disposeHeroItemId">Objeto:</label>
+		<select id="disposeHeroItemId" name="id" onchange="updateHeroItemDisposal()">
+			<?php foreach($disposalItems as $disposalItem){ ?>
+			<option value="<?php echo $disposalItem['id']; ?>" data-name="<?php echo htmlspecialchars($disposalItem['name'],ENT_QUOTES,'UTF-8'); ?>" data-amount="<?php echo $disposalItem['num']; ?>" data-stackable="<?php echo $disposalItem['stackable'] ? '1' : '0'; ?>"><?php echo $disposalItem['num'].' × '.htmlspecialchars($disposalItem['name'],ENT_QUOTES,'UTF-8'); ?></option>
+			<?php } ?>
+		</select>
+		<label for="disposeHeroItemAmount">Cantidad:</label>
+		<input class="text" id="disposeHeroItemAmount" name="amount" type="number" min="1" value="1" onchange="updateHeroItemDisposal()" onkeyup="updateHeroItemDisposal()">
+		<span id="disposeHeroItemValue"></span>
+		<button type="button" onclick="submitHeroItemDisposal('liquidate')">Liquidar</button>
+		<button type="button" onclick="submitHeroItemDisposal('discard')">Descartar</button>
+	</form>
+</div></div>
+<script type="text/javascript">
+function selectedHeroDisposalItem(){
+	var select = document.getElementById('disposeHeroItemId');
+	return select.options[select.selectedIndex];
+}
+function updateHeroItemDisposal(){
+	var option = selectedHeroDisposalItem();
+	var input = document.getElementById('disposeHeroItemAmount');
+	var stackable = option.getAttribute('data-stackable') === '1';
+	var maximum = parseInt(option.getAttribute('data-amount'),10);
+	input.max = maximum;
+	input.readOnly = !stackable;
+	if(!stackable || parseInt(input.value,10)>maximum || parseInt(input.value,10)<1){
+		input.value = maximum;
+	}
+	var amount = parseInt(input.value,10) || 0;
+	var reward = stackable ? Math.floor(amount/10) : 10;
+	document.getElementById('disposeHeroItemValue').innerHTML = stackable && amount<10
+		? ' Liquidación mínima: 10 unidades.'
+		: ' Liquidación: '+reward+' de plata.';
+}
+function submitHeroItemDisposal(action){
+	var option = selectedHeroDisposalItem();
+	var input = document.getElementById('disposeHeroItemAmount');
+	var stackable = option.getAttribute('data-stackable') === '1';
+	var maximum = parseInt(option.getAttribute('data-amount'),10);
+	var amount = stackable ? parseInt(input.value,10) : maximum;
+	if(!amount || amount<1 || amount>maximum){
+		alert('Elige una cantidad válida.');
+		return;
+	}
+	if(action==='liquidate' && stackable && amount<10){
+		alert('Debes liquidar al menos 10 unidades para recibir 1 de plata.');
+		return;
+	}
+	var name = option.getAttribute('data-name');
+	var reward = stackable ? Math.floor(amount/10) : 10;
+	var message = action==='liquidate'
+		? '¿Liquidar definitivamente '+amount+' × '+name+' por '+reward+' de plata?'
+		: '¿Descartar definitivamente '+amount+' × '+name+' sin recibir plata?';
+	if(confirm(message)){
+		document.getElementById('disposeHeroItemForm').disposalAction.value = action;
+		document.getElementById('disposeHeroItemForm').submit();
+	}
+}
+updateHeroItemDisposal();
+</script>
+<?php } ?>
 <?php
 $prefix = "".TB_PREFIX."auction";
 
