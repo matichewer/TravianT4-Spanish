@@ -13,7 +13,7 @@
 
 - [x] 3.1 Procesar liquidación y descarte exclusivamente mediante POST autenticado y token `mchecker`, traduciendo cada resultado a un mensaje neutral en español.
 - [x] 3.2 Añadir controles de liquidar y descartar a los objetos disponibles de la zona de venta, con selección parcial solo para objetos apilables.
-- [x] 3.3 Mostrar la cantidad mínima liquidable, calcular la recompensa prevista en la interfaz y solicitar una confirmación irreversible con objeto, cantidad y plata exactos.
+- [x] 3.3 Mostrar la cantidad mínima liquidable, calcular la recompensa prevista en la interfaz y solicitar una confirmación irreversible con objeto, cantidad y plata exactos mediante acciones visualmente reconocibles y jerarquizadas.
 - [x] 3.4 Mantener ocultas o inhabilitadas ambas acciones para objetos equipados, comprometidos en subastas o no disponibles.
 - [x] 3.5 Si se modifica CSS o JavaScript estático, actualizar sus versiones de caché —y las de imágenes CSS afectadas— conforme a las reglas de despliegue.
 
