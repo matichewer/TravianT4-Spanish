@@ -1853,6 +1853,7 @@ class Automation {
             $totalheal = 0;
             $spyReinforcements = array();
             $spyReinforcementReportOwners = array();
+            $battleReinforcementReportOwners = array();
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
             $breweryActive = false;
@@ -2509,11 +2510,9 @@ class Automation {
                         $wrong = '0';
                         if((int)$enforce['from'] === 0) {
                             $reinforcementOwner = 0;
-                            $reinforcementAlly = 0;
                             $tribe = 4;
                         } else {
                             $reinforcementOwner = $database->getVillageField($enforce['from'], "owner");
-                            $reinforcementAlly = $database->getUserField($reinforcementOwner, "alliance", 0);
                             $tribe = $database->getUserField($reinforcementOwner, "tribe", 0);
                         }
                         $start = ($tribe - 1) * 10 + 1;
@@ -2560,31 +2559,14 @@ class Automation {
                             $wrong = '1';
                         }
 
-                        $notlife = ''.$reinforcementDead[$start].','.$reinforcementDead[$start + 1].','.$reinforcementDead[$start + 2].','.$reinforcementDead[$start + 3].','.$reinforcementDead[$start + 4].','.$reinforcementDead[$start + 5].','.$reinforcementDead[$start + 6].','.$reinforcementDead[$start + 7].','.$reinforcementDead[$start + 8].','.$reinforcementDead[$start + 9].'';
-                        $notlife1 = array_sum($reinforcementDead);
-                        $life = ''.$enforce['u'.$start.''].','.$enforce['u'.($start + 1).''].','.$enforce['u'.($start + 2).''].','.$enforce['u'.($start + 3).''].','.$enforce['u'.($start + 4).''].','.$enforce['u'.($start + 5).''].','.$enforce['u'.($start + 6).''].','.$enforce['u'.($start + 7).''].','.$enforce['u'.($start + 8).''].','.$enforce['u'.($start + 9).''].'';
-                        $life1 = $enforce['u'.$start.''] + $enforce['u'.($start + 1).''] + $enforce['u'.($start + 2).''] + $enforce['u'.($start + 3).''] + $enforce['u'.($start + 4).''] + $enforce['u'.($start + 5).''] + $enforce['u'.($start + 6).''] + $enforce['u'.($start + 7).''] + $enforce['u'.($start + 8).''] + $enforce['u'.($start + 9).''];
-                        $lifehero = $enforce['hero'];
-                        $notlifehero = $reinforcementHeroLoss;
-                        $totallife = $enforce['hero'] + $life1;
-                        $totalnotlife = $reinforcementHeroLoss + $notlife1;
-                        $totalsend_att = $data['t1'] + $data['t2'] + $data['t3'] + $data['t4'] + $data['t5'] + $data['t6'] + $data['t7'] + $data['t8'] + $data['t9'] + $data['t10'] + $data['t11'];
-                        $totaldead_att = $dead1 + $dead2 + $dead3 + $dead4 + $dead5 + $dead6 + $dead7 + $dead8 + $dead9 + $dead10 + $dead11;
-                        //NEED TO SEND A RAPPORTAGE!!!
-                        $data2 = ''.$reinforcementOwner.','.$enforce['from'].','.addslashes($this->reportSafeField($to['name'])).','.$tribe.','.$life.','.$notlife.','.$lifehero.','.$notlifehero.',reinforcement-origin-v1,reinforcement-context-v1,'.$from['owner'].','.$from['wref'].','.($scout ? 1 : 0).','.($spyDetected ? 1 : 0);
-                        // En un ataque normal el propietario conserva el aviso resumido de
-                        // sus bajas. En un espionaje detectado se difiere el aviso hasta que
-                        // exista $data2: así recibe el mismo informe defensivo completo que
-                        // el dueño de la aldea, no sólo la fila de su refuerzo.
+                        // Los informes de espionaje y batalla se envían después, cuando ya
+                        // existe el payload defensivo completo. Guardar un jugador una sola
+                        // vez evita duplicados si reforzó desde más de una aldea.
                         if($reinforcementOwner > 0 && (int)$reinforcementOwner !== (int)$to['owner'] && (!$scout || $spyDetected)) {
                             if($scout) {
                                 $spyReinforcementReportOwners[(int)$reinforcementOwner] = true;
-                            } else if($totalnotlife == 0) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 15, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
-                            } else if($totallife > $totalnotlife) {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 16, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
                             } else {
-                                $database->addNotice($reinforcementOwner, $from['wref'], $reinforcementAlly, 17, 'Refuerzo en '.addslashes($to['name']).' atacado', $data2, $AttackArrivalTime);
+                                $battleReinforcementReportOwners[(int)$reinforcementOwner] = true;
                             }
                         }
                         if(!$scout) {
@@ -3331,21 +3313,23 @@ class Automation {
                     $data2def = $defenderPartyData !== ''
                         ? $data2.',defenders-v1,'.$defenderPartyData
                         : $data2;
+                    $defenderReportType = 6;
                     if($totaldead_def == 0) {
-                        $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                         if($totalsend_def == 0) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 7, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
+                            $defenderReportType = 7;
                         } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 4, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
+                            $defenderReportType = 4;
                         }
-
-                    } else {
-                        $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
-                        if($totalsend_def > $totaldead_def) {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 5, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
-                        } else {
-                            $database->addNotice($to['owner'], $to['wref'], $toAlly, 6, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2def, $AttackArrivalTime);
-                        }
+                    } elseif($totalsend_def > $totaldead_def) {
+                        $defenderReportType = 5;
+                    }
+                    $defenderTopic = ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'';
+                    $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
+                    $database->addNotice($to['owner'], $to['wref'], $toAlly, $defenderReportType, $defenderTopic, $data2def, $AttackArrivalTime);
+                    foreach(array_keys($battleReinforcementReportOwners) as $reinforcementOwner) {
+                        // Copia personal: muestra el mismo combate completo y el desglose
+                        // por defensor, pero no duplica el evento en los informes de alianza.
+                        $database->addNotice($reinforcementOwner, $to['wref'], 0, $defenderReportType, $defenderTopic, $data2def, $AttackArrivalTime);
                     }
                 }
                 //to here

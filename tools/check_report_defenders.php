@@ -240,6 +240,23 @@ reportDefendersAssert(
 	'un informe viejo se sigue dibujando con el desglose por tribu'
 );
 
+// ------------------------------------------------------- copia al reforzador
+$automationSource = file_get_contents($root.'/GameEngine/Automation.php');
+reportDefendersAssert(
+	strpos($automationSource, '$battleReinforcementReportOwners[(int)$reinforcementOwner] = true;') !== false,
+	'la batalla reúne a cada dueño de refuerzos para enviarle una sola copia'
+);
+reportDefendersAssert(
+	strpos($automationSource, 'addNotice($reinforcementOwner, $to[\'wref\'], 0, $defenderReportType, $defenderTopic, $data2def') !== false,
+	'el reforzador recibe el payload defensivo completo como informe personal'
+);
+reportDefendersAssert(
+	strpos($automationSource, 'addNotice($reinforcementOwner, $from[\'wref\'], $reinforcementAlly, 15') === false
+		&& strpos($automationSource, 'addNotice($reinforcementOwner, $from[\'wref\'], $reinforcementAlly, 16') === false
+		&& strpos($automationSource, 'addNotice($reinforcementOwner, $from[\'wref\'], $reinforcementAlly, 17') === false,
+	'los combates nuevos ya no generan el resumen incompleto de refuerzo'
+);
+
 // ------------------------------------------------------- refuerzo de naturaleza
 // Los animales enjaulados defienden como un refuerzo sin jugador ni aldea (`from = 0`).
 $natureParty = $newDefenderParty->invoke($automation, 0, 0, 4);

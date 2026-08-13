@@ -57,7 +57,7 @@
 		<tr>
 <td class="role"></td>
 <td class="troopHeadline" colspan="11">
-<a href="karte.php?z=<?php echo $dataarray[0]; ?>"><?php echo $database->getVillageField($dataarray[0],'name'); ?></a> <?php echo REPORT_SEND_REINF_TO; ?> <a href="karte.php?z=<?php echo $dataarray[14]; ?>"><?php echo $database->getVillageField($dataarray[14],'name'); ?></a>
+<a href="karte.php?d=<?php echo $dataarray[0]."&amp;c=".$generator->getMapCheck($dataarray[0]); ?>"><?php echo $database->getVillageField($dataarray[0],'name'); ?></a> <?php echo REPORT_SEND_REINF_TO; ?> <a href="karte.php?d=<?php echo $dataarray[14]."&amp;c=".$generator->getMapCheck($dataarray[14]); ?>"><?php echo $database->getVillageField($dataarray[14],'name'); ?></a>
 </td>
 </tr></thead>
 <tbody class="units"><tr>

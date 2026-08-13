@@ -710,8 +710,8 @@ try {
 		'el nombre de aldea no parte el CSV del informe ni se re-escapa ('.$unsafeVillage.')'
 	);
 	trapperAssert(
-		substr_count($automationSource,'addslashes($this->reportSafeField($to[\'name\']))') === 4,
-		'los cuatro nombres de aldea que viajan dentro del CSV están protegidos'
+		substr_count($automationSource,'addslashes($this->reportSafeField($to[\'name\']))') === 3,
+		'los tres nombres de aldea que viajan dentro del CSV están protegidos'
 	);
 
 	echo "Trapper lifecycle regression passed.\n";
