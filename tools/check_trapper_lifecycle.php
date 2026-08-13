@@ -515,7 +515,7 @@ try {
 	);
 	trapperAssert(
 		(int)$rescueResult['freed'][1] === 13 && (int)$rescueResult['freed'][2] === 7,
-		'el rescate informa qué tropas volvieron con el ejército, para que el informe no las liste como presas'
+		'el rescate informa qué tropas volvieron con el ejército para calcular el estado final'
 	);
 	trapperAssert(
 		strpos($rescueResult['info'],'liberó <b>20</b> tropas propias') !== false
@@ -658,6 +658,10 @@ try {
 	trapperAssert(
 		substr_count($automationSource,'trap-data-v1') === 3,
 		'los informes nuevos delimitan explícitamente el bloque de prisioneros'
+	);
+	trapperAssert(
+		strpos($automationSource,"$"."unitstraped_att = implode(',', $"."stilltraped)") === false,
+		'el informe conserva las tropas atrapadas en la batalla aunque sean liberadas al ganar'
 	);
 	// La detección pasó a decidirse en spyAttemptDetected(), pero los espías capturados
 	// en trampas la siguen disparando aunque no haya ninguna baja. El comportamiento en

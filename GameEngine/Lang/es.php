@@ -407,7 +407,7 @@ define("REPORT_FROM_ALLY","de la alianza");
 define("REPORT_FROM_VIL","de la aldea");
 define("REPORT_INFORMATION","información");
 define("REPORT_PER_HOURS","por hora");
-define("REPORT_PRISONERS","Prisioneros");
+define("REPORT_PRISONERS","Atrapadas");
 define("REPORT_RECEIVER","Destinatario");
 define("REPORT_REINF","Refuerzo");
 define("REPORT_NATURE_REINF","Naturaleza (animales capturados)");

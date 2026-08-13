@@ -2636,9 +2636,9 @@ class Automation {
 
                 // El rescate de prisioneros va acá y no junto al informe: un ataque ganado
                 // libera lo que ya estaba atrapado y también lo que las trampas acaban de
-                // capturar en esta misma batalla, así que el informe no puede seguir
-                // listando como prisionero lo que vuelve con el ejército. $traped* queda
-                // intacto porque más arriba ya decidió quién peleó y quién conquista.
+                // capturar en esta misma batalla. $traped* y $unitstraped_att conservan esa
+                // captura original para que el informe muestre quién no llegó a combatir;
+                // $stilltraped se usa por separado para el retorno y el resultado final.
                 $stilltraped = array();
                 for ($i = 1; $i <= 11; $i++) {
                     $stilltraped[$i] = ${'traped'.$i};
@@ -2651,7 +2651,6 @@ class Automation {
                     }
                 }
                 $totalstilltraped_att = array_sum($stilltraped);
-                $unitstraped_att = implode(',', $stilltraped);
                 if($totaldead_att > 0 && $dead11 == 0 && $Attacker['hero'] > 0) {
 
                     // Estado por ataque: el foreach reutiliza el scope, y sin este reset un
@@ -3536,9 +3535,9 @@ class Automation {
      * tenían atrapado en esa aldea y rompe las trampas que los retenían. Las tropas
      * vuelven completas — forzar la liberación no cuesta bajas.
      *
-     * Devuelve el texto para el informe y, por posición, cuántas de las tropas volvieron
-     * con el ejército de este ataque: el informe no puede seguir listando como prisionero
-     * lo que en la misma pasada volvió a casa.
+     * Devuelve el texto para el informe y, por posición, cuántas tropas volvieron con el
+     * ejército de este ataque. Ese desglose actualiza el retorno y el estado final; el
+     * informe conserva por separado la captura ocurrida antes del combate.
      */
     private function releaseTrappedTroops($data, $from, $to, $ownally) {
         global $database;
