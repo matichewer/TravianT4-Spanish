@@ -2573,7 +2573,7 @@
 				$allianceCondition = "";
 				if($alliance > 0) {
 					$allianceCondition = " OR (ally = $alliance"
-						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21,22,23,24))";
+						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21,22,23,24,25))";
 				}
 				$q = "SELECT * FROM " . TB_PREFIX . "ndata"
 					." WHERE id = $id AND (uid = $uid$allianceCondition) LIMIT 1";
@@ -2582,7 +2582,7 @@
 				return $row ? $row : false;
 			}
 
-			function getNoticeNeighbors($uid, $alliance, $id, $filter = 0) {
+			function getNoticeNeighbors($uid, $alliance, $id, $filter = 0, $allianceOnly = false) {
 				$uid = (int)$uid;
 				$alliance = (int)$alliance;
 				$id = (int)$id;
@@ -2592,8 +2592,13 @@
 					return $neighbors;
 				}
 
-				$accessCondition = "uid = $uid AND del = 0";
-				if($alliance > 0 && $filter === 0) {
+				$allianceEventTypes = "0,1,2,3,4,5,6,7,22,23,24,25";
+				if($allianceOnly && $alliance > 0) {
+					$accessCondition = "ally = $alliance AND ntype IN ($allianceEventTypes)";
+				} else {
+					$accessCondition = "uid = $uid AND del = 0";
+				}
+				if(!$allianceOnly && $alliance > 0 && $filter === 0) {
 					$accessCondition = "($accessCondition) OR (ally = $alliance"
 						." AND ntype IN (0,1,2,3,4,5,6,7,15,16,17,18,19,20,21,22,23,24))";
 				}

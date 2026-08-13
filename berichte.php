@@ -104,11 +104,15 @@ if(isset($_GET['n1'],$_GET['del']) && $_GET['del'] == 1) {
 }
 if(isset($_GET['id'])) {
 	if(!empty($message->readingNotice)) {
+		$allianceReportNavigation = isset($_GET['aid'])
+			&& (int)$_GET['aid'] > 0
+			&& (int)$_GET['aid'] === (int)$session->alliance;
 		$noticeNeighbors = $database->getNoticeNeighbors(
 			$session->uid,
 			$session->alliance,
 			(int)$_GET['id'],
-			$reportFilter
+			$reportFilter,
+			$allianceReportNavigation
 		);
 		include("Templates/Notice/navigation.tpl");
 		$type = ($message->readingNotice['ntype'] == 5)? $message->readingNotice['archive'] : $message->readingNotice['ntype'];

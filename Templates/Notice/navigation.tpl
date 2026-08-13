@@ -8,7 +8,12 @@
 	}
 </style>
 <div class="footer">
-	<?php $reportFilterQuery = $reportFilter ? "&amp;t=".$reportFilter : ""; ?>
+	<?php
+	$reportFilterQuery = $reportFilter ? "&amp;t=".$reportFilter : "";
+	if(!empty($allianceReportNavigation)) {
+		$reportFilterQuery .= "&amp;aid=".(int)$session->alliance;
+	}
+	?>
 	<div style="float: left;">
 		<button type="button" class="reportNavigationButton<?php if(!$noticeNeighbors['previous']) { ?> disabled<?php } ?>" value="Mas reciente"<?php if($noticeNeighbors['previous']) { ?> onclick="window.location.href = 'berichte.php?id=<?php echo $noticeNeighbors['previous'].$reportFilterQuery; ?>';"<?php } else { ?> disabled="disabled"<?php } ?>>
 			<div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">&laquo; Más reciente</div></div>
