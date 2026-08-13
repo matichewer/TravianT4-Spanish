@@ -20,10 +20,10 @@ $allResourceRate = 3*SPEED*$productPoints;
 $focusedResourceRate = 10*SPEED*$productPoints;
 $canSpendPoint = (int)$hero['points']>0;
 $heroStrengthPerPoint = $tribe===1 ? 100 : 80;
-$powerPointStyle = $canSpendPoint && $powerPoints<$attributeLimit ? "" : " hidden";
-$offBonusPointStyle = $canSpendPoint && $offBonusPoints<$attributeLimit ? "" : " hidden";
-$defBonusPointStyle = $canSpendPoint && $defBonusPoints<$attributeLimit ? "" : " hidden";
-$productPointStyle = $canSpendPoint && $productPoints<$attributeLimit ? "" : " hidden";
+$powerPointStyle = $canSpendPoint && $powerPoints<$attributeLimit ? "" : " disabled";
+$offBonusPointStyle = $canSpendPoint && $offBonusPoints<$attributeLimit ? "" : " disabled";
+$defBonusPointStyle = $canSpendPoint && $defBonusPoints<$attributeLimit ? "" : " disabled";
+$productPointStyle = $canSpendPoint && $productPoints<$attributeLimit ? "" : " disabled";
 $selectedResourceRate = $resourceRates['wood'];
 if(!empty($hero['r2'])){ $selectedResourceRate = $resourceRates['clay']; }
 elseif(!empty($hero['r3'])){ $selectedResourceRate = $resourceRates['iron']; }
@@ -85,7 +85,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="#" role="button" data-add-attribute="power"></a>
-	        <a class="removePoint hidden" href="#" role="button" data-remove-attribute="power"></a>
+	        <a class="removePoint disabled" href="#" role="button" data-remove-attribute="power" aria-disabled="true"></a>
 				</div>
 				<div class="element points"><?php echo $powerPoints; ?></div>
 			</div>
@@ -101,7 +101,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="#" role="button" data-add-attribute="offBonus"></a>
-	            <a class="removePoint hidden" href="#" role="button" data-remove-attribute="offBonus"></a>
+	            <a class="removePoint disabled" href="#" role="button" data-remove-attribute="offBonus" aria-disabled="true"></a>
 				</div>
 				<div class="element points"><?php echo $offBonusPoints; ?></div>
 			</div>
@@ -118,7 +118,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="#" role="button" data-add-attribute="defBonus"></a>
-	            <a class="removePoint hidden" href="#" role="button" data-remove-attribute="defBonus"></a>
+	            <a class="removePoint disabled" href="#" role="button" data-remove-attribute="defBonus" aria-disabled="true"></a>
 				</div>
 				<div class="element points"><?php echo $defBonusPoints; ?></div>
 			</div>
@@ -136,7 +136,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	             <a class="setPoint<?php echo $productPointStyle; ?>" href="#" role="button" data-add-attribute="product"></a>
-	             <a class="removePoint hidden" href="#" role="button" data-remove-attribute="product"></a>
+	             <a class="removePoint disabled" href="#" role="button" data-remove-attribute="product" aria-disabled="true"></a>
 				</div>
 				<div class="element points"><?php echo $productPoints; ?></div>
 		</div>
@@ -352,6 +352,11 @@ window.addEvent('domready',function(){
 		button.className = button.className.replace(/\s*disabled\b/g,'')+(enabled ? '' : ' disabled');
 	}
 
+	function setLinkEnabled(link,enabled){
+		link.className = link.className.replace(/\s*disabled\b/g,'')+(enabled ? '' : ' disabled');
+		link.setAttribute('aria-disabled',enabled ? 'false' : 'true');
+	}
+
 	for(var i=0;i<attributes.length;i++){
 		var name = attributes[i];
 		rows[name] = form.querySelector('[data-attribute="'+name+'"]');
@@ -373,8 +378,8 @@ window.addEvent('domready',function(){
 			var row = rows[attribute];
 			row.querySelector('.points').textContent = points;
 			row.querySelector('.bar').style.width = points+'%';
-			setHidden(row.querySelector('.setPoint'),remaining<1 || points>=limit);
-			setHidden(row.querySelector('.removePoint'),(parseInt(form.elements[attribute].value,10) || 0)<1);
+			setLinkEnabled(row.querySelector('.setPoint'),remaining>0 && points<limit);
+			setLinkEnabled(row.querySelector('.removePoint'),(parseInt(form.elements[attribute].value,10) || 0)>0);
 			if(attribute==='power'){
 				row.querySelector('.current.power').textContent = baseStrength+(points-basePoints.power)*strengthPerPoint;
 			}else if(attribute==='offBonus' || attribute==='defBonus'){

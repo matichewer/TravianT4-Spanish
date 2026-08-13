@@ -99,7 +99,8 @@ heroAttributeAssert(
 	&& substr_count($heroTemplate,'data-add-attribute=')===4
 	&& substr_count($heroTemplate,'data-remove-attribute=')===4
 	&& strpos($heroTemplate,'data-add-attribute="power" title=')===false
-	&& strpos($heroTemplate,"setHidden(row.querySelector('.removePoint')")!==false
+	&& strpos($heroTemplate,"setLinkEnabled(row.querySelector('.removePoint')")!==false
+	&& strpos($heroTemplate,"setLinkEnabled(row.querySelector('.setPoint')")!==false
 	&& strpos($heroTemplate,"if(pending>0)")!==false
 	&& substr_count($heroTemplate,'class="element attribName tooltip"')===5
 	&& strpos($heroTemplate,'class="attribute power tooltip"')===false
