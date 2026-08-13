@@ -43,13 +43,31 @@ $cropFillTime = $formatStorageFillTime($village->maxcrop, $village->acrop, $vill
 $formatResourceAmount = function ($amount) {
 	return number_format((int) round($amount), 0, ',', '.');
 };
+$resourceAmountPreview = isset($_GET['resource_preview']) && $_GET['resource_preview'] === 'digits';
+$displayedResources = $resourceAmountPreview
+	? array(
+		'wood' => array(120000, 160000),
+		'clay' => array(1234567, 8000000),
+		'iron' => array(12345678, 80000000),
+		'crop' => array(87654321, 90000000),
+	)
+	: array(
+		'wood' => array($village->awood, $village->maxstore),
+		'clay' => array($village->aclay, $village->maxstore),
+		'iron' => array($village->airon, $village->maxstore),
+		'crop' => array(max(0, $village->acrop), $village->maxcrop),
+	);
+$resourceAmountClass = function ($amounts) {
+	$digits = max(strlen((string) abs((int) round($amounts[0]))), strlen((string) abs((int) round($amounts[1]))));
+	return ' resourceDigits' . min(8, max(5, $digits));
+};
 ?>
 <ul id="res">
 		<li class="r1" title="<div style=color:#FFF><b><?php echo WOOD; ?></b></div><?php echo $woodFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo WOOD; ?>"/> 
 
-			<span id="l1" class="value "><?php echo $formatResourceAmount($village->awood)." / ".$formatResourceAmount($village->maxstore); ?></span>
+			<span id="l1" class="value<?php echo $resourceAmountClass($displayedResources['wood']); ?>"><?php echo $formatResourceAmount($displayedResources['wood'][0])." / ".$formatResourceAmount($displayedResources['wood'][1]); ?></span>
         <div class="bar-bg">
 	     	 <div id="lbar1" class="bar" style="width: 0%; background-color: rgb(0, 105, 0); "></div>
       	</div>
@@ -59,7 +77,7 @@ $formatResourceAmount = function ($amount) {
 		<li class="r2" title="<div style=color:#FFF><b><?php echo CLAY; ?></b></div><?php echo $clayFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CLAY; ?>"/> 
-			<span id="l2" class="value "><?php echo $formatResourceAmount($village->aclay)." / ".$formatResourceAmount($village->maxstore); ?></span>
+			<span id="l2" class="value<?php echo $resourceAmountClass($displayedResources['clay']); ?>"><?php echo $formatResourceAmount($displayedResources['clay'][0])." / ".$formatResourceAmount($displayedResources['clay'][1]); ?></span>
           <div class="bar-bg">
 	      <div id="lbar2" class="bar" style="width: 0%; background-color: rgb(0, 105, 0); "></div>
       	  </div>
@@ -69,7 +87,7 @@ $formatResourceAmount = function ($amount) {
 		<li class="r3" title="<div style=color:#FFF><b><?php echo IRON; ?></b></div><?php echo $ironFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo IRON; ?>"/> 
-			<span id="l3" class="value "><?php echo $formatResourceAmount($village->airon)." / ".$formatResourceAmount($village->maxstore); ?></span>
+			<span id="l3" class="value<?php echo $resourceAmountClass($displayedResources['iron']); ?>"><?php echo $formatResourceAmount($displayedResources['iron'][0])." / ".$formatResourceAmount($displayedResources['iron'][1]); ?></span>
           <div class="bar-bg">
 	      <div id="lbar3" class="bar" style="width: 0%; background-color: rgb(0, 105, 0); "></div>
       	  </div> 
@@ -79,7 +97,7 @@ $formatResourceAmount = function ($amount) {
 		<li class="r4" title="<div style=color:#FFF><b><?php echo CROP; ?></b></div><?php echo $cropFillTime; ?>">
 		<p> 
         	<img src="img/x.gif" alt="<?php echo CROP; ?>"/> 
-			<span id="l4" class="value "><?php echo $formatResourceAmount(max(0, $village->acrop))." / ".$formatResourceAmount($village->maxcrop); ?></span>
+			<span id="l4" class="value<?php echo $resourceAmountClass($displayedResources['crop']); ?>"><?php echo $formatResourceAmount($displayedResources['crop'][0])." / ".$formatResourceAmount($displayedResources['crop'][1]); ?></span>
           <div class="bar-bg">
 	      <div id="lbar4" class="bar" style="width: 0%; background-color: rgb(0, 105, 0); "></div>
       	  </div>

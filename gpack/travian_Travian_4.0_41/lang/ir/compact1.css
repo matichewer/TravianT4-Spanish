@@ -754,7 +754,7 @@ body.loader #myGameLinkHeaderWrapper,body.login #myGameLinkHeaderWrapper,body.lo
 #res li.r1 p img{background-position:0 0;}#res li.r2 p img{background-position:0 -26px;}
 #res li.r3 p img{background-position:0 -52px;}#res li.r4 p img{background-position:0 -78px;}
 #res li.r5 p img{background-position:0 -104px;}#res li p{position:relative;}.ie6 #res li p{width:106px;height:16px;}
-#res li p .value{position:absolute;right:0;top:2px;font-weight:bold;}.ie7 #res li p{zoom:1;}
+#res li p .value{position:absolute;right:0;top:2px;font-weight:bold;white-space:nowrap;}#res li p .value.resourceDigits5{font-size:11px;}#res li p .value.resourceDigits6{font-size:10px;}#res li p .value.resourceDigits7{font-size:9px;}#res li p .value.resourceDigits8{font-size:8px;}.ie7 #res li p{zoom:1;}
 #res li p .value.small{font-size:11px;}#res li .bar-bg{background-color:#CCC;height:3px;margin:4px 0 0;width:107px;float:left;}
 #res li .bar{background-color:#FF0;height:3px;font-size:0;}#side_info{float:left;position:relative;width:196px;top:-90px;}
 body.login #side_info,body.logout #side_info,body.signup #side_info,body.support #side_info,body.activate #side_info,body.error_site #side_info,body.fatal_error #side_info,body.banned_cn #side_info{top:-74px;}
