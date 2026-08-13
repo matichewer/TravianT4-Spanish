@@ -11282,7 +11282,7 @@ return c}
 				}
 			}
 			resources[a].value=new_res;
-			timer[a].node.innerHTML=formatResourceAmount(new_res)+"/"+formatResourceAmount(timer[a].max_res);
+			timer[a].node.innerHTML=formatResourceAmount(new_res)+" / "+formatResourceAmount(timer[a].max_res);
 			var c=$(timer[a].bar_name);
 			if(c){
 				var b=Math.round(100*new_res/timer[a].max_res);
