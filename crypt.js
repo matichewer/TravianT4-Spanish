@@ -11236,11 +11236,11 @@ return c}
 		var k=null;
 		if(g!=null){
 			resources[b]=new Object();
-			var a=g.innerHTML.match(/(\d+)\/(\d+)/);
+			var a=g.innerHTML.match(/([\d.]+)\/([\d.]+)/);
 			if(a!=null){
 				f=a[0].split("/");
-				d=parseInt(f[0]);
-				c=parseInt(f[1]);
+				d=parseInt(f[0].replace(/\./g,""));
+				c=parseInt(f[1].replace(/\./g,""));
 				j=resources.production[b];
 				if(j!=0){
 					h=$time();
@@ -11265,6 +11265,9 @@ return c}
 			}
 		}
 	}
+	function formatResourceAmount(a){
+		return String(a).replace(/\B(?=(\d{3})+(?!\d))/g,".")
+	}
 	function executeTimer(a){
 		time_elapsed=$time()-timer[a].start;
 		if(time_elapsed>=0){
@@ -11279,7 +11282,7 @@ return c}
 				}
 			}
 			resources[a].value=new_res;
-			timer[a].node.innerHTML=new_res+"/"+timer[a].max_res;
+			timer[a].node.innerHTML=formatResourceAmount(new_res)+"/"+formatResourceAmount(timer[a].max_res);
 			var c=$(timer[a].bar_name);
 			if(c){
 				var b=Math.round(100*new_res/timer[a].max_res);
