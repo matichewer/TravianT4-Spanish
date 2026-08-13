@@ -5399,6 +5399,91 @@ break;
         		return mysqli_fetch_array($result);
         	}
 
+			/**
+			 * Revive al héroe con un balde manteniendo sincronizados hero, units y la
+			 * cola de rescate. Si el rescate ya estaba pagado, su aldea manda sobre la
+			 * aldea que el jugador tenía seleccionada al usar el objeto.
+			 */
+			function consumeHeroRevivalBucket($uid,$itemId,$selectedVillageId) {
+				$uid = (int)$uid;
+				$itemId = (int)$itemId;
+				$selectedVillageId = (int)$selectedVillageId;
+				if($uid<=0 || $itemId<=0 || $selectedVillageId<=0) {
+					return array('ok'=>false,'status'=>'invalid','vref'=>0);
+				}
+
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'hero_revival_'.$uid);
+				$lockResult = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',5) AS acquired");
+				$lockRow = $lockResult ? mysqli_fetch_assoc($lockResult) : false;
+				if(!$lockRow || (int)$lockRow['acquired']!==1) {
+					return array('ok'=>false,'status'=>'busy','vref'=>0);
+				}
+
+				try {
+					$heroResult = mysqli_query($this->connection,
+						"SELECT dead FROM ".TB_PREFIX."hero WHERE uid=$uid LIMIT 1"
+					);
+					$hero = $heroResult ? mysqli_fetch_assoc($heroResult) : false;
+					$itemResult = mysqli_query($this->connection,
+						"SELECT id FROM ".TB_PREFIX."heroitems"
+						." WHERE id=$itemId AND uid=$uid AND btype=12 AND proc=0 AND num>0 LIMIT 1"
+					);
+					$item = $itemResult ? mysqli_fetch_assoc($itemResult) : false;
+					if(!$hero || (int)$hero['dead']===0 || !$item) {
+						return array('ok'=>false,'status'=>'unavailable','vref'=>0);
+					}
+
+					$queueResult = mysqli_query($this->connection,
+						"SELECT t.vref FROM ".TB_PREFIX."training AS t"
+						." INNER JOIN ".TB_PREFIX."vdata AS v ON v.wref=t.vref"
+						." WHERE t.unit=0 AND v.owner=$uid ORDER BY t.id ASC LIMIT 1"
+					);
+					$queue = $queueResult ? mysqli_fetch_assoc($queueResult) : false;
+					$destination = $queue ? (int)$queue['vref'] : $selectedVillageId;
+					$destinationResult = mysqli_query($this->connection,
+						"SELECT v.wref FROM ".TB_PREFIX."vdata AS v"
+						." INNER JOIN ".TB_PREFIX."units AS u ON u.vref=v.wref"
+						." WHERE v.wref=$destination AND v.owner=$uid LIMIT 1"
+					);
+					if(!$destinationResult || mysqli_num_rows($destinationResult)!==1) {
+						return array('ok'=>false,'status'=>'invalid_destination','vref'=>0);
+					}
+
+					$cleared = mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX."units AS u"
+						." INNER JOIN ".TB_PREFIX."vdata AS v ON v.wref=u.vref"
+						." SET u.hero=0 WHERE v.owner=$uid"
+					);
+					$placed = $cleared ? mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX."units SET hero=1 WHERE vref=$destination"
+					) : false;
+					$revived = $placed ? mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX."hero SET dead=0,health=100,wref=$destination"
+						." WHERE uid=$uid AND dead<>0"
+					) : false;
+					if(!$revived || mysqli_affected_rows($this->connection)!==1) {
+						return array('ok'=>false,'status'=>'error','vref'=>0);
+					}
+
+					$queueRemoved = mysqli_query($this->connection,
+						"DELETE t FROM ".TB_PREFIX."training AS t"
+						." INNER JOIN ".TB_PREFIX."vdata AS v ON v.wref=t.vref"
+						." WHERE t.unit=0 AND v.owner=$uid"
+					);
+					$consumed = $queueRemoved ? mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX."heroitems SET proc=1"
+						." WHERE id=$itemId AND uid=$uid AND btype=12 AND proc=0 AND num>0"
+					) : false;
+					if(!$consumed || mysqli_affected_rows($this->connection)!==1) {
+						return array('ok'=>false,'status'=>'error','vref'=>$destination);
+					}
+
+					return array('ok'=>true,'status'=>'success','vref'=>$destination);
+				} finally {
+					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+				}
+			}
+
 			function editHeroNum($id, $num, $mode) {
 				$id = (int)$id;
 				$num = max(0,(int)$num);

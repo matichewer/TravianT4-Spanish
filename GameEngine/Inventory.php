@@ -290,13 +290,7 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 	}
 
 	elseif($data['btype']==12){
-		if($heroData['dead']!=0){
-			$database->modifyHero2('dead', 0, $uid, 0);
-			$database->modifyHero2('health', 100, $uid, 0);
-			$database->modifyHero2('wref', $village->wid, $uid, 0);
-			$database->editTableField('units', 'hero', 1, 'vref', $village->wid);
-			$database->editProcItem($data['id'], 1);
-		}
+		$database->consumeHeroRevivalBucket($uid,$data['id'],$village->wid);
 	}
 
 		elseif($data['btype']==13){

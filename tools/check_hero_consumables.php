@@ -55,6 +55,18 @@ class ConsumableDatabase {
 		return true;
 	}
 	public function editTableField($t,$f,$v,$rf,$r){ $this->revived = true; return true; }
+	public function consumeHeroRevivalBucket($uid,$id,$selectedVillageId){
+		if((int)$this->hero['dead']===0 || !isset($this->items[$id])
+			|| (int)$this->items[$id]['btype']!==12 || (int)$this->items[$id]['proc']!==0){
+			return array('ok'=>false,'status'=>'unavailable','vref'=>0);
+		}
+		$this->hero['dead']=0;
+		$this->hero['health']=100;
+		$this->hero['wref']=(int)$selectedVillageId;
+		$this->items[$id]['proc']=1;
+		$this->revived=true;
+		return array('ok'=>true,'status'=>'success','vref'=>(int)$selectedVillageId);
+	}
 	public function consumeBookOfWisdom($uid,$id){ return true; }
 	public function consumeArtwork($uid,$id,$points,$now=null){
 		$now = $now===null ? time() : (int)$now;
