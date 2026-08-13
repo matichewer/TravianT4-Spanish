@@ -11268,6 +11268,16 @@ return c}
 	function formatResourceAmount(a){
 		return String(a).replace(/\B(?=(\d{3})+(?!\d))/g,".")
 	}
+	function displayResourceAmounts(a,b,c){
+		var d=String(Math.abs(a)).length+String(Math.abs(b)).length>12;
+		var e=c.parentNode.parentNode;
+		if(d){
+			e.className=e.className.replace(/\s*resourceTwoLines/g,"")+" resourceTwoLines"
+		}else{
+			e.className=e.className.replace(/\s*resourceTwoLines/g,"")
+		}
+		return formatResourceAmount(a)+(d?" /<br>":" / ")+formatResourceAmount(b)
+	}
 	function executeTimer(a){
 		time_elapsed=$time()-timer[a].start;
 		if(time_elapsed>=0){
@@ -11282,7 +11292,7 @@ return c}
 				}
 			}
 			resources[a].value=new_res;
-			timer[a].node.innerHTML=formatResourceAmount(new_res)+" / "+formatResourceAmount(timer[a].max_res);
+			timer[a].node.innerHTML=displayResourceAmounts(new_res,timer[a].max_res,timer[a].node);
 			var c=$(timer[a].bar_name);
 			if(c){
 				var b=Math.round(100*new_res/timer[a].max_res);
