@@ -8,7 +8,20 @@
     $attRank = $ranking->getTop10AttRank($session->uid);
     $defRank = $ranking->getTop10DefRank($session->uid);
     $clpRank = $ranking->getTop10ClpRank($session->uid);
-    $rrRank = $ranking->getTop10RobbersRank($session->uid);
+	$rrRank = $ranking->getTop10RobbersRank($session->uid);
+	function renderCurrentPlayerOutsideTop10($result, $rank, $field) {
+		if((int)$rank <= 10) {
+			return;
+		}
+		echo '<tr><td colspan="3" class="empty"></td></tr>';
+		while($row = mysql_fetch_array($result)) {
+			echo '<tr class="own hl select">';
+			echo '<td class="ra fc">'.(int)$rank.'.&nbsp;</td>';
+			echo '<td class="pla"><a href="spieler.php?uid='.(int)$row['id'].'">'.$row['username'].'</a></td>';
+			echo '<td class="val lc">'.number_format((int)$row[$field], 0, ',', '.').'</td>';
+			echo '</tr>';
+		}
+	}
 ?>
 <div class="contentNavi tabNavi">
 				<div class="container normal">
@@ -56,25 +69,8 @@
 		echo "</tr>";
 	}
 ?>
-		<tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($attRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$attRank.".&nbsp;</td>";
-        }
-        
-	  	if($attRank > 10) {
-			echo "<td class=\"pla\">".$row['username']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentPlayerOutsideTop10($result2, $attRank, 'ap');
 ?>
          </tbody>
 </table>
@@ -108,25 +104,8 @@
 		echo "</tr>";
 	}
 ?>
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($defRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$defRank.".&nbsp;</td>";
-        }
-        
-	  	if($defRank > 10) {
-			echo "<td class=\"pla\">".$row['username']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentPlayerOutsideTop10($result2, $defRank, 'dp');
 ?>
          </tbody>
 </table>
@@ -163,25 +142,8 @@
 		echo "</tr>";
 	}
 ?>
-         <tr>
-            <td colspan="3" class="empty"></td>
-        </tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($clpRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$clpRank.".&nbsp;</td>";
-        }
-        
-	  	if($clpRank > 10) {
-			echo "<td class=\"pla\">".$row['username']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentPlayerOutsideTop10($result2, $clpRank, 'clp');
 ?>
     </tbody>
 </table>
@@ -215,25 +177,8 @@
 		echo "</tr>";
 	}
 ?>
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($rrRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$rrRank.".&nbsp;</td>";
-        }
-        
-	  	if($rrRank > 10) {
-			echo "<td class=\"pla\">".$row['username']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='spieler.php?uid=".$row['id']."'>".$row['username']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentPlayerOutsideTop10($result2, $rrRank, 'RR');
 ?>
     </tbody>
 </table>

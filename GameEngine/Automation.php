@@ -1115,9 +1115,11 @@ class Automation {
                         $database->deleteFriend($friend['id'], "friend".$i."wait");
                     }
                 }
-                $database->updateUserField($need['uid'], 'alliance', 0, 1);
-                if($database->isAllianceOwner($need['uid'])) {
-                    $alliance = $database->getUserAllianceID($need['uid']);
+				$departingAlliance = (int)$database->getUserAllianceID($need['uid']);
+				$wasAllianceOwner = $database->isAllianceOwner($need['uid']);
+				$database->changeUserAlliance((int)$need['uid'], 0);
+				$alliance = $departingAlliance;
+                if($wasAllianceOwner && $departingAlliance > 0) {
                     $newowner = $database->getAllMember2($alliance);
                     $newleader = $newowner['id'];
                     $q = "UPDATE ".TB_PREFIX."alidata set leader = ".$newleader." where id = ".$alliance."";
@@ -2791,12 +2793,10 @@ class Automation {
 
                 $database->modifyPoints($toF['owner'], 'dpall', $defensivePoints);
                 $database->modifyPoints($from['owner'], 'apall', $offensivePoints);
-                $database->modifyPoints($toF['owner'], 'dp', $defensivePoints);
-                $database->modifyPoints($from['owner'], 'ap', $offensivePoints);
+				$database->modifyWeeklyRankingPoints($toF['owner'], 'dp', $defensivePoints);
+				$database->modifyWeeklyRankingPoints($from['owner'], 'ap', $offensivePoints);
                 $database->modifyPointsAlly($targetally, 'Adp', $defensivePoints);
                 $database->modifyPointsAlly($ownally, 'Aap', $offensivePoints);
-                $database->modifyPointsAlly($targetally, 'dp', $defensivePoints);
-                $database->modifyPointsAlly($ownally, 'ap', $offensivePoints);
 
 
                 if(!$isoasis) {
@@ -3386,10 +3386,8 @@ class Automation {
                         $database->addMovement(6, $to['wref'], $from['wref'], $reference, $datar, $endtime);
                         //$database->updateVillage($to['wref']);
                         $totalStolen = $steal[0] + $steal[1] + $steal[2] + $steal[3];
-                        $database->modifyPoints($from['owner'], 'RR', $totalStolen);
-                        $database->modifyPoints($to['owner'], 'RR', -$totalStolen);
-                        $database->modifyPointsAlly($ownally, 'RR', $totalStolen);
-                        $database->modifyPointsAlly($targetally, 'RR', -$totalStolen);
+						$database->modifyWeeklyRankingPoints($from['owner'], 'RR', $totalStolen);
+						$database->modifyWeeklyRankingPoints($to['owner'], 'RR', -$totalStolen);
                     }
                 } else //else they die and don't return or report.
                 {

@@ -188,7 +188,7 @@
 				$alliance_info = $database->getAlliance($invite['alliance']);
 				if(is_array($alliance_info) && (int)$alliance_info['max'] > 0 && count($memberlist) < (int)$alliance_info['max']){
 					$database->removeInvitationsForUser($session->uid);
-					$database->updateUserField($database->RemoveXSS($invite['uid']), "alliance", $database->RemoveXSS($invite['alliance']), 1);
+					$database->changeUserAlliance((int)$invite['uid'], (int)$invite['alliance']);
 					$database->createAlliPermissions($database->RemoveXSS($invite['uid']), $database->RemoveXSS($invite['alliance']), '', '0', '0', '0', '0', '0', '0', '0', '0');
 					// Log the notice
 					$database->insertAlliNotice($invite['alliance'], '<a href="spieler.php?uid=' . $session->uid . '">' . addslashes($session->username) . '</a> se unió a la alianza.');
@@ -255,8 +255,7 @@
 				$form->addError("ally1", "No se pudo crear la alianza. Volvé a intentarlo.");
 				return;
 			}
-       			$database->updateUserField($database->RemoveXSS($session->uid), "alliance", $database->RemoveXSS($aid), 1);
-				$database->procAllyPop($aid);
+			$database->changeUserAlliance((int)$session->uid, (int)$aid);
        			// Asign Permissions
        			$database->createAlliPermissions($database->RemoveXSS($session->uid), $database->RemoveXSS($aid), 'Fundador de la alianza', '1', '1', '1', '1', '1', '1', '1', '1');
        			// log the notice
@@ -373,7 +372,7 @@
                     }
                     else
                     {
-                        $database->updateUserField($post['a_user'], 'alliance', 0, 1);
+						$database->changeUserAlliance((int)$post['a_user'], 0);
                         $database->deleteAlliPermissions($post['a_user']);
                         $database->deleteAlliance($session->alliance);
                         $database->insertAlliNotice($session->alliance, '<a href="spieler.php?uid=' . $UserData['id'] . '">' . addslashes($UserData['username']) . '</a> fue expulsado de la alianza.');
@@ -431,7 +430,7 @@
                         $database->query($q);
                         $database->updateAlliPermissions($newleader['id'], $session->alliance, 'Líder interino', 1,1,1,1,1,1,1,1);
                         
-                        $database->updateUserField($session->uid, 'alliance', 0, 1);
+						$database->changeUserAlliance((int)$session->uid, 0);
                         $database->deleteAlliPermissions($session->uid);
                         // log the notice
                         $database->deleteAlliance($session->alliance);
@@ -440,7 +439,7 @@
                     }
                     else
                     {
-                        $database->updateUserField($session->uid, 'alliance', 0, 1);
+						$database->changeUserAlliance((int)$session->uid, 0);
                         $database->deleteAlliPermissions($session->uid);
                         // log the notice
                         $database->deleteAlliance($session->alliance);

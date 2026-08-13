@@ -1510,10 +1510,131 @@
         		return mysqli_query($this->connection,$q);
         	}
 
-        	function modifyPointsAlly($aid, $points, $amt) {
+			function modifyPointsAlly($aid, $points, $amt) {
         		$q = "UPDATE " . TB_PREFIX . "alidata set $points = $points + $amt where id = $aid";
         		return mysqli_query($this->connection,$q);
         	}
+
+			/**
+			 * Updates a weekly player score and the matching current alliance score in
+			 * one statement. The alliance is deliberately derived from the locked
+			 * player row instead of being supplied by combat code, so both ledgers
+			 * always attribute the same event to the same owner.
+			 */
+			function modifyWeeklyRankingPoints($uid, $field, $amount) {
+				$uid = (int)$uid;
+				$amount = (int)$amount;
+				$accessLimit = INCLUDE_ADMIN ? 10 : 8;
+				$allowed = array('ap', 'dp', 'RR');
+				if($uid <= 0 || !in_array($field, $allowed, true) || $amount === 0) {
+					return $amount === 0;
+				}
+				$q = "UPDATE " . TB_PREFIX . "users u"
+					. " LEFT JOIN " . TB_PREFIX . "alidata a ON a.id = u.alliance"
+					. " AND u.tribe <= 3 AND u.access < $accessLimit"
+					. " SET u.`$field` = u.`$field` + ($amount),"
+					. " a.`$field` = a.`$field` + ($amount)"
+					. " WHERE u.id = $uid";
+				return mysqli_query($this->connection, $q);
+			}
+
+			/** Rebuilds the derived weekly alliance counters from current members. */
+			function reconcileAllianceWeeklyRankings() {
+				$accessLimit = INCLUDE_ADMIN ? 10 : 8;
+				$q = "UPDATE " . TB_PREFIX . "alidata a"
+					. " LEFT JOIN ("
+					. " SELECT u.alliance, COALESCE(SUM(u.ap),0) ap, COALESCE(SUM(u.dp),0) dp,"
+					. " COALESCE(SUM(u.clp),0) clp, COALESCE(SUM(u.RR),0) RR,"
+					. " COALESCE(SUM(v.population),0) population"
+					. " FROM " . TB_PREFIX . "users u"
+					. " LEFT JOIN (SELECT owner,SUM(pop) population FROM " . TB_PREFIX . "vdata GROUP BY owner) v ON v.owner=u.id"
+					. " WHERE u.alliance > 0 AND u.tribe <= 3 AND u.access < $accessLimit"
+					. " GROUP BY u.alliance"
+					. ") totals ON totals.alliance = a.id"
+					. " SET a.ap = COALESCE(totals.ap,0), a.dp = COALESCE(totals.dp,0),"
+					. " a.clp = COALESCE(totals.clp,0), a.RR = COALESCE(totals.RR,0),"
+					. " a.oldrank = COALESCE(totals.population,0)";
+				return mysqli_query($this->connection, $q);
+			}
+
+			/**
+			 * Changes alliance membership without turning transferred population into
+			 * growth and transfers the member's already earned weekly contribution.
+			 */
+			function changeUserAlliance($uid, $newAlliance) {
+				$uid = (int)$uid;
+				$newAlliance = max(0, (int)$newAlliance);
+				if($uid <= 0) {
+					return false;
+				}
+
+				// Freeze any real population change under the old membership first.
+				if(!$this->syncClimberPopulation($uid)) {
+					return false;
+				}
+				if(!mysqli_begin_transaction($this->connection)) {
+					return false;
+				}
+
+				try {
+					$result = mysqli_query(
+						$this->connection,
+						"SELECT u.alliance,u.ap,u.dp,u.clp,u.RR,u.tribe,u.access,COALESCE(SUM(v.pop),0) population"
+						. " FROM " . TB_PREFIX . "users u"
+						. " LEFT JOIN " . TB_PREFIX . "vdata v ON v.owner = u.id"
+						. " WHERE u.id = $uid GROUP BY u.id FOR UPDATE"
+					);
+					$user = $result ? mysqli_fetch_assoc($result) : false;
+					if(!$user) {
+						throw new Exception('Ranking member not found');
+					}
+					$oldAlliance = (int)$user['alliance'];
+					if($oldAlliance === $newAlliance) {
+						mysqli_commit($this->connection);
+						return true;
+					}
+
+					$allianceIds = array_values(array_filter(array_unique(array($oldAlliance, $newAlliance))));
+					if($allianceIds) {
+						$lock = mysqli_query(
+							$this->connection,
+							"SELECT id FROM " . TB_PREFIX . "alidata WHERE id IN (" . implode(',', $allianceIds) . ") ORDER BY id FOR UPDATE"
+						);
+						if(!$lock || mysqli_num_rows($lock) !== count($allianceIds)) {
+							throw new Exception('Ranking alliance not found');
+						}
+					}
+
+					$population = (int)$user['population'];
+					$ranked = (int)$user['tribe'] <= 3 && (int)$user['access'] < (INCLUDE_ADMIN ? 10 : 8);
+					foreach(array($oldAlliance => -1, $newAlliance => 1) as $aid => $direction) {
+						$aid = (int)$aid;
+						if($aid <= 0 || !$ranked) {
+							continue;
+						}
+						$ap = $direction * (int)$user['ap'];
+						$dp = $direction * (int)$user['dp'];
+						$clp = $direction * (int)$user['clp'];
+						$rr = $direction * (int)$user['RR'];
+						$pop = $direction * $population;
+						$q = "UPDATE " . TB_PREFIX . "alidata SET"
+							. " ap = ap + ($ap), dp = dp + ($dp), clp = clp + ($clp),"
+							. " RR = RR + ($rr), oldrank = oldrank + ($pop)"
+							. " WHERE id = $aid";
+						if(!mysqli_query($this->connection, $q)) {
+							throw new Exception('Could not transfer ranking contribution');
+						}
+					}
+
+					if(!mysqli_query($this->connection, "UPDATE " . TB_PREFIX . "users SET alliance = $newAlliance WHERE id = $uid")) {
+						throw new Exception('Could not change alliance');
+					}
+					return mysqli_commit($this->connection);
+				} catch(Exception $error) {
+					mysqli_rollback($this->connection);
+					return false;
+				}
+			}
 
         	/*****************************************
         	Function to create an alliance

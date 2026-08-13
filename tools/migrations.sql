@@ -292,3 +292,32 @@ INNER JOIN s1_users AS u ON u.id = v.owner
 INNER JOIN s1_wdata AS w ON w.id = v.wref
 SET v.capital = IF(w.x = 0 AND w.y = 0 AND v.natar = 0, 1, 0)
 WHERE u.username = 'Natars';
+
+-- 2026-08-12 - Totales semanales de alianza desincronizados
+-- Defensa y saqueo se actualizaban con un id de alianza calculado por separado del
+-- jugador, y los cambios de membresia no transferian los puntos semanales. El codigo
+-- nuevo deriva siempre la alianza desde el jugador y transfiere su aporte al cambiar.
+-- Esta reconciliacion idempotente corrige los contadores que ya estaban desviados y
+-- alinea la base de poblacion para que la siguiente pasada no invente crecimiento.
+UPDATE s1_alidata AS a
+LEFT JOIN (
+    SELECT u.alliance,
+           COALESCE(SUM(u.ap), 0) AS ap,
+           COALESCE(SUM(u.dp), 0) AS dp,
+           COALESCE(SUM(u.clp), 0) AS clp,
+           COALESCE(SUM(u.RR), 0) AS RR,
+           COALESCE(SUM(v.population), 0) AS population
+    FROM s1_users AS u
+    LEFT JOIN (
+        SELECT owner, SUM(pop) AS population
+        FROM s1_vdata
+        GROUP BY owner
+    ) AS v ON v.owner = u.id
+    WHERE u.alliance > 0 AND u.tribe <= 3 AND u.access < 8
+    GROUP BY u.alliance
+) AS totals ON totals.alliance = a.id
+SET a.ap = COALESCE(totals.ap, 0),
+    a.dp = COALESCE(totals.dp, 0),
+    a.clp = COALESCE(totals.clp, 0),
+    a.RR = COALESCE(totals.RR, 0),
+    a.oldrank = COALESCE(totals.population, 0);

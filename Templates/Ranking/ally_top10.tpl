@@ -7,7 +7,20 @@
     $attRank = $ranking->getATop10AttRank($session->alliance);
     $defRank = $ranking->getATop10DefRank($session->alliance);
     $clpRank = $ranking->getATop10ClpRank($session->alliance);
-    $rrRank = $ranking->getATop10RobbersRank($session->alliance);
+	$rrRank = $ranking->getATop10RobbersRank($session->alliance);
+	function renderCurrentAllianceOutsideTop10($result, $rank, $field) {
+		if((int)$rank <= 10) {
+			return;
+		}
+		echo '<tr><td colspan="3" class="empty"></td></tr>';
+		while($row = mysql_fetch_array($result)) {
+			echo '<tr class="own hl select">';
+			echo '<td class="ra fc">'.(int)$rank.'.&nbsp;</td>';
+			echo '<td class="pla"><a href="allianz.php?aid='.(int)$row['id'].'">'.$row['name'].'</a></td>';
+			echo '<td class="val lc">'.number_format((int)$row[$field], 0, ',', '.').'</td>';
+			echo '</tr>';
+		}
+	}
     
 ?>
 <div class="contentNavi tabNavi">
@@ -53,25 +66,8 @@
 		echo "</tr>";
 	}
 ?>
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($attRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$attRank.".&nbsp;</td>";
-        }
-        
-	  	if($attRank > 10) {
-			echo "<td class=\"pla\">".$row['name']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['ap'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentAllianceOutsideTop10($result2, $attRank, 'ap');
     if($session->alliance == 0){
 		echo'<tr class="own hl"><td class="ra  fc">?</td><td class="al ">-</td><td class="val  lc"></td></tr>';
 	}
@@ -105,25 +101,8 @@
 	}
 ?>
 	
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($defRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$defRank.".&nbsp;</td>";
-        }
-        
-	  	if($defRank > 10) {
-			echo "<td class=\"pla\">".$row['name']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['dp'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentAllianceOutsideTop10($result2, $defRank, 'dp');
     if($session->alliance == 0){
 		echo'<tr class="own hl"><td class="ra  fc">?</td><td class="al ">-</td><td class="val  lc"></td></tr>';
 	}
@@ -160,25 +139,8 @@
 		echo "</tr>";
 	}
 ?>
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($clpRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$clpRank.".&nbsp;</td>";
-        }
-        
-	  	if($clpRank > 10) {
-			echo "<td class=\"pla\">".$row['name']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['clp'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentAllianceOutsideTop10($result2, $clpRank, 'clp');
     if($session->alliance == 0){
 		echo'<tr class="own hl"><td class="ra  fc">?</td><td class="al ">-</td><td class="val  lc"></td></tr>';
 	}
@@ -212,25 +174,8 @@
 		echo "</tr>";
 	}
 ?>
-		 <tr>
-			<td colspan="3" class="empty"></td>
-		</tr>
 <?php
-	while($row = mysql_fetch_array($result2)){
-		if($rrRank > 10) {
-			echo "<tr class=\"none\"><td class=\"ra fc\">?&nbsp;</td>";
-        } else {
-        	echo "<tr class=\"own hl select\"><td class=\"ra fc\">".$rrRank.".&nbsp;</td>";
-        }
-        
-	  	if($rrRank > 10) {
-			echo "<td class=\"pla\">".$row['name']."</td>";
-        } else {
-        	echo "<td class=\"pla\"><a href='allianz.php?aid=".$row['id']."'>".$row['name']."</a></td>";
-        }
-		echo "<td class=\"val lc\">".number_format((int)$row['RR'], 0, ',', '.')."</td>";
-		echo "</tr>";
-	}
+	renderCurrentAllianceOutsideTop10($result2, $rrRank, 'RR');
     if($session->alliance == 0){
 		echo'<tr class="own hl"><td class="ra  fc">?</td><td class="al ">-</td><td class="val  lc"></td></tr>';
 	}
