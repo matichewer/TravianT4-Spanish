@@ -85,6 +85,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="#" role="button" data-add-attribute="power"></a>
+	        <a class="removePoint hidden" href="#" role="button" data-remove-attribute="power"></a>
 				</div>
 				<div class="element points"><?php echo $powerPoints; ?></div>
 			</div>
@@ -100,6 +101,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="#" role="button" data-add-attribute="offBonus"></a>
+	            <a class="removePoint hidden" href="#" role="button" data-remove-attribute="offBonus"></a>
 				</div>
 				<div class="element points"><?php echo $offBonusPoints; ?></div>
 			</div>
@@ -116,6 +118,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="#" role="button" data-add-attribute="defBonus"></a>
+	            <a class="removePoint hidden" href="#" role="button" data-remove-attribute="defBonus"></a>
 				</div>
 				<div class="element points"><?php echo $defBonusPoints; ?></div>
 			</div>
@@ -133,6 +136,7 @@ ob_start();
 				</div>
 				<div class="element add">
 	             <a class="setPoint<?php echo $productPointStyle; ?>" href="#" role="button" data-add-attribute="product"></a>
+	             <a class="removePoint hidden" href="#" role="button" data-remove-attribute="product"></a>
 				</div>
 				<div class="element points"><?php echo $productPoints; ?></div>
 		</div>
@@ -370,6 +374,7 @@ window.addEvent('domready',function(){
 			row.querySelector('.points').textContent = points;
 			row.querySelector('.bar').style.width = points+'%';
 			setHidden(row.querySelector('.setPoint'),remaining<1 || points>=limit);
+			setHidden(row.querySelector('.removePoint'),(parseInt(form.elements[attribute].value,10) || 0)<1);
 			if(attribute==='power'){
 				row.querySelector('.current.power').textContent = baseStrength+(points-basePoints.power)*strengthPerPoint;
 			}else if(attribute==='offBonus' || attribute==='defBonus'){
@@ -400,6 +405,20 @@ window.addEvent('domready',function(){
 			}
 			if(spent<available && basePoints[attribute]+parseInt(input.value,10)<limit){
 				input.value = (parseInt(input.value,10) || 0)+1;
+				render();
+			}
+		});
+	}
+
+	var removeButtons = form.querySelectorAll('[data-remove-attribute]');
+	for(var removeButtonIndex=0;removeButtonIndex<removeButtons.length;removeButtonIndex++){
+		removeButtons[removeButtonIndex].addEventListener('click',function(event){
+			event.preventDefault();
+			var attribute = this.getAttribute('data-remove-attribute');
+			var input = form.elements[attribute];
+			var pending = parseInt(input.value,10) || 0;
+			if(pending>0){
+				input.value = pending-1;
 				render();
 			}
 		});

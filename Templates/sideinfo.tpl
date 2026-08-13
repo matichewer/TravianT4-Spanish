@@ -16,6 +16,9 @@ $allianceinfo = $database->getAlliance($aid);
     <img id="heroImage" src="hero_image.php?uid=<?php echo $session->uid; ?>&size=sideinfo&<?php echo $hero['hash']; ?>" class="heroImage"/>
 	<div class="heroImageBorder"></div> 
     <a id="heroProfile" href="hero_inventory.php" class="heroProfile"></a>
+	<?php if(is_array($hero) && (int)$hero['points'] > 0): ?>
+	<a href="hero_inventory.php" class="heroAttributePoints" title="Tienes puntos para asignar en tus atributos"><span>+</span></a>
+	<?php endif; ?>
 	<a href="hero_adventure.php" class="adventures" title="<?php echo SIDEINFO_ADVENTURES; ?>: <?php echo $adventureCount; ?>">
 		<span class="adventureCount<?php echo $heroCanAdventure ? '' : ' adventureCountUnavailable'; ?>"><?php echo $adventureCount; ?></span>
 	</a>

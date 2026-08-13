@@ -21,7 +21,7 @@ $schema = "CREATE TEMPORARY TABLE $table ("
 	.") ENGINE=InnoDB";
 $assert(mysqli_query($database->connection, $schema), mysqli_error($database->connection));
 
-$types = array(1, 25, 0, 22, 10, 13, 8, 9, 21);
+$types = array(1, 25, 4, 7, 0, 22, 10, 13, 8, 9, 21);
 foreach($types as $index => $type) {
 	$id = $index + 1;
 	$assert(mysqli_query($database->connection, "INSERT INTO $table VALUES ($id, 101, $type, 0)"), mysqli_error($database->connection));
@@ -31,6 +31,7 @@ $assert(mysqli_query($database->connection, "INSERT INTO $table VALUES (20, 101,
 $counts = $database->getUnreadNoticeCountsByCategory(101);
 $assert($counts === array(
 	'attack' => 2,
+	'defense' => 2,
 	'spy' => 2,
 	'trade' => 2,
 	'reinforcement' => 1,

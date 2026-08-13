@@ -61,8 +61,14 @@ class CatapultPersistenceDatabaseStub {
 }
 
 class CatapultAutomationForTest extends Automation {
+    public $productionAccruals = array();
+
     public function recountPop($villageId) {
         return 1;
+    }
+
+    protected function accrueProductionBeforeChange($villageId, $until) {
+        $this->productionAccruals[] = array((int)$villageId, (int)$until);
     }
 }
 
@@ -76,6 +82,10 @@ foreach($expectedUnits as $tribe => $unitId) {
 }
 catapultAssert(!$battle->isCatapultUnit(38), 'no reconoce al Cocodrilo de Naturaleza como catapulta');
 catapultAssert($battle->getTribeCatapultUnit(4) === 0, 'Naturaleza no obtiene unidad de catapulta');
+catapultAssert(catapultNormalizeTarget(15, 9) === 0, 'rechaza un objetivo que la plaza todavía no desbloqueó');
+catapultAssert(catapultNormalizeTarget(15, 10) === 15, 'acepta un objetivo desbloqueado por la plaza');
+catapultAssert(catapultNormalizeTarget(23, 20) === 0, 'el escondite sólo puede recibir impactos aleatorios');
+catapultAssert(catapultNormalizeTarget(42, 10) === 42, 'permite seleccionar el Gran taller');
 
 $firing = $battle->calculateSiegeFiring(100, 0.25, 1000, 500);
 catapultAssert(is_finite($firing) && $firing > 0 && $firing < 75, 'calcula potencia de disparo finita tras las bajas');
@@ -200,11 +210,20 @@ catapultAssert(
     'destruir un edificio limpia nivel y tipo'
 );
 
-$impactMethod->invoke($persistenceAutomation, 900, 1, 10000, 0, 1, 0, $targetVillage);
+$impactMethod->invoke($persistenceAutomation, 900, 1, 10000, 0, 1, 0, $targetVillage, 123456);
 catapultAssert(
     $database->fields['f1'] === 0 && $database->fields['f1t'] === 1,
     'destruir un recurso conserva su tipo de campo'
 );
+catapultAssert(
+    $persistenceAutomation->productionAccruals === array(array(900,123456)),
+    'acredita la producción anterior antes de cambiar el campo'
+);
+$cancelledFieldQueue = false;
+foreach($database->queries as $query) {
+    if(strpos($query, 'bdata WHERE wid = 900 AND field = 1') !== false) $cancelledFieldQueue = true;
+}
+catapultAssert($cancelledFieldQueue, 'el impacto cancela la construcción pendiente de la casilla');
 
 $impactMethod->invoke($persistenceAutomation, 900, 10, 10000, 0, 1, 0, $targetVillage);
 catapultAssert(
@@ -242,6 +261,16 @@ catapultAssert(
 catapultAssert(
     strpos($resolution['report'], '1,') === 0 && strpos($resolution['report'], '<br>') !== false,
     'el doble impacto conserva el formato del reporte'
+);
+
+$automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
+catapultAssert(
+    strpos($automationSource,'ORDER BY endtime ASC, moveid ASC') !== false,
+    'las oleadas empatadas se resuelven por identificador de movimiento'
+);
+catapultAssert(
+    strpos($automationSource,'isPendingAttackMovement((int)$data[\'moveid\'])') !== false,
+    'una instantánea no procesa movimientos eliminados por un ataque anterior'
 );
 
 echo "Catapult attack checks passed.\n";

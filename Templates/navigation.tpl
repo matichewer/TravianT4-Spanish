@@ -36,7 +36,8 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
 		$unnotice = array_sum($unreadNoticeCategories);
 		$hasUnreadNotices = $unnotice > 0;
 		$noticeCategoryLabels = array(
-			'attack' => 'Ataque o defensa',
+			'attack' => 'Ataque',
+			'defense' => 'Defensa',
 			'spy' => 'Espionaje',
 			'trade' => 'Comercio',
 			'reinforcement' => 'Refuerzo',

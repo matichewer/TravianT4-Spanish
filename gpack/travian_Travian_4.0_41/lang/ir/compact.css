@@ -1,4 +1,4 @@
-@CHARSET "UTF-8";@import "compact1.css?v=48";@import "hero.css";.boxesColor.orange .boxes-tr{background-position:-25px 0;}
+@CHARSET "UTF-8";@import "compact1.css?v=60";@import "hero.css";.boxesColor.orange .boxes-tr{background-position:-25px 0;}
 .boxesColor.orange .boxes-bl{background-position:0 -26px;}.boxesColor.orange .boxes-br{background-position:-26px -26px;}
 .boxesColor.green .boxes-container{color:#FFF;}.boxesColor.green .boxes-tl,.boxesColor.green .boxes-tc,.boxesColor.green .boxes-tr,.boxesColor.green .boxes-ml,.boxesColor.green .boxes-mc,.boxesColor.green .boxes-mr,.boxesColor.green .boxes-bl,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-br{background-image:url(../../img/round/boxes/green/sprite.png);}
 .boxesColor.green .boxes-ml,.boxesColor.green .boxes-mr,.boxesColor.green .boxes-tc,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-mc{background-image:none;background-color:#498843;}
@@ -906,8 +906,9 @@ div.hero_inventory .attribute .power{width:45px;}div.hero_inventory .attribute.s
 div.hero_inventory .attribute .progress{width:202px;}.ie6 div.hero_inventory .attribute .progress{font-size:0;}
 div.hero_inventory .attribute.power .attribName,div.hero_inventory .attribute.offBonus .attribName,div.hero_inventory .attribute.defBonus .attribName,div.hero_inventory .attribute.productionPoints .attribName{width:155px;}
 div.hero_inventory .attribute.power .progress,div.hero_inventory .attribute.offBonus .progress,div.hero_inventory .attribute.defBonus .progress,div.hero_inventory .attribute.productionPoints .progress{width:192px;}
-div.hero_inventory .attribute .add{width:16px;}.ie6 div.hero_inventory .attribute .add{height:16px;position:relative;}
+div.hero_inventory .attribute .add{width:37px;white-space:nowrap;}.ie6 div.hero_inventory .attribute .add{height:16px;position:relative;}
 div.hero_inventory .attribute .setPoint{height:16px;width:16px;display:inline-block;background-image:url(../../img/a/plus.gif);background-position:top left;}
+div.hero_inventory .attribute .removePoint{height:13px;width:13px;display:inline-block;margin:1px 0 0 4px;background-image:url(../../img/a/minus.gif);background-position:top left;vertical-align:top;}
 div.hero_inventory .attribute .hidden{display:none;}div.hero_inventory .attribute .points{width:50px;text-align:center;}div.hero_inventory .attributeAllocationFooter{margin:4px 14px 7px;padding-top:7px;border-top:1px solid #ccc;overflow:hidden;}div.hero_inventory .attributeAllocationActions{float:right;}div.hero_inventory .attributeAllocationActions button{margin-left:6px;vertical-align:middle;}
 div.hero_inventory #attributes .attribute{margin:0 15px;}div.hero_inventory #attributes .boxes{margin-bottom:10px;padding:1px;}
 div.hero_inventory #attributes .boxes-contents{padding-top:8px;}div.hero_inventory #attributes{margin-bottom:19px;width:100%;}

@@ -5,6 +5,7 @@ require_once __DIR__.'/Hero.php';
 // Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
 require_once __DIR__.'/GeneratorX.php';
 require_once __DIR__.'/Production.php';
+require_once __DIR__.'/Catapult.php';
 
 class Automation {
 
@@ -87,17 +88,7 @@ class Automation {
 // @formatter:on
 
     private function isAllowedCatapultTargetType($target, $allowRandomSentinel = false) {
-        $target = (int)$target;
-        if($allowRandomSentinel && $target === 99) {
-            return true;
-        }
-        return in_array($target, array(
-            0,
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-            14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 34, 35, 36, 37, 38,
-            39, 40, 41, 42
-        ), true);
+		return catapultIsKnownTarget($target, $allowRandomSentinel);
     }
 
     public function selectCatapultTargetSlot($fields, $requestedType) {
@@ -269,7 +260,7 @@ class Automation {
         return true;
     }
 
-    private function applyCatapultImpact($villageId, $requestedType, $firingPower, $upgradeLevel, $moralBonus, $stonemasonLevel, $targetVillage) {
+    private function applyCatapultImpact($villageId, $requestedType, $firingPower, $upgradeLevel, $moralBonus, $stonemasonLevel, $targetVillage, $impactTime = null) {
         global $database, $battle, $bid34;
         $fields = $database->getResourceLevel((int)$villageId);
         $slot = $this->selectCatapultTargetSlot($fields, $requestedType);
@@ -312,6 +303,10 @@ class Automation {
         $destroyedVillage = false;
 
         if($newLevel < $oldLevel) {
+			if(in_array($buildingType, range(1, 9), true)) {
+				$this->accrueProductionBeforeChange((int)$villageId, $impactTime === null ? time() : (int)$impactTime);
+			}
+			$database->query("DELETE FROM ".TB_PREFIX."bdata WHERE wid = ".(int)$villageId." AND field = ".(int)$slot);
             $database->setVillageLevel((int)$villageId, 'f'.$slot, $newLevel);
             if($slot >= 19 && $newLevel === 0) {
                 $database->setVillageLevel((int)$villageId, 'f'.$slot.'t', 0);
@@ -393,7 +388,8 @@ class Automation {
                 isset($battleResult[6]) ? (int)$battleResult[6] : 0,
                 isset($battleResult[5]) ? (float)$battleResult[5] : 1,
                 $stonemasonLevel,
-                $targetVillage
+                $targetVillage,
+				isset($data['endtime']) ? (int)$data['endtime'] : null
             );
             if($impact === null) {
                 continue;
@@ -1835,9 +1831,13 @@ class Automation {
         $time = time();
         $ourFileHandle = @fopen("GameEngine/Prevention/sendunits.txt", 'w');
         @fclose($ourFileHandle);
-        $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."attacks where ".TB_PREFIX."movement.ref = ".TB_PREFIX."attacks.id and ".TB_PREFIX."movement.proc = '0' and ".TB_PREFIX."movement.sort_type = '3' and ".TB_PREFIX."attacks.attack_type != '2' and endtime < $time ORDER BY endtime ASC";
+        $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."attacks where ".TB_PREFIX."movement.ref = ".TB_PREFIX."attacks.id and ".TB_PREFIX."movement.proc = '0' and ".TB_PREFIX."movement.sort_type = '3' and ".TB_PREFIX."attacks.attack_type != '2' and endtime < $time ORDER BY endtime ASC, moveid ASC";
         $dataarray = $database->query_return($q);
         foreach ($dataarray as $data) {
+			if(!$database->isPendingAttackMovement((int)$data['moveid'])
+				|| (!$database->checkVilExist((int)$data['to']) && !$database->isVillageOases((int)$data['to']))) {
+				continue;
+			}
             // Bring the world up to the attack's arrival time, but never apply
             // a building level that completed after this attack.
             $this->buildComplete((int)$data['endtime'], false);
@@ -4388,7 +4388,7 @@ class Automation {
      * la tarifa nueva, así que un oasis recién conquistado paga retroactivamente su
      * +25% sobre el tiempo en que todavía no era suyo (y al perderlo se lo descuenta).
      */
-    private function accrueProductionBeforeChange($villageId, $until) {
+    protected function accrueProductionBeforeChange($villageId, $until) {
         global $database;
         $villageId = (int)$villageId;
         if($villageId <= 0) {

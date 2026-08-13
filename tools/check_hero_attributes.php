@@ -97,7 +97,10 @@ heroAttributeAssert(
 	&& strpos($heroTemplate,"(int)\$hero['points']>0 ? ' hasPoints' : ''")!==false
 	&& strpos($heroTemplate,"(remaining>0 ? ' hasPoints' : '')")!==false
 	&& substr_count($heroTemplate,'data-add-attribute=')===4
+	&& substr_count($heroTemplate,'data-remove-attribute=')===4
 	&& strpos($heroTemplate,'data-add-attribute="power" title=')===false
+	&& strpos($heroTemplate,"setHidden(row.querySelector('.removePoint')")!==false
+	&& strpos($heroTemplate,"if(pending>0)")!==false
 	&& substr_count($heroTemplate,'class="element attribName tooltip"')===5
 	&& strpos($heroTemplate,'class="attribute power tooltip"')===false
 	&& strpos($heroTemplate,'class="attribute offBonus tooltip"')===false

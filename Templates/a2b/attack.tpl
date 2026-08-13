@@ -241,104 +241,22 @@ if($canMoveHome){
                     
                         <select name="ctar1" class="dropdown">
                             <option value="0">Aleatorio</option>
-                            <?php if($building->getTypeLevel(16) >= 5) { ?>
-                			<optgroup label="Recursos">
-                                <option value="1">Leñador</option>
-                                <option value="2">Excavación de barro</option>
-                                <option value="3">Mina de hierro</option>
-                                <option value="4">Campo de cereal</option>
-                                <option value="5">Aserradero</option>
-                                <option value="6">Fábrica de ladrillos</option>
-                                <option value="7">Fundición de hierro</option>
-                                <option value="8">Molino</option>
-                                <option value="9">Panadería</option>
-                            </optgroup>
-                            <?php } ?>
-                            
-                            <?php if($building->getTypeLevel(16) >= 3) { ?>
-                            <optgroup label="Infraestructura">
-                                <option value="10">almacén</option>
-                                <option value="11">granero</option>
-                                <?php if($building->getTypeLevel(16) >= 10) { ?>
-                                <option value="15">edificio principal</option>
-                                <option value="17">mercado</option>
-                                <option value="18">embajada</option>
-                                <option value="24">ayuntamiento</option>
-                                <option value="25">Residencia</option>
-                                <option value="26">Palacio</option>
-                                <option value="27">tesorería</option>
-                                <option value="28">Centro comercial</option>
-                                <?php } ?>
-                                <option value="38">Gran almacén</option>
-                                <option value="39">Gran granero</option>
-                            </optgroup>
-                            <?php } ?>
-                            <?php if($building->getTypeLevel(16) >= 10) { ?>
-                            <optgroup label="Militar">
-                                <option value="12">herrería</option>
-                                <option value="14">Plaza de torneos</option>
-                                <option value="16">Plaza de reuniones</option>
- 								<option value="19">cuartel</option>
- 								<option value="20">establo</option>
- 								<option value="21">taller</option>
-                                <option value="22">Academia</option>
- 								<option value="29">Gran cuartel</option>
-  								<option value="30">Gran establo</option>
-  								<option value="37">Mansión del héroe</option>
-                            </optgroup>
-                            <?php } ?>
+                            <?php foreach(catapultTargetCatalog() as $targetId => $targetMeta) {
+                                if($building->getTypeLevel(16) >= $targetMeta['level']) {
+                                    echo '<option value="'.$targetId.'">'.htmlspecialchars($targetMeta['name'],ENT_QUOTES,'UTF-8').'</option>';
+                                }
+                            } ?>
                         </select>
 
             <?php if($building->getTypeLevel(16) == 20) { ?>
                      <select name="ctar2" class="dropdown">
                 <option value="0">-</option>
                 <option value="99">Aleatorio</option>
-                            <?php if($building->getTypeLevel(16) >= 5) { ?>
-                            <optgroup label="Recursos">
-                                <option value="1">leñador</option>
-                                <option value="2">excavación de barro</option>
-                                <option value="3">mina de hierro</option>
-                                <option value="4">campo de cereal</option>
-                                <option value="5">aserradero</option>
-                                <option value="6">fábrica de ladrillos</option>
-                                <option value="7">fundición de hierro</option>
-                                <option value="8">molino</option>
-                                <option value="9">panadería</option>
-                            </optgroup>
-                            <?php } ?>
-                            
-                            <?php if($building->getTypeLevel(16) >= 3) { ?>
-                            <optgroup label="Infraestructura">
-                                <option value="10">almacén</option>
-                                <option value="11">granero</option>
-                                <?php if($building->getTypeLevel(16) >= 10) { ?>
-                                <option value="15">edificio principal</option>
-                                <option value="17">mercado</option>
-                                <option value="18">Embajada</option>
-                                <option value="24">ayuntamiento</option>
-                                <option value="25">residencia</option>
-                                <option value="26">Palacio</option>
-                                <option value="27">tesorería</option>
-                                <option value="28">Centro comercial</option>
-                                <?php } ?>
-                                <option value="38">Gran almacén</option>
-                                <option value="39">Gran granero</option>
-                            </optgroup>
-                            <?php } ?>
-                            <?php if($building->getTypeLevel(16) >= 10) { ?>
-                            <optgroup label="Militar">
-                                <option value="12">herrería</option>
-                                <option value="14">Plaza de torneos</option>
-                                <option value="16">Plaza de reuniones</option>
-                                <option value="19">cuartel</option>
-                                <option value="20">establo</option>
-                                <option value="21">taller</option>
-                                <option value="22">academia</option>
-                                <option value="29">Gran cuartel</option>
-                                <option value="30">Gran establo</option>
-                                <option value="37">Mansión del héroe</option>
-                            </optgroup>
-                            <?php } ?>
+                            <?php foreach(catapultTargetCatalog() as $targetId => $targetMeta) {
+                                if($building->getTypeLevel(16) >= $targetMeta['level']) {
+                                    echo '<option value="'.$targetId.'">'.htmlspecialchars($targetMeta['name'],ENT_QUOTES,'UTF-8').'</option>';
+                                }
+                            } ?>
                         </select>
                     <?php }?>
 

@@ -1,28 +1,15 @@
 <?php
 
+require_once __DIR__.'/Catapult.php';
+
 class Units {
 	const TROOP_CANCEL_WINDOW = 90;
 
 	public $sending = array(), $recieving = array(), $return = array();
 
 	private function normalizeCatapultTarget($value, $allowSecondRandom = false) {
-		if(!is_scalar($value) || !is_numeric($value)) {
-			return 0;
-		}
-
-		$target = (int)$value;
-		if($allowSecondRandom && $target === 99) {
-			return 99;
-		}
-
-		$allowedTargets = array(
-			0,
-			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-			14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-			25, 26, 27, 28, 29, 30, 34, 35, 36, 37, 38,
-			39, 40, 41, 42
-		);
-		return in_array($target, $allowedTargets, true) ? $target : 0;
+		global $building;
+		return catapultNormalizeTarget($value, $building->getTypeLevel(16), $allowSecondRandom);
 	}
 
 	// Posición (1-10) que ocupa el espía dentro de cada tribu. Los galos lo tienen

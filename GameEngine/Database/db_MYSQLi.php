@@ -2646,13 +2646,15 @@
 				$uid = (int)$uid;
 				$counts = array(
 					'attack' => 0,
+					'defense' => 0,
 					'spy' => 0,
 					'trade' => 0,
 					'reinforcement' => 0,
 					'misc' => 0
 				);
 				$q = "SELECT CASE"
-					." WHEN ntype IN (1,2,3,4,5,6,7,25) THEN 'attack'"
+					." WHEN ntype IN (1,2,3,25) THEN 'attack'"
+					." WHEN ntype IN (4,5,6,7) THEN 'defense'"
 					." WHEN ntype IN (0,22,23,24) THEN 'spy'"
 					." WHEN ntype IN (10,11,12,13) THEN 'trade'"
 					." WHEN ntype = 8 THEN 'reinforcement'"
@@ -3454,6 +3456,12 @@
 			function addMovement($type, $from, $to, $ref, $data, $endtime, $send = 1, $wood = 0, $clay = 0, $iron = 0, $crop = 0, $ref2 = 0) {
 				$q = "INSERT INTO " . TB_PREFIX . "movement values (0,$type,$from,$to,$ref,$ref2,'$data',$endtime,0,$send,$wood,$clay,$iron,$crop)";
 				return mysqli_query($this->connection,$q);
+			}
+
+			function isPendingAttackMovement($moveid) {
+				$moveid = (int)$moveid;
+				$result = mysqli_query($this->connection,"SELECT 1 FROM ".TB_PREFIX."movement WHERE moveid = $moveid AND sort_type = 3 AND proc = 0 LIMIT 1");
+				return $result && mysqli_num_rows($result) === 1;
 			}
 
 			function claimA2b($ckey, $check) {

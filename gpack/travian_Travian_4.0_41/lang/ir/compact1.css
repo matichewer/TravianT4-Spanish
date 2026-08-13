@@ -767,9 +767,11 @@ body.login #side_info,body.logout #side_info,body.signup #side_info,body.support
 #side_info .news .newsContentMoreInfoLink:hover{color:#00BC00;}#side_info .sideInfoHero{display:block;height:136px;left:33px;position:relative;width:145px;z-index:1;}
 #side_info .sideInfoHero .heroProfile,#side_info .sideInfoHero .adventures,#side_info .sideInfoHero .auctions{display:block;position:absolute;}
 #side_info .sideInfoHero .heroImage{width:106px;margin-left:8px;margin-top:15px;}
-#side_info .sideInfoHero .heroImageBorder{width:145px;height:136px;position:absolute;left:0;top:0;background-image:url("../../img/layout/sign_heroBorder-rtl.png");}
+#side_info .sideInfoHero .heroImageBorder{width:145px;height:136px;position:absolute;left:0;top:0;background-image:url("../../img/layout/sign_heroBorder-rtl.png");z-index:2;pointer-events:none;}
 .ie6 #side_info .sideInfoHero .heroImageBorder{background-image:url("../../img/layout/sign_heroBorder-rtl.png");}
 #side_info .sideInfoHero .heroProfile{height:95px;left:15px;top:30px;width:93px;}
+#side_info .sideInfoHero .heroAttributePoints{background-image:url("../../img/layout/heroAttributePoints.png?v=5");display:block;filter:drop-shadow(1px 0 0 #34351c) drop-shadow(-1px 0 0 #34351c) drop-shadow(0 1px 0 #34351c) drop-shadow(0 -1px 0 #34351c);height:30px;left:101px;position:absolute;top:97px;transform:rotate(12deg) scale(.88);transform-origin:4px 15px;width:30px;z-index:1;}
+#side_info .sideInfoHero .heroAttributePoints span{color:#4b431d;display:block;font:bold 17px/30px Arial,sans-serif;margin-left:2px;text-align:center;text-decoration:none;text-shadow:0 1px 0 #e7d786;}
 #side_info .sideInfoHero .adventures{height:30px;left:112px;top:36px;width:30px;}
 #side_info .sideInfoHero .auctions{height:30px;left:115px;top:68px;width:30px;}#side_info .sideInfoPlayer{height:51px;position:relative;width:182px;left:5px;margin-top:-13px;}
 #side_info .sideInfoPlayer .signLink{width:128px;height:22px;padding-top:10px;padding-left:35px;top:8px;left:7px;}
@@ -1560,6 +1562,7 @@ div.village2 div#village_map .l40{left:310px;top:470px;}
 #navigation .report-badge-background-r{left:15px;width:5px;background-position:right top;}
 #navigation .report-badge-content{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:17px;line-height:1;}
 #navigation .report-badge-attack .report-badge-background{filter:hue-rotate(-95deg) saturate(3) brightness(.72);}
-#navigation .report-badge-spy .report-badge-background{filter:hue-rotate(135deg) saturate(2) brightness(.78);}
+#navigation .report-badge-defense .report-badge-background{filter:hue-rotate(135deg) saturate(2) brightness(.78);}
+#navigation .report-badge-spy .report-badge-background{filter:hue-rotate(-55deg) saturate(2.2) brightness(1.02);}
 #navigation .report-badge-trade .report-badge-background{filter:grayscale(1) brightness(.78);}
 #navigation .report-badge-reinforcement .report-badge-background{filter:hue-rotate(200deg) saturate(1.8) brightness(.72);}
