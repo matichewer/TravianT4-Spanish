@@ -74,12 +74,23 @@ $index = 0;
 $row1 = 0;
 for($i=0;$i<count($maparray);$i++) {
 	$row1 = intdiv($i, $COLS);
+	$targetalliance = 0;
+	$tribe = 0;
+	$username = '';
+	$uinfo = '';
+	$allyname = '-';
+	$tribename = '-';
 
 	if($maparray[$index]['occupied'] > 0 && $maparray[$index]['fieldtype'] >= 0) {
-	$targetalliance = $database->getUserField($maparray[$index]['owner'],"alliance",0);
-    $tribe = $database->getUserField($maparray[$index]['owner'],"tribe",0);
-    $username = $database->getUserField($maparray[$index]['owner'],"username",0);
-    $oasisowner = $database->getUserField($maparray[$index]['owner'],"username",0);
+	$tileowner = (int)$maparray[$index]['owner'];
+	if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0) {
+		$odata = $database->getOMInfo($maparray[$index]['id']);
+		$tileowner = (int)$odata['owner'];
+	}
+	$targetalliance = $database->getUserField($tileowner,"alliance",0);
+    $tribe = $database->getUserField($tileowner,"tribe",0);
+    $username = $database->getUserField($tileowner,"username",0);
+    $uinfo = $username;
     $friendarray = array();
     $enemyarray = array();
     $neutralarray = array();
@@ -177,10 +188,6 @@ break;
     }elseif($tribe==5) {
     	$tribename = "Natares";
         }
-
-    $odata = $database->getOMInfo($maparray[$index]['id']);
-    $uinfo = $database->getUserField($odata['owner'],'username',0);
-
     if($maparray[$index]['fieldtype'] > 0 && $maparray[$index]['occupied'] == 1) {
     $targettitle = "<font color='white'><b>Aldea ".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Jugador: ".$username."<br>Población: ".$maparray[$index]['pop']."<br>Alianza ".$allyname."<br>Tribu: ".$tribename."";
     }
