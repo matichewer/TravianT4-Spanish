@@ -1561,8 +1561,9 @@ div.village2 div#village_map .l40{left:310px;top:470px;}
 #navigation .report-badge-background-l{left:0;width:15px;background-position:left top;}
 #navigation .report-badge-background-r{left:15px;width:5px;background-position:right top;}
 #navigation .report-badge-content{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:17px;line-height:1;}
-#navigation .report-badge-attack .report-badge-background{filter:hue-rotate(-95deg) saturate(3) brightness(.72);}
-#navigation .report-badge-defense .report-badge-background{filter:hue-rotate(135deg) saturate(2) brightness(.78);}
-#navigation .report-badge-spy .report-badge-background{filter:hue-rotate(-55deg) saturate(2.2) brightness(1.02);}
-#navigation .report-badge-trade .report-badge-background{filter:grayscale(1) brightness(.78);}
-#navigation .report-badge-reinforcement .report-badge-background{filter:hue-rotate(200deg) saturate(1.8) brightness(.72);}
+#navigation .report-badge-attack .report-badge-background{filter:brightness(0) saturate(70%) invert(13%) sepia(90%) saturate(5000%) hue-rotate(359deg) brightness(94%) contrast(114%);}
+#navigation .report-badge-defense .report-badge-background{filter:hue-rotate(145deg) saturate(2.6) brightness(.72);}
+#navigation .report-badge-spy .report-badge-background{filter:hue-rotate(-55deg) saturate(1.35) brightness(1.08);}
+#navigation .report-badge-trade .report-badge-background{filter:grayscale(1) brightness(1.05);}
+#navigation .report-badge-reinforcement .report-badge-background{filter:hue-rotate(200deg) saturate(1.2) brightness(.92);}
+#navigation .report-badge-misc .report-badge-background{filter:saturate(.7) brightness(1.08);}
