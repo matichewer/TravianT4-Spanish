@@ -89,16 +89,92 @@ celebrationAssert(
 	'celebration.php volvió a descontar recursos con un $mode sin definir'
 );
 
-// La plantilla tiene que pedir la misma duración que agenda el servidor y mandar el token.
-$template = file_get_contents(dirname(__DIR__).'/Templates/Build/24_1.tpl');
-celebrationAssert($template !== false, 'No se pudo leer 24_1.tpl');
+// El arranque de la celebración es una sola escritura condicionada: dos pedidos
+// simultáneos no pueden pisar una fiesta ya empezada, y el cierre sólo paga los
+// puntos de cultura al proceso que realmente cerró la fila.
+$db = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+celebrationAssert($db !== false, 'No se pudo leer db_MYSQLi.php');
 celebrationAssert(
-	substr_count($template, 'celebrationDuration($i,$level)') === 2,
-	'24_1.tpl dejó de mostrar la duración compartida en alguna de las dos celebraciones'
+	preg_match('/function addCel\(.*?celebration = 0/s', $db) === 1,
+	'addCel() dejó de exigir que la aldea no tuviera otra celebración'
 );
 celebrationAssert(
-	substr_count($template, 'c=$session->mchecker') === 2,
-	'24_1.tpl dejó de mandar el token en alguno de los dos botones'
+	preg_match('/function clearCel\(.*?celebration <> 0.*?mysqli_affected_rows/s', $db) === 1,
+	'clearCel() dejó de informar si realmente cerró la celebración'
 );
+
+$automation = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
+celebrationAssert($automation !== false, 'No se pudo leer Automation.php');
+celebrationAssert(
+	preg_match('/\$rewards = array\(1 => 500, 2 => 2000\)/', $automation) === 1,
+	'celebrationComplete() volvió a decidir los puntos de cultura con ifs sueltos'
+);
+celebrationAssert(
+	preg_match('/if\(!\$database->clearCel\(\$id\)\)\s*\{\s*continue;/', $automation) === 1,
+	'celebrationComplete() acredita los puntos sin haber ganado el cierre de la fila'
+);
+celebrationAssert(
+	preg_match('/if\(!isset\(\$rewards\[\$type\]\)/', $automation) === 1,
+	'celebrationComplete() volvió a arrastrar $cp de la aldea anterior del bucle'
+);
+
+// --- La plantilla ---------------------------------------------------------------
+//
+// Los dos bloques de celebración salen del mismo bucle, así que ya no pueden
+// desbalancearse entre sí; lo que se revisa acá es que la estructura cierre todo
+// lo que abre en cualquiera de las ramas (botón, "en curso", faltan recursos).
+
+$template = file_get_contents(dirname(__DIR__).'/Templates/Build/24_celebrations.tpl');
+celebrationAssert($template !== false, 'No se pudo leer 24_celebrations.tpl');
+celebrationAssert(
+	substr_count($template, 'celebrationDuration($i, $level)') === 1,
+	'24_celebrations.tpl dejó de derivar la duración (y la disponibilidad) de la función compartida'
+);
+celebrationAssert(
+	substr_count($template, "celebration.php?id=") === 1
+		&& strpos($template, 'session->mchecker') !== false,
+	'24_celebrations.tpl dejó de mandar el token en el botón de celebrar'
+);
+celebrationAssert(
+	strpos($template, '$time =') === false,
+	'24_celebrations.tpl volvió a pisar $time con el resultado de calculateAvaliable()'
+);
+
+$progress = file_get_contents(dirname(__DIR__).'/Templates/Build/24_progress.tpl');
+celebrationAssert($progress !== false, 'No se pudo leer 24_progress.tpl');
+celebrationAssert(
+	strpos($progress, '\\"') === false,
+	'24_progress.tpl volvió a escribir comillas escapadas en HTML crudo'
+);
+celebrationAssert(
+	strpos($progress, 'Party') === false,
+	'24_progress.tpl volvió a mostrar la celebración sin traducir'
+);
+
+foreach(array('24_celebrations.tpl' => $template, '24_progress.tpl' => $progress) as $name => $source) {
+	// Las ramas del bloque de acción son excluyentes y cada una se cierra sola, así
+	// que la cuenta cruda del archivo tiene que dar pareja. Se descartan las líneas
+	// de comentario, que también hablan de <div>.
+	$markup = implode("\n", array_filter(
+		explode("\n", $source),
+		function($line) { return strpos(ltrim($line), '//') !== 0; }
+	));
+	celebrationAssert(
+		substr_count($markup, '<div') === substr_count($markup, '</div>'),
+		"$name abre y cierra distinta cantidad de contenedores"
+	);
+}
+
+// --- Las partes no se pueden pedir sueltas por URL ------------------------------
+//
+// build.php trata "Templates/Build/<gid>_<n>.tpl" como una pestaña cuando llega
+// ?t=<n> o ?s=<n> (siempre numéricos). Con los nombres viejos, build.php?id=<ayto>&t=1
+// devolvía la lista de celebraciones sin encabezado ni bloque de mejora.
+foreach(array('24_1.tpl', '24_2.tpl') as $numbered) {
+	celebrationAssert(
+		!file_exists(dirname(__DIR__).'/Templates/Build/'.$numbered),
+		"$numbered volvió a existir: se puede pedir suelta con ?t=/?s="
+	);
+}
 
 echo "Celebrations regression: OK\n";

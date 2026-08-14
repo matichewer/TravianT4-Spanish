@@ -67,7 +67,9 @@ if ($buildingHelpType === 'rally-point') {
 	$buildingHelpNote = 'Todos los niveles reducen la duración de las celebraciones y aumentan la producción diaria de puntos de cultura del edificio.';
 	if (isset($bid24[$buildingHelpLevel]['attri'])) {
 		$buildingHelpCurrentValue = str_replace('.', ',', (string) round($bid24[$buildingHelpLevel]['attri'], 2));
-		$buildingHelpNote = 'Duración actual: '.$buildingHelpCurrentValue.'% del tiempo base. '.$buildingHelpNote;
+		// El porcentaje sale de la misma curva que la tabla $sc de Data/cel.php, así que
+		// describe la fiesta pequeña; la grande recorre esa curva a partir del nivel 10.
+		$buildingHelpNote = 'Duración de la fiesta pequeña: '.$buildingHelpCurrentValue.'% de la del nivel 1. '.$buildingHelpNote;
 	}
 } elseif ($buildingHelpType === 'academy') {
 	$buildingHelpTribe = isset($session->tribe) ? (int) $session->tribe : 1;

@@ -4724,17 +4724,25 @@ class Automation {
         $ourFileHandle = fopen("GameEngine/Prevention/celebration.txt", 'w');
         fclose($ourFileHandle);
         $varray = $database->getCel();
+        $rewards = array(1 => 500, 2 => 2000);
         foreach ($varray as $vil) {
-            $id = $vil['wref'];
-            $type = $vil['type'];
-            $user = $vil['owner'];
-            if($type == 1) {
-                $cp = 500;
-            } else if($type == 2) {
-                $cp = 2000;
+            $id = (int)$vil['wref'];
+            $type = (int)$vil['type'];
+            $user = (int)$vil['owner'];
+            // clearCel() sólo devuelve true para la petición que efectivamente cerró
+            // la celebración. Automation corre en cada carga de página, así que dos
+            // jugadores online a la vez podían leer la misma fila vencida y acreditar
+            // los puntos de cultura dos veces.
+            if(!$database->clearCel($id)) {
+                continue;
             }
-            $database->clearCel($id);
-            $database->setCelCp($user, $cp);
+            // Una fila con un `type` fuera de 1/2 se cierra igual pero no paga nada:
+            // antes $cp no se reiniciaba en cada vuelta y esa aldea acreditaba los
+            // puntos de la anterior del bucle (o rompía la consulta en la primera).
+            if(!isset($rewards[$type]) || $user <= 0) {
+                continue;
+            }
+            $database->setCelCp($user, $rewards[$type]);
         }
         if(file_exists("GameEngine/Prevention/celebration.txt")) {
             @unlink("GameEngine/Prevention/celebration.txt");

@@ -32,14 +32,17 @@ foreach($varray as $vil){
 	$lvlRes = $building->getTypeLevel(25,$vid);
 	$lvlPal = $building->getTypeLevel(26,$vid);
 	$maxslots = ($lvlRes>=10?floor($lvlRes/10):0)+($lvlPal>=10?floor(($lvlPal-5)/5):0);
-	$hasCel = $database->getVillageField($vid,'celebration');
-	if ($hasCel <> 0) { $timer++; }
+	// Una celebración ya vencida que la barrida todavía no cerró no es una en curso:
+	// mostraba una cuenta atrás en 0:00:00 y consumía un id de timer.
+	$celEnd = (int)$database->getVillageField($vid,'celebration');
+	$hasCel = $celEnd > time();
+	if ($hasCel) { $timer++; }
 
 	if($vil['capital'] == 1) { $class = 'hl'; } else {$class = 'hover'; }              
 
 	echo '<tr class="'.$class.'"><td class="vil fc"><a href="dorf1.php?newdid='.$vid.'">'.$vil['name'].'</a></td>';
 	echo '<td class="cps">'.rtrim(rtrim(number_format($cp,2,',','.'),'0'),',').'</td>';
-	echo '<td class="cel">'.($lvlTH>0?'<a href="build.php?newdid='.$vid.'&amp;gid=24">'.($hasCel<>0?'<span id="timer'.$timer.'">'.$generator->getTimeFormat($hasCel-time()).'</span>':'<span class="dot">●</span>').'</a>':'<span class="none">-</span>').'</td>';
+	echo '<td class="cel">'.($lvlTH>0?'<a href="build.php?newdid='.$vid.'&amp;gid=24">'.($hasCel?'<span id="timer'.$timer.'">'.$generator->getTimeFormat($celEnd-time()).'</span>':'<span class="dot">●</span>').'</a>':'<span class="none">-</span>').'</td>';
 	echo '<td class="tro"><span class="">';
 	$unit = $database->getUnit($vid);
 	$siedler = $unit['u'.$siedlerID];

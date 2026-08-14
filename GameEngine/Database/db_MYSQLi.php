@@ -727,6 +727,11 @@
 							. " LEFT JOIN " . TB_PREFIX . "artefacts AS artefact ON artefact.vref = destination.wref"
 							. " SET source.exp$slot = $target, destination.owner = $attackerOwner,"
 							. " destination.loyalty = 33" . ($loyaltyClock === "" ? "" : ", destination.loyaltyupdate = " . time()) . ","
+							// La celebración se cancela junto con el cambio de dueño: iba en la
+							// misma escritura a propósito, porque si la fiesta sobrevive a la
+							// conquista los puntos de cultura que pagó el defensor se los acredita
+							// el conquistador cuando la barrida la cierra.
+							. " destination.celebration = 0, destination.type = 0,"
 							. " fields.f40 = 0, fields.f40t = 0,"
 							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner"
 							. " WHERE source.wref = $from AND source.owner = $attackerOwner"
@@ -2091,9 +2096,19 @@
         		return mysqli_query($this->connection,$q);
         	}
 
+        	/**
+        	 * Una celebración sólo puede empezar si la aldea no tiene otra: la condición
+        	 * viaja en el propio UPDATE para que dos pedidos simultáneos no puedan
+        	 * arrancar dos fiestas (la segunda pisaría a la primera y se perderían los
+        	 * puntos de cultura ya pagados).
+        	 */
         	function addCel($ref, $cel, $type) {
-        		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = $cel, type= $type where wref = $ref";
-        		return mysqli_query($this->connection,$q);
+        		$ref = (int)$ref;
+        		$cel = (int)$cel;
+        		$type = (int)$type;
+        		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = $cel, type = $type where wref = $ref AND celebration = 0";
+        		$result = mysqli_query($this->connection,$q);
+        		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
         	function getCel() {
         		$time = time();
@@ -2102,11 +2117,20 @@
         		return $this->mysqli_fetch_all($result);
         	}
 
+        	/**
+        	 * Devuelve true sólo para quien realmente cerró la celebración. Es lo que
+        	 * hace que los puntos de cultura se paguen una sola vez: el que pierde la
+        	 * carrera ve 0 filas afectadas y no acredita nada.
+        	 */
         	function clearCel($ref) {
-        		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = 0, type = 0 where wref = $ref";
-        		return mysqli_query($this->connection,$q);
+        		$ref = (int)$ref;
+        		$q = "UPDATE " . TB_PREFIX . "vdata set celebration = 0, type = 0 where wref = $ref AND celebration <> 0";
+        		$result = mysqli_query($this->connection,$q);
+        		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
         	function setCelCp($user, $cp) {
+        		$user = (int)$user;
+        		$cp = (int)$cp;
         		$q = "UPDATE " . TB_PREFIX . "users set cp = cp + $cp where id = $user";
 		return mysqli_query($this->connection,$q);
 	}

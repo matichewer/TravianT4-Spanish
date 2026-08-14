@@ -16,8 +16,12 @@ En el Ayuntamiento puedes organizar grandes celebraciones. Cada celebración aum
 
 	include("upgrade.tpl");
 	if ($building->getTypeLevel(24) > 0) {
-		include("Templates/Build/24_1.tpl"); 
-		include("Templates/Build/24_2.tpl");
+		// Nombres no numéricos a propósito: build.php sólo acepta ?t=/?s= numéricos,
+		// así que estas dos partes no se pueden pedir sueltas por URL (antes
+		// build.php?id=<ayuntamiento>&t=1 devolvía la lista de celebraciones sin el
+		// encabezado ni el bloque de mejora).
+		include("Templates/Build/24_celebrations.tpl");
+		include("Templates/Build/24_progress.tpl");
 	}
 ?>
 </div>

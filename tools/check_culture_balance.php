@@ -79,8 +79,7 @@ cultureBalanceAssert(
 $celebrationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 $celebrationDataSource = file_get_contents(dirname(__DIR__).'/GameEngine/Data/cel.php');
 cultureBalanceAssert(
-	strpos($celebrationSource, '$cp = 500;') !== false
-		&& strpos($celebrationSource, '$cp = 2000;') !== false
+	strpos($celebrationSource, '$rewards = array(1 => 500, 2 => 2000);') !== false
 		&& strpos($celebrationDataSource, '$table[$level] / SPEED') !== false,
 	'Las fiestas deben conservar 500/2000 PC y adaptar únicamente su duración a SPEED.'
 );

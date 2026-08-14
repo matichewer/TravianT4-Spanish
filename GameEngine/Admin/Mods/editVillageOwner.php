@@ -13,8 +13,13 @@ include_once("validateMultihunterSession.php");
 
 $id = $_POST['did'];
 
-mysql_query("UPDATE ".TB_PREFIX."vdata SET 
-	owner = '".$_POST['newowner']."' 
+// Igual que en una conquista: la aldea cambia de dueño, así que la celebración se
+// cancela. Si sobrevive, los puntos de cultura que pagó el dueño anterior se los
+// lleva el nuevo cuando la barrida cierra la fiesta.
+mysql_query("UPDATE ".TB_PREFIX."vdata SET
+	owner = '".$_POST['newowner']."',
+	celebration = 0,
+	type = 0
 	WHERE wref = $id AND capital = 0") or die(mysql_error());
 
 // header("Location: ../../../Admin/admin.php?p=player&uid=".$_POST['newowner']."");

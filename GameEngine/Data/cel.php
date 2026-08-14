@@ -49,8 +49,8 @@ $gc= array(
 
 if(!function_exists('celebrationDuration')){
 	// Duración de una celebración en segundos, según el nivel del Ayuntamiento. Es la
-	// única definición: la usan celebration.php y Templates/Build/24_1.tpl, para que el
-	// tiempo que se anuncia sea el que después se agenda. Antes la plantilla lo derivaba
+	// única definición: la usan celebration.php y Templates/Build/24_celebrations.tpl, para
+	// que el tiempo que se anuncia sea el que después se agenda. Antes la plantilla lo derivaba
 	// de `$cel[..]['time']` y el `attri` del edificio, y el servidor de estas tablas, así
 	// que se iban unos segundos.
 	//
