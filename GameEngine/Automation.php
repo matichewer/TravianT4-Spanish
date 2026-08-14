@@ -1941,6 +1941,9 @@ class Automation {
             $tocoor = $database->getCoor($data['from']);
             $fromcoor = $database->getCoor($data['to']);
             $isoasis = $database->isVillageOases($data['to']);
+            // El asunto del informe no distingue oasis homónimos: se le agrega la
+            // coordenada del oasis al final para poder ubicarlo de un vistazo.
+            $oasisTopicSuffix = $isoasis ? ' ('.$fromcoor['x'].'|'.$fromcoor['y'].')' : '';
             $AttackArrivalTime = $data['endtime'];
             if($isoasis == 0) {
                 $AttackerID = $database->getUserField($database->getVillageField($data['from'], "owner"), "id", 0);
@@ -3356,11 +3359,11 @@ class Automation {
                 if($scout) {
                     if($spyDetected) {
                         $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
-                        $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                        $database->addNotice($to['owner'], $to['wref'], $toAlly, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).$oasisTopicSuffix.'', $data2, $AttackArrivalTime);
                         foreach(array_keys($spyReinforcementReportOwners) as $reinforcementOwner) {
                             // La copia es personal (ally = 0): el informe original del dueño
                             // ya alimenta los eventos de la alianza y no debe duplicarse allí.
-                            $database->addNotice($reinforcementOwner, $to['wref'], 0, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2, $AttackArrivalTime);
+                            $database->addNotice($reinforcementOwner, $to['wref'], 0, 0, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).$oasisTopicSuffix.'', $data2, $AttackArrivalTime);
                         }
                     }
                 } else {
@@ -3382,7 +3385,7 @@ class Automation {
                     } elseif($totalsend_def > $totaldead_def) {
                         $defenderReportType = 5;
                     }
-                    $defenderTopic = ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'';
+                    $defenderTopic = ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).$oasisTopicSuffix.'';
                     $toAlly = $database->getUserField($to['owner'], 'alliance', 0);
                     $database->addNotice($to['owner'], $to['wref'], $toAlly, $defenderReportType, $defenderTopic, $data2def, $AttackArrivalTime);
                     foreach(array_keys($battleReinforcementReportOwners) as $reinforcementOwner) {
@@ -3406,14 +3409,14 @@ class Automation {
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
                         $spyReportType = ($totaldead_att == 0 && $totalstilltraped_att == 0) ? 22 : 23;
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, $spyReportType, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, $spyReportType, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).$oasisTopicSuffix.'', $data2att, $AttackArrivalTime);
                     } else {
                         if($totaldead_att == 0 && $totalstilltraped_att == 0) {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 1, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).$oasisTopicSuffix.'', $data2att, $AttackArrivalTime);
                         } else {
                             $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data2att, $AttackArrivalTime);
+                            $database->addNotice($from['owner'], $to['wref'], $fromAlly, 2, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).$oasisTopicSuffix.'', $data2att, $AttackArrivalTime);
                         }
                     }
 
@@ -3453,10 +3456,10 @@ class Automation {
                     $database->setMovementProc($data['moveid']);
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 24, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 24, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).$oasisTopicSuffix.'', $data_fail, $AttackArrivalTime);
                     } else {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 3, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                        $database->addNotice($from['owner'], $to['wref'], $fromAlly, 3, ''.addslashes($from['name']).' ataca a '.addslashes($to['name']).$oasisTopicSuffix.'', $data_fail, $AttackArrivalTime);
                     }
                 }
 
@@ -3959,6 +3962,7 @@ class Automation {
                     $toF = $database->getVillage($data['to']);
                     $targettribe = $database->getUserField($database->getVillageField($data['to'], "owner"), "tribe", 0);
                 }
+                $oasisTopicSuffix = $targetIsOasis ? ' ('.$to['x'].'|'.$to['y'].')' : '';
                 // El héroe se guarda en un único sitio: en aldea propia vive en `units`,
                 // en aldea ajena vive en la fila de refuerzo. Escribirlo en los dos lados
                 // lo duplicaba (aparecía dos veces en el informe de batalla y defendía doble).
@@ -4014,10 +4018,10 @@ class Automation {
                 $unitssend_att = ''.$data['t1'].','.$data['t2'].','.$data['t3'].','.$data['t4'].','.$data['t5'].','.$data['t6'].','.$data['t7'].','.$data['t8'].','.$data['t9'].','.$data['t10'].','.$data['t11'].'';
                 $data_fail = ''.$from['wref'].','.$from['owner'].','.$owntribe.','.$unitssend_att.','.$to['wref'].','.$to['owner'].'';
                 $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                $database->addNotice($from['owner'], $to['wref'], $fromAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                $database->addNotice($from['owner'], $to['wref'], $fromAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).$oasisTopicSuffix.'', $data_fail, $AttackArrivalTime);
                 if($from['owner'] != $to['owner']) {
                     $toAlly = $database->getUserField($from['owner'], 'alliance', 0);
-                    $database->addNotice($to['owner'], $to['wref'], $toAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).'', $data_fail, $AttackArrivalTime);
+                    $database->addNotice($to['owner'], $to['wref'], $toAlly, 8, ''.addslashes($from['name']).' reforzó '.addslashes($to['name']).$oasisTopicSuffix.'', $data_fail, $AttackArrivalTime);
                 }
                 //update status
                 $database->setMovementProc($data['moveid']);
