@@ -15,6 +15,7 @@ class Market {
     // pestaña que no carga los datos.
     public $onsale = array(), $onmarket = array(), $sending = array(), $recieving = array(), $return = array();
     public $offerDraft = array();
+    public $routeError = array();
     public $maxcarry,$merchant,$used; 
      
     public function procMarket($post) { 
@@ -97,11 +98,13 @@ class Market {
             $this->redirectToMarket(0,4);
         }
 
+        $backToForm = $postAction === 'editRoute' ? '' : 'create';
+
         $resource = array();
         foreach(array('r1','r2','r3','r4') as $field) {
             $value = isset($post[$field]) && $post[$field] === '' ? 0 : $this->nonNegativeInteger(isset($post[$field]) ? $post[$field] : null);
             if($value === false) {
-                $this->redirectToMarket(0,4);
+                $this->tradeRouteFailure('invalid',array(),$backToForm);
             }
             $resource[] = $value;
         }
@@ -117,9 +120,14 @@ class Market {
         $committedByOtherRoutes = $database->getVillageRouteMerchantTotal($village->wid,$routeId ?: 0);
         $merchantsFreeForRoutes = max(0,$this->merchant - $committedByOtherRoutes);
 
-        if(array_sum($resource) <= 0 || $start === false || $start > 23 || $deliveries < 1 || $deliveries > 3
-            || $reqMerc <= 0 || $reqMerc > $merchantsFreeForRoutes) {
-            $this->redirectToMarket(0,4);
+        if(array_sum($resource) <= 0) {
+            $this->tradeRouteFailure('noresources',array(),$backToForm);
+        }
+        if($start === false || $start > 23 || $deliveries < 1 || $deliveries > 3 || $reqMerc <= 0) {
+            $this->tradeRouteFailure('invalid',array(),$backToForm);
+        }
+        if($reqMerc > $merchantsFreeForRoutes) {
+            $this->tradeRouteFailure('merchants',array('need'=>$reqMerc,'free'=>$merchantsFreeForRoutes),$backToForm);
         }
         $timestamp = strtotime('today '.sprintf('%02d',$start).':00:00');
         if($timestamp <= time()) {
@@ -129,17 +137,27 @@ class Market {
         if($postAction === 'addRoute') {
             $target = $this->positiveInteger(isset($post['tvillage']) ? $post['tvillage'] : null);
             if(!$target || $target === (int)$village->wid || (int)$database->getVillageField($target,'owner') !== (int)$session->uid) {
-                $this->redirectToMarket(0,4);
+                $this->tradeRouteFailure('target',array(),$backToForm);
             }
-            $database->createTradeRoute($session->uid,$target,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp);
+            if(!$database->createTradeRoute($session->uid,$target,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp)) {
+                $this->tradeRouteFailure('failed',array(),$backToForm);
+            }
         } else {
-            if($routeId) {
-                $database->updateTradeRouteOwned($routeId,$session->uid,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp);
+            if(!$routeId || !$database->updateTradeRouteOwned($routeId,$session->uid,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp)) {
+                $this->tradeRouteFailure('failed',array(),$backToForm);
             }
         }
         $this->redirectToMarket(0,4);
     }
-     
+
+    // Todos los rechazos al guardar una ruta terminaban en el mismo redirect mudo: la
+    // pagina se recargaba igual que si hubiera funcionado. Guardamos el motivo en la
+    // sesion para que 17_4.tpl lo muestre una sola vez.
+    private function tradeRouteFailure($code,$params=array(),$backToForm='') {
+        $_SESSION['tradeRouteError'] = array('code'=>$code,'params'=>$params);
+        $this->redirectToMarket(0,4,$backToForm);
+    }
+
     private function loadMarket() { 
         global $session,$building,$bid28,$bid17,$database,$village; 
         $this->recieving = $database->getMovement(0,$village->wid,1); 
@@ -154,6 +172,10 @@ class Market {
         $this->onmarket = $database->getMarket($village->wid,0); 
         if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
             $this->offerDraft = $_SESSION['marketOfferDraft'][$village->wid];
+        }
+        if(isset($_SESSION['tradeRouteError']) && is_array($_SESSION['tradeRouteError'])) {
+            $this->routeError = $_SESSION['tradeRouteError'];
+            unset($_SESSION['tradeRouteError']);
         }
         $this->maxcarry = ($session->tribe == 1)? 500 : (($session->tribe == 2)? 1000 : 750); 
 		$this->maxcarry *= TRADER_CAPACITY; 

@@ -12,9 +12,36 @@ $buildingHelpLevel = $village->resarray['f'.$id];
 include('build_level_help.tpl');
 
 include("upgrade.tpl");
-include("17_menu.tpl"); 
+include("17_menu.tpl");
+
+if(!empty($market->routeError['code'])){
+	$routeErrorParams = isset($market->routeError['params']) && is_array($market->routeError['params']) ? $market->routeError['params'] : array();
+	switch($market->routeError['code']){
+		case 'noresources':
+			$routeErrorText = 'Indicá al menos un recurso para enviar.';
+			break;
+		case 'merchants':
+			$routeErrorText = 'Mercaderes insuficientes: esta ruta necesita '.(isset($routeErrorParams['need']) ? (int)$routeErrorParams['need'] : 0)
+				.' y en este Mercado quedan '.(isset($routeErrorParams['free']) ? (int)$routeErrorParams['free'] : 0).' libres para rutas.';
+			break;
+		case 'target':
+			$routeErrorText = 'La aldea de destino no es válida.';
+			break;
+		case 'invalid':
+			$routeErrorText = 'Revisá los valores ingresados.';
+			break;
+		default:
+			$routeErrorText = 'No se pudo guardar la ruta comercial. Intentalo de nuevo.';
+	}
+	echo '<p class="error"><b>'.htmlspecialchars($routeErrorText,ENT_QUOTES,'UTF-8').'</b></p>';
+}
 
 if(isset($_GET['create'])){
+// Los mercaderes de una ruta quedan reservados: sin este dato a la vista, pasarse de
+// capacidad era la otra forma de que "guardar" no hiciera nada.
+$routeMerchantsUsed = (int)$database->getVillageRouteMerchantTotal($village->wid);
+echo '<p>Mercaderes libres para rutas: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
+	.' (cada uno transporta '.(int)$market->maxcarry.' recursos).</p>';
 include("17_create.tpl");
 }else if(isset($_GET['action'],$_GET['routeid']) && $_GET['action'] === 'editRoute' && ctype_digit((string)$_GET['routeid'])){
 $edited_route = $database->getTradeRoute2((int)$_GET['routeid']);

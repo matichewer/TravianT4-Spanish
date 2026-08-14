@@ -183,6 +183,33 @@ check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,
 	'los fallos transitorios usan una espera acotada antes del siguiente intento');
 
 // ---------------------------------------------------------------------------
+section('H. Crear una ruta no cuesta oro ni falla en silencio');
+// ---------------------------------------------------------------------------
+$dbSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+$createRouteStart = strpos($dbSource,'function createTradeRoute(');
+$createRouteBody = $createRouteStart === false ? '' : substr($dbSource,$createRouteStart,strpos($dbSource,'function getTradeRoute(') - $createRouteStart);
+check($createRouteBody !== '','createTradeRoute() sigue existiendo en la capa de datos');
+check(strpos($createRouteBody,'gold') === false,
+	'createTradeRoute() no cobra oro: el requisito es el Club del Oro, igual que la pestaña');
+
+check(strpos($tplSource,"\$session->gold > 1") === false,
+	'el formulario de creación no se esconde según el saldo de oro');
+
+check(strpos($marketSource,'private function tradeRouteFailure(') !== false
+	&& strpos($marketSource,"\$_SESSION['tradeRouteError']") !== false,
+	'los rechazos al guardar dejan un motivo en la sesión en vez de recargar mudos');
+foreach(array('noresources','merchants','target','invalid') as $errorCode) {
+	check(strpos($marketSource,"tradeRouteFailure('".$errorCode."'") !== false,
+		"procTradeRoutes() reporta el motivo '".$errorCode."'");
+	check(strpos($tplSource,"case '".$errorCode."':") !== false,
+		"la vista tiene texto para el motivo '".$errorCode."'");
+}
+check(preg_match('/if\(!\$database->createTradeRoute\(/',$marketSource) === 1,
+	'un INSERT fallido tambien se reporta en vez de darse por bueno');
+check(strpos($marketSource,"unset(\$_SESSION['tradeRouteError'])") !== false,
+	'el aviso se consume una sola vez y no persiste al recargar');
+
+// ---------------------------------------------------------------------------
 echo "\n";
 if(empty($GLOBALS['fails'])) {
 	echo "Trade route checks passed (".$GLOBALS['checks']." comprobaciones).\n";

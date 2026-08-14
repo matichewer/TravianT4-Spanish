@@ -2680,18 +2680,12 @@
 					|| $deliveries < 1 || $deliveries > 3 || $merchant <= 0 || $time <= 0) {
 					return false;
 				}
-				mysqli_query($this->connection,"START TRANSACTION");
-				$charged = mysqli_query($this->connection,"UPDATE " . TB_PREFIX . "users SET gold = gold - 2 WHERE id = $uid AND gold >= 2");
-				if(!$charged || mysqli_affected_rows($this->connection) !== 1) {
-					mysqli_query($this->connection,"ROLLBACK");
-					return false;
-				}
+				// Crear una ruta no cuesta oro: el requisito es el Club del Oro, que ya es
+				// lo que habilita la pestaña. El cobro de 2 de oro que habia aca fallaba
+				// en silencio cuando el saldo era 0 y ademas era incoherente (editar no
+				// cobraba y borrar no devolvia nada).
 				$q = "INSERT into " . TB_PREFIX . "route values (0,$uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time)";
-				if(!mysqli_query($this->connection,$q)) {
-					mysqli_query($this->connection,"ROLLBACK");
-					return false;
-				}
-				return mysqli_query($this->connection,"COMMIT");
+				return mysqli_query($this->connection,$q);
 			}
 
 			function getTradeRoute($uid) {
