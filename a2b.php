@@ -18,6 +18,9 @@ else if(isset($_GET['o'])) {
 else if(isset($_GET['z'])) {
 	header("Location: ".$_SERVER['PHP_SELF']."?z=".$_GET['z']);
 }
+else if(isset($_GET['bid'])) {
+	header("Location: ".$_SERVER['PHP_SELF']."?bid=".$_GET['bid']);
+}
 else if($_GET['id']!=0){
 	header("Location: ".$_SERVER['PHP_SELF']);
 }

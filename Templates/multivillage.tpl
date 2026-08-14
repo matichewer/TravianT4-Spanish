@@ -45,6 +45,8 @@
     	$vill = "&o=".$_GET['o'];
 	}else if(isset($_GET['z'])) {
     	$vill = "&z=".$_GET['z'];
+	}else if(isset($_GET['bid'])) {
+    	$vill = "&bid=".$_GET['bid'];
 	}else if(isset($_GET['s'])) {
     	$vill = "&s=".$_GET['s'];
 	}else if(isset($_GET['c'])) {

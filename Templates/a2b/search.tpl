@@ -23,7 +23,7 @@ if(isset($_GET['z'])){
 $coor = $database->getCoor($_GET['z']);
 
 }elseif(isset($_GET['bid'])){
-$coor = $database->getCoor($dataarray['31']);
+$coor = $database->getCoor($reportdata['31']);
 }else{
 $coor['x'] = "";
 $coor['y'] = "";
