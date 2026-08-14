@@ -16,15 +16,16 @@ class Market {
     public $onsale = array(), $onmarket = array(), $sending = array(), $recieving = array(), $return = array();
     public $offerDraft = array();
     public $routeError = array();
-    public $maxcarry,$merchant,$used; 
+    public $error = array();
+    public $routeReserved = 0;
+    public $maxcarry,$merchant,$used;
      
     public function procMarket($post) { 
         global $session;
-        $this->loadMarket(); 
-        if(isset($_SESSION['loadMarket'])) { 
-            $this->loadOnsale(); 
-            unset($_SESSION['loadMarket']); 
-        }
+        // Las ofertas de otras aldeas las carga filterNeed() cuando se abre la pestaña
+        // "Comprar" (procRemove, t=1). Cargarlas aca ademas, por una marca en la sesion,
+        // repetia la lista entera —una consulta por oferta— en cada visita a esa pestaña.
+        $this->loadMarket();
         if(isset($post['ft'])) {
             switch($post['ft']) {
                 case "mk1":
@@ -58,7 +59,9 @@ class Market {
         } 
         else if(isset($get['t'],$get['a'],$get['del']) && (string)$get['t'] === '2' && is_scalar($get['a']) && hash_equals((string)$session->mchecker,(string)$get['a'])) {
             $session->changeChecker();
-            $this->cancelOffer($get['del']);
+            if(!$this->cancelOffer($get['del'])) {
+                $this->marketFailure('cancel',isset($get['id']) ? $get['id'] : 0,$get['t']);
+            }
             $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,$get['t']);
         }
     } 
@@ -112,10 +115,10 @@ class Market {
         $deliveries = $this->positiveInteger(isset($post['deliveries']) ? $post['deliveries'] : null);
         $reqMerc = $this->requiredMerchants(array_sum($resource));
 
-        // Las rutas ya creadas reservan mercaderes de forma permanente (se liberan solo
-        // al borrar la ruta), asi que hay que descontarlas de la capacidad del edificio;
-        // si no, se pueden crear rutas cuya suma de mercaderes nunca entra en el mismo
-        // Mercado y terminan fallando en silencio cada vez que les toca disparar.
+        // Los mercaderes de una ruta se ocupan recien cuando sale, pero todas las rutas
+        // de una aldea tienen que caber a la vez en el Mercado: si la suma pasa el total
+        // del edificio hay una que no va a poder salir nunca. Se valida al crearla, que
+        // es donde se puede avisar, en vez de dejarla fallando cada dia en silencio.
         $routeId = $postAction === 'editRoute' ? $this->positiveInteger(isset($post['routeid']) ? $post['routeid'] : null) : 0;
         $committedByOtherRoutes = $this->routeMerchantsCommitted($routeId ?: 0);
         $merchantsFreeForRoutes = max(0,$this->merchant - $committedByOtherRoutes);
@@ -158,20 +161,35 @@ class Market {
         $this->redirectToMarket(0,4,$backToForm);
     }
 
+    // Lo mismo para enviar, ofertar y aceptar: el rechazo era un redirect mudo y el
+    // jugador solo veia que "no pasaba nada". El motivo se muestra una sola vez, en la
+    // pestaña donde estaba trabajando.
+    private function marketFailure($code,$id,$tab,$params=array()) {
+        $_SESSION['marketError'] = array('code'=>$code,'params'=>$params);
+        $this->redirectToMarket($id,$tab);
+    }
+
     private function loadMarket() {
         global $session,$building,$bid17,$database,$village;
         $this->recieving = $database->getMovement(0,$village->wid,1);
         $this->sending = $database->getMovement(0,$village->wid,0);
         $this->return  = $database->getMovement(2,$village->wid,1);
-        $this->merchant = ($building->getTypeLevel(17) > 0)? $bid17[$building->getTypeLevel(17)]['attri'] : 0;
+        // Un nivel fuera de la tabla (editado desde el panel) dejaba $merchant en null y
+        // el Mercado sin poder mover nada; se recorta igual que la capacidad de carga.
+        $marketLevel = (int)$building->getTypeLevel(17);
+        $this->merchant = ($marketLevel > 0 && !empty($bid17))
+            ? (int)$bid17[min($marketLevel,count($bid17))]['attri']
+            : 0;
         // La capacidad se calcula antes que los mercaderes ocupados porque las rutas
         // reservan segun la capacidad de hoy, no la del dia en que se crearon.
         $this->maxcarry = Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28));
-        // Los mercaderes asignados a rutas quedan reservados. Sin incluirlos aca,
-        // un envio manual podia ocuparlos justo antes del horario de la ruta y esta
-        // fallaba silenciosamente.
-        $this->used = $database->totalMerchantUsed($village->wid)
-            + $this->routeMerchantsCommitted();
+        // Ocupados = solo los que estan realmente fuera de casa: viajes de ida, de vuelta
+        // y los que esperan a que alguien acepte una oferta. Las rutas comerciales NO
+        // ocupan mercaderes hasta que salen (igual que en Travian): descontarlas todo el
+        // dia dejaba "Mercaderes 1/16" sin un solo movimiento a la vista, bloqueaba
+        // vender y comprar, y ademas los contaba dos veces mientras la ruta viajaba.
+        $this->used = (int)$database->totalMerchantUsed($village->wid);
+        $this->routeReserved = $this->routeMerchantsCommitted();
         $this->onmarket = $database->getMarket($village->wid,0);
         if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
             $this->offerDraft = $_SESSION['marketOfferDraft'][$village->wid];
@@ -180,6 +198,69 @@ class Market {
             $this->routeError = $_SESSION['tradeRouteError'];
             unset($_SESSION['tradeRouteError']);
         }
+        if(isset($_SESSION['marketError']) && is_array($_SESSION['marketError'])) {
+            $this->error = $_SESSION['marketError'];
+            unset($_SESSION['marketError']);
+        }
+    }
+
+    /**
+     * Horarios de salida de las rutas de esta aldea, para poder explicar en pantalla
+     * a que hora se van los mercaderes comprometidos.
+     */
+    public function routeDepartureHours() {
+        global $database,$village;
+        $hours = array();
+        foreach($database->getTradeRoutesFrom($village->wid) as $route) {
+            $hours[(int)$route['start']] = sprintf('%02d:00',(int)$route['start']);
+        }
+        ksort($hours);
+        return array_values($hours);
+    }
+
+    /**
+     * Texto del ultimo rechazo, para mostrarlo una sola vez arriba de la pestaña.
+     */
+    public function errorText() {
+        if(empty($this->error['code'])) {
+            return '';
+        }
+        $params = (isset($this->error['params']) && is_array($this->error['params'])) ? $this->error['params'] : array();
+        $need = isset($params['need']) ? (int)$params['need'] : 0;
+        $free = isset($params['free']) ? (int)$params['free'] : 0;
+        switch($this->error['code']) {
+            case 'merchants':
+                return 'Mercaderes insuficientes: hacen falta '.$need.' y hay '.$free.' libres.';
+            case 'resources':
+                return 'No hay suficientes recursos en el almacén de esta aldea.';
+            case 'target':
+                return 'No hay ninguna aldea en ese destino.';
+            case 'gone':
+                return 'Esa oferta ya no está disponible.';
+            case 'taken':
+                return 'Otro jugador aceptó esa oferta primero.';
+            case 'alliance':
+                return 'Esa oferta es sólo para miembros de otra alianza.';
+            case 'maxtime':
+                return 'Tus mercaderes tardarían más de lo que acepta esa oferta.';
+            case 'sameresource':
+                return 'Hay que ofrecer y pedir recursos distintos.';
+            case 'hours':
+                return 'El tiempo máximo tiene que estar entre 1 y 99 horas.';
+            case 'cancel':
+                return 'No se pudo cancelar la oferta: puede que ya la hayan aceptado.';
+            case 'npcstorage':
+                return 'El reparto no entra en el almacén de esta aldea.';
+            case 'npctotal':
+                return 'El reparto pide más recursos de los que hay en el almacén.';
+            case 'gold':
+                return 'No se pudo hacer el cambio: hacen falta 3 de oro.';
+            case 'failed':
+                return 'No se pudo completar la operación. Intentalo de nuevo.';
+            case 'invalid':
+                return 'Revisá los valores ingresados.';
+        }
+        return 'No se pudo completar la operación. Intentalo de nuevo.';
     }
 
     /**
@@ -227,15 +308,24 @@ class Market {
 	        if(!$session->goldclub) {
 	            $sendCount = 1;
 	        }
+	        $id = isset($post['id']) ? $post['id'] : 0;
 	        $reqMerc = $this->requiredMerchants(array_sum($resource));
-	        if(in_array(false,$resource,true) || $target == 0 || !$database->checkVilExist($target)
-	            || $sendCount < 1 || $sendCount > 3 || $reqMerc == 0 || $reqMerc > $this->merchantAvail()) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0);
+	        if(in_array(false,$resource,true) || $sendCount < 1 || $sendCount > 3 || $reqMerc == 0) {
+	            $this->marketFailure('invalid',$id,null);
+	        }
+	        if($target == 0 || !$database->checkVilExist($target)) {
+	            $this->marketFailure('target',$id,null);
+	        }
+	        if($reqMerc > $this->merchantAvail()) {
+	            $this->marketFailure('merchants',$id,null,array('need'=>$reqMerc,'free'=>$this->merchantAvail()));
 	        }
 
 	        $coor = $database->getCoor($target);
-	        if(!is_array($coor) || !$database->deductResourcesIfAvailable($village->wid,$resource[0],$resource[1],$resource[2],$resource[3])) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0);
+	        if(!is_array($coor)) {
+	            $this->marketFailure('target',$id,null);
+	        }
+	        if(!$database->deductResourcesIfAvailable($village->wid,$resource[0],$resource[1],$resource[2],$resource[3])) {
+	            $this->marketFailure('resources',$id,null);
 	        }
 
 	        $resdata = implode(",",$resource);
@@ -247,10 +337,10 @@ class Market {
 	                $database->sendResource($reference,0,0,0,0,1);
 	            }
 	            $database->modifyResource($village->wid,$resource[0],$resource[1],$resource[2],$resource[3],1);
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0);
+	            $this->marketFailure('failed',$id,null);
 	        }
 	        $logging->addMarketLog($village->wid,1,array($resource[0],$resource[1],$resource[2],$resource[3],$target));
-	        $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0);
+	        $this->redirectToMarket($id);
 	    }
      
     private function addOffer($post) { 
@@ -259,16 +349,21 @@ class Market {
         $wtype = isset($post['rid2']) ? (int)$post['rid2'] : 0;
         $gamt = $this->positiveInteger(isset($post['m1']) ? $post['m1'] : null);
         $wamt = $this->positiveInteger(isset($post['m2']) ? $post['m2'] : null);
+        $id = isset($post['id']) ? $post['id'] : 0;
+        $tab = isset($post['t']) ? $post['t'] : 2;
 
-	        if(!$this->validResourceType($gtype) || !$this->validResourceType($wtype) || $gtype == $wtype || $gamt == 0 || $wamt == 0) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,isset($post['t']) ? $post['t'] : 2);
+        if(!$this->validResourceType($gtype) || !$this->validResourceType($wtype) || $gamt == 0 || $wamt == 0) {
+            $this->marketFailure('invalid',$id,$tab);
+        }
+        if($gtype == $wtype) {
+            $this->marketFailure('sameresource',$id,$tab);
         }
 
         $time = 0;
         if(isset($post['d1'])) {
             $hours = $this->positiveInteger(isset($post['d2']) ? $post['d2'] : null);
             if($hours == 0 || $hours > 99) {
-	                $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,isset($post['t']) ? $post['t'] : 2);
+                $this->marketFailure('hours',$id,$tab);
             }
             $time = $hours * 3600;
         }
@@ -287,61 +382,80 @@ class Market {
 
         $resource = $this->resourceArray($gtype,$gamt);
         $reqMerc = $this->requiredMerchants($gamt);
-        if($reqMerc == 0 || $reqMerc > $this->merchantAvail()) {
-	            $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,isset($post['t']) ? $post['t'] : 2);
+        if($reqMerc == 0) {
+            $this->marketFailure('invalid',$id,$tab);
+        }
+        if($reqMerc > $this->merchantAvail()) {
+            $this->marketFailure('merchants',$id,$tab,array('need'=>$reqMerc,'free'=>$this->merchantAvail()));
         }
 
-        if($database->deductResourcesIfAvailable($village->wid,$resource[1],$resource[2],$resource[3],$resource[4])) {
-            $offerId = $database->addMarket($village->wid,$gtype,$gamt,$wtype,$wamt,$time,$alliance,$reqMerc,0);
-            if(!$offerId) {
-                $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);
-            }
+        if(!$database->deductResourcesIfAvailable($village->wid,$resource[1],$resource[2],$resource[3],$resource[4])) {
+            $this->marketFailure('resources',$id,$tab);
         }
-	        $this->redirectToMarket(isset($post['id']) ? $post['id'] : 0,isset($post['t']) ? $post['t'] : 2);
-	    }
+        $offerId = $database->addMarket($village->wid,$gtype,$gamt,$wtype,$wamt,$time,$alliance,$reqMerc,0);
+        if(!$offerId) {
+            $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);
+            $this->marketFailure('failed',$id,$tab);
+        }
+        // La oferta entro: el formulario vuelve vacio en vez de repetir el borrador.
+        unset($_SESSION['marketOfferDraft'][$village->wid]);
+        $this->redirectToMarket($id,$tab);
+    }
      
-    private function acceptOffer($get) { 
-        global $database,$village,$session,$logging,$generator; 
-	        $offerId = $this->positiveInteger(isset($get['g']) ? $get['g'] : null);
-	        $infoarray = $offerId ? $database->getMarketInfo($offerId) : false;
-	        if(!$this->validOffer($infoarray) || (int)$infoarray['vref'] == (int)$village->wid) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
-	        }
+    private function acceptOffer($get) {
+        global $database,$village,$session,$logging,$generator;
+        $offerId = $this->positiveInteger(isset($get['g']) ? $get['g'] : null);
+        $infoarray = $offerId ? $database->getMarketInfo($offerId) : false;
+        $id = isset($get['id']) ? $get['id'] : 0;
+        $tab = isset($get['t']) ? $get['t'] : 1;
+        if(!$this->validOffer($infoarray) || (int)$infoarray['vref'] == (int)$village->wid) {
+            $this->marketFailure('gone',$id,$tab);
+        }
 
         $buyerAlliance = (int)$session->alliance;
         if((int)$infoarray['alliance'] != 0 && (int)$infoarray['alliance'] != $buyerAlliance) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            $this->marketFailure('alliance',$id,$tab);
         }
 
         $sellerOwner = (int)$database->getVillageField($infoarray['vref'],"owner");
         if($sellerOwner == 0 || $sellerOwner == (int)$session->uid) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            $this->marketFailure('gone',$id,$tab);
         }
 
         $hiscoor = $database->getCoor($infoarray['vref']);
         if(!is_array($hiscoor)) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            $this->marketFailure('gone',$id,$tab);
         }
         $mytime = $generator->procDistanceTime($hiscoor,$village->coor,$session->tribe,0);
         if((int)$infoarray['maxtime'] > 0 && $mytime > (int)$infoarray['maxtime']) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            $this->marketFailure('maxtime',$id,$tab);
         }
 
         $reqMerc = $this->requiredMerchants((int)$infoarray['wamt']);
-        if($reqMerc == 0 || $reqMerc > $this->merchantAvail()) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+        if($reqMerc == 0) {
+            $this->marketFailure('gone',$id,$tab);
+        }
+        if($reqMerc > $this->merchantAvail()) {
+            $this->marketFailure('merchants',$id,$tab,array('need'=>$reqMerc,'free'=>$this->merchantAvail()));
         }
 
         if(!$database->claimMarketOffer($offerId,$village->wid,$buyerAlliance)) {
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            // Otro jugador la acepto entre que se dibujo la lista y este click.
+            $this->marketFailure('taken',$id,$tab);
         }
 
-        $currentMerchantAvail = max(0,$this->merchant - $database->totalMerchantUsed($village->wid));
+        // Se relee lo ocupado despues de reclamar la oferta: entre el chequeo de arriba y
+        // este punto pudo salir otro envio de esta misma aldea.
+        $currentMerchantAvail = max(0,$this->merchant - (int)$database->totalMerchantUsed($village->wid));
         $myresource = $this->resourceArray((int)$infoarray['wtype'],(int)$infoarray['wamt']);
         $hisresource = $this->resourceArray((int)$infoarray['gtype'],(int)$infoarray['gamt']);
-        if($reqMerc > $currentMerchantAvail || !$database->deductResourcesIfAvailable($village->wid,$myresource[1],$myresource[2],$myresource[3],$myresource[4])) {
-	            $database->releaseMarketOffer($offerId);
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+        if($reqMerc > $currentMerchantAvail) {
+            $database->releaseMarketOffer($offerId);
+            $this->marketFailure('merchants',$id,$tab,array('need'=>$reqMerc,'free'=>$currentMerchantAvail));
+        }
+        if(!$database->deductResourcesIfAvailable($village->wid,$myresource[1],$myresource[2],$myresource[3],$myresource[4])) {
+            $database->releaseMarketOffer($offerId);
+            $this->marketFailure('resources',$id,$tab);
         }
 
         $mysendid = $database->sendResource($myresource[1],$myresource[2],$myresource[3],$myresource[4],$reqMerc,0);
@@ -354,14 +468,14 @@ class Market {
         $hismovement = $hissendid ? $database->addMovement(0,$infoarray['vref'],$village->wid,$hissendid,$hisresdata,$histime+time()) : false;
 
         if(!$mymovement || !$hismovement) {
-	            $this->rollbackAcceptedOffer($offerId,$myresource,$mysendid,$hissendid);
-	            $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
+            $this->rollbackAcceptedOffer($offerId,$myresource,$mysendid,$hissendid);
+            $this->marketFailure('failed',$id,$tab);
         }
 
-	        $database->removeAcceptedOffer($offerId);
-	        $logging->addMarketLog($village->wid,2,array($infoarray['vref'],$offerId));
-	        $this->redirectToMarket(isset($get['id']) ? $get['id'] : 0,isset($get['t']) ? $get['t'] : 1);
-    } 
+        $database->removeAcceptedOffer($offerId);
+        $logging->addMarketLog($village->wid,2,array($infoarray['vref'],$offerId));
+        $this->redirectToMarket($id,$tab);
+    }
 
     private function cancelOffer($offerId) {
         global $database,$village;
@@ -532,12 +646,12 @@ class Market {
 	        $id = isset($post['id']) ? $post['id'] : 0;
 	        $values = isset($post['m2']) && is_array($post['m2']) ? array_values($post['m2']) : array();
 	        if(count($values) !== 4) {
-	            $this->redirectToMarket($id,3);
+	            $this->marketFailure('invalid',$id,3);
 	        }
 	        foreach($values as $index => $value) {
 	            $value = (is_scalar($value) && (string)$value === '')? 0 : $this->nonNegativeInteger($value);
 	            if($value === false) {
-	                $this->redirectToMarket($id,3);
+	                $this->marketFailure('invalid',$id,3);
 	            }
 	            $values[$index] = $value;
 	        }
@@ -552,13 +666,13 @@ class Market {
 	        $limits = array((int)$village->maxstore,(int)$village->maxstore,(int)$village->maxstore,(int)$village->maxcrop);
 	        foreach($values as $index => $value) {
 	            if($value > $limits[$index]) {
-	                $this->redirectToMarket($id,3);
+	                $this->marketFailure('npcstorage',$id,3);
 	            }
 	        }
 	        // la aldea sigue produciendo entre que se dibuja el formulario y se envia,
 	        // por eso solo se exige no crear recursos de la nada
 	        if(array_sum($values) > $available) {
-	            $this->redirectToMarket($id,3);
+	            $this->marketFailure('npctotal',$id,3);
 	        }
 	        $rest = $available - array_sum($values);
 	        foreach($values as $index => $value) {
@@ -575,7 +689,7 @@ class Market {
 	        }
 
 	        if(!$database->redistributeResourcesWithGold($session->uid,$village->wid,$values[0],$values[1],$values[2],$values[3],3)) {
-	            $this->redirectToMarket($id,3);
+	            $this->marketFailure('gold',$id,3);
 	        }
 	        $this->redirectToMarket($id,3,"c");
 	    }

@@ -134,8 +134,9 @@ check(strpos($automationSource,'public static function routeMerchantsCommitted('
 	'existe routeMerchantsCommitted(), que recalcula la reserva de cada ruta');
 check(strpos($automationSource,'$database->getTradeRoutesFrom($vid, $excludeRouteId)') !== false,
 	'la reserva se calcula sobre los recursos de la ruta, no sobre la columna merchant');
-check(strpos($marketSource,'+ $this->routeMerchantsCommitted()') !== false,
-	'el Mercado descuenta la reserva recalculada de los mercaderes disponibles');
+check(strpos($marketSource,'$this->routeReserved = $this->routeMerchantsCommitted();') !== false,
+	'el Mercado recalcula lo comprometido por rutas con la capacidad de hoy (para mostrarlo,'
+	.' no para descontarlo: los mercaderes se ocupan recien cuando la ruta sale)');
 
 // Una ruta de 7500 creada sin Oficina reservaba 10 mercaderes para siempre.
 check(Automation::merchantsRequired(7500,Automation::merchantCarryCapacity(3,0)) === 10,

@@ -97,8 +97,8 @@ check(strpos($dbSource,"mysqli_affected_rows(\$this->connection) === 1") !== fal
 	'claimTradeRoute() solo confirma éxito si afectó exactamente una fila');
 
 check(strpos($dbSource,'function getTradeRoutesFrom(') !== false,'existe getTradeRoutesFrom()');
-check(strpos($dbSource,"SELECT id, wood, clay, iron, crop FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
-	'getTradeRoutesFrom() devuelve los recursos de cada ruta de esa aldea de origen');
+check(strpos($dbSource,"SELECT id, wood, clay, iron, crop, start, deliveries FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
+	'getTradeRoutesFrom() devuelve recursos y horario de cada ruta de esa aldea de origen');
 check(strpos($dbSource,'AND id <> $excludeRouteId') !== false,
 	'getTradeRoutesFrom() puede excluir la propia ruta al editarla');
 check(strpos($dbSource,'SELECT SUM(merchant) FROM') === false,
@@ -181,11 +181,25 @@ check(strpos($tradeRouteBody,'timestamp <= $time ORDER BY timestamp ASC') !== fa
 	'el segundo exacto del horario ya cuenta como vencido y se respeta el orden cronológico');
 
 // ---------------------------------------------------------------------------
-section('G. Reserva efectiva y reintentos');
+section('G. Los mercaderes de una ruta no se ocupan hasta que sale');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,'$database->totalMerchantUsed($village->wid)') !== false
-	&& strpos($marketSource,'+ $this->routeMerchantsCommitted()') !== false,
-	'merchantAvail descuenta tanto movimientos reales como mercaderes reservados por rutas');
+// Una ruta reservaba sus mercaderes las 24 horas: el Mercado mostraba "1/16" sin un solo
+// movimiento a la vista, no se podia enviar, vender ni comprar, y mientras la ruta
+// viajaba los mismos mercaderes se contaban dos veces (la reserva + el envio real).
+check(strpos($marketSource,'$this->used = (int)$database->totalMerchantUsed($village->wid);') !== false,
+	'los mercaderes ocupados son solo los que estan de viaje o esperando en una oferta');
+check(strpos($marketSource,'+ $this->routeMerchantsCommitted()') === false,
+	'ya no queda la reserva permanente de rutas sumada a los mercaderes ocupados');
+check(strpos($marketSource,'$this->routeReserved = $this->routeMerchantsCommitted();') !== false,
+	'lo comprometido por rutas se sigue calculando, pero aparte, para poder mostrarlo');
+check(strpos($marketSource,'$reqMerc > $merchantsFreeForRoutes') !== false,
+	'crear una ruta sigue exigiendo que todas las rutas de la aldea quepan juntas en el Mercado');
+$merchantsTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_merchants.tpl');
+check(strpos($merchantsTpl,'$market->routeReserved') !== false
+	&& strpos($merchantsTpl,'salen todos los días en') !== false,
+	'el contador del Mercado explica cuantos mercaderes salen en rutas y a que hora');
+check(strpos($marketSource,'public function routeDepartureHours()') !== false,
+	'existe el horario de salida de las rutas para poder mostrarlo junto al contador');
 check(strpos($tplSource,'$market->routeMerchants($route)') !== false,
 	'el listado muestra los mercaderes que la ruta ocupa hoy, no los del día en que se creó');
 check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,

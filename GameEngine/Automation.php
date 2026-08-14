@@ -1827,7 +1827,7 @@ class Automation {
     }
 
     private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
-        global $database, $generator, $logging;
+        global $bid17, $database, $generator, $logging;
         $availableWood = $database->getWoodAvailable($from);
         $availableClay = $database->getClayAvailable($from);
         $availableIron = $database->getIronAvailable($from);
@@ -1839,7 +1839,13 @@ class Automation {
         $itrans = min((int)$itrans, (int)floor($availableIron));
         $crtrans = min((int)$crtrans, (int)floor($availableCrop));
         if($wtrans > 0 OR $ctrans > 0 OR $itrans > 0 OR $crtrans > 0) {
-            $merchant2 = ($this->getTypeLevel(17, $from) > 0) ? $this->getTypeLevel(17, $from) : 0;
+            // Mercaderes del Mercado de la aldea de origen. Coincidia con el nivel por
+            // casualidad (bid17 da 1 mercader por nivel); leer la tabla es lo que hace el
+            // resto del juego y no se rompe si esos valores cambian.
+            $marketLevel2 = (int)$this->getTypeLevel(17, $from);
+            $merchant2 = ($marketLevel2 > 0 && !empty($bid17))
+                ? (int)$bid17[min($marketLevel2, count($bid17))]['attri']
+                : 0;
             $used2 = $database->totalMerchantUsed($from);
             $merchantAvail2 = $merchant2 - $used2;
             $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));

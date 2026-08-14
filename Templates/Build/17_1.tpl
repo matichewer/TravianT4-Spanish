@@ -23,10 +23,11 @@ include('build_level_help.tpl');
 
 include("upgrade.tpl");
 include("17_menu.tpl");
+// El contador de mercaderes va fuera del bloque de Plus: sin Plus se pierden los filtros
+// de busqueda, no la unica pista de cuantos mercaderes quedan para aceptar una oferta.
+include("17_merchants.tpl");
 if($session->plus) {
 ?>
-<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Mercaderes <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
-				</div><div class="clear"></div>
 <div class="boxes boxesColor gray search_select"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><table id="search_select" class="buy_select transparent" cellpadding="1" cellspacing="1">
 	<thead>
 		<tr>

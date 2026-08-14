@@ -19,9 +19,8 @@ include("17_menu.tpl");
 var haendler = <?php echo $market->merchantAvail(); ?>;
 var carry = <?php echo $market->maxcarry; ?>;
 </script>
-<div class="boxes boxesColor gray traderCount"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">Mercaderes <?php echo $market->merchantAvail(); ?> / <?php echo $market->merchant; ?></div>
-				</div><div class="clear"></div>
 <?php
+include("17_merchants.tpl");
 
 $marketFormType = isset($_POST['ft']) && is_string($_POST['ft']) ? $_POST['ft'] : '';
 foreach(array('r1','r2','r3','r4') as $marketResourceField) {
@@ -72,8 +71,8 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 		<td class="max"> / <span class="none"><B><?php echo $market->maxcarry; ?></B></span> </td> 
 	</tr>
     <tr> 
-		<td class="ico"><img class="r2" src="img/x.gif" alt="Hierro" title="Hierro" /></td> 
-		<td class="nam"> Barro</td> 
+		<td class="ico"><img class="r2" src="img/x.gif" alt="Barro" title="Barro" /></td>
+		<td class="nam"> Barro</td>
 		<td class="val"><input class="text disabled" type="text" name="r2" id="r2" value="<?php echo $_POST['r2']; ?>" readonly="readonly"></td> 
 		<td class="max"> / <span class="none"><b><?php echo$market->maxcarry; ?></b></span> </td> 
 	</tr>

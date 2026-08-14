@@ -37,11 +37,12 @@ if(!empty($market->routeError['code'])){
 }
 
 if(isset($_GET['create'])){
-// Los mercaderes de una ruta quedan reservados: sin este dato a la vista, pasarse de
-// capacidad era la otra forma de que "guardar" no hiciera nada.
+// Todas las rutas de la aldea tienen que caber a la vez en el Mercado: sin este dato a la
+// vista, pasarse de capacidad era la otra forma de que "guardar" no hiciera nada.
 $routeMerchantsUsed = (int)$market->routeMerchantsCommitted();
-echo '<p>Mercaderes libres para rutas: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
-	.' (cada uno transporta '.round($market->maxcarry).' recursos).</p>';
+echo '<p>Mercaderes que se pueden comprometer en rutas: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
+	.' (cada uno transporta '.round($market->maxcarry).' recursos). Los mercaderes de una ruta'
+	.' sólo están ocupados mientras viajan.</p>';
 include("17_create.tpl");
 }else if(isset($_GET['action'],$_GET['routeid']) && $_GET['action'] === 'editRoute' && ctype_digit((string)$_GET['routeid'])){
 $edited_route = $database->getTradeRoute2((int)$_GET['routeid']);

@@ -2787,7 +2787,7 @@
 			function getTradeRoutesFrom($vid,$excludeRouteId = 0) {
 				$vid = (int) $vid;
 				$excludeRouteId = (int) $excludeRouteId;
-				$q = "SELECT id, wood, clay, iron, crop FROM " . TB_PREFIX . "route WHERE `from` = $vid";
+				$q = "SELECT id, wood, clay, iron, crop, start, deliveries FROM " . TB_PREFIX . "route WHERE `from` = $vid";
 				if($excludeRouteId > 0) {
 					$q .= " AND id <> $excludeRouteId";
 				}

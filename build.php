@@ -135,9 +135,6 @@ if(isset($_GET['id'])) {
 		$buildingTemplate = "Templates/Build/".$buildingType.".tpl";
 		$tabTemplate = "";
 		if(isset($_GET['t'])) {
-			if($_GET['t'] == 1) {
-			$_SESSION['loadMarket'] = 1;
-			}
 			$tabTemplate = "Templates/Build/".$buildingType."_".$_GET['t'].".tpl";
 		} else
 		if(isset($_GET['s'])) {

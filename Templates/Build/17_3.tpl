@@ -20,7 +20,12 @@ if(isset($_GET['c'])){
 <p><b>Recursos redistribuidos.</b> Costo: <b>3 </b><img src="img/x.gif" class="gold" alt="Oro" title="Oro" /></p>
 <a href="javascript: history.go(-2)">Volver al edificio</a> 
 
-<?php } else { ?>
+<?php } else {
+// El NPC no usa mercaderes, pero sí puede rechazar el reparto: hasta ahora se volvía a
+// la misma pantalla sin decir nada (y con el oro sin cobrar, que era lo confuso).
+$marketShowCounter = false;
+include("17_merchants.tpl");
+?>
 
 <p>Puedes redistribuir los recursos de tu almacén con los mercaderes NPC.<br><br>La primera fila muestra el contenido actual del almacén. En la segunda puedes indicar una distribución diferente. La tercera muestra la diferencia entre la proporción nueva y la anterior.</p>
 
@@ -167,8 +172,26 @@ function testSum() {
 	}
 }
 </script> 
-<script language="JavaScript">var summe=<?php echo floor($village->awood+$village->acrop+$village->airon+$village->aclay); ?>;var max123=<?php echo $village->maxstore; ?>;var max4=<?php echo $village->maxcrop; ?>;</script> 
-		<form method="post" name="snd" action="build.php"> 
+<script language="JavaScript">var summe=<?php echo floor($village->awood+$village->acrop+$village->airon+$village->aclay); ?>;var max123=<?php echo $village->maxstore; ?>;var max4=<?php echo $village->maxcrop; ?>;</script>
+<?php
+// Los enlaces "NPC" del resto del juego (mejoras, tropas, fiestas) traen el reparto
+// deseado por GET. Se echaba tal cual dentro de un value="..." => cualquiera podia armar
+// un enlace con comillas y meter HTML en la pagina. Ademas un valor no numerico rompia
+// las sumas de abajo con un warning. Se normaliza una sola vez, aca.
+$npcPreset = array();
+$npcHasPreset = true;
+foreach(array('r1','r2','r3','r4') as $npcField) {
+	if(isset($_GET[$npcField]) && is_scalar($_GET[$npcField]) && ctype_digit((string)$_GET[$npcField])) {
+		$npcPreset[$npcField] = (int)$_GET[$npcField];
+	} else {
+		$npcPreset[$npcField] = 0;
+		$npcHasPreset = false;
+	}
+}
+$npcPresetTotal = array_sum($npcPreset);
+$npcStoreTotal = floor($village->awood+$village->acrop+$village->airon+$village->aclay);
+?>
+		<form method="post" name="snd" action="build.php">
 			<input type="hidden" name="id" value="<?php echo (int)$id; ?>">
 			<input type="hidden" name="ft" value="mk3">
 			<input type="hidden" name="t" value="3">
@@ -205,26 +228,26 @@ function testSum() {
 			<tr> 
 	
 			<td class="sel"> 
-				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if(isset($_GET['r1'])) { echo "value=\"".$_GET['r1']."\""; } ?>/> 
+				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if($npcHasPreset) { echo 'value="'.(int)$npcPreset['r1'].'"'; } ?>/> 
 				<input type="hidden" name="m1[]" value="<?php echo floor($village->awood); ?>" /> 
 			</td> 
 		
 			<td class="sel"> 
-				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if(isset($_GET['r2'])) { echo "value=\"".$_GET['r2']."\""; } ?>/> 
+				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if($npcHasPreset) { echo 'value="'.(int)$npcPreset['r2'].'"'; } ?>/> 
 				<input type="hidden" name="m1[]" value="<?php echo floor($village->aclay); ?>" /> 
 			</td> 
 		
 			<td class="sel"> 
-				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if(isset($_GET['r3'])) { echo "value=\"".$_GET['r3']."\""; } ?>/> 
+				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if($npcHasPreset) { echo 'value="'.(int)$npcPreset['r3'].'"'; } ?>/> 
 				<input type="hidden" name="m1[]" value="<?php echo floor($village->airon); ?>" /> 
 			</td> 
 		
 			<td class="sel"> 
-				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if(isset($_GET['r4'])) { echo "value=\"".$_GET['r4']."\""; } ?>/> 
+				<input class="text" onkeyup="calculateRest();" name="m2[]" size="5" maxlength="7" <?php if($npcHasPreset) { echo 'value="'.(int)$npcPreset['r4'].'"'; } ?>/> 
 				<input type="hidden" name="m1[]" value="<?php echo floor($village->acrop); ?>" /> 
 			</td> 
 		
-			<td class="sum">Total:&nbsp;<span id="newsum"><?php if(isset($_GET['r1']) && isset($_GET['r2']) && isset($_GET['r3']) && isset($_GET['r4'])) { echo $_GET['r1']+$_GET['r2']+$_GET['r3']+$_GET['r4']; } else { echo 0; } ?></span></td> 
+			<td class="sum">Total:&nbsp;<span id="newsum"><?php echo $npcHasPreset ? (int)$npcPresetTotal : 0; ?></span></td> 
 		</tr> 
 		<tr> 
 	
@@ -245,9 +268,7 @@ function testSum() {
 			</td> 
 		
 					<td class="sum">Resto&nbsp;<span id="remain">
-                    <?php if(isset($_GET['r1']) && isset($_GET['r2']) && isset($_GET['r3']) && isset($_GET['r4'])) { 
-                    echo floor($village->awood+$village->acrop+$village->airon+$village->aclay)-($_GET['r1']+$_GET['r2']+$_GET['r3']+$_GET['r4']); 
-                    } else { echo floor($village->awood+$village->acrop+$village->airon+$village->aclay); } ?></span></td> 
+                    <?php echo $npcHasPreset ? $npcStoreTotal-(int)$npcPresetTotal : $npcStoreTotal; ?></span></td> 
 		  </tr> 
 		  </tbody> 
 		</table>
