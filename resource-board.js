@@ -14,6 +14,14 @@
 	var TICK_MS = 1000;
 	var MS_PER_HOUR = 3600000;
 
+	/* El mercado (Templates/Build/17.tpl) lee la cantidad disponible de
+	   resources['l1'..'l4'].value, el objeto global que llenaba executeTimer() de
+	   crypt.js. Se sigue publicando desde aca para no tocar esa pagina: sin esto
+	   los atajos "+1000" y "todo" del formulario de envio tiran TypeError y no
+	   hacen nada. Va truncado y no redondeado, porque es un tope de envio: si se
+	   redondeara para arriba se podrian pedir mas recursos de los que hay. */
+	var LEGACY_IDS = { wood: 'l1', clay: 'l2', iron: 'l3', crop: 'l4' };
+
 	function formatAmount(value) {
 		return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 	}
@@ -55,6 +63,7 @@
 				amount: entry.amount,
 				capacity: entry.capacity,
 				production: entry.production,
+				legacyId: LEGACY_IDS[entry.key],
 				value: value,
 				bar: document.getElementById('resBar_' + entry.key),
 				fill: document.getElementById('resFill_' + entry.key),
@@ -81,6 +90,13 @@
 			}
 
 			res.value.innerHTML = formatAmount(amount);
+
+			if (res.legacyId && window.resources) {
+				if (!window.resources[res.legacyId]) {
+					window.resources[res.legacyId] = {};
+				}
+				window.resources[res.legacyId].value = Math.floor(amount);
+			}
 
 			if (res.fill) {
 				res.fill.style.width = Math.min(100, Math.max(0, amount * 100 / capacity)) + '%';
