@@ -5901,10 +5901,10 @@ break;
 			//
 			// Las aventuras tienen que quedar cerca de la aldea del héroe. La vieja banda
 			// abarcaba casi todo el mapa y, aun con un servidor x3, producía viajes de más
-			// de una hora. Un cuadro de 10 casillas conserva una duración apreciable (el
-			// peor destino está a 14,1 casillas) sin convertir cada aventura en una
-			// expedición de larga distancia. Las casillas ocupadas quedan afuera:
-			// `occupied` cubre aldeas y oasis tomados por igual.
+			// de una hora. Un cuadro de 30 casillas (peor destino a 42,4 casillas) da
+			// viajes más largos sin convertir cada aventura en una expedición que cruza
+			// el mapa. Las casillas ocupadas quedan afuera: `occupied` cubre aldeas y
+			// oasis tomados por igual.
 			function pickAdventureField($homeWref) {
 				$homeWref = (int) $homeWref;
 				if($homeWref <= 0) {
@@ -5918,7 +5918,7 @@ break;
 				if($worldRadius <= 0) {
 					return 0;
 				}
-				$adventureRadius = min(10, $worldRadius);
+				$adventureRadius = min(30, $worldRadius);
 				$x1 = (int)$home['x'] - $adventureRadius;
 				$x2 = (int)$home['x'] + $adventureRadius;
 				$y1 = (int)$home['y'] - $adventureRadius;

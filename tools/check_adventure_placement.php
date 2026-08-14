@@ -41,9 +41,8 @@ $radius = $database->getWorldRadius();
 echo "Mundo: radio $radius\n\n";
 check($radius > 0, 'el radio del mundo sale de wdata, no de WORLD_MAX');
 
-// Las aventuras se sortean como máximo a diez casillas por eje. En un servidor
-// x3, un héroe base tarda unos 40 minutos al rincón más lejano del cuadro.
-$adventureRadius = min(10, $radius);
+// Las aventuras se sortean como máximo a treinta casillas por eje.
+$adventureRadius = min(30, $radius);
 $maxDist = sqrt(2 * pow($adventureRadius, 2));
 
 echo "\n== Posicionamiento ==\n";
