@@ -292,10 +292,6 @@ include("Templates/footer.tpl");
 include("Templates/header.tpl");
 include("Templates/res.tpl");
 ?>
-<script type="text/javascript">
-	resources.production = {
-'l1': <?php echo $village->getProd("wood"); ?>,'l2': <?php echo $village->getProd("clay"); ?>,'l3': <?php echo $village->getProd("iron"); ?>,'l4': <?php echo $village->getProd("crop"); ?>			};
-</script>
 
 <?php
 include("Templates/vname.tpl");

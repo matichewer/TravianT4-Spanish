@@ -760,3 +760,196 @@ div.village2 div.buildingList div.buildingNotifications {
 	float: right;
 	width: 217px;
 }
+
+/* ── Tablero de recursos del encabezado (Templates/res.tpl) ──────────────────
+   #res es un <ul> absoluto dentro de .bodyWrapper, y el espacio vertical que
+   tiene es fijo:
+
+     y=80  termina la fila de iconos redondos de navegacion (#mtop, y=10..80),
+           que estan antes en el DOM y por lo tanto se dibujan por debajo de
+           esta tarjeta: si empezara mas arriba les taparia la base.
+     y=115 empieza .contentTitle, el techo redondeado de la tarjeta de
+           contenido, que ademas trae el <h1> de la pagina posicionado en
+           y=123. Pasarse de 115 come el redondeo y roza el titulo.
+
+   O sea 35px, repartidos en 13 (cantidad) + 12 (barra) + 10 (pie). El fondo
+   blanco arranca en realidad en y=70 pero viene pintado en el arte de fondo
+   (bgVillage-rtl.jpg, x 193..789, y 70..110), asi que la tarjeta usa el mismo
+   blanco y las dos piezas se leen como una sola. Por eso tambien el ancho es
+   596px desde x=193: los bordes tienen que coincidir con los del dibujo. */
+#res {
+	box-sizing: border-box;
+	top: 80px;
+	left: 193px;
+	z-index: 1;
+	width: 596px;
+	height: 35px;
+	/* El ancho de la tarjeta lo manda el dibujo del fondo, pero el contenido va
+	   metido 24px a cada lado: asi el bloque queda mas angosto que el blanco y
+	   sobra aire entre la ultima cifra y el borde. */
+	padding: 0 24px;
+	background: #f5fefd;
+	border-radius: 0 0 5px 5px;
+	/* El desenfoque va metido 2px hacia adentro y bajado otros 2: si la sombra
+	   asomara por arriba se veria la costura con el blanco pintado del fondo. */
+	box-shadow: 0 2px 3px -2px rgba(45, 70, 60, 0.5);
+	font-size: 9px;
+	line-height: 10px;
+}
+
+/* 16px de canaleta entre columnas: con la cifra pegada al borde derecho quedaba
+   a milimetros del icono del recurso siguiente y se leian como un solo bloque. */
+/* La canaleta va repartida en las dos celdas (10px + 10px) en vez de colgada de
+   la derecha: asi el separador cae justo en el medio del hueco. El ancho util de
+   la columna lo fija el renglon de abajo, que es el mas largo de los tres:
+   "/h: 12.000" + "máx 240.000" —el Gran Almacen al maximo— mide 92px, de ahi los
+   96px de contenido. Ese renglon nunca debe pasarse del ancho de la barra. */
+#res li.r1,
+#res li.r2,
+#res li.r3,
+#res li.r4 {
+	box-sizing: border-box;
+	width: 116px;
+	padding: 0 10px;
+}
+
+#res li.r5 {
+	box-sizing: border-box;
+	width: 84px;
+	padding: 0 10px;
+}
+
+/* Rayita de separacion en el medio de cada canaleta. Va difuminada arriba y
+   abajo para que no choque contra los bordes de la tarjeta. */
+#res li + li {
+	position: relative;
+}
+
+#res li + li:before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	bottom: 3px;
+	left: 0;
+	width: 1px;
+	background: linear-gradient(to bottom, rgba(58, 92, 80, 0) 0%, rgba(58, 92, 80, 0.22) 28%, rgba(58, 92, 80, 0.22) 72%, rgba(58, 92, 80, 0) 100%);
+}
+
+#res .resAmount,
+#res .resBar,
+#res .resFoot {
+	display: block;
+	overflow: hidden;
+}
+
+/* El icono flota a la izquierda, asi que el centrado es sobre lo que queda de
+   renglon: la cifra queda a mitad de camino entre su icono y el de al lado. */
+#res .resAmount {
+	height: 13px;
+	line-height: 13px;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* El sprite chico (18x12) en vez del grande (18x16): en un renglon de 13px el
+   grande no entra, y subirlo 3px lo mete abajo de los iconos de navegacion. */
+#res .resAmount img {
+	float: left;
+	margin-top: 1px;
+	width: 18px;
+	height: 12px;
+	background-image: url(../gpack/travian_Travian_4.0_41/img/a/res2-rtl.gif);
+}
+
+#res li.r1 .resAmount img { background-position: 0 0; }
+#res li.r2 .resAmount img { background-position: 0 -22px; }
+#res li.r3 .resAmount img { background-position: 0 -44px; }
+#res li.r4 .resAmount img { background-position: 0 -66px; }
+#res li.r5 .resAmount img { background-position: 0 -88px; }
+
+#res .resBar {
+	box-sizing: border-box;
+	position: relative;
+	height: 12px;
+	border: 1px solid #b9c4bd;
+	border-radius: 2px;
+	background: #e7ecea;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.09);
+}
+
+#res .resBarFill {
+	display: block;
+	height: 100%;
+	border-radius: 1px 0 0 1px;
+	background: #8cc63f;
+	background: linear-gradient(to bottom, #a9db63 0%, #74ad24 100%);
+	transition: width 900ms linear;
+}
+
+/* Deposito lleno: la produccion se esta perdiendo. El cereal en negativo se
+   marca igual de rojo, pero el reloj cuenta hacia el vacio. */
+#res .resBar.resBarFull .resBarFill {
+	background: #c0392b;
+	background: linear-gradient(to bottom, #e57373 0%, #c0392b 100%);
+}
+
+#res .resBar.resBarDraining .resBarFill {
+	background: linear-gradient(to bottom, #f0a860 0%, #d2701c 100%);
+}
+
+#res .resBarClock {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 10px;
+	line-height: 10px;
+	color: #23400a;
+	font-size: 9px;
+	font-weight: bold;
+	text-align: center;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+	white-space: nowrap;
+}
+
+#res .resBar.resBarFull .resBarClock,
+#res .resBar.resBarDraining .resBarClock {
+	color: #5a1a10;
+}
+
+#res .resFoot {
+	height: 10px;
+	color: #5c6360;
+	white-space: nowrap;
+}
+
+#res .resRate {
+	float: left;
+}
+
+#res .resMax {
+	float: right;
+}
+
+#res .resNegative {
+	color: #a5301f;
+	font-weight: bold;
+}
+
+/* La celda de consumo no lleva barra: el renglon del medio queda para la
+   produccion bruta, alineado con las barras de al lado. Sus dos renglones van
+   centrados como la cifra de arriba, no pegados al borde. */
+#res li.r5 .resFootWide {
+	height: 12px;
+	line-height: 12px;
+}
+
+#res li.r5 .resFoot {
+	text-align: center;
+}
+
+#res li.r5 .resMax {
+	float: none;
+}
