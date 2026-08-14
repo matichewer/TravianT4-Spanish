@@ -1,41 +1,34 @@
-<form action="build.php" method="post">
-		<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
-        <input type="hidden" name="action" value="editRoute">
-		<input type="hidden" name="a" value="<?php echo $session->mchecker; ?>">
-		<input type="hidden" name="routeid" value="<?php echo (int)$edited_route['id']; ?>">
-			<table cellpadding="1" cellspacing="1" id="npc" class="transparent">
-			<thead>
-			<tr>
-			<th colspan="2">Editar ruta comercial</th>
-			</tr>
-			</thead>
-				<tbody>
-				<tr>
-					<th>
-						Recursos:					</th>
-					<td>
-						<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Madera" title="Madera"> <input class="text" type="text" name="r1" id="r1" value="<?php echo (int)$edited_route['wood']; ?>" maxlength="5" tabindex="1" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Barro" title="Barro"> <input class="text" type="text" name="r2" id="r2" value="<?php echo (int)$edited_route['clay']; ?>" maxlength="5" tabindex="2" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Hierro" title="Hierro"> <input class="text" type="text" name="r3" id="r3" value="<?php echo (int)$edited_route['iron']; ?>" maxlength="5" tabindex="3" style="width:50px;">  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Cereal" title="Cereal"> <input class="text" type="text" name="r4" id="r4" value="<?php echo (int)$edited_route['crop']; ?>" maxlength="5" tabindex="4" style="width:50px;">
+<?php
+// $edited_routes: array (lista, no asociativo) de filas de s1_route que forman el
+// grupo que se esta editando -- una ruta con varios horarios es, por dentro, una fila
+// por horario, todas comparten destino/recursos/envios y solo difieren en start/
+// start_minute. 17_4.tpl ya valido que todas pertenecen al jugador y a esta aldea, y
+// las ordeno por horario antes de incluir esta plantilla.
+$routeFormAction = 'editRoute';
+$routeFormHeading = 'Editar ruta comercial';
 
-					</td>
-				</tr>
-				<tr>
-					<th>
-						Hora de inicio:					</th>
-					<td>
-						<select name="start"><?php for($i=0;$i<=23;$i++){?><option value="<?php echo $i; ?>" <?php if($i == $edited_route['start']){echo "selected";} ?>><?php if($i > 9){echo $i;}else{echo "0".$i;}?></option><?php } ?></select>
-					</td>
-				</tr>
-				<tr>
-					<th>
-						Envíos:					</th>
-					<td>
-						<select name="deliveries"><?php for($i=1;$i<=3;$i++){?><option value="<?php echo $i; ?>" <?php if($i == $edited_route['deliveries']){echo "selected";} ?>><?php echo $i; ?></option><?php } ?></select>
-					</td>
-				</tr>
-			</tbody></table>
+$routeFormOriginalRouteIds = array();
+$routeFormSchedules = array();
+foreach($edited_routes as $editedRoute) {
+    $routeFormOriginalRouteIds[] = (int)$editedRoute['id'];
+    $routeFormSchedules[] = array('hour'=>(int)$editedRoute['start'],'minute'=>(int)$editedRoute['start_minute']);
+}
+$firstRoute = $edited_routes[0];
+$routeFormTarget = (int)$firstRoute['wid'];
+$routeFormResource = array((int)$firstRoute['wood'],(int)$firstRoute['clay'],(int)$firstRoute['iron'],(int)$firstRoute['crop']);
+$routeFormDeliveries = (int)$firstRoute['deliveries'];
 
-			</div>
-				</div>
-<p><button type="submit" value="save"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">guardar</div></div></button></p>
-</form>
-</div>
+// Si el guardado anterior fue rechazado, se recuperan destino/recursos/envios y los
+// horarios tal como habian quedado (incluidos los agregados o quitados a mano) en vez
+// de volver a mostrar el grupo guardado como si nada se hubiera intentado.
+$routeFormDraft = $market->routeDraftFor('edit'.implode('-',$routeFormOriginalRouteIds));
+if($routeFormDraft !== null) {
+    $routeFormTarget = $routeFormDraft['target'];
+    $routeFormResource = $routeFormDraft['resource'];
+    $routeFormDeliveries = $routeFormDraft['deliveries'];
+    if($routeFormDraft['schedules'] !== null) {
+        $routeFormSchedules = $routeFormDraft['schedules'];
+    }
+}
+
+include('17_route_form.tpl');

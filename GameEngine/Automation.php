@@ -1717,12 +1717,75 @@ class Automation {
         return $total;
     }
 
-    public static function nextTradeRouteTimestamp($startHour, $now = null) {
+    /**
+     * Maximo de mercaderes que estan de viaje (ida + vuelta) al mismo tiempo, dado un
+     * conjunto de salidas diarias de una aldea. Cada entrada es
+     * ['start' => segundos desde la medianoche, 'duration' => segundos que el
+     * mercader esta afuera (ida + vuelta), 'merchants' => cuantos mercaderes ocupa].
+     *
+     * Antes, crear una ruta exigia que la SUMA de todas las rutas de la aldea entrara
+     * en el Mercado, sin importar si sus horarios realmente coincidian en el tiempo:
+     * dos aldeas vecinas con un viaje de una hora no podian compartir mercaderes ni
+     * saliendo cada 12 horas. Esto calcula el solapamiento real: como las salidas se
+     * repiten todos los dias a la misma hora, se resuelve en un reloj de 24hs (con
+     * vuelta de medianoche), no en timestamps absolutos.
+     */
+    public static function peakConcurrentMerchants($entries) {
+        $daySeconds = 86400;
+        $alwaysBusy = 0;
+        $events = array();
+        foreach($entries as $entry) {
+            $merchants = isset($entry['merchants']) ? (int)$entry['merchants'] : 0;
+            $duration = isset($entry['duration']) ? max(0,(int)$entry['duration']) : 0;
+            if($merchants <= 0 || $duration <= 0) {
+                continue;
+            }
+            if($duration >= $daySeconds) {
+                // El viaje de ida y vuelta no entra en un dia: el mercader nunca esta
+                // libre, ocupa su cupo las 24 horas.
+                $alwaysBusy += $merchants;
+                continue;
+            }
+            $start = ((int)$entry['start'] % $daySeconds + $daySeconds) % $daySeconds;
+            $end = $start + $duration;
+            if($end <= $daySeconds) {
+                $events[] = array($start,$merchants);
+                $events[] = array($end,-$merchants);
+            } else {
+                // Cruza la medianoche: se parte en el tramo de hoy y el de manana, que
+                // en el reloj de 24hs que se repite todos los dias es el mismo tramo
+                // desde las 0hs.
+                $events[] = array($start,$merchants);
+                $events[] = array($daySeconds,-$merchants);
+                $events[] = array(0,$merchants);
+                $events[] = array($end - $daySeconds,-$merchants);
+            }
+        }
+        if(empty($events)) {
+            return $alwaysBusy;
+        }
+        // A igual instante, los cierres van antes que las aperturas: si una salida
+        // termina justo cuando otra empieza, esos mercaderes ya estan libres.
+        usort($events,function($a,$b) {
+            return $a[0] !== $b[0] ? ($a[0] <=> $b[0]) : ($a[1] <=> $b[1]);
+        });
+        $current = $alwaysBusy;
+        $peak = $alwaysBusy;
+        foreach($events as $event) {
+            $current += $event[1];
+            $peak = max($peak,$current);
+        }
+        return $peak;
+    }
+
+    public static function nextTradeRouteTimestamp($startHour, $startMinute = 0, $now = null) {
         $startHour = max(0, min(23, (int)$startHour));
+        $startMinute = max(0, min(59, (int)$startMinute));
         $now = $now === null ? time() : (int)$now;
-        $next = strtotime('today '.sprintf('%02d',$startHour).':00:00', $now);
+        $timeOfDay = sprintf('%02d:%02d:00', $startHour, $startMinute);
+        $next = strtotime('today '.$timeOfDay, $now);
         if($next <= $now) {
-            $next = strtotime('tomorrow '.sprintf('%02d',$startHour).':00:00', $now);
+            $next = strtotime('tomorrow '.$timeOfDay, $now);
         }
         return (int)$next;
     }
@@ -1736,7 +1799,7 @@ class Automation {
             // Se reclama la fila avanzándola directamente al próximo horario futuro.
             // Así un segundo worker no puede duplicarla y tampoco se recuperan varios
             // días atrasados en una ráfaga de envíos.
-            $nextTimestamp = self::nextTradeRouteTimestamp($data['start'], $time);
+            $nextTimestamp = self::nextTradeRouteTimestamp($data['start'], $data['start_minute'], $time);
             if(!$database->claimTradeRoute($data['id'], $data['timestamp'], $nextTimestamp)) {
                 continue;
             }

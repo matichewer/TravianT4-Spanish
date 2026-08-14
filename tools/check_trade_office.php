@@ -145,9 +145,9 @@ check(Automation::merchantsRequired(7500,Automation::merchantCarryCapacity(3,20)
 	'con la Oficina a 20, esa misma ruta pasa a ocupar 4');
 
 $rutasTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_4.tpl');
-check(strpos($rutasTpl,'$market->routeMerchants($route)') !== false,
+check(strpos($rutasTpl,'$market->routeMerchants($firstRoute)') !== false,
 	'el listado de rutas muestra la reserva de hoy');
-check(strpos($rutasTpl,"\$route['merchant']") === false,
+check(strpos($rutasTpl,"\$route['merchant']") === false && strpos($rutasTpl,"\$firstRoute['merchant']") === false,
 	'el listado ya no imprime la columna congelada del día de creación');
 check(strpos($rutasTpl,'$market->routeMerchantsCommitted()') !== false,
 	'el formulario de creación cuenta los mercaderes libres con la reserva recalculada');

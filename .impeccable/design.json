@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-14T00:00:00.000Z",
+  "title": "Design System: Travian T4 en español",
+  "extensions": {
+    "colorMeta": {
+      "moss-accent": { "role": "primary", "displayName": "Verde Musgo", "canonical": "#99c01a", "tonalRamp": ["#233806", "#375809", "#4b790c", "#5f9a0f", "#73ba13", "#99c01a", "#b8dc54", "#dcf0a8"] },
+      "moss-accent-hover": { "role": "primary", "displayName": "Verde Musgo Hover", "canonical": "#00bc00", "tonalRamp": ["#002d00", "#005a00", "#008700", "#00b400", "#00bc00", "#33cc33", "#66dd66", "#b3eeb3"] },
+      "moss-accent-deep": { "role": "secondary", "displayName": "Musgo Profundo", "canonical": "#568b0b", "tonalRamp": ["#152a03", "#295306", "#3e7d09", "#4f7500", "#568b0b", "#6fae0e", "#93cf3e", "#c7e79b"] },
+      "moss-accent-deep-hover": { "role": "secondary", "displayName": "Musgo Profundo Hover", "canonical": "#4f7500", "tonalRamp": ["#121c00", "#243800", "#365400", "#4f7500", "#679600", "#87bb1a", "#a9d454", "#d4e9a8"] },
+      "link-active": { "role": "secondary", "displayName": "Naranja Activo", "canonical": "#ff8000", "tonalRamp": ["#3d1f00", "#7a3f00", "#b85e00", "#f57700", "#ff8000", "#ff9e33", "#ffbe73", "#ffdfb8"] },
+      "alarm-red": { "role": "tertiary", "displayName": "Rojo de Alarma", "canonical": "#de0000", "tonalRamp": ["#380000", "#6f0000", "#a70000", "#de0000", "#e83333", "#ee6666", "#f49999", "#f9cccc"] },
+      "alarm-red-soft": { "role": "tertiary", "displayName": "Rojo de Alarma Suave", "canonical": "#c0392b", "tonalRamp": ["#2e0d08", "#5c1a10", "#8a2718", "#a83022", "#c0392b", "#d15f52", "#e0897f", "#f0c3bd"] },
+      "amber-warning": { "role": "tertiary", "displayName": "Ámbar de Advertencia", "canonical": "#f88c1f", "tonalRamp": ["#3d2306", "#7a460c", "#b76912", "#f38b1c", "#f88c1f", "#faa650", "#fcc287", "#fde1c3"] },
+      "amber-warning-deep": { "role": "tertiary", "displayName": "Ámbar Profundo", "canonical": "#f3a000", "tonalRamp": ["#3b2800", "#754f00", "#b07700", "#e99e00", "#f3a000", "#f6b333", "#f9cc73", "#fce6b9"] },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#252525", "tonalRamp": ["#0a0a0a", "#141414", "#1f1f1f", "#252525", "#4a4a4a", "#787878", "#a8a8a8", "#d6d6d6"] },
+      "ink-parchment": { "role": "neutral", "displayName": "Tinta sobre Pergamino", "canonical": "#3c2a14", "tonalRamp": ["#0f0a05", "#1e150a", "#2d1f0f", "#3c2a14", "#654726", "#8f6c40", "#bb9a6c", "#e4d3ae"] },
+      "timber-border": { "role": "neutral", "displayName": "Borde de Madera", "canonical": "#5d421a", "tonalRamp": ["#171006", "#2e200d", "#453013", "#5d421a", "#83602a", "#a9843e", "#c8a86a", "#e6d4a8"] },
+      "timber-border-soft": { "role": "neutral", "displayName": "Borde de Madera Suave", "canonical": "#69502c", "tonalRamp": ["#1a140b", "#332815", "#4d3c20", "#69502c", "#8c7040", "#af9560", "#ccb98d", "#e8dcc4"] },
+      "weathered-oak": { "role": "neutral", "displayName": "Roble Curtido", "canonical": "#bba36e", "tonalRamp": ["#2e281b", "#5c4f36", "#897750", "#a68d5e", "#bba36e", "#ccbb90", "#ddd3b4", "#eeead9"] },
+      "parchment-cream": { "role": "neutral", "displayName": "Crema Pergamino", "canonical": "#fff8df", "tonalRamp": ["#4d4423", "#998746", "#c9b877", "#e8daac", "#fff8df", "#fffae8", "#fffcf1", "#fffef9"] },
+      "parchment-cream-soft": { "role": "neutral", "displayName": "Crema Pergamino Suave", "canonical": "#fff3d5", "tonalRamp": ["#4a3f1d", "#947e3a", "#c4ab63", "#e6cf9d", "#fff3d5", "#fff6e0", "#fff9ea", "#fffcf5"] },
+      "surface-white": { "role": "neutral", "displayName": "Blanco Pergamino", "canonical": "#ffffff", "tonalRamp": ["#1a1a1a", "#404040", "#666666", "#8c8c8c", "#b3b3b3", "#d9d9d9", "#f0f0f0", "#ffffff"] },
+      "surface-cool-white": { "role": "neutral", "displayName": "Blanco Frío", "canonical": "#f5fefd", "tonalRamp": ["#0e2a27", "#1c544e", "#2a7e75", "#6fada7", "#b2d6d2", "#d8ebe9", "#eef8f7", "#f5fefd"] },
+      "stone-border": { "role": "neutral", "displayName": "Borde Piedra", "canonical": "#c8c8c8", "tonalRamp": ["#2e2e2e", "#5c5c5c", "#8a8a8a", "#b0b0b0", "#c8c8c8", "#d6d6d6", "#e4e4e4", "#f2f2f2"] },
+      "stone-border-soft": { "role": "neutral", "displayName": "Borde Piedra Suave", "canonical": "#d7d7d7", "tonalRamp": ["#333333", "#666666", "#999999", "#bfbfbf", "#d7d7d7", "#e0e0e0", "#ececec", "#f7f7f7"] }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body", "purpose": "Texto por defecto de todas las páginas del juego." },
+      "title": { "displayName": "Title", "purpose": "H1 de cada página de contenido, dentro de la tarjeta de pergamino." },
+      "label": { "displayName": "Label", "purpose": "Controles de formulario y texto secundario en paneles/tooltips." },
+      "micro": { "displayName": "Micro", "purpose": "Badges de conteo (aventuras, próximo nivel), siempre sobre insignia sólida." }
+    },
+    "shadows": [
+      { "name": "badge-hard", "value": "0 1px 2px rgba(0, 0, 0, 0.7)", "purpose": "Contorno de contraste fuerte para badges pequeños sobre el fondo ilustrado." },
+      { "name": "inset-sheen-soft", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.35)", "purpose": "Brillo superior de 1px en level badges con gradiente." },
+      { "name": "inset-sheen", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.55)", "purpose": "Brillo superior de 1px en botones tipo troop-stats-back." },
+      { "name": "floating-panel", "value": "0 3px 9px rgba(43, 29, 11, 0.45)", "purpose": "Única sombra 'elevada' del proyecto; reservada al tooltip del panel de cultura." },
+      { "name": "engraved-groove", "value": "inset 0 1px 2px rgba(73, 48, 14, 0.42)", "purpose": "Barra de progreso de cultura, efecto de ranura tallada en madera." },
+      { "name": "white-card", "value": "0 2px 3px -2px rgba(45, 70, 60, 0.5)", "purpose": "Tablero de recursos (#res), sombra corta verde-grisácea." },
+      { "name": "res-bar-inset", "value": "inset 0 1px 1px rgba(0, 0, 0, 0.09)", "purpose": "Surco de las mini barras de progreso de recursos." },
+      { "name": "res-bar-fill-sheen", "value": "inset 0 1px rgba(237, 255, 172, 0.65)", "purpose": "Brillo superior en el relleno de la barra de cultura." }
+    ],
+    "motion": [
+      { "name": "tooltip-transition", "value": "opacity 120ms ease, transform 120ms ease, visibility 120ms ease", "purpose": "Aparición del tooltip del panel de cultura." },
+      { "name": "res-bar-fill-transition", "value": "width 900ms linear", "purpose": "Animación de la barra de recursos al cambiar de nivel." }
+    ],
+    "breakpoints": [
+      { "name": "wrapper-overhang", "value": "1119px", "purpose": "990px + 2×overhang de carteles + 20px de margen de scrollbar; reancla los carteles que asoman del wrapper." },
+      { "name": "building-help-mobile", "value": "760px", "purpose": "La caja de ayuda de nivel de edificio pasa a ancho completo." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Adventure Count Badge",
+      "kind": "chip",
+      "refersTo": "adventure-count-badge",
+      "description": "Insignia circular de conteo de aventuras disponibles del héroe, anclada sobre el retrato del héroe en la barra lateral.",
+      "html": "<span class=\"ds-adventure-badge\">3</span>",
+      "css": ".ds-adventure-badge { position: absolute; top: -7px; right: -7px; min-width: 16px; height: 16px; padding: 0 2px; border: 1px solid #7b5a00; border-radius: 9px; background: #f7d928; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); color: #2d2500; font: bold 10px/16px Verdana, Arial, Helvetica, sans-serif; text-align: center; box-sizing: border-box; }"
+    },
+    {
+      "name": "Building Level Help",
+      "kind": "custom",
+      "refersTo": "building-level-help-next",
+      "description": "Caja colapsable de ayuda contextual sobre los beneficios del próximo nivel de un edificio.",
+      "html": "<details class=\"ds-level-help\" open><summary class=\"ds-level-help-summary\">Ver beneficios por nivel</summary><div class=\"ds-level-help-content\"><div class=\"ds-level-help-heading\"><span>Nivel 3</span><span class=\"ds-level-help-next\">Próximo</span></div><ul><li class=\"ds-level-help-unlocked\"><strong>+15%</strong> producción</li></ul></div></details>",
+      "css": ".ds-level-help { box-sizing: border-box; width: 320px; margin: 9px 0 13px; border: 1px solid #c8c8c8; border-radius: 5px; background: #f4f4f4; color: #333; font-family: Arial, Helvetica, Verdana, sans-serif; } .ds-level-help-summary { box-sizing: border-box; min-height: 31px; padding: 6px 10px; cursor: pointer; list-style: none; color: #568b0b; font-weight: bold; line-height: 19px; } .ds-level-help-content { padding: 4px 11px 10px; border-top: 1px solid #d7d7d7; background: #fff; } .ds-level-help-heading { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0 5px; } .ds-level-help-heading span { color: #777; font-size: 11px; } .ds-level-help-unlocked strong { color: #568b0b; } .ds-level-help-next { display: inline-block; margin-left: 4px; padding: 1px 4px; border-radius: 3px; background: #f3a000; color: #fff; font-size: 10px; font-weight: bold; }"
+    },
+    {
+      "name": "Culture Progress Tooltip",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Tooltip de pergamino con flecha, muestra el detalle de puntos de cultura al pasar el mouse por el título del panel.",
+      "html": "<div class=\"ds-cp-tooltip\"><strong>Puntos de Cultura</strong><span class=\"ds-cp-tooltip-line\">Producción diaria: 45</span><span class=\"ds-cp-tooltip-foot\">Cada aldea nueva cuesta más puntos.</span></div>",
+      "css": ".ds-cp-tooltip { box-sizing: border-box; position: relative; width: 260px; padding: 10px 12px; border: 1px solid #5d421a; border-radius: 5px; background: #fff8df; box-shadow: 0 3px 9px rgba(43, 29, 11, 0.45); color: #3c2a14; font-family: Arial, Helvetica, Verdana, sans-serif; font-size: 11px; line-height: 15px; } .ds-cp-tooltip strong { display: block; margin-bottom: 6px; color: #568b0b; font-size: 12px; } .ds-cp-tooltip-line { display: block; margin-bottom: 5px; } .ds-cp-tooltip-foot { display: block; margin-top: 7px; padding-top: 7px; border-top: 1px dotted #bba36e; color: #69502c; }"
+    },
+    {
+      "name": "Culture Progress Bar",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Barra de progreso 'grabada en madera' del panel de cultura, con relleno en gradiente verde.",
+      "html": "<div class=\"ds-cp-bar\"><div class=\"ds-cp-bar-fill\" style=\"width: 62%\"></div></div>",
+      "css": ".ds-cp-bar { box-sizing: border-box; height: 8px; padding: 1px; overflow: hidden; border: 1px solid #705020; border-radius: 3px; background: #c8ad72; box-shadow: inset 0 1px 2px rgba(73, 48, 14, 0.42); } .ds-cp-bar-fill { height: 8px; border-radius: 2px; background-color: #7da100; background-image: linear-gradient(to bottom, #b8da3f, #739b00); box-shadow: inset 0 1px rgba(237, 255, 172, 0.65); }"
+    },
+    {
+      "name": "Plus Product Intro",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Caja de pergamino que introduce los beneficios de una sección de la página Plus, con tags de característica tipo píldora.",
+      "html": "<div class=\"ds-plus-intro\"><strong>Constructor Rápido</strong><p>Termina construcciones al instante.</p><span class=\"ds-plus-tag\">Consumible</span><span class=\"ds-plus-tag ds-plus-tag-permanent\">Permanente</span></div>",
+      "css": ".ds-plus-intro { margin: 8px 0 18px; padding: 10px 12px; border: 1px solid #c8b47c; border-radius: 4px; background: #fff8df; color: #3c2a14; font-family: Arial, Helvetica, Verdana, sans-serif; line-height: 16px; } .ds-plus-intro strong { display: block; margin-bottom: 4px; color: #568b0b; font-size: 13px; } .ds-plus-intro p { margin: 0; } .ds-plus-tag { display: inline-block; margin: 6px 5px 0 0; padding: 1px 6px; border: 1px solid #b8a168; border-radius: 8px; background: #f5edcf; color: #5b431a; font-size: 10px; font-weight: bold; line-height: 14px; } .ds-plus-tag-permanent { border-color: #83a72c; background: #edf6d2; color: #4f7500; }"
+    },
+    {
+      "name": "Resource Board Bar",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Mini barra de progreso de un recurso individual en el tablero superior (#res), con estados normal / drenando / lleno.",
+      "html": "<div class=\"ds-res-bar\"><div class=\"ds-res-bar-fill\"></div><span class=\"ds-res-bar-clock\">02:14:05</span></div>",
+      "css": ".ds-res-bar { box-sizing: border-box; position: relative; height: 12px; border: 1px solid #b9c4bd; border-radius: 2px; background: #e7ecea; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.09); } .ds-res-bar-fill { display: block; height: 100%; width: 55%; border-radius: 1px 0 0 1px; background: linear-gradient(to bottom, #a9db63 0%, #74ad24 100%); transition: width 900ms linear; } .ds-res-bar-clock { position: absolute; top: 0; left: 0; width: 100%; height: 10px; line-height: 10px; color: #23400a; font-size: 9px; font-weight: bold; text-align: center; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Pergamino y la Madera",
+    "overview": "La interfaz no se presenta como una app: se presenta como objetos físicos apoyados sobre una aldea pintada. El fondo de cada pantalla es una ilustración de paisaje (bgVillage-rtl.jpg / bgV.jpg); encima de esa escena flotan carteles de madera tallada y rollos de pergamino resueltos como arte en sprite (#villageName, #villageList, el marco del héroe), no como tarjetas de UI genéricas. Ese arte del gpack (Travian 4.0_41) es la autoridad visual del proyecto y es intocable: ninguna decisión de esta capa lo reemplaza ni lo reinterpreta.\n\nEncima de ese mundo heredado, el proyecto agrega una capa propia y deliberadamente discreta (img/travian_basics.css): badges de estado, un panel de progreso de cultura que se construye como un cartel de pergamino de tres piezas, tooltips, y utilidades para páginas nuevas (troop stats, building stats, ayuda contextual de nivel de edificio). Esta capa nunca compite con el arte pintado — toma prestada su paleta (verde musgo, madera, pergamino) y su vocabulario de profundidad es suave y funcional, nunca una tarjeta 'elevada' al estilo de un dashboard moderno.",
+    "keyCharacteristics": [
+      "Ancho fijo de 990px, centrado sobre un fondo pintado que ocupa todo el viewport.",
+      "Los componentes de estado del juego (carteles, marcos) son arte en sprite, no CSS; los componentes que agrega el proyecto sí son CSS real, pero minimalista.",
+      "Paleta heredada del Travian clásico: verde musgo como acento primario, madera y pergamino como superficie secundaria, rojo/ámbar solo para alarma y advertencia.",
+      "Cero border-radius ni sombra en el juego original; la capa propia introduce ambos con moderación (2–9px, sombras suaves en tonos madera/verde)."
+    ],
+    "rules": [
+      { "name": "La Regla del Pergamino Intacto", "body": "Ningún contenedor de la capa propia que se apoye en arte de cartel (#villageList, #villageName, #cultureProgress) lleva background/box-shadow propio en el contenedor — el pergamino ya resuelve ese fondo.", "section": "colors" },
+      { "name": "La Regla de la Familia Única", "body": "No se introducen webfonts ni familias secundarias; toda jerarquía se logra con tamaño y peso dentro del mismo stack de sistema.", "section": "typography" },
+      { "name": "La Regla de los 990px", "body": "El wrapper del juego nunca es fluido de verdad: es un lienzo de ancho fijo con un breakpoint puntual (1119px) para el overhang de los carteles, no un sistema responsive general.", "section": "layout" },
+      { "name": "La Regla del Tono Cálido", "body": "Ninguna sombra de la capa propia usa negro puro; siempre lleva un matiz marrón (rgba(43,29,11,…)) o verde-musgo (rgba(45,70,60,…)) para mantenerse dentro de la paleta de la aldea pintada.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do mantener toda superficie apoyada en arte de cartel (#villageList, #villageName, #cultureProgress) sin background/box-shadow propio en el contenedor — el pergamino ya resuelve ese fondo.",
+      "Do usar tonos cálidos (marrón/verde) en cualquier sombra nueva de la capa propia, nunca negro neutro puro.",
+      "Do versionar la URL (?v=N) de cualquier asset estático (CSS, JS, imágenes referenciadas desde CSS) que cambie, porque Cloudflare lo cachea 4 horas en producción.",
+      "Do mantener los clamps de ancho de los carteles width-independent dentro de ±25% del ancho nativo del arte."
+    ],
+    "donts": [
+      "Don't ensanchar #side_info en compact1.css — es un float de 196px dentro del wrapper de 990px; ensancharlo rompe el layout de toda la vista de aldea.",
+      "Don't reemplazar ni reestilizar el arte del gpack (gpack/travian_Travian_4.0_41) — es un compromiso de marca fijo, no un punto de partida.",
+      "Don't introducir sombras 'de tarjeta moderna' (grandes, neutras, muy elevadas) en componentes propios — la única sombra flotante autorizada es la del tooltip del panel de cultura.",
+      "Don't agregar webfonts o una segunda familia tipográfica — todo el juego usa un único stack de sistema."
+    ]
+  }
+}

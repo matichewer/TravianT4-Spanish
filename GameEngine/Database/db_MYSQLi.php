@@ -2696,11 +2696,11 @@
 				return $counts;
 			}
 
-			function createTradeRoute($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time) {
-				$values = array_map('intval',array($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time));
-				list($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time) = $values;
+			function createTradeRoute($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time) {
+				$values = array_map('intval',array($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time));
+				list($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time) = $values;
 				if($uid <= 0 || $wid <= 0 || $from <= 0 || $wid === $from || min($r1,$r2,$r3,$r4) < 0
-					|| $r1 + $r2 + $r3 + $r4 <= 0 || $start < 0 || $start > 23
+					|| $r1 + $r2 + $r3 + $r4 <= 0 || $start < 0 || $start > 23 || $startMinute < 0 || $startMinute > 59
 					|| $deliveries < 1 || $deliveries > 3 || $merchant <= 0 || $time <= 0) {
 					return false;
 				}
@@ -2708,7 +2708,9 @@
 				// lo que habilita la pestaña. El cobro de 2 de oro que habia aca fallaba
 				// en silencio cuando el saldo era 0 y ademas era incoherente (editar no
 				// cobraba y borrar no devolvia nada).
-				$q = "INSERT into " . TB_PREFIX . "route values (0,$uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time)";
+				// Columnas explicitas en vez de VALUES posicional: asi agregar start_minute
+				// no depende de que quede pegado al final de la tabla.
+				$q = "INSERT INTO " . TB_PREFIX . "route (uid, wid, `from`, wood, clay, iron, crop, start, start_minute, deliveries, merchant, timestamp) VALUES ($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time)";
 				return mysqli_query($this->connection,$q);
 			}
 
@@ -2726,6 +2728,27 @@
 				return $dbarray;
 			}
 
+			/**
+			 * Varias rutas por id a la vez (una ruta con varios horarios es, por dentro,
+			 * una fila por horario): devuelve un array indexado por id, para que quien
+			 * llama pueda reconstruir el grupo completo con una sola consulta.
+			 */
+			function getTradeRoutesByIds($ids) {
+				$ids = array_values(array_unique(array_filter(array_map('intval',(array)$ids),function($id) {
+					return $id > 0;
+				})));
+				if(empty($ids)) {
+					return array();
+				}
+				$q = "SELECT * FROM " . TB_PREFIX . "route WHERE id IN (" . implode(',',$ids) . ")";
+				$result = mysqli_query($this->connection,$q);
+				$routes = array();
+				while($result && $row = mysqli_fetch_assoc($result)) {
+					$routes[(int)$row['id']] = $row;
+				}
+				return $routes;
+			}
+
 			function getTradeRouteUid($id) {
 				$id = (int) $id;
 				$q = "SELECT * FROM " . TB_PREFIX . "route where id = $id";
@@ -2734,15 +2757,17 @@
 				return $dbarray ? $dbarray['uid'] : 0;
 			}
 
-			function updateTradeRouteOwned($id,$uid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time) {
-				$values = array_map('intval',array($id,$uid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time));
-				list($id,$uid,$from,$r1,$r2,$r3,$r4,$start,$deliveries,$merchant,$time) = $values;
-				if($id <= 0 || $uid <= 0 || $from <= 0 || min($r1,$r2,$r3,$r4) < 0
-					|| $r1 + $r2 + $r3 + $r4 <= 0 || $start < 0 || $start > 23
+			function updateTradeRouteOwned($id,$uid,$from,$wid,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time) {
+				$values = array_map('intval',array($id,$uid,$from,$wid,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time));
+				list($id,$uid,$from,$wid,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time) = $values;
+				if($id <= 0 || $uid <= 0 || $from <= 0 || $wid <= 0 || $wid === $from || min($r1,$r2,$r3,$r4) < 0
+					|| $r1 + $r2 + $r3 + $r4 <= 0 || $start < 0 || $start > 23 || $startMinute < 0 || $startMinute > 59
 					|| $deliveries < 1 || $deliveries > 3 || $merchant <= 0 || $time <= 0) {
 					return false;
 				}
-				$q = "UPDATE " . TB_PREFIX . "route SET wood = $r1, clay = $r2, iron = $r3, crop = $r4, start = $start, deliveries = $deliveries, merchant = $merchant, timestamp = $time WHERE id = $id AND uid = $uid AND `from` = $from";
+				// El destino ahora tambien se puede cambiar al editar (antes solo recursos/
+				// horario/envios), asi que wid entra en el UPDATE igual que en el alta.
+				$q = "UPDATE " . TB_PREFIX . "route SET wid = $wid, wood = $r1, clay = $r2, iron = $r3, crop = $r4, start = $start, start_minute = $startMinute, deliveries = $deliveries, merchant = $merchant, timestamp = $time WHERE id = $id AND uid = $uid AND `from` = $from";
 				return mysqli_query($this->connection,$q);
 			}
 
@@ -2784,12 +2809,17 @@
 			 * no se lee la columna `merchant`, que se queda con el valor del dia en que
 			 * se creo la ruta.
 			 */
-			function getTradeRoutesFrom($vid,$excludeRouteId = 0) {
+			function getTradeRoutesFrom($vid,$excludeRouteIds = array()) {
 				$vid = (int) $vid;
-				$excludeRouteId = (int) $excludeRouteId;
-				$q = "SELECT id, wood, clay, iron, crop, start, deliveries FROM " . TB_PREFIX . "route WHERE `from` = $vid";
-				if($excludeRouteId > 0) {
-					$q .= " AND id <> $excludeRouteId";
+				// Una ruta con varios horarios es varias filas: al editarla hay que excluir
+				// TODAS sus filas, no solo una, o el calendario de solapamiento se compara
+				// contra si misma.
+				$excludeRouteIds = array_values(array_unique(array_filter(array_map('intval',(array)$excludeRouteIds),function($id) {
+					return $id > 0;
+				})));
+				$q = "SELECT id, wid, wood, clay, iron, crop, start, start_minute, deliveries FROM " . TB_PREFIX . "route WHERE `from` = $vid";
+				if(!empty($excludeRouteIds)) {
+					$q .= " AND id NOT IN (" . implode(',',$excludeRouteIds) . ")";
 				}
 				$result = mysqli_query($this->connection,$q);
 				$routes = array();

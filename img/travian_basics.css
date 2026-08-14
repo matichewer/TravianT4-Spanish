@@ -964,3 +964,239 @@ div.village2 div.buildingList div.buildingNotifications {
 #res li.r5 .resMax {
 	float: none;
 }
+
+/* ── Formulario de ruta comercial (Templates/Build/17_route_form.tpl) ────────
+   Un solo panel gris (igual que la caja de "Ventajas al subir de nivel" un poco
+   mas arriba en la misma pagina) agrupa recursos, destino, envios y horarios;
+   el titulo queda afuera, como encabezado de la seccion. */
+.routeFormTitle {
+	margin: 0 0 10px;
+	color: #568b0b;
+	font-size: 13px;
+	font-weight: bold;
+}
+
+.routeFormPanel {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 14px 16px;
+	border: 1px solid #c8c8c8;
+	border-radius: 5px;
+	background: #f4f4f4;
+}
+
+.routeFormField {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.routeFormField > label {
+	color: #3c2a14;
+	font-size: 11px;
+	font-weight: bold;
+}
+
+.routeForm select,
+.routeForm input.text {
+	box-sizing: border-box;
+	border: 1px solid #c8c8c8;
+	border-radius: 3px;
+	background: #fff;
+	color: #252525;
+	font-size: 11px;
+	font-family: Arial, Helvetica, Verdana, sans-serif;
+}
+
+.routeForm select {
+	padding: 3px 4px;
+}
+
+#routeFormTarget {
+	max-width: 320px;
+}
+
+/* El select solo tiene 3 opciones (1/2/3): sin esto, hereda el ancho de la
+   columna lateral entera (heredado de "Aldea de destino", que si necesita ser
+   ancho) porque los hijos de un flex column se estiran por defecto. */
+#routeFormDeliveries {
+	align-self: flex-start;
+	width: auto;
+	min-width: 56px;
+}
+
+/* Recursos a un lado, destino+envios al otro (agrupados en su propia caja, igual
+   que la de "Ventajas al subir de nivel" un poco mas arriba en la misma pagina),
+   y los horarios abajo ocupando todo el ancho. La columna de recursos no crece
+   mas de lo que necesita; la lateral se lleva el resto. */
+.routeFormTopGrid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	align-items: flex-start;
+}
+
+.routeFormTopGrid > .routeFormField {
+	flex: 0 0 auto;
+}
+
+.routeFormSideCol {
+	flex: 1 1 220px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 220px;
+}
+
+/* Misma distribucion que la tabla de envio de la pestana Resumen (table.send_res:
+   icono angosto, nombre, input a la derecha, "/ capacidad" al final), fila por
+   recurso en vez de la fila horizontal que tenia antes. El transparent es
+   necesario, no cosmetico: el juego le pone fondo gris (#C9C9C9) a toda tabla
+   por defecto para simular lineas de grilla finas entre celdas, y sin pisarlo
+   ese gris se ve encima del panel. La celda tiene el mismo problema por su
+   cuenta: "table td,table th{background-color:#FFF}" es una regla aparte (no
+   heredada de la tabla), asi que hay que transparentarla tambien. */
+.routeFormResourceTable {
+	width: auto;
+	background-color: transparent;
+}
+
+.routeFormResourceTable td {
+	padding: 3px 4px;
+	vertical-align: middle;
+	background-color: transparent;
+}
+
+.routeFormResIco {
+	width: 20px;
+}
+
+.routeFormResIco img {
+	display: block;
+}
+
+.routeFormResName {
+	color: #3c2a14;
+}
+
+.routeFormResVal {
+	width: 90px;
+}
+
+.routeFormResVal input.text {
+	width: 100%;
+	padding: 3px 6px;
+	text-align: right;
+}
+
+.routeFormResMax {
+	padding-left: 6px;
+	color: #777;
+	white-space: nowrap;
+}
+
+/* Fila que envuelve hacia la derecha (no una columna apilada): cada horario es su
+   propia ficha, se van agregando una al lado de la otra y el bloque crece hacia
+   abajo solo cuando ya no entran mas en el ancho disponible. El boton de agregar
+   vive dentro de la misma fila, como una ficha punteada mas al final de la lista,
+   en vez de un boton aparte debajo. */
+.routeFormSchedules {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.routeFormSchedule {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	width: fit-content;
+	padding: 4px 6px;
+	border: 1px solid #d7d7d7;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.routeFormScheduleSep {
+	color: #777;
+	font-weight: bold;
+}
+
+/* El selector va prefijado con "button" a proposito: el reset del juego
+   (button,button:hover,button:focus{padding:0;border:0 solid transparent;...} en
+   compact1.css) tiene la misma especificidad que un solo ".clase:hover", y gana en
+   el estado hover porque ademas suma el selector de tipo "button". Sin el prefijo,
+   el boton perdia su padding y su borde apenas se le pasaba el mouse por encima
+   (se veia como si "se achicara"). */
+button.routeFormScheduleRemove {
+	box-sizing: border-box;
+	width: 18px;
+	height: 18px;
+	margin-left: 2px;
+	border: 1px solid #d7d7d7;
+	border-radius: 50%;
+	background: #fff;
+	color: #a11818;
+	font-size: 11px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+button.routeFormScheduleRemove:hover,
+button.routeFormScheduleRemove:focus {
+	border: 1px solid #a11818;
+	background: #fff3d5;
+}
+
+/* Ficha punteada al final de la fila de horarios, del mismo alto que las fichas
+   ya guardadas: se lee como "el proximo casillero", no como un boton aparte.
+   Ver el comentario de arriba sobre el prefijo "button": mismo motivo (especificidad
+   del reset global del juego en :hover). */
+button.routeFormAddSchedule {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border: 1px dashed #99c01a;
+	border-radius: 4px;
+	background: transparent;
+	color: #5f8000;
+	font-size: 11px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+button.routeFormAddSchedule:hover,
+button.routeFormAddSchedule:focus {
+	padding: 4px 10px;
+	border: 1px dashed #4f7500;
+	background: #eef6d8;
+	color: #4f7500;
+}
+
+/* El numero "/ <capacidad>" funciona como enlace de texto (igual que
+   #marketQuickAdd1..4 en la pestana Resumen), asi que aca si conviene el reset
+   transparente/sin padding del boton base del juego: no hace falta pelearlo.
+   El color es el mismo verde de enlace de todo el juego (a:link), no uno propio:
+   son los mismos numeros que en Resumen, tienen que verse iguales. */
+button.routeFormResAdd {
+	color: #99c01a;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+button.routeFormResAdd:hover,
+button.routeFormResAdd:focus {
+	color: #00bc00;
+	text-decoration: underline;
+}
+
+/* Igual que updateQuickAddState() en Resumen: al llegar al tope, los numeros se
+   apagan en vez de seguir sumando al hacer click. */
+button.routeFormResAdd:disabled {
+	color: #999;
+	cursor: default;
+	text-decoration: none;
+}

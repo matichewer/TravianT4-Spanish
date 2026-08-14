@@ -1347,6 +1347,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%route` (
   `iron` int(5) unsigned NOT NULL,
   `crop` int(5) unsigned NOT NULL,
   `start` tinyint(2) unsigned NOT NULL,
+  `start_minute` tinyint(2) unsigned NOT NULL DEFAULT 0,
   `deliveries` tinyint(1) unsigned NOT NULL,
   `merchant` int(11) unsigned NOT NULL,
   `timestamp` int(11) unsigned NOT NULL,

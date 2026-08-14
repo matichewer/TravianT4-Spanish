@@ -8,13 +8,19 @@
 ##  Copyright:     TravianX (c) 2010-2011. All rights reserved.                ## 
 ##                                                                             ## 
 ################################################################################# 
-class Market { 
-     
+class Market {
+
+    // Tope de horarios que se pueden declarar en un solo guardado de ruta comercial.
+    // La reserva de mercaderes ya lo limita en la practica (cada horario extra suma
+    // otro reqMerc completo), esto es solo un techo duro contra un payload absurdo.
+    const MAX_ROUTE_SCHEDULES = 12;
+
     // Una sola asignacion al final solo inicializa la ultima propiedad: el resto
     // quedaba en null y disparaba warnings de count() al abrir el mercado por una
     // pestaña que no carga los datos.
     public $onsale = array(), $onmarket = array(), $sending = array(), $recieving = array(), $return = array();
     public $offerDraft = array();
+    public $routeDraft = array();
     public $routeError = array();
     public $error = array();
     public $routeReserved = 0;
@@ -71,7 +77,7 @@ class Market {
     }
 
     public function procTradeRoutes($post,$get) {
-        global $database,$village,$session;
+        global $database,$village,$session,$generator;
         $postAction = isset($post['action']) && is_scalar($post['action']) ? (string)$post['action'] : '';
         $getAction = isset($get['action']) && is_scalar($get['action']) ? (string)$get['action'] : '';
         if(in_array($postAction,array('addRoute','editRoute'),true)) {
@@ -94,14 +100,62 @@ class Market {
         $session->changeChecker();
 
         if($getAction === 'delRoute') {
-            $routeId = $this->positiveInteger(isset($get['routeid']) ? $get['routeid'] : null);
-            if($routeId) {
-                $database->deleteTradeRouteOwned($routeId,$session->uid,$village->wid);
+            // Una ruta con varios horarios es varias filas: borrarla del todo es borrar
+            // cada id del grupo, no solo uno.
+            $rawIds = isset($get['routeid']) ? $get['routeid'] : null;
+            foreach(is_array($rawIds) ? $rawIds : array($rawIds) as $rawId) {
+                $routeId = $this->positiveInteger($rawId);
+                if($routeId) {
+                    $database->deleteTradeRouteOwned($routeId,$session->uid,$village->wid);
+                }
             }
             $this->redirectToMarket(0,4);
         }
 
-        $backToForm = $postAction === 'editRoute' ? '' : 'create';
+        // Los ids que ya existian en el grupo que se esta editando (una fila por cada
+        // horario ya guardado); vacio al crear. Se necesitan antes de armar el destino
+        // del redirect (para poder volver al mismo formulario de edicion, no a la
+        // lista), antes de excluirlos al validar la capacidad, y para reconciliar el
+        // guardado contra el grupo real (que horarios actualizan una fila existente,
+        // cuales crean una nueva, cuales sobran y hay que borrar).
+        $originalRouteIds = array();
+        if($postAction === 'editRoute' && isset($post['original_routeid']) && is_array($post['original_routeid'])) {
+            foreach($post['original_routeid'] as $rawId) {
+                $rid = $this->positiveInteger($rawId);
+                if($rid) {
+                    $originalRouteIds[] = $rid;
+                }
+            }
+            $originalRouteIds = array_values(array_unique($originalRouteIds));
+        }
+        if($postAction === 'editRoute') {
+            $backToForm = '';
+            if(!empty($originalRouteIds)) {
+                $backToForm = 'action=editRoute';
+                foreach($originalRouteIds as $rid) {
+                    $backToForm .= '&routeid%5B%5D='.$rid;
+                }
+            }
+        } else {
+            $backToForm = 'create';
+        }
+
+        // Un rechazo repetia el formulario vacio: lo que el jugador ya habia
+        // completado (incluidos los horarios que agrego) se perdia y habia que
+        // escribirlo de nuevo. Se guarda ANTES de validar nada, asi que sea cual sea
+        // el motivo del rechazo, 17_create.tpl/17_edit.tpl pueden recuperarlo. Se
+        // borra recien cuando el guardado termina bien.
+        $routeDraftKey = $postAction === 'editRoute' ? 'edit'.implode('-',$originalRouteIds) : 'create';
+        $_SESSION['tradeRouteDraft'][$village->wid][$routeDraftKey] = array(
+            'tvillage' => $this->draftScalar(isset($post['tvillage']) ? $post['tvillage'] : null),
+            'r1' => $this->draftScalar(isset($post['r1']) ? $post['r1'] : null),
+            'r2' => $this->draftScalar(isset($post['r2']) ? $post['r2'] : null),
+            'r3' => $this->draftScalar(isset($post['r3']) ? $post['r3'] : null),
+            'r4' => $this->draftScalar(isset($post['r4']) ? $post['r4'] : null),
+            'deliveries' => $this->draftScalar(isset($post['deliveries']) ? $post['deliveries'] : null),
+            'schedule_hour' => $this->draftScalarArray(isset($post['schedule_hour']) ? $post['schedule_hour'] : null),
+            'schedule_minute' => $this->draftScalarArray(isset($post['schedule_minute']) ? $post['schedule_minute'] : null),
+        );
 
         $resource = array();
         foreach(array('r1','r2','r3','r4') as $field) {
@@ -111,46 +165,153 @@ class Market {
             }
             $resource[] = $value;
         }
-        $start = $this->nonNegativeInteger(isset($post['start']) ? $post['start'] : null);
         $deliveries = $this->positiveInteger(isset($post['deliveries']) ? $post['deliveries'] : null);
         $reqMerc = $this->requiredMerchants(array_sum($resource));
 
-        // Los mercaderes de una ruta se ocupan recien cuando sale, pero todas las rutas
-        // de una aldea tienen que caber a la vez en el Mercado: si la suma pasa el total
-        // del edificio hay una que no va a poder salir nunca. Se valida al crearla, que
-        // es donde se puede avisar, en vez de dejarla fallando cada dia en silencio.
-        $routeId = $postAction === 'editRoute' ? $this->positiveInteger(isset($post['routeid']) ? $post['routeid'] : null) : 0;
-        $committedByOtherRoutes = $this->routeMerchantsCommitted($routeId ?: 0);
-        $merchantsFreeForRoutes = max(0,$this->merchant - $committedByOtherRoutes);
+        $target = $this->positiveInteger(isset($post['tvillage']) ? $post['tvillage'] : null);
+        if(!$target || $target === (int)$village->wid || (int)$database->getVillageField($target,'owner') !== (int)$session->uid) {
+            $this->tradeRouteFailure('target',array(),$backToForm);
+        }
+
+        if($postAction === 'editRoute' && empty($originalRouteIds)) {
+            $this->tradeRouteFailure('invalid',array(),$backToForm);
+        }
+        // Las filas del grupo tienen que ser realmente del jugador y de esta aldea: sin
+        // esto, un routeid ajeno colado a mano en el formulario se podria sobreescribir
+        // o terminar borrado por sobrar en la reconciliacion de abajo.
+        if(!empty($originalRouteIds)) {
+            $ownedRoutes = $database->getTradeRoutesByIds($originalRouteIds);
+            foreach($originalRouteIds as $rid) {
+                if(!isset($ownedRoutes[$rid]) || (int)$ownedRoutes[$rid]['uid'] !== (int)$session->uid || (int)$ownedRoutes[$rid]['from'] !== (int)$village->wid) {
+                    $this->tradeRouteFailure('invalid',array(),$backToForm);
+                }
+            }
+        }
+
+        // Editar ahora permite el mismo formulario completo que crear (destino, recursos
+        // y varios horarios a la vez).
+        $schedules = $this->parseRouteSchedules($post);
 
         if(array_sum($resource) <= 0) {
             $this->tradeRouteFailure('noresources',array(),$backToForm);
         }
-        if($start === false || $start > 23 || $deliveries < 1 || $deliveries > 3 || $reqMerc <= 0) {
+        if($deliveries < 1 || $deliveries > 3 || $reqMerc <= 0 || empty($schedules)) {
             $this->tradeRouteFailure('invalid',array(),$backToForm);
         }
-        if($reqMerc > $merchantsFreeForRoutes) {
-            $this->tradeRouteFailure('merchants',array('need'=>$reqMerc,'free'=>$merchantsFreeForRoutes),$backToForm);
+
+        // Los mercaderes de una ruta se ocupan recien cuando sale, y solo mientras dura
+        // el viaje de ida y vuelta: dos salidas que nunca coinciden en el tiempo (por
+        // ejemplo, aldeas vecinas con horarios espaciados mas que el viaje de vuelta)
+        // pueden compartir el mismo cupo. Antes se sumaba ciegamente el reqMerc de cada
+        // horario contra el total del edificio, lo que exigia el doble de mercaderes
+        // aunque nunca fueran a estar afuera a la vez. Aca se arma el calendario real
+        // de esta aldea (las otras rutas ya guardadas + los horarios de este guardado)
+        // y se valida contra el pico de mercaderes simultaneos, no contra la suma.
+        $peakEntries = array();
+        foreach($database->getTradeRoutesFrom($village->wid,$originalRouteIds) as $route) {
+            $otherReqMerc = $this->requiredMerchants((int)$route['wood'] + (int)$route['clay'] + (int)$route['iron'] + (int)$route['crop']);
+            if($otherReqMerc <= 0) {
+                continue;
+            }
+            $otherDuration = $this->merchantRoundTripSeconds($village->wid,(int)$route['wid']);
+            $peakEntries[] = array(
+                'start' => ((int)$route['start']) * 3600 + ((int)$route['start_minute']) * 60,
+                'duration' => $otherDuration,
+                'merchants' => $otherReqMerc,
+            );
         }
-        $timestamp = strtotime('today '.sprintf('%02d',$start).':00:00');
-        if($timestamp <= time()) {
-            $timestamp += 86400;
+        $newRouteDuration = $this->merchantRoundTripSeconds($village->wid,$target);
+        foreach($schedules as $schedule) {
+            $peakEntries[] = array(
+                'start' => $schedule['hour'] * 3600 + $schedule['minute'] * 60,
+                'duration' => $newRouteDuration,
+                'merchants' => $reqMerc,
+            );
+        }
+        $peakDemand = Automation::peakConcurrentMerchants($peakEntries);
+        if($peakDemand > $this->merchant) {
+            $this->tradeRouteFailure('merchants',array('need'=>$peakDemand,'free'=>$this->merchant),$backToForm);
         }
 
-        if($postAction === 'addRoute') {
-            $target = $this->positiveInteger(isset($post['tvillage']) ? $post['tvillage'] : null);
-            if(!$target || $target === (int)$village->wid || (int)$database->getVillageField($target,'owner') !== (int)$session->uid) {
-                $this->tradeRouteFailure('target',array(),$backToForm);
-            }
-            if(!$database->createTradeRoute($session->uid,$target,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp)) {
-                $this->tradeRouteFailure('failed',array(),$backToForm);
-            }
-        } else {
-            if(!$routeId || !$database->updateTradeRouteOwned($routeId,$session->uid,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$start,$deliveries,$reqMerc,$timestamp)) {
-                $this->tradeRouteFailure('failed',array(),$backToForm);
+        // Reconciliacion por posicion, no por id: el horario N actualiza la fila
+        // original N si existe, o crea una fila nueva si no. Como todas las filas del
+        // grupo comparten destino/recursos/envios, no importa CUAL id original se quede
+        // con CUAL horario tras agregar/quitar horarios en el medio de la lista — lo
+        // unico que importa es que el CONJUNTO final de horarios sea el correcto, y eso
+        // se cumple sin necesitar rastrear que horario "es" cada id.
+        foreach($schedules as $scheduleIndex => $schedule) {
+            $timestamp = Automation::nextTradeRouteTimestamp($schedule['hour'],$schedule['minute']);
+            if(isset($originalRouteIds[$scheduleIndex])) {
+                if(!$database->updateTradeRouteOwned($originalRouteIds[$scheduleIndex],$session->uid,$village->wid,$target,$resource[0],$resource[1],$resource[2],$resource[3],$schedule['hour'],$schedule['minute'],$deliveries,$reqMerc,$timestamp)) {
+                    $this->tradeRouteFailure('failed',array(),$backToForm);
+                }
+            } else {
+                if(!$database->createTradeRoute($session->uid,$target,$village->wid,$resource[0],$resource[1],$resource[2],$resource[3],$schedule['hour'],$schedule['minute'],$deliveries,$reqMerc,$timestamp)) {
+                    $this->tradeRouteFailure('failed',array(),$backToForm);
+                }
             }
         }
+        // Ids originales que sobran (el jugador quito ese horario del formulario): ya
+        // no tienen horario asignado, se borran.
+        for($i = count($schedules); $i < count($originalRouteIds); $i++) {
+            $database->deleteTradeRouteOwned($originalRouteIds[$i],$session->uid,$village->wid);
+        }
+        // El guardado termino bien: el borrador de este formulario ya no hace falta.
+        unset($_SESSION['tradeRouteDraft'][$village->wid][$routeDraftKey]);
+        if(empty($_SESSION['tradeRouteDraft'][$village->wid])) {
+            unset($_SESSION['tradeRouteDraft'][$village->wid]);
+        }
         $this->redirectToMarket(0,4);
+    }
+
+    /**
+     * Valor escalar tal cual lo mando el formulario, para guardarlo en el borrador de
+     * sesion sin validar (la validacion real es la que ya hace procTradeRoutes; esto
+     * es solo para poder repoblar el formulario si rechaza el guardado).
+     */
+    private function draftScalar($value) {
+        return is_scalar($value) ? (string)$value : '';
+    }
+
+    /**
+     * Igual que draftScalar() pero para los arrays de horarios (schedule_hour[] /
+     * schedule_minute[]): cada elemento se guarda como string, cualquier elemento que
+     * no sea escalar (payload manipulado) se descarta en vez de romper el guardado.
+     */
+    private function draftScalarArray($value) {
+        if(!is_array($value)) {
+            return array();
+        }
+        $result = array();
+        foreach($value as $item) {
+            if(is_scalar($item)) {
+                $result[] = (string)$item;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Uno o mas pares hora/minuto declarados en el formulario (schedule_hour[] /
+     * schedule_minute[]). Cada par se guarda como su propia ruta; devuelve un array
+     * vacio si falta alguno, no vienen parejos, o algun valor es invalido.
+     */
+    private function parseRouteSchedules($post) {
+        $hours = isset($post['schedule_hour']) && is_array($post['schedule_hour']) ? array_values($post['schedule_hour']) : array();
+        $minutes = isset($post['schedule_minute']) && is_array($post['schedule_minute']) ? array_values($post['schedule_minute']) : array();
+        if(empty($hours) || count($hours) !== count($minutes) || count($hours) > self::MAX_ROUTE_SCHEDULES) {
+            return array();
+        }
+        $schedules = array();
+        foreach($hours as $index => $hourValue) {
+            $hour = $this->nonNegativeInteger($hourValue);
+            $minute = $this->nonNegativeInteger($minutes[$index]);
+            if($hour === false || $hour > 23 || $minute === false || $minute > 59) {
+                return array();
+            }
+            $schedules[] = array('hour'=>$hour,'minute'=>$minute);
+        }
+        return $schedules;
     }
 
     // Todos los rechazos al guardar una ruta terminaban en el mismo redirect mudo: la
@@ -194,6 +355,9 @@ class Market {
         if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
             $this->offerDraft = $_SESSION['marketOfferDraft'][$village->wid];
         }
+        if(isset($_SESSION['tradeRouteDraft'][$village->wid]) && is_array($_SESSION['tradeRouteDraft'][$village->wid])) {
+            $this->routeDraft = $_SESSION['tradeRouteDraft'][$village->wid];
+        }
         if(isset($_SESSION['tradeRouteError']) && is_array($_SESSION['tradeRouteError'])) {
             $this->routeError = $_SESSION['tradeRouteError'];
             unset($_SESSION['tradeRouteError']);
@@ -205,6 +369,52 @@ class Market {
     }
 
     /**
+     * Borrador del formulario de rutas para $key ('create' o 'edit<id>'), ya
+     * normalizado a los mismos tipos que usan los valores por defecto del
+     * formulario (17_create.tpl / 17_edit.tpl). null si no hay borrador para esa
+     * clave, que es el caso normal (solo existe tras un guardado rechazado).
+     */
+    public function routeDraftFor($key) {
+        global $village;
+        if(!isset($this->routeDraft[$key]) || !is_array($this->routeDraft[$key])) {
+            return null;
+        }
+        $draft = $this->routeDraft[$key];
+        // Se consume aca, en el momento en que el formulario realmente lo muestra: la
+        // proxima vez que se abra este mismo formulario sin haber fallado un guardado
+        // recien arranca en blanco, en vez de repetir un intento viejo para siempre
+        // (antes solo se borraba al guardar bien, asi que un intento fallido que el
+        // jugador abandona queda pegado en la sesion indefinidamente).
+        unset($_SESSION['tradeRouteDraft'][$village->wid][$key]);
+        if(empty($_SESSION['tradeRouteDraft'][$village->wid])) {
+            unset($_SESSION['tradeRouteDraft'][$village->wid]);
+        }
+        $resource = array();
+        foreach(array('r1','r2','r3','r4') as $field) {
+            $resource[] = isset($draft[$field]) ? max(0,(int)$draft[$field]) : 0;
+        }
+        $deliveries = isset($draft['deliveries']) ? (int)$draft['deliveries'] : 1;
+        if($deliveries < 1 || $deliveries > 3) {
+            $deliveries = 1;
+        }
+        $hours = isset($draft['schedule_hour']) && is_array($draft['schedule_hour']) ? $draft['schedule_hour'] : array();
+        $minutes = isset($draft['schedule_minute']) && is_array($draft['schedule_minute']) ? $draft['schedule_minute'] : array();
+        $schedules = array();
+        foreach($hours as $index => $hourValue) {
+            $schedules[] = array(
+                'hour' => max(0,min(23,(int)$hourValue)),
+                'minute' => isset($minutes[$index]) ? max(0,min(59,(int)$minutes[$index])) : 0,
+            );
+        }
+        return array(
+            'target' => isset($draft['tvillage']) ? (int)$draft['tvillage'] : 0,
+            'resource' => $resource,
+            'deliveries' => $deliveries,
+            'schedules' => empty($schedules) ? null : $schedules,
+        );
+    }
+
+    /**
      * Horarios de salida de las rutas de esta aldea, para poder explicar en pantalla
      * a que hora se van los mercaderes comprometidos.
      */
@@ -212,7 +422,8 @@ class Market {
         global $database,$village;
         $hours = array();
         foreach($database->getTradeRoutesFrom($village->wid) as $route) {
-            $hours[(int)$route['start']] = sprintf('%02d:00',(int)$route['start']);
+            $key = ((int)$route['start']) * 60 + (int)$route['start_minute'];
+            $hours[$key] = sprintf('%02d:%02d',(int)$route['start'],(int)$route['start_minute']);
         }
         ksort($hours);
         return array_values($hours);
@@ -578,6 +789,25 @@ class Market {
 
     private function requiredMerchants($amount) {
         return Automation::merchantsRequired($amount,$this->maxcarry);
+    }
+
+    /**
+     * Segundos que un mercader esta afuera en un viaje de ida y vuelta entre $fromVid
+     * y $toVid, a la velocidad de mercader de la propia tribu (misma formula que usa
+     * el envio manual y el reparto real de Automation::sendResource2, para que el
+     * calendario de solapamiento no invente un tiempo de viaje distinto del real).
+     */
+    private function merchantRoundTripSeconds($fromVid,$toVid) {
+        global $database,$session,$generator;
+        if($fromVid <= 0 || $toVid <= 0) {
+            return 0;
+        }
+        $fromCoor = $database->getCoor($fromVid);
+        $toCoor = $database->getCoor($toVid);
+        if(!is_array($fromCoor) || !is_array($toCoor)) {
+            return 0;
+        }
+        return 2 * (int)$generator->procDistanceTime($toCoor,$fromCoor,$session->tribe,0);
     }
      
     private function loadOnsale() { 

@@ -76,10 +76,10 @@ section('B. Lo comprometido por rutas se muestra, no se descuenta');
 check(strpos($marketSource,'$this->routeReserved = $this->routeMerchantsCommitted();') !== false,
 	'loadMarket() calcula aparte los mercaderes comprometidos por rutas');
 check(strpos($marketSource,'public function routeDepartureHours()') !== false
-	&& strpos($marketSource,"sprintf('%02d:00',(int)\$route['start'])") !== false,
-	'existe el horario de salida de cada ruta para mostrarlo');
-check(strpos($dbSource,'start, deliveries FROM " . TB_PREFIX . "route') !== false,
-	'getTradeRoutesFrom() trae también el horario de la ruta');
+	&& strpos($marketSource,"sprintf('%02d:%02d',(int)\$route['start'],(int)\$route['start_minute'])") !== false,
+	'existe el horario de salida de cada ruta (hora y minuto) para mostrarlo');
+check(strpos($dbSource,'start, start_minute, deliveries FROM " . TB_PREFIX . "route') !== false,
+	'getTradeRoutesFrom() trae también el horario completo (hora y minuto) de la ruta');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
 	&& strpos($merchantsTpl,'salen todos los días en') !== false,
 	'el contador explica cuántos mercaderes salen en rutas y a qué hora');
@@ -89,9 +89,11 @@ check(strpos($merchantsTpl,'Mientras no viajen podés usarlos') !== false,
 // ---------------------------------------------------------------------------
 section('C. Las rutas de una aldea tienen que caber juntas en el Mercado');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,'$reqMerc > $merchantsFreeForRoutes') !== false
-	&& strpos($marketSource,"\$this->routeMerchantsCommitted(\$routeId ?: 0)") !== false,
-	'crear/editar una ruta valida contra el total del edificio menos las otras rutas');
+// El detalle del calculo de solapamiento (Automation::peakConcurrentMerchants) tiene
+// su propia cobertura en check_trade_routes.php seccion K; aca solo se confirma que
+// procTradeRoutes() sigue validando contra el pico y avisando si no entra.
+check(strpos($marketSource,'if($peakDemand > $this->merchant)') !== false,
+	'crear/editar una ruta valida contra el pico de mercaderes simultaneos, no la capacidad total sin mas');
 check(strpos($marketSource,'$this->tradeRouteFailure(\'merchants\'') !== false,
 	'pasarse de esa capacidad avisa en vez de guardar en silencio');
 

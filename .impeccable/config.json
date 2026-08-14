@@ -1,0 +1,56 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "img/travian_basics.css"
+        ],
+        "createdAt": "2026-08-14T20:11:49.747Z",
+        "reason": "L580 border-right:7px solid on a 0x0 pseudo-element is the classic CSS triangle-arrow trick for the culture-progress tooltip pointer, not a card side-accent; pre-existing code, unrelated to this session's edits"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "img/travian_basics.css"
+        ],
+        "createdAt": "2026-08-14T20:11:49.775Z",
+        "reason": "L899 transition:width on #res .resBarFill animates a resource-level meter where width IS the displayed data, not a decorative layout shift; pre-existing code, unrelated to this session's edits"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-08-14T20:11:49.802Z",
+        "reason": "Arial/Helvetica/Verdana is this project's single system font stack for the whole game (DESIGN.md: La Regla de la Familia Unica); the new .routeForm rules match that existing convention, not a new choice"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#a11818",
+        "createdAt": "2026-08-14T20:34:38.912Z",
+        "reason": "Reuses this file's pre-existing .cultureProgressUnavailable red (same file, same delete/warning semantics) for the schedule-remove button; not a new color choice"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#5f8000",
+        "createdAt": "2026-08-14T20:34:38.941Z",
+        "reason": "Deliberately mirrors this file's pre-existing .buildingStatsIndex a pill-link pattern (comment in code says so) for .routeFormAdd; matches its exact color, not new"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#799b22",
+        "createdAt": "2026-08-14T20:34:38.973Z",
+        "reason": "Same .buildingStatsIndex a:hover reuse as above, hover border-color"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#eef6d8",
+        "createdAt": "2026-08-14T20:34:39.006Z",
+        "reason": "Same .buildingStatsIndex a:hover reuse as above, hover background"
+      }
+    ]
+  }
+}

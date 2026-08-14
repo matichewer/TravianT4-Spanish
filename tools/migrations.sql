@@ -321,3 +321,11 @@ SET a.ap = COALESCE(totals.ap, 0),
     a.clp = COALESCE(totals.clp, 0),
     a.RR = COALESCE(totals.RR, 0),
     a.oldrank = COALESCE(totals.population, 0);
+
+-- 2026-08-14 - Minutos y horarios multiples en rutas comerciales
+-- Las rutas del Mercado solo guardaban la hora de salida (0-23); el jugador no podia
+-- afinar el minuto ni cargar varios horarios de una entrega sin repetir el formulario
+-- entero por cada uno. El codigo nuevo guarda tambien el minuto y el formulario permite
+-- declarar varios horarios en un mismo guardado (cada uno se guarda como su propia fila).
+ALTER TABLE s1_route
+  ADD COLUMN IF NOT EXISTS start_minute tinyint(2) unsigned NOT NULL DEFAULT 0 AFTER start;

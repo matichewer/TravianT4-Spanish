@@ -97,10 +97,10 @@ check(strpos($dbSource,"mysqli_affected_rows(\$this->connection) === 1") !== fal
 	'claimTradeRoute() solo confirma éxito si afectó exactamente una fila');
 
 check(strpos($dbSource,'function getTradeRoutesFrom(') !== false,'existe getTradeRoutesFrom()');
-check(strpos($dbSource,"SELECT id, wood, clay, iron, crop, start, deliveries FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
-	'getTradeRoutesFrom() devuelve recursos y horario de cada ruta de esa aldea de origen');
-check(strpos($dbSource,'AND id <> $excludeRouteId') !== false,
-	'getTradeRoutesFrom() puede excluir la propia ruta al editarla');
+check(strpos($dbSource,"SELECT id, wid, wood, clay, iron, crop, start, start_minute, deliveries FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
+	'getTradeRoutesFrom() devuelve destino, recursos y horario (hora y minuto) de cada ruta de esa aldea de origen');
+check(strpos($dbSource,'AND id NOT IN (') !== false,
+	'getTradeRoutesFrom() puede excluir varias filas a la vez (todo el grupo que se esta editando, no solo una)');
 check(strpos($dbSource,'SELECT SUM(merchant) FROM') === false,
 	'ya nadie suma la columna merchant guardada: quedaba congelada en la capacidad del día de creación');
 
@@ -135,29 +135,60 @@ check(strpos($tradeRouteBody,'if(!$this->sendResource2(') !== false
 	'un envío fallido se reprograma para reintento en vez de perder el día');
 
 // ---------------------------------------------------------------------------
-section('D. Market::procTradeRoutes(): capacidad libre, no capacidad total');
+section('D. Market::procTradeRoutes(): pico de superposición, no la suma ciega');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,'$committedByOtherRoutes = $this->routeMerchantsCommitted($routeId ?: 0);') !== false,
-	'procTradeRoutes() descuenta lo ya comprometido por otras rutas de la misma aldea');
-check(strpos($marketSource,'$reqMerc > $merchantsFreeForRoutes') !== false,
-	'la validación usa la capacidad libre para rutas, no $this->merchant a secas');
+check(strpos($marketSource,"\$database->getTradeRoutesFrom(\$village->wid,\$originalRouteIds)") !== false,
+	'procTradeRoutes() arma el calendario con las otras rutas de la misma aldea (excluyendo TODO el grupo que se edita, no solo una fila)');
+check(strpos($marketSource,'$peakDemand = Automation::peakConcurrentMerchants($peakEntries);') !== false,
+	'la validación usa el pico de mercaderes simultáneos calculado por Automation, no una suma local');
+check(strpos($marketSource,'if($peakDemand > $this->merchant)') !== false,
+	'se valida contra la capacidad total del Mercado, ya que el pico ya tiene en cuenta las rutas existentes');
 check(strpos($marketSource,'$reqMerc > $this->merchant)') === false,
 	'ya no queda el chequeo viejo contra la capacidad total sin descontar rutas existentes');
-check(strpos($marketSource,"\$routeId = \$postAction === 'editRoute'") !== false,
-	'al editar, el routeId se calcula antes de validar para poder excluir la propia ruta');
+check(strpos($marketSource,"\$originalRouteIds = array();") !== false
+	&& strpos($marketSource,"if(\$postAction === 'editRoute' && isset(\$post['original_routeid'])") !== false,
+	'al editar, los ids del grupo completo se calculan antes de validar para poder excluirlos');
+check(strpos($marketSource,'private function merchantRoundTripSeconds(') !== false,
+	'existe merchantRoundTripSeconds(), que calcula el viaje real ida y vuelta entre dos aldeas');
+check(strpos($marketSource,'2 * (int)$generator->procDistanceTime($toCoor,$fromCoor,$session->tribe,0)') !== false,
+	'el viaje se calcula con la misma fórmula que usa el envío manual, no una copia con otro número');
 
 // ---------------------------------------------------------------------------
 section('E. Vista 17_4.tpl: no ofrecer borrar/editar la ruta de otra aldea');
 // ---------------------------------------------------------------------------
 $tplSource = file_get_contents(dirname(__DIR__).'/Templates/Build/17_4.tpl');
-check(strpos($tplSource,"\$isOwnVillage = (int)\$route['from'] === (int)\$village->wid;") !== false,
-	'la vista calcula si la ruta listada pertenece a la aldea actual');
-check(preg_match('/if\(\$isOwnVillage\)\{ \?><a href="build\.php\?gid=17&amp;t=4&amp;action=delRoute/',$tplSource) === 1,
-	'el enlace de eliminar solo aparece si la ruta es de esta aldea');
-check(preg_match('/if\(\$isOwnVillage\)\{ \?><a href="build\.php\?id=<\?php echo \$id; \?>&t=4&action=editRoute/',$tplSource) === 1,
-	'el enlace de editar solo aparece si la ruta es de esta aldea');
+check(strpos($tplSource,"\$isOwnVillage = (int)\$firstRoute['from'] === (int)\$village->wid;") !== false,
+	'la vista calcula si el grupo listado pertenece a la aldea actual');
+check(preg_match('/<\?php if\(\$isOwnVillage\)\{ \?>\s*<a href="build\.php\?id=<\?php echo \$id; \?>&amp;t=4&amp;action=editRoute<\?php echo \$groupIdsQuery; \?>">/',$tplSource) === 1,
+	'el enlace de editar solo aparece si el grupo es de esta aldea');
+check(strpos($tplSource,'action=delRoute<?php echo $groupIdsQuery; ?>') !== false,
+	'el enlace de eliminar borra TODOS los horarios del grupo, no solo uno');
 check(strpos($tplSource,'gestionar desde esa aldea') !== false,
 	'las rutas de otra aldea muestran cómo gestionarlas en vez de un enlace que siempre falla');
+check(strpos($tplSource,"onclick=\"return confirm('¿Eliminar esta ruta comercial") !== false,
+	'borrar un grupo con varios horarios pide confirmación (antes borraba un solo horario, ahora puede borrar varios)');
+
+// ---------------------------------------------------------------------------
+section('E2. Agrupar varios horarios en una sola fila del listado');
+// ---------------------------------------------------------------------------
+// Antes, una ruta con N horarios (N filas en la base) aparecia como N filas identicas
+// en el listado. Ahora se agrupan por origen+destino+recursos+envios, que es lo que
+// procTradeRoutes() usa para decidir que filas pertenecen al mismo "grupo" al guardar.
+check(strpos($tplSource,"\$groupKey = \$route['from'].'|'.\$route['wid'].'|'.\$route['wood'].'|'.\$route['clay'].'|'.\$route['iron'].'|'.\$route['crop'].'|'.\$route['deliveries'];") !== false,
+	'el agrupado usa la misma firma (origen+destino+recursos+envios) que define un grupo al guardar');
+check(strpos($tplSource,"echo implode('<br>',\$scheduleTimes);") !== false,
+	'todos los horarios de un grupo se listan juntos, uno debajo del otro, en una sola fila de la tabla');
+check(strpos($tplSource,'function($a,$b){') !== false && substr_count($tplSource,'<=>') >= 2,
+	'tanto los grupos como los horarios dentro de cada grupo se ordenan de forma estable, no en el orden en que llegaron de la base');
+
+check(strpos($tplSource,"\$requestedRouteIds = array_values(array_unique(\$requestedRouteIds));") !== false,
+	'la vista arma la lista de ids pedidos para editar antes de validar el grupo');
+check(strpos($tplSource,'$edited_routes = $database->getTradeRoutesByIds($requestedRouteIds)') !== false || strpos($tplSource,'getTradeRoutesByIds($requestedRouteIds)') !== false,
+	'la vista trae TODAS las filas pedidas de una sola vez para validar el grupo completo');
+check(strpos($tplSource,'count($edited_routes) === count($requestedRouteIds)') !== false,
+	'si algun id pedido no existe (o no es del jugador), el grupo entero se rechaza, no se edita a medias');
+check(strpos($tplSource,"(int)\$editedRouteRow['uid'] !== (int)\$session->uid || (int)\$editedRouteRow['from'] !== (int)\$village->wid") !== false,
+	'CADA fila del grupo se revisa contra el dueño y la aldea, no solo la primera');
 
 // ---------------------------------------------------------------------------
 section('F. Worker y calendario de ejecución');
@@ -166,12 +197,18 @@ $timezone = date_default_timezone_get();
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 $morning = strtotime('2026-08-11 09:30:00');
 $afterStart = strtotime('2026-08-11 10:30:00');
-check(Automation::nextTradeRouteTimestamp(10,$morning) === strtotime('2026-08-11 10:00:00'),
+check(Automation::nextTradeRouteTimestamp(10,0,$morning) === strtotime('2026-08-11 10:00:00'),
 	'antes del horario devuelve la ejecución del mismo día');
-check(Automation::nextTradeRouteTimestamp(10,$afterStart) === strtotime('2026-08-12 10:00:00'),
+check(Automation::nextTradeRouteTimestamp(10,0,$afterStart) === strtotime('2026-08-12 10:00:00'),
 	'después del horario devuelve directamente el día siguiente');
-check(Automation::nextTradeRouteTimestamp(10,strtotime('2026-08-08 10:00:00')) === strtotime('2026-08-09 10:00:00'),
+check(Automation::nextTradeRouteTimestamp(10,0,strtotime('2026-08-08 10:00:00')) === strtotime('2026-08-09 10:00:00'),
 	'el cálculo siempre produce una única próxima ejecución futura');
+// El minuto ahora es significativo: dos rutas a la misma hora pero distinto minuto no
+// pueden colapsar al mismo horario de salida.
+check(Automation::nextTradeRouteTimestamp(10,15,$morning) === strtotime('2026-08-11 10:15:00'),
+	'el minuto declarado se respeta en el cálculo, no solo la hora');
+check(Automation::nextTradeRouteTimestamp(10,15,strtotime('2026-08-11 10:15:00')) === strtotime('2026-08-12 10:15:00'),
+	'el segundo exacto del minuto declarado ya cuenta como vencido');
 date_default_timezone_set($timezone);
 
 check(strpos($automationSource,'if($marketOnly) {') !== false
@@ -192,15 +229,15 @@ check(strpos($marketSource,'+ $this->routeMerchantsCommitted()') === false,
 	'ya no queda la reserva permanente de rutas sumada a los mercaderes ocupados');
 check(strpos($marketSource,'$this->routeReserved = $this->routeMerchantsCommitted();') !== false,
 	'lo comprometido por rutas se sigue calculando, pero aparte, para poder mostrarlo');
-check(strpos($marketSource,'$reqMerc > $merchantsFreeForRoutes') !== false,
-	'crear una ruta sigue exigiendo que todas las rutas de la aldea quepan juntas en el Mercado');
+check(strpos($marketSource,'if($peakDemand > $this->merchant)') !== false,
+	'crear una ruta sigue exigiendo que las salidas de la aldea entren en el Mercado en su momento de mayor superposición');
 $merchantsTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_merchants.tpl');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
 	&& strpos($merchantsTpl,'salen todos los días en') !== false,
 	'el contador del Mercado explica cuantos mercaderes salen en rutas y a que hora');
 check(strpos($marketSource,'public function routeDepartureHours()') !== false,
 	'existe el horario de salida de las rutas para poder mostrarlo junto al contador');
-check(strpos($tplSource,'$market->routeMerchants($route)') !== false,
+check(strpos($tplSource,'$market->routeMerchants($firstRoute)') !== false,
 	'el listado muestra los mercaderes que la ruta ocupa hoy, no los del día en que se creó');
 check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,
 	'los fallos transitorios usan una espera acotada antes del siguiente intento');
@@ -231,6 +268,151 @@ check(preg_match('/if\(!\$database->createTradeRoute\(/',$marketSource) === 1,
 	'un INSERT fallido tambien se reporta en vez de darse por bueno');
 check(strpos($marketSource,"unset(\$_SESSION['tradeRouteError'])") !== false,
 	'el aviso se consume una sola vez y no persiste al recargar');
+
+// ---------------------------------------------------------------------------
+section('I. Minutos y varios horarios por guardado');
+// ---------------------------------------------------------------------------
+// Antes solo se guardaba la hora (0-23); ahora tambien el minuto, y un mismo guardado
+// puede declarar varios horarios (schedule_hour[]/schedule_minute[]), cada uno su propia
+// fila en la tabla, todos con el mismo destino/recursos/envios.
+check(strpos($dbSource,'function createTradeRoute($uid,$wid,$from,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time)') !== false,
+	'createTradeRoute() recibe el minuto ademas de la hora');
+check(strpos($dbSource,'$startMinute < 0 || $startMinute > 59') !== false,
+	'createTradeRoute() valida el minuto contra el rango 0-59');
+check(strpos($dbSource,'function updateTradeRouteOwned($id,$uid,$from,$wid,$r1,$r2,$r3,$r4,$start,$startMinute,$deliveries,$merchant,$time)') !== false,
+	'updateTradeRouteOwned() recibe destino y minuto, para tener paridad completa con crear');
+check(strpos($dbSource,'SET wid = $wid, wood = $r1') !== false,
+	'editar una ruta ahora puede cambiar tambien la aldea de destino');
+
+check(strpos($marketSource,'const MAX_ROUTE_SCHEDULES') !== false,
+	'existe un tope duro de horarios por guardado');
+check(strpos($marketSource,'private function parseRouteSchedules(') !== false,
+	'existe parseRouteSchedules(), que valida los pares hora/minuto declarados');
+check(strpos($marketSource,"count(\$hours) !== count(\$minutes)") !== false,
+	'parseRouteSchedules() rechaza arrays de hora y minuto desparejados');
+check(strpos($marketSource,'isset($originalRouteIds[$scheduleIndex])') !== false,
+	'al editar, cada horario declarado actualiza la fila original en su misma posicion (o crea una si no hay); no hardcodea "solo el primero"');
+check(strpos($marketSource,'for($i = count($schedules); $i < count($originalRouteIds); $i++)') !== false,
+	'los ids originales que sobran (horarios que el jugador quito) se borran, no quedan huerfanos');
+check(strpos($marketSource,'Automation::nextTradeRouteTimestamp($schedule[\'hour\'],$schedule[\'minute\'])') !== false,
+	'el horario de cada ruta se calcula con la unica implementacion de Automation, no una copia local');
+check(strpos($marketSource,"strtotime('today '.sprintf") === false,
+	'ya no queda el calculo de horario duplicado que existia antes en Market');
+
+$routeFormTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_route_form.tpl');
+check(strpos($routeFormTpl,'name="schedule_hour[]"') !== false && strpos($routeFormTpl,'name="schedule_minute[]"') !== false,
+	'el formulario compartido declara hora y minuto por cada horario');
+check(strpos($routeFormTpl,'id="routeFormAddSchedule"') !== false,
+	'el formulario permite agregar mas de un horario antes de guardar');
+check(strpos($routeFormTpl,'name="tvillage"') !== false,
+	'el formulario de edicion tambien puede cambiar la aldea de destino, igual que al crear');
+$createTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_create.tpl');
+$editTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_edit.tpl');
+check(strpos($createTpl,"include('17_route_form.tpl')") !== false && strpos($editTpl,"include('17_route_form.tpl')") !== false,
+	'crear y editar comparten el mismo formulario, para no duplicar campos entre los dos');
+check(strpos($editTpl,"\$firstRoute['wid']") !== false,
+	'editar precarga el destino actual de la ruta, no solo recursos/horario/envios');
+check(strpos($editTpl,'foreach($edited_routes as $editedRoute)') !== false,
+	'editar arma los horarios a partir de TODAS las filas del grupo, no de una sola');
+
+// ---------------------------------------------------------------------------
+section('J. Un guardado rechazado no borra lo que el jugador ya completo');
+// ---------------------------------------------------------------------------
+// Antes, cualquier motivo de rechazo (recursos vacios, mercaderes insuficientes, etc.)
+// redirigia a un formulario en blanco: el destino, los recursos y los horarios que el
+// jugador ya habia cargado (incluidos los que agrego a mano) se perdian.
+check(strpos($marketSource,"\$_SESSION['tradeRouteDraft'][\$village->wid][\$routeDraftKey] = array(") !== false,
+	'el borrador se guarda ANTES de cualquier validacion, asi que sobrevive a cualquier motivo de rechazo');
+check(preg_match('/\$routeDraftKey\s*=\s*\$postAction === \'editRoute\' \? \'edit\'\.implode\(\'-\',\$originalRouteIds\) : \'create\';/',$marketSource) === 1,
+	'el borrador distingue crear de editar (y de que GRUPO de rutas) para no mezclar formularios distintos');
+check(strpos($marketSource,'private function draftScalar(') !== false
+	&& strpos($marketSource,'private function draftScalarArray(') !== false,
+	'los valores del borrador se guardan como escalares/arrays de escalares, sin confiar en el payload');
+check(strpos($marketSource,'public function routeDraftFor(') !== false,
+	'existe routeDraftFor(), que normaliza el borrador a los mismos tipos que usan los defaults del formulario');
+check(strpos($marketSource,"unset(\$_SESSION['tradeRouteDraft'][\$village->wid][\$routeDraftKey]);") !== false,
+	'el borrador se borra recien cuando el guardado termina bien, no en cada intento');
+check(strpos($marketSource,"\$backToForm = 'action=editRoute';") !== false
+	&& strpos($marketSource,"\$backToForm .= '&routeid%5B%5D='.\$rid;") !== false,
+	'un rechazo al editar vuelve al mismo formulario de edicion con TODO el grupo (con su borrador), no a la lista de rutas');
+
+check(strpos($createTpl,"\$market->routeDraftFor('create')") !== false,
+	'el formulario de creacion recupera su propio borrador');
+check(strpos($editTpl,"\$market->routeDraftFor('edit'.implode('-',\$routeFormOriginalRouteIds))") !== false,
+	'el formulario de edicion recupera el borrador de ese GRUPO especifico, no el de otro');
+
+// ---------------------------------------------------------------------------
+section('K. Automation::peakConcurrentMerchants(): solapamiento real, no la suma');
+// ---------------------------------------------------------------------------
+// Caso reportado: dos aldeas vecinas (viaje corto) con horarios espaciados de sobra
+// (cada 12 horas) no deberian exigir el doble de mercaderes solo por existir dos
+// horarios; el pico real es 1, no 2, porque nunca coinciden en el tiempo.
+check(Automation::peakConcurrentMerchants(array(
+		array('start'=>0,'duration'=>3600,'merchants'=>1),
+		array('start'=>12*3600,'duration'=>3600,'merchants'=>1),
+	)) === 1,
+	'dos salidas de 1 mercader cada 12hs con 1h de viaje nunca se pisan: el pico es 1, no 2');
+
+// Si el viaje dura mas que el espacio entre horarios, ahi si se pisan y hace falta
+// el doble.
+check(Automation::peakConcurrentMerchants(array(
+		array('start'=>0,'duration'=>13*3600,'merchants'=>1),
+		array('start'=>12*3600,'duration'=>3600,'merchants'=>1),
+	)) === 2,
+	'si el viaje de la primera salida todavia no termino cuando arranca la segunda, el pico es 2');
+
+// Una salida que cruza la medianoche (sale a las 23 y vuelve a las 2) tiene que
+// pisarse igual con una que sale a las 01: el reloj de 24hs da la vuelta.
+check(Automation::peakConcurrentMerchants(array(
+		array('start'=>23*3600,'duration'=>3*3600,'merchants'=>1),
+		array('start'=>1*3600,'duration'=>1800,'merchants'=>1),
+	)) === 2,
+	'el solapamiento se calcula con vuelta de medianoche, no solo dentro del mismo dia');
+
+// Un viaje de mas de 24 horas (aldea rarisimamente lejos) nunca libera al mercader:
+// ocupa su cupo todo el dia, sin importar el horario de otras salidas.
+check(Automation::peakConcurrentMerchants(array(
+		array('start'=>0,'duration'=>90000,'merchants'=>2),
+		array('start'=>43200,'duration'=>60,'merchants'=>1),
+	)) === 3,
+	'un viaje de ida y vuelta de mas de 24hs ocupa su cupo todo el dia, se suma siempre');
+
+// Cierres antes que aperturas en el mismo instante: el mercader que vuelve justo
+// cuando otro sale ya esta libre para el segundo.
+check(Automation::peakConcurrentMerchants(array(
+		array('start'=>0,'duration'=>3600,'merchants'=>1),
+		array('start'=>3600,'duration'=>3600,'merchants'=>1),
+	)) === 1,
+	'un cierre exacto no se cuenta como solapado con la apertura que sucede en el mismo instante');
+
+check(Automation::peakConcurrentMerchants(array()) === 0,
+	'sin salidas no hace falta ningun mercader');
+
+check(strpos($marketSource,"foreach(\$database->getTradeRoutesFrom(\$village->wid,\$originalRouteIds) as \$route) {") !== false,
+	'el calendario de la aldea se arma con las rutas reales de esa aldea, no un supuesto');
+check(strpos($dbSource,'SELECT id, wid, wood, clay, iron, crop, start, start_minute, deliveries FROM') !== false,
+	'getTradeRoutesFrom() trae tambien el destino de cada ruta, necesario para calcular su viaje');
+
+// ---------------------------------------------------------------------------
+section('L. Una ruta con varios horarios es una sola fila en el listado y en la edicion');
+// ---------------------------------------------------------------------------
+// Antes, crear una ruta con 3 horarios dejaba 3 filas identicas (misma descripcion,
+// mismos recursos) en el listado, y editarla solo dejaba tocar el primer horario:
+// agregar o quitar horarios en la edicion no reconciliaba las filas de mas/de menos.
+check(strpos($dbSource,'function getTradeRoutesByIds(') !== false,
+	'existe getTradeRoutesByIds(), para traer el grupo completo de una sola consulta');
+check(strpos($dbSource,"WHERE id IN (\" . implode(',',\$ids) . \")") !== false,
+	'getTradeRoutesByIds() trae todas las filas pedidas en una sola consulta, no una por una');
+
+check(strpos($marketSource,"\$ownedRoutes = \$database->getTradeRoutesByIds(\$originalRouteIds);") !== false,
+	'antes de reconciliar, se revalida contra la base que CADA id del grupo sigue siendo del jugador y de esta aldea');
+check(preg_match('/foreach\(\$originalRouteIds as \$rid\)\s*\{\s*if\(!isset\(\$ownedRoutes\[\$rid\]\)/',$marketSource) === 1,
+	'un id colado en el formulario que no pertenece al jugador/aldea rechaza el guardado entero, no se ignora en silencio');
+
+check(strpos($tplSource,"\$requestedRouteIds[] = (int)\$rawId;") !== false,
+	'el enlace de editar puede pedir varios ids del grupo a la vez (routeid[])');
+check(strpos($tplSource,'usort($edited_routes,function($a,$b){') !== false,
+	'el grupo se ordena por horario antes de mostrarlo, para que la posicion de cada horario en el formulario sea predecible');
 
 // ---------------------------------------------------------------------------
 echo "\n";

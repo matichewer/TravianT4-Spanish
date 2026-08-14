@@ -21,8 +21,13 @@ if(!empty($market->routeError['code'])){
 			$routeErrorText = 'Indicá al menos un recurso para enviar.';
 			break;
 		case 'merchants':
-			$routeErrorText = 'Mercaderes insuficientes: esta ruta necesita '.(isset($routeErrorParams['need']) ? (int)$routeErrorParams['need'] : 0)
-				.' y en este Mercado quedan '.(isset($routeErrorParams['free']) ? (int)$routeErrorParams['free'] : 0).' libres para rutas.';
+			// "need" es el pico de mercaderes que estarian de viaje a la vez si esto se
+			// guarda (esta ruta mas las que ya existen), no una simple suma: dos salidas
+			// que nunca coinciden en el tiempo pueden compartir mercaderes.
+			$routeErrorText = 'Mercaderes insuficientes: en el momento de mayor superposición esta aldea necesitaría '
+				.(isset($routeErrorParams['need']) ? (int)$routeErrorParams['need'] : 0)
+				.' mercaderes viajando a la vez, y el Mercado solo tiene '
+				.(isset($routeErrorParams['free']) ? (int)$routeErrorParams['free'] : 0).' en total.';
 			break;
 		case 'target':
 			$routeErrorText = 'La aldea de destino no es válida.';
@@ -44,50 +49,139 @@ echo '<p>Mercaderes que se pueden comprometer en rutas: '.max(0,(int)$market->me
 	.' (cada uno transporta '.round($market->maxcarry).' recursos). Los mercaderes de una ruta'
 	.' sólo están ocupados mientras viajan.</p>';
 include("17_create.tpl");
-}else if(isset($_GET['action'],$_GET['routeid']) && $_GET['action'] === 'editRoute' && ctype_digit((string)$_GET['routeid'])){
-$edited_route = $database->getTradeRoute2((int)$_GET['routeid']);
-if(is_array($edited_route) && (int)$edited_route['uid'] === (int)$session->uid && (int)$edited_route['from'] === (int)$village->wid){
-include("17_edit.tpl");
+}else if(isset($_GET['action']) && $_GET['action'] === 'editRoute' && isset($_GET['routeid'])){
+// Una ruta con varios horarios es varias filas: se piden todos los ids del grupo
+// (routeid[]=A&routeid[]=B&...) y se valida que TODOS existan y sean del jugador y de
+// esta aldea, no solo el primero.
+$requestedRouteIds = array();
+foreach((is_array($_GET['routeid']) ? $_GET['routeid'] : array($_GET['routeid'])) as $rawId) {
+	if(is_scalar($rawId) && ctype_digit((string)$rawId)) {
+		$requestedRouteIds[] = (int)$rawId;
+	}
+}
+$requestedRouteIds = array_values(array_unique($requestedRouteIds));
+$edited_routes = !empty($requestedRouteIds) ? $database->getTradeRoutesByIds($requestedRouteIds) : array();
+$validGroup = !empty($requestedRouteIds) && count($edited_routes) === count($requestedRouteIds);
+if($validGroup){
+	foreach($edited_routes as $editedRouteRow){
+		if((int)$editedRouteRow['uid'] !== (int)$session->uid || (int)$editedRouteRow['from'] !== (int)$village->wid){
+			$validGroup = false;
+			break;
+		}
+	}
+}
+if($validGroup){
+	// Orden estable por horario, no por el orden en que llegaron los ids: asi la
+	// posicion de cada horario en el formulario es predecible.
+	usort($edited_routes,function($a,$b){
+		return ((int)$a['start']*3600 + (int)$a['start_minute']*60) <=> ((int)$b['start']*3600 + (int)$b['start_minute']*60);
+	});
+	$edited_routes = array_values($edited_routes);
+	include("17_edit.tpl");
 } else {
-header("Location: build.php?gid=17&t=4");
-exit;
+	header("Location: build.php?gid=17&t=4");
+	exit;
 }
 }else{
 ?>
 
-<table id="npc" cellpadding="1" cellspacing="1"> 
+<table id="npc" cellpadding="1" cellspacing="1">
 <thead>
 <tr>
-<th colspan="2">Descripción</th>
-<th>Inicio</th>
+<th>Recursos</th>
+<th>Destino</th>
+<th>Horarios</th>
 <th>Mercaderes</th>
+<th>Envíos</th>
 <th>Acción</th>
 </tr></thead><tbody>
 <?php
 $routes = $database->getTradeRoute($session->uid);
     if(count($routes) == 0) {
-    echo "<tr><td colspan=\"5\" class=\"none\">No hay rutas comerciales activas.</td></tr>";
+    echo "<tr><td colspan=\"6\" class=\"none\">No hay rutas comerciales activas.</td></tr>";
     }else{
+// Una ruta con varios horarios es, por dentro, una fila por horario: se agrupan las
+// que comparten origen+destino+recursos+envios para mostrar un solo renglon con todos
+// sus horarios juntos, en vez de repetir la descripcion una vez por horario.
+$routeGroups = array();
+$routeGroupOrder = array();
 foreach($routes as $route){
-$isOwnVillage = (int)$route['from'] === (int)$village->wid;
+	$groupKey = $route['from'].'|'.$route['wid'].'|'.$route['wood'].'|'.$route['clay'].'|'.$route['iron'].'|'.$route['crop'].'|'.$route['deliveries'];
+	if(!isset($routeGroups[$groupKey])){
+		$routeGroups[$groupKey] = array();
+		$routeGroupOrder[] = $groupKey;
+	}
+	$routeGroups[$groupKey][] = $route;
+}
+foreach($routeGroupOrder as $groupKey){
+	$groupRoutes = $routeGroups[$groupKey];
+	usort($groupRoutes,function($a,$b){
+		return ((int)$a['start']*3600 + (int)$a['start_minute']*60) <=> ((int)$b['start']*3600 + (int)$b['start_minute']*60);
+	});
+	$firstRoute = $groupRoutes[0];
+	$isOwnVillage = (int)$firstRoute['from'] === (int)$village->wid;
+	$groupIdsQuery = '';
+	foreach($groupRoutes as $groupRoute){
+		$groupIdsQuery .= '&amp;routeid%5B%5D='.(int)$groupRoute['id'];
+	}
 ?>
 <tr>
-<th><?php if($isOwnVillage){ ?><a href="build.php?gid=17&amp;t=4&amp;action=delRoute&amp;routeid=<?php echo (int)$route['id']; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>"><img class="del" src="img/x.gif" alt="eliminar" title="eliminar"></a><?php } ?></th>
-<th>
+<td>
 <?php
-$routeVillageName = htmlspecialchars((string)$database->getVillageField($route['wid'],"name"),ENT_QUOTES,'UTF-8');
-echo "Ruta comercial a <a href=karte.php?d=".(int)$route['wid']."&amp;c=".$generator->getMapCheck($route['wid']).">".$routeVillageName."</a><br>";
+$routeResourceLabels = array(1=>'Madera',2=>'Barro',3=>'Hierro',4=>'Cereal');
+$routeResourceValues = array(1=>$firstRoute['wood'],2=>$firstRoute['clay'],3=>$firstRoute['iron'],4=>$firstRoute['crop']);
+$routeResourceLines = array();
+foreach($routeResourceLabels as $resIndex => $resLabel){
+	$routeResourceLines[] = '<img src="'.GP_LOCATE.'img/r/'.$resIndex.'.gif" alt="'.$resLabel.'" title="'.$resLabel.'"> '.(int)$routeResourceValues[$resIndex];
+}
+echo implode('<br>',$routeResourceLines);
+?>
+</td>
+<td>
+<?php
+$routeVillageName = htmlspecialchars((string)$database->getVillageField($firstRoute['wid'],"name"),ENT_QUOTES,'UTF-8');
+echo "<a href=karte.php?d=".(int)$firstRoute['wid']."&amp;c=".$generator->getMapCheck($firstRoute['wid']).">".$routeVillageName."</a>";
 if(!$isOwnVillage){
-$originVillageName = htmlspecialchars((string)$database->getVillageField($route['from'],"name"),ENT_QUOTES,'UTF-8');
-echo "<small>Origen: <a href=\"dorf2.php?newdid=".(int)$route['from']."\">".$originVillageName."</a></small><br>";
+$originVillageName = htmlspecialchars((string)$database->getVillageField($firstRoute['from'],"name"),ENT_QUOTES,'UTF-8');
+echo "<br><small>Origen: <a href=\"dorf2.php?newdid=".(int)$firstRoute['from']."\">".$originVillageName."</a></small>";
 }
 ?>
-<img src="<?php echo GP_LOCATE; ?>img/r/1.gif" alt="Madera" title="Madera"> <?php echo $route['wood']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/2.gif" alt="Barro" title="Barro"> <?php echo $route['clay']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/3.gif" alt="Hierro" title="Hierro"> <?php echo $route['iron']; ?>  <img src="<?php echo GP_LOCATE; ?>img/r/4.gif" alt="Cereal" title="Cereal"> <?php echo $route['crop']; ?>
-
-</th>
-<th><?php if($route['start'] > 9){ echo $route['start'];}else{ echo "0".$route['start'];} echo ":00"; ?></th>
-<th><?php echo (int)$route['deliveries']."x".$market->routeMerchants($route); ?></th>
-<th><?php if($isOwnVillage){ ?><a href="build.php?id=<?php echo $id; ?>&t=4&action=editRoute&routeid=<?php echo $route['id']; ?>">» editar</a><?php }else{ ?><small>gestionar desde esa aldea</small><?php } ?></th>
+</td>
+<td>
+<?php
+$scheduleTimes = array();
+foreach($groupRoutes as $groupRoute){
+	$scheduleTimes[] = sprintf('%02d:%02d',(int)$groupRoute['start'],(int)$groupRoute['start_minute']);
+}
+echo implode('<br>',$scheduleTimes);
+?>
+</td>
+<td>
+<?php
+// La misma cantidad de mercaderes sale en CADA horario (todas las filas del grupo
+// comparten recursos): mostrar el total de la aldea sumando por horario daria una
+// cifra que nunca coincide con "Mercaderes X/Y" de arriba, que es por salida.
+$routeMerchantsPerDeparture = (int)$market->routeMerchants($firstRoute);
+$routeDeliveries = (int)$firstRoute['deliveries'];
+echo $routeMerchantsPerDeparture.' '.($routeMerchantsPerDeparture === 1 ? 'mercader' : 'mercaderes').' por salida';
+?>
+</td>
+<td>
+<?php
+// Columna aparte y siempre visible, tambien en x1: sin esto, dos rutas identicas
+// salvo por los envios se ven exactamente iguales en la lista y hay que abrir
+// "editar" para notar la diferencia.
+echo '<span title="Cada vez que sale esta ruta, esos mercaderes hacen '.$routeDeliveries.' '.($routeDeliveries === 1 ? 'viaje' : 'viajes seguidos').' antes de volver.">x'.$routeDeliveries.'</span>';
+?>
+</td>
+<td>
+<?php if($isOwnVillage){ ?>
+<a href="build.php?id=<?php echo $id; ?>&amp;t=4&amp;action=editRoute<?php echo $groupIdsQuery; ?>">Editar</a><br>
+<a href="build.php?gid=17&amp;t=4&amp;action=delRoute<?php echo $groupIdsQuery; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>" onclick="return confirm('¿Eliminar esta ruta comercial<?php echo count($groupRoutes) > 1 ? ' y sus '.count($groupRoutes).' horarios' : ''; ?>?');">Eliminar</a>
+<?php }else{ ?>
+<small>gestionar desde esa aldea</small>
+<?php } ?>
+</td>
 </tr>
 <?php }} ?>
         </tbody></table>
