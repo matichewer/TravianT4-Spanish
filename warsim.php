@@ -4,9 +4,18 @@ include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
+	$_SESSION['warsimRefillAttacker'] = true;
 	header("Location: ".$_SERVER['PHP_SELF']);
 }
 $simulationInput = $_POST;
+$refillAttackerFromVillage = false;
+if(empty($simulationInput) && !isset($_GET['newdid'])) {
+	if(!empty($_SESSION['warsimLastInput'])) {
+		$simulationInput = $_SESSION['warsimLastInput'];
+	}
+	$refillAttackerFromVillage = !empty($_SESSION['warsimRefillAttacker']);
+	unset($_SESSION['warsimRefillAttacker']);
+}
 if(empty($_POST) && isset($_GET['oasis'])) {
 	$simulationInput = $battle->getOasisSimulationInput($_GET['oasis']);
 	if($simulationInput === false) {
@@ -14,7 +23,24 @@ if(empty($_POST) && isset($_GET['oasis'])) {
 		$simulationInput = array();
 	}
 }
+if($refillAttackerFromVillage && isset($simulationInput['a1_v'])) {
+	// Al cambiar de aldea desde el simulador conservamos el resto de la
+	// configuracion (defensor, tipo de ataque, etc.) pero recargamos las
+	// tropas propias desde la aldea recien seleccionada, no la anterior.
+	$villageUnits = $database->getUnit($village->wid);
+	$attackerUpgrades = $database->getABTech($village->wid);
+	$unitOffset = ((int)$simulationInput['a1_v'] - 1) * 10;
+	for($i = 1; $i <= 10; $i++) {
+		$simulationInput['a1_'.$i] = isset($villageUnits['u'.($unitOffset + $i)]) ? max(0, (int)$villageUnits['u'.($unitOffset + $i)]) : 0;
+	}
+	for($i = 1; $i <= 8; $i++) {
+		$simulationInput['f1_'.$i] = isset($attackerUpgrades['b'.$i]) ? max(0, min(20, (int)$attackerUpgrades['b'.$i])) : 0;
+	}
+}
 $battle->procSim($simulationInput);
+if(isset($_POST['target'])) {
+	$_SESSION['warsimLastInput'] = $form->valuearray;
+}
 include "Templates/html.tpl";
 ?>
 <body class="v35 webkit chrome warsim">
