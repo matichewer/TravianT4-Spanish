@@ -3017,7 +3017,7 @@
 					}
 					$type = (int)$fields['f'.$field.'t'];
 					$level = (int)$fields['f'.$field];
-					$uprequire = $building->resourceRequired($field,$type);
+					$uprequire = $building->resourceRequired($field,$type,0);
 					$finish = time() + max(1,(int)floor($uprequire['time']/2));
 					$q = "INSERT INTO ".TB_PREFIX."demolition (vref,buildnumber,lvl,timetofinish) VALUES ($wid,$field,".($level-1).",$finish)";
 					return mysqli_query($this->connection,$q);
