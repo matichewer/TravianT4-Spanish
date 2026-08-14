@@ -39,9 +39,9 @@ if(!empty($market->routeError['code'])){
 if(isset($_GET['create'])){
 // Los mercaderes de una ruta quedan reservados: sin este dato a la vista, pasarse de
 // capacidad era la otra forma de que "guardar" no hiciera nada.
-$routeMerchantsUsed = (int)$database->getVillageRouteMerchantTotal($village->wid);
+$routeMerchantsUsed = (int)$market->routeMerchantsCommitted();
 echo '<p>Mercaderes libres para rutas: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
-	.' (cada uno transporta '.(int)$market->maxcarry.' recursos).</p>';
+	.' (cada uno transporta '.round($market->maxcarry).' recursos).</p>';
 include("17_create.tpl");
 }else if(isset($_GET['action'],$_GET['routeid']) && $_GET['action'] === 'editRoute' && ctype_digit((string)$_GET['routeid'])){
 $edited_route = $database->getTradeRoute2((int)$_GET['routeid']);
@@ -85,7 +85,7 @@ echo "<small>Origen: <a href=\"dorf2.php?newdid=".(int)$route['from']."\">".$ori
 
 </th>
 <th><?php if($route['start'] > 9){ echo $route['start'];}else{ echo "0".$route['start'];} echo ":00"; ?></th>
-<th><?php echo $route['deliveries']."x".$route['merchant']; ?></th>
+<th><?php echo (int)$route['deliveries']."x".$market->routeMerchants($route); ?></th>
 <th><?php if($isOwnVillage){ ?><a href="build.php?id=<?php echo $id; ?>&t=4&action=editRoute&routeid=<?php echo $route['id']; ?>">» editar</a><?php }else{ ?><small>gestionar desde esa aldea</small><?php } ?></th>
 </tr>
 <?php }} ?>

@@ -2,9 +2,13 @@
 $bid = $village->resarray['f'.$id.'t'];
 $bindicate = $building->canBuild($id,$village->resarray['f'.$id.'t']);
 if($bindicate == 1) {
-	echo "<p><span class=\"none\"><b><!--".$building->procResType($village->resarray['f'.$id.'t'])."--> completamente mejorado</b></span></p>";
-} else if($bindicate == 10) {
+	// El nombre estaba dentro de un comentario HTML, así que en el nivel máximo la
+	// página mostraba sólo " completamente mejorado", sin decir de qué edificio.
 	echo "<p><span class=\"none\"><b>".$building->procResType($village->resarray['f'.$id.'t'])." completamente mejorado</b></span></p>";
+} else if($bindicate == 10) {
+	// Todavía no está al máximo: el último nivel está en obra. Mismo texto que usa la
+	// lista de construcciones nuevas para ese estado.
+	echo "<p><span class=\"none\"><b>El último nivel de ".$building->procResType($village->resarray['f'.$id.'t'])." está en construcción</b></span></p>";
 } else if($bindicate == 11) {
 	echo "<p><span class=\"none\"><b>".$building->procResType($village->resarray['f'.$id.'t'])." ha sido demolido</b></span></p>";
 } else {

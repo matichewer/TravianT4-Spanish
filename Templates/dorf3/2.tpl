@@ -12,7 +12,10 @@ foreach($varray as $vil){
 	$vid = $vil['wref'];
 	$vdata = $database->getVillage($vid);   
 	$totalmerchants = $building->getTypeLevel(17,$vid);
-	$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid);
+	// Las rutas comerciales tambien reservan mercaderes: sin descontarlas, el resumen
+	// prometia mas mercaderes libres de los que el Mercado deja usar.
+	$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid)
+		- Automation::routeMerchantsCommitted($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid)));
 	if($vdata['wood'] > $vdata['maxstore']) { $wood = $vdata['maxstore']; } else { $wood = $vdata['wood']; }
 	if($vdata['clay'] > $vdata['maxstore']) { $clay = $vdata['maxstore']; } else { $clay = $vdata['clay']; }
 	if($vdata['iron'] > $vdata['maxstore']) { $iron = $vdata['maxstore']; } else { $iron = $vdata['iron']; }

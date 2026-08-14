@@ -122,7 +122,7 @@ if(count($market->onsale) > 0) {
 for($i=$u;$i<$u+$pageSize;$i++) {
 if(isset($market->onsale[$i])) {
 echo "<tr><td class=\"val\">";
-$reqMerc = (int)ceil($market->onsale[$i]['wamt']/$market->maxcarry);
+$reqMerc = $market->merchantsFor((int)$market->onsale[$i]['wamt']);
 
 	        $sss = ($market->onsale[$i]['gamt'] > 0)? ($market->onsale[$i]['wamt']/$market->onsale[$i]['gamt']) : 0;
         $ratio = round($sss, 1);

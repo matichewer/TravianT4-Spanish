@@ -1659,6 +1659,64 @@ class Automation {
         return array($pop, $cp);
     }
 
+    /**
+     * Capacidad de carga de un mercader: unica formula del servidor.
+     *
+     * Base por tribu, multiplicador del servidor y el bono de la Oficina de comercio
+     * (10% por nivel). La division por 100 va al final a proposito: 750 * 230 / 100 da
+     * 1725 exacto, mientras que 750 * (230/100) da 1724.99999999999977 y eso rompia los
+     * bordes (el envio de capacidad justa se rechazaba por "mercaderes insuficientes" y
+     * la pestaña de rutas mostraba 1724). El nivel se recorta a la tabla: un nivel fuera
+     * de rango (editado desde el panel de administracion) dejaba la capacidad en 0 y con
+     * eso el Mercado entero sin poder enviar nada.
+     */
+    public static function merchantCarryCapacity($tribe, $tradeOfficeLevel) {
+        global $bid28;
+        $tribe = (int)$tribe;
+        $capacity = (($tribe == 1) ? 500 : (($tribe == 2) ? 1000 : 750)) * TRADER_CAPACITY;
+        $level = (int)$tradeOfficeLevel;
+        if($level > 0 && is_array($bid28) && !empty($bid28)) {
+            $level = min($level, count($bid28));
+            if(isset($bid28[$level]['attri'])) {
+                $capacity = $capacity * $bid28[$level]['attri'] / 100;
+            }
+        }
+        return $capacity;
+    }
+
+    /**
+     * Mercaderes que hacen falta para mover $amount recursos. El colchon de 0.1 evita
+     * que un total multiplo exacto de la capacidad pida un mercader de mas por coma
+     * flotante; lo usan por igual el envio manual, las ofertas y las rutas.
+     */
+    public static function merchantsRequired($amount, $carryCapacity) {
+        if($amount <= 0 || $carryCapacity <= 0) {
+            return 0;
+        }
+        return (int)ceil(($amount - 0.1) / $carryCapacity);
+    }
+
+    /**
+     * Mercaderes reservados por las rutas comerciales que salen de esta aldea.
+     *
+     * Se recalculan con la capacidad actual en vez de leer la columna `merchant` de la
+     * ruta: ese numero quedaba congelado en el que hacia falta el dia que se creo la
+     * ruta, asi que subir la Oficina de comercio no liberaba nunca los mercaderes que
+     * sobraban (una ruta de 7500 creada sin Oficina seguia reservando 10 mercaderes con
+     * la Oficina a 20, donde ya solo necesita 4).
+     */
+    public static function routeMerchantsCommitted($vid, $carryCapacity, $excludeRouteId = 0) {
+        global $database;
+        $total = 0;
+        foreach($database->getTradeRoutesFrom($vid, $excludeRouteId) as $route) {
+            $total += self::merchantsRequired(
+                (int)$route['wood'] + (int)$route['clay'] + (int)$route['iron'] + (int)$route['crop'],
+                $carryCapacity
+            );
+        }
+        return $total;
+    }
+
     public static function nextTradeRouteTimestamp($startHour, $now = null) {
         $startHour = max(0, min(23, (int)$startHour));
         $now = $now === null ? time() : (int)$now;
@@ -1769,7 +1827,7 @@ class Automation {
     }
 
     private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
-        global $bid17, $bid28, $database, $generator, $logging;
+        global $database, $generator, $logging;
         $availableWood = $database->getWoodAvailable($from);
         $availableClay = $database->getClayAvailable($from);
         $availableIron = $database->getIronAvailable($from);
@@ -1784,13 +1842,9 @@ class Automation {
             $merchant2 = ($this->getTypeLevel(17, $from) > 0) ? $this->getTypeLevel(17, $from) : 0;
             $used2 = $database->totalMerchantUsed($from);
             $merchantAvail2 = $merchant2 - $used2;
-            $maxcarry2 = ($tribe == 1) ? 500 : (($tribe == 2) ? 1000 : 750);
-            $maxcarry2 *= TRADER_CAPACITY;
-            if($this->getTypeLevel(28, $from) != 0) {
-                $maxcarry2 *= $bid28[$this->getTypeLevel(28, $from)]['attri'] / 100;
-            }
+            $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));
             $resource = array($wtrans, $ctrans, $itrans, $crtrans);
-            $reqMerc = ceil((array_sum($resource) - 0.1) / $maxcarry2);
+            $reqMerc = self::merchantsRequired(array_sum($resource), $maxcarry2);
             if($merchantAvail2 != 0 && $reqMerc <= $merchantAvail2) {
                 $coor = $database->getCoor($to);
                 $coor2 = $database->getCoor($from);

@@ -8,20 +8,27 @@
 
 
 	<table cellpadding="1" cellspacing="1" id="build_value">
+	<?php
+	// Un nivel fuera de la tabla (0 recien construido, o uno editado desde el panel de
+	// administracion) dejaba la celda vacia: sin bonus la capacidad es la base, 100%.
+	$tradeOfficeLevel = (int)$village->resarray['f'.$id];
+	$tradeOfficeMax = count($bid28);
+	$tradeOfficeBonus = isset($bid28[$tradeOfficeLevel]['attri']) ? $bid28[$tradeOfficeLevel]['attri'] : ($tradeOfficeLevel > 0 ? $bid28[$tradeOfficeMax]['attri'] : 100);
+	?>
 		<tr>
 			<th>Capacidad de transporte por mercader:</th>
-			<td><b><?php echo $bid28[$village->resarray['f'.$id]]['attri']; ?>%</b></td>
+			<td><b><?php echo $tradeOfficeBonus; ?>%</b></td>
 		</tr>
-		<tr>
-		<?php 
-        if(!$building->isMax($village->resarray['f'.$id.'t'],$id)) {
+		<?php
+        if(!$building->isMax($village->resarray['f'.$id.'t'],$id) && isset($bid28[$tradeOfficeLevel+1]['attri'])) {
         ?>
-			<th>Capacidad de transporte por mercader en el nivel  <?php echo $village->resarray['f'.$id]+1; ?> </th>
-			<td><b><?php echo $bid28[$village->resarray['f'.$id]+1]['attri']; ?>%</b></td>
+		<tr>
+			<th>Capacidad de transporte por mercader en el nivel  <?php echo $tradeOfficeLevel+1; ?> </th>
+			<td><b><?php echo $bid28[$tradeOfficeLevel+1]['attri']; ?>%</b></td>
+		</tr>
             <?php
             }
             ?>
-		</tr>
 	</table>
 <?php 
 include("upgrade.tpl");

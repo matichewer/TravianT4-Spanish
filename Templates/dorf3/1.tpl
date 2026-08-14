@@ -14,7 +14,10 @@
 		$jobs = $database->getJobs($vid);
 		$unit = $database->getTraining($vid);
 		$totalmerchants = $building->getTypeLevel(17,$vid);
-		$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid);
+		// Las rutas comerciales tambien reservan mercaderes: sin descontarlas, el resumen
+		// prometia mas mercaderes libres de los que el Mercado deja usar.
+		$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid)
+			- Automation::routeMerchantsCommitted($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid)));
 		$incoming_attacks = $database->getMovement(3,$vid,1);
 		$bui = '<span class="none">-</span>';
 		$tro = '<span class="none">-</span>';

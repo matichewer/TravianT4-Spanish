@@ -115,8 +115,8 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 	<tr>
 		<th>Mercaderes:</th>
 		<td><?php
-        $resource = array($_POST['r1'],$_POST['r2'],$_POST['r3'],$_POST['r4']); 
-        echo ceil((array_sum($resource)-0.1)/$market->maxcarry); ?></td>
+        $resource = array($_POST['r1'],$_POST['r2'],$_POST['r3'],$_POST['r4']);
+        echo $market->merchantsFor(array_sum($resource)); ?></td>
 	</tr>
 	<tr>
 		<th>Envíos:</th>

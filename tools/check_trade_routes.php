@@ -10,7 +10,8 @@
  *      asi el numero de mercaderes exigido al crear una ruta no puede quedar por
  *      encima del que hace falta realmente al entregarla.
  *   B. La capa de datos expone claimTradeRoute (reclamo atómico WHERE timestamp=...)
- *      y getVillageRouteMerchantTotal (mercaderes ya comprometidos por otras rutas).
+ *      y getTradeRoutesFrom (las rutas de la aldea, para recalcular los mercaderes
+ *      que tienen comprometidos con la capacidad de hoy).
  *   C. Automation::TradeRoute() reclama cada fila antes de procesarla (sin editTradeRoute
  *      incondicional al final) y borra las rutas huérfanas cuando el origen o el
  *      destino ya no pertenecen al dueño de la ruta.
@@ -47,6 +48,10 @@ function section($title) {
 // ---------------------------------------------------------------------------
 section('A. requiredMerchants() sin desfasaje de coma flotante');
 // ---------------------------------------------------------------------------
+// La regla del redondeo vive en Automation (Market y las plantillas la delegan),
+// así que hace falta cargarlo antes que Market.
+define('TRAVIAN_SKIP_AUTOMATION_BOOTSTRAP',true);
+require_once dirname(__DIR__).'/GameEngine/Automation.php';
 require_once dirname(__DIR__).'/GameEngine/Market.php';
 
 $reflection = new ReflectionClass('Market');
@@ -69,13 +74,16 @@ check($requiredMerchants->invoke($market,751) === 2,'capacidad entera: un recurs
 check($requiredMerchants->invoke($market,0) === 0,'sin recursos no hace falta ningún mercader');
 check($requiredMerchants->invoke($market,-5) === 0,'un total negativo no exige mercaderes (lo rechaza el llamador)');
 
-// El mismo colchón que usa Automation::sendResource2 al entregar.
+// El mismo colchón que usa Automation::sendResource2 al entregar: ahora es literalmente
+// la misma función, no una copia con el mismo número.
 $automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
-check(strpos($automationSource,'ceil((array_sum($resource) - 0.1) / $maxcarry2)') !== false,
-	'sendResource2 sigue usando el colchón de 0.1 al entregar (referencia para el de creación)');
+check(strpos($automationSource,'ceil(($amount - 0.1) / $carryCapacity)') !== false,
+	'merchantsRequired() es la única implementación del colchón de 0.1');
+check(strpos($automationSource,'$reqMerc = self::merchantsRequired(array_sum($resource), $maxcarry2)') !== false,
+	'sendResource2 delega el redondeo en merchantsRequired() al entregar');
 $marketSource = file_get_contents(dirname(__DIR__).'/GameEngine/Market.php');
-check(strpos($marketSource,'ceil(($amount-0.1)/$this->maxcarry)') !== false,
-	'requiredMerchants() usa el mismo colchón al crear/editar una ruta');
+check(strpos($marketSource,'return Automation::merchantsRequired($amount,$this->maxcarry);') !== false,
+	'requiredMerchants() usa la misma función al crear/editar una ruta');
 
 // ---------------------------------------------------------------------------
 section('B. Capa de datos: reclamo atómico y capacidad comprometida');
@@ -88,11 +96,13 @@ check(strpos($dbSource,"mysqli_affected_rows(\$this->connection) === 1") !== fal
 	&& strpos($dbSource,'function claimTradeRoute(') !== false,
 	'claimTradeRoute() solo confirma éxito si afectó exactamente una fila');
 
-check(strpos($dbSource,'function getVillageRouteMerchantTotal(') !== false,'existe getVillageRouteMerchantTotal()');
-check(strpos($dbSource,"SELECT SUM(merchant) FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
-	'getVillageRouteMerchantTotal() suma los mercaderes de las rutas de esa aldea de origen');
+check(strpos($dbSource,'function getTradeRoutesFrom(') !== false,'existe getTradeRoutesFrom()');
+check(strpos($dbSource,"SELECT id, wood, clay, iron, crop FROM \" . TB_PREFIX . \"route WHERE `from` = \$vid") !== false,
+	'getTradeRoutesFrom() devuelve los recursos de cada ruta de esa aldea de origen');
 check(strpos($dbSource,'AND id <> $excludeRouteId') !== false,
-	'getVillageRouteMerchantTotal() puede excluir la propia ruta al editarla');
+	'getTradeRoutesFrom() puede excluir la propia ruta al editarla');
+check(strpos($dbSource,'SELECT SUM(merchant) FROM') === false,
+	'ya nadie suma la columna merchant guardada: quedaba congelada en la capacidad del día de creación');
 
 check(strpos($dbSource,'function deleteTradeRoute(') !== false,'sigue existiendo deleteTradeRoute() (borrado sin dueño, para limpieza del sistema)');
 check(strpos($dbSource,'function retryTradeRoute(') !== false,'existe retryTradeRoute() para fallos transitorios');
@@ -127,7 +137,7 @@ check(strpos($tradeRouteBody,'if(!$this->sendResource2(') !== false
 // ---------------------------------------------------------------------------
 section('D. Market::procTradeRoutes(): capacidad libre, no capacidad total');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,'getVillageRouteMerchantTotal($village->wid,$routeId ?: 0)') !== false,
+check(strpos($marketSource,'$committedByOtherRoutes = $this->routeMerchantsCommitted($routeId ?: 0);') !== false,
 	'procTradeRoutes() descuenta lo ya comprometido por otras rutas de la misma aldea');
 check(strpos($marketSource,'$reqMerc > $merchantsFreeForRoutes') !== false,
 	'la validación usa la capacidad libre para rutas, no $this->merchant a secas');
@@ -152,9 +162,6 @@ check(strpos($tplSource,'gestionar desde esa aldea') !== false,
 // ---------------------------------------------------------------------------
 section('F. Worker y calendario de ejecución');
 // ---------------------------------------------------------------------------
-define('TRAVIAN_SKIP_AUTOMATION_BOOTSTRAP',true);
-require_once dirname(__DIR__).'/GameEngine/Automation.php';
-
 $timezone = date_default_timezone_get();
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 $morning = strtotime('2026-08-11 09:30:00');
@@ -177,8 +184,10 @@ check(strpos($tradeRouteBody,'timestamp <= $time ORDER BY timestamp ASC') !== fa
 section('G. Reserva efectiva y reintentos');
 // ---------------------------------------------------------------------------
 check(strpos($marketSource,'$database->totalMerchantUsed($village->wid)') !== false
-	&& strpos($marketSource,'+ $database->getVillageRouteMerchantTotal($village->wid)') !== false,
+	&& strpos($marketSource,'+ $this->routeMerchantsCommitted()') !== false,
 	'merchantAvail descuenta tanto movimientos reales como mercaderes reservados por rutas');
+check(strpos($tplSource,'$market->routeMerchants($route)') !== false,
+	'el listado muestra los mercaderes que la ruta ocupa hoy, no los del día en que se creó');
 check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,
 	'los fallos transitorios usan una espera acotada antes del siguiente intento');
 

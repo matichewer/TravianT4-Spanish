@@ -443,6 +443,9 @@ class Building {
 		if(!$this->isTribeBuildingAllowed($id)) {
 			return false;
 		}
+		if(!$this->isSingleBuildingAllowed($id)) {
+			return false;
+		}
 		switch($id) {
 			case 1:
 			case 2:
@@ -466,29 +469,22 @@ class Building {
 			case 11:
 			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(11);
 			break;
-			// Edificios de bonus: uno solo por aldea. La lista de construcción ya los
-			// oculta cuando existen, pero sin este control una petición a mano creaba
-			// un segundo aserradero y el bono pasaba a ser el del último campo, no el
-			// del mejor edificio.
+			// La unicidad de todos estos la resuelve isSingleBuildingAllowed() antes
+			// del switch; acá quedan sólo los requisitos propios de cada edificio.
 			case 5:
-			return $this->isSingleBonusBuildingAllowed(5)
-				&& $this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5;
+			return $this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 6:
-			return $this->isSingleBonusBuildingAllowed(6)
-				&& $this->getTypeLevel(2) >= 10 && $this->getTypeLevel(15) >= 5;
+			return $this->getTypeLevel(2) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 7:
-			return $this->isSingleBonusBuildingAllowed(7)
-				&& $this->getTypeLevel(3) >= 10 && $this->getTypeLevel(15) >= 5;
+			return $this->getTypeLevel(3) >= 10 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 8:
-			return $this->isSingleBonusBuildingAllowed(8)
-				&& $this->getTypeLevel(4) >= 5 && $this->getTypeLevel(15) >= 5;
+			return $this->getTypeLevel(4) >= 5 && $this->getTypeLevel(15) >= 5;
 			break;
 			case 9:
-			return $this->isSingleBonusBuildingAllowed(9)
-				&& $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5;
+			return $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5;
 			break;
 			case 12:
 			if($this->getTypeLevel(22) >= 1 && $this->getTypeLevel(15) >= 3) { return true; } else { return false; }
@@ -515,23 +511,21 @@ class Building {
 			if($this->getTypeLevel(22) >= 10 && $this->getTypeLevel(15) >= 10) { return true; } else { return false; }
 			break;
 			case 25:
-			// Una sola residencia por aldea y nunca junto a un palacio (ni construido
-			// ni en cola): la lista de construcciones ya lo oculta, esto lo valida.
+			// Residencia y palacio se excluyen entre sí, además de ser únicos: la
+			// aldea no puede tener uno si ya tiene el otro, ni construido ni en cola.
 			return $this->getTypeLevel(15) >= 5
-				&& $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
 				&& $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26);
 			break;
 			case 26:
 			return $this->getTypeLevel(18) >= 1 && $this->getTypeLevel(15) >= 5
 				&& $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
-				&& $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26)
 				&& !$this->hasPalaceInAnotherVillage();
 			break;
 			case 27:
 			if($this->getTypeLevel(15) >= 10) { return true; } else { return false; }
 			break;
 			case 28:
-			if($this->getTypeLevel(17) == 20 && $this->getTypeLevel(20) >= 10) { return true; } else { return false; }
+			return $this->getTypeLevel(17) == 20 && $this->getTypeLevel(20) >= 10;
 			break;
 			case 29:
 			if($this->getTypeLevel(19) == 20 && $village->capital == 0) { return true; } else { return false; }
@@ -543,7 +537,7 @@ class Building {
 			if($village->capital == 1 && $this->getTypeLevel(26) >= 3 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
 			break;
 			case 35:
-			if($this->getTypeCount(35) == 0 && !$this->hasQueuedType(35) && $this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
+			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
 			break;
 			case 36:
 			if(!$this->hasQueuedType(36) && $this->getTypeLevel(16) >= 1 && ($this->getTypeCount(36) == 0 || $this->getTypeLevel(36) == 20)) { return true; } else { return false; }
@@ -563,7 +557,7 @@ class Building {
 			return false; //not implemented
 			break;
 			case 41:
-			if($this->getTypeCount(41) == 0 && !$this->hasQueuedType(41) && $this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
+			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
 			break;
 			case 42:
 			if($this->getTypeLevel(21) == 20 && $village->capital == 0) { return true; } else { return false; }
@@ -649,10 +643,27 @@ class Building {
 	}
 
 	/**
-	 * Aserradero, fábrica de ladrillos, fundición, molino y panadería son únicos
-	 * por aldea: ni construido ni en cola puede haber otro del mismo tipo.
+	 * Edificios que sólo admiten uno por aldea: ni construido ni en cola puede haber
+	 * otro del mismo tipo. Es la misma regla que aplica la lista de construcciones
+	 * (`avaliable.tpl` los ofrece sólo con nivel 0 y sin trabajo encolado); sin ella
+	 * del lado del servidor, una petición a mano levantaba un segundo edificio que no
+	 * suma nada —getTypeLevel() se queda con el nivel más alto— y sólo gasta recursos,
+	 * población y un solar.
+	 *
+	 * Quedan fuera a propósito los que sí se repiten, cada uno con su propia regla:
+	 * almacén (10), granero (11), escondite (23), trampero (36), gran almacén (38) y
+	 * gran granero (39); y los que van a un solar fijo, plaza de reuniones (16) y
+	 * muralla (31/32/33), donde constructBuilding ya rechaza el solar ocupado.
 	 */
-	private function isSingleBonusBuildingAllowed($tid) {
+	private static $singlePerVillage = array(
+		5,6,7,8,9,12,14,15,17,18,19,20,21,22,24,25,26,27,28,29,30,34,35,37,41,42
+	);
+
+	private function isSingleBuildingAllowed($tid) {
+		$tid = (int)$tid;
+		if(!in_array($tid,self::$singlePerVillage,true)) {
+			return true;
+		}
 		return $this->getTypeCount($tid) == 0 && !$this->hasQueuedType($tid);
 	}
 

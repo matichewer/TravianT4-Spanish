@@ -2778,16 +2778,25 @@
 				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
-			function getVillageRouteMerchantTotal($vid,$excludeRouteId = 0) {
+			/**
+			 * Rutas comerciales que salen de una aldea. Los mercaderes que reservan se
+			 * recalculan con la capacidad actual (Automation::routeMerchantsCommitted),
+			 * no se lee la columna `merchant`, que se queda con el valor del dia en que
+			 * se creo la ruta.
+			 */
+			function getTradeRoutesFrom($vid,$excludeRouteId = 0) {
 				$vid = (int) $vid;
 				$excludeRouteId = (int) $excludeRouteId;
-				$q = "SELECT SUM(merchant) FROM " . TB_PREFIX . "route WHERE `from` = $vid";
+				$q = "SELECT id, wood, clay, iron, crop FROM " . TB_PREFIX . "route WHERE `from` = $vid";
 				if($excludeRouteId > 0) {
 					$q .= " AND id <> $excludeRouteId";
 				}
 				$result = mysqli_query($this->connection,$q);
-				$row = mysqli_fetch_row($result);
-				return ($row && $row[0] !== null) ? (int)$row[0] : 0;
+				$routes = array();
+				while($result && $row = mysqli_fetch_assoc($result)) {
+					$routes[] = $row;
+				}
+				return $routes;
 			}
 
 			function deleteTradeRoute($id) {

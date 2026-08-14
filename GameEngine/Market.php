@@ -117,7 +117,7 @@ class Market {
         // si no, se pueden crear rutas cuya suma de mercaderes nunca entra en el mismo
         // Mercado y terminan fallando en silencio cada vez que les toca disparar.
         $routeId = $postAction === 'editRoute' ? $this->positiveInteger(isset($post['routeid']) ? $post['routeid'] : null) : 0;
-        $committedByOtherRoutes = $database->getVillageRouteMerchantTotal($village->wid,$routeId ?: 0);
+        $committedByOtherRoutes = $this->routeMerchantsCommitted($routeId ?: 0);
         $merchantsFreeForRoutes = max(0,$this->merchant - $committedByOtherRoutes);
 
         if(array_sum($resource) <= 0) {
@@ -158,18 +158,21 @@ class Market {
         $this->redirectToMarket(0,4,$backToForm);
     }
 
-    private function loadMarket() { 
-        global $session,$building,$bid28,$bid17,$database,$village; 
-        $this->recieving = $database->getMovement(0,$village->wid,1); 
-        $this->sending = $database->getMovement(0,$village->wid,0); 
-        $this->return  = $database->getMovement(2,$village->wid,1); 
-        $this->merchant = ($building->getTypeLevel(17) > 0)? $bid17[$building->getTypeLevel(17)]['attri'] : 0; 
+    private function loadMarket() {
+        global $session,$building,$bid17,$database,$village;
+        $this->recieving = $database->getMovement(0,$village->wid,1);
+        $this->sending = $database->getMovement(0,$village->wid,0);
+        $this->return  = $database->getMovement(2,$village->wid,1);
+        $this->merchant = ($building->getTypeLevel(17) > 0)? $bid17[$building->getTypeLevel(17)]['attri'] : 0;
+        // La capacidad se calcula antes que los mercaderes ocupados porque las rutas
+        // reservan segun la capacidad de hoy, no la del dia en que se crearon.
+        $this->maxcarry = Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28));
         // Los mercaderes asignados a rutas quedan reservados. Sin incluirlos aca,
         // un envio manual podia ocuparlos justo antes del horario de la ruta y esta
         // fallaba silenciosamente.
         $this->used = $database->totalMerchantUsed($village->wid)
-            + $database->getVillageRouteMerchantTotal($village->wid);
-        $this->onmarket = $database->getMarket($village->wid,0); 
+            + $this->routeMerchantsCommitted();
+        $this->onmarket = $database->getMarket($village->wid,0);
         if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
             $this->offerDraft = $_SESSION['marketOfferDraft'][$village->wid];
         }
@@ -177,12 +180,39 @@ class Market {
             $this->routeError = $_SESSION['tradeRouteError'];
             unset($_SESSION['tradeRouteError']);
         }
-        $this->maxcarry = ($session->tribe == 1)? 500 : (($session->tribe == 2)? 1000 : 750); 
-		$this->maxcarry *= TRADER_CAPACITY; 
-        if($building->getTypeLevel(28) != 0) { 
-            $this->maxcarry *= $bid28[$building->getTypeLevel(28)]['attri'] / 100; 
-        } 
-    } 
+    }
+
+    /**
+     * Mercaderes que hacen falta para mover $amount recursos desde esta aldea, con la
+     * capacidad que da la Oficina de comercio ahora mismo. Lo usan las plantillas del
+     * Mercado para no repetir la regla del redondeo.
+     */
+    public function merchantsFor($amount) {
+        return Automation::merchantsRequired($amount,$this->maxcarry);
+    }
+
+    /**
+     * Mercaderes que las rutas de esta aldea tienen reservados hoy.
+     */
+    public function routeMerchantsCommitted($excludeRouteId = 0) {
+        global $village;
+        return Automation::routeMerchantsCommitted($village->wid,$this->maxcarry,$excludeRouteId);
+    }
+
+    /**
+     * Mercaderes que ocupa una ruta concreta. El listado muestra tambien las rutas que
+     * salen de otras aldeas del jugador, y cada aldea tiene su propia Oficina de
+     * comercio, asi que la capacidad se toma de la aldea de origen de la ruta.
+     */
+    public function routeMerchants($route) {
+        global $session,$building,$village;
+        $from = isset($route['from']) ? (int)$route['from'] : 0;
+        $carry = ($from === (int)$village->wid)
+            ? $this->maxcarry
+            : Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$from));
+        $amount = (int)$route['wood'] + (int)$route['clay'] + (int)$route['iron'] + (int)$route['crop'];
+        return Automation::merchantsRequired($amount,$carry);
+    }
      
 	    private function sendResource($post) {
 	        global $database,$village,$session,$generator,$logging;
@@ -433,13 +463,7 @@ class Market {
     }
 
     private function requiredMerchants($amount) {
-        if($amount <= 0 || $this->maxcarry <= 0) {
-            return 0;
-        }
-        // El -0.1 evita que un total que sea multiplo exacto de maxcarry (comun con el
-        // bonus del Almacen Grande, que no siempre da una capacidad entera) redondee
-        // hacia arriba por imprecision de coma flotante. Mismo colchon que sendResource2.
-        return (int)ceil(($amount-0.1)/$this->maxcarry);
+        return Automation::merchantsRequired($amount,$this->maxcarry);
     }
      
     private function loadOnsale() { 

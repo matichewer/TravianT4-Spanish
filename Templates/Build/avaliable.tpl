@@ -212,7 +212,11 @@ if($barrack == 0 && ($rallypoint == 0 || $mainbuilding < 3) ) {
 if($grainmill == 0 && ($cropland < 5 || $mainbuilding < 5)) {
    include("soon/grainmill.tpl");
 }
-if($marketplace == 0 && ($mainbuilding < 3 || $granary == 0 || $warehouse == 0)) {
+// El nivel del Mercado se guarda en $market. La condición miraba una variable con otro
+// nombre, que no existe: siempre daba cierta, así que la aldea veía el Mercado anunciado
+// como "próximamente" aunque ya lo tuviera construido (y con un notice por variable
+// indefinida en cada carga de la lista).
+if($market == 0 && ($mainbuilding < 3 || $granary == 0 || $warehouse == 0)) {
    include("soon/marketplace.tpl");
 }
 if($residence == 0 && $mainbuilding < 5 && $palace == 0) {
