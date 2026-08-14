@@ -2987,13 +2987,52 @@
             }
 
         	function addDemolition($wid, $field) {
-        		global $building, $village;
-				$q = "DELETE FROM ".TB_PREFIX."bdata WHERE field=$field AND wid=$wid";
-				mysqli_query($this->connection,$q);
-        		$uprequire = $building->resourceRequired($field,$village->resarray['f'.$field.'t']);
-        		$q = "INSERT INTO ".TB_PREFIX."demolition VALUES (".$wid.",".$field.",".($this->getFieldLevel($wid,$field)-1).",".(time()+floor($uprequire['time']/2)).")";
-				return mysqli_query($this->connection,$q);
+				global $building;
+				$wid = (int)$wid;
+				$field = (int)$field;
+				if($wid <= 0 || $field < 19 || $field > 40 || !is_object($building)) {
+					return false;
+				}
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'demolition_'.$wid);
+				$lock = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',2)");
+				$lockRow = $lock ? mysqli_fetch_row($lock) : false;
+				if(!$lockRow || (int)$lockRow[0] !== 1) {
+					return false;
+				}
+				try {
+					$fields = $this->getResourceLevel($wid);
+					if(!is_array($fields) || (int)$fields['f'.$field] <= 0 || (int)$fields['f'.$field.'t'] <= 0) {
+						return false;
+					}
+					$mainLevel = 0;
+					for($slot = 19; $slot <= 40; $slot++) {
+						if((int)$fields['f'.$slot.'t'] === 15) {
+							$mainLevel = max($mainLevel,(int)$fields['f'.$slot]);
+						}
+					}
+					if($mainLevel < (int)DEMOLISH_LEVEL_REQ || !empty($this->getDemolition($wid))
+						|| !empty($this->getBuildingByField($wid,$field))
+						|| !empty($this->getMasterJobsByField($wid,$field))) {
+						return false;
+					}
+					$type = (int)$fields['f'.$field.'t'];
+					$level = (int)$fields['f'.$field];
+					$uprequire = $building->resourceRequired($field,$type);
+					$finish = time() + max(1,(int)floor($uprequire['time']/2));
+					$q = "INSERT INTO ".TB_PREFIX."demolition (vref,buildnumber,lvl,timetofinish) VALUES ($wid,$field,".($level-1).",$finish)";
+					return mysqli_query($this->connection,$q);
+				} finally {
+					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+				}
         	}
+
+			function claimDemolition($wid, $finish) {
+				$wid = (int)$wid;
+				$finish = (int)$finish;
+				$q = "DELETE FROM ".TB_PREFIX."demolition WHERE vref=$wid AND timetofinish=$finish AND timetofinish<=".time();
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
 
 
         	function getDemolition($wid = 0) {

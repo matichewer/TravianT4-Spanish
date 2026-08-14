@@ -4813,8 +4813,22 @@ class Automation {
         $varray = $database->getDemolition();
         foreach ($varray as $vil) {
             if($vil['timetofinish'] <= time()) {
+				// Automation corre en cada carga: la fila vencida funciona como cerrojo
+				// para que dos peticiones simultáneas no bajen dos niveles.
+				$claimed = method_exists($database,'claimDemolition')
+					? $database->claimDemolition($vil['vref'],$vil['timetofinish'])
+					: true;
+				if(!$claimed) {
+					continue;
+				}
                 $type = $database->getFieldType($vil['vref'], $vil['buildnumber']);
                 $level = $database->getFieldLevel($vil['vref'], $vil['buildnumber']);
+				if((int)$level <= 0 || (int)$type <= 0) {
+					if(!method_exists($database,'claimDemolition')) {
+						$database->delDemolition($vil['vref']);
+					}
+					continue;
+				}
                 // Igual que al construir: se cobra lo producido con el nivel viejo
                 // hasta el momento en que termina la demolición.
                 if((int)$type >= 1 && (int)$type <= 9) {
@@ -4834,10 +4848,12 @@ class Automation {
                 if($type == 36) {
                     $this->syncTrapperCapacity($vil['vref']);
                 }
-                $pop = $this->getPop($type, $level - 1);
-                $database->modifyPop($vil['vref'], $pop[0], 1);
-                $this->procClimbers($database->getVillageField($vil['vref'], 'owner'));
-                $database->delDemolition($vil['vref']);
+				// El recuento autoritativo actualiza habitantes y puntos de cultura.
+				// Antes la demolición dejaba CP fantasma del nivel eliminado.
+				$this->recountPop($vil['vref']);
+				if(!method_exists($database,'claimDemolition')) {
+					$database->delDemolition($vil['vref']);
+				}
             }
         }
         if(file_exists("GameEngine/Prevention/demolition.txt")) {

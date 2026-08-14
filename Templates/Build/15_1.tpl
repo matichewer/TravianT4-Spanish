@@ -1,41 +1,56 @@
 <div class="clear"></div>
 <?php
 
-if($_REQUEST["cancel"] == "1") {
+if(isset($_POST['cancel'],$_POST['c']) && is_scalar($_POST['c']) && $_POST['cancel'] === '1'
+	&& hash_equals((string)$session->mchecker,(string)$_POST['c'])) {
 	$database->delDemolition($village->wid);
-	header("Location: build.php?gid=15&amp;cancel=0&amp;demolish=0");
+	$session->changeChecker();
+	header('Location: build.php?gid=15');
+	exit;
 }
 
-if(!empty($_REQUEST["demolish"]) && $_REQUEST["c"] == $session->mchecker) {
-	if($_REQUEST["type"] != null) 	{
-		$type = $_REQUEST['type'];
-		$database->addDemolition($village->wid,$type);
+if(isset($_POST['demolish'],$_POST['c']) && is_scalar($_POST['c']) && $_POST['demolish'] === '1'
+	&& hash_equals((string)$session->mchecker,(string)$_POST['c'])) {
+	if(isset($_POST['type']) && is_scalar($_POST['type']) && ctype_digit((string)$_POST['type'])) {
+		$database->addDemolition($village->wid,(int)$_POST['type']);
 		$session->changeChecker();
-		header("Location: build.php?gid=15&amp;cancel=0&amp;demolish=0");
+		header('Location: build.php?gid=15');
+		exit;
 	}
 }
 
 if($village->resarray['f'.$id] >= DEMOLISH_LEVEL_REQ) {
-	echo "<h4>Demoler edificio:</h4><p>Tus arquitectos pueden demoler los edificios que ya no necesites:</p>";
+	echo '<h4>Demoler edificio:</h4><p>Tus arquitectos pueden demoler los edificios que ya no necesites:</p>';
 	$VillageResourceLevels = $database->getResourceLevel($village->wid);
 	$DemolitionProgress = $database->getDemolition($village->wid);
-	if (!empty($DemolitionProgress)) {
+	if(!empty($DemolitionProgress)) {
 		$Demolition = $DemolitionProgress[0];
-        echo" <table cellpadding='1' cellspacing='1' id='demolish'><tbody><tr>
-		<td><a href='build.php?id=26&cancel=1'><img class='del' src='img/x.gif' title='mégse' alt='mégse'></a></td><td>
-		<b>".$building->procResType($VillageResourceLevels['f'.$Demolition['buildnumber'].'t'])."</b></td><td><span id='timer1'>".$generator->getTimeFormat($Demolition['timetofinish']-time())."</span></td>
+		$field = (int)$Demolition['buildnumber'];
+		$name = isset($VillageResourceLevels['f'.$field.'t'])
+			? $building->procResType($VillageResourceLevels['f'.$field.'t'])
+			: 'Edificio';
+		echo "<table cellpadding='1' cellspacing='1' id='demolish'><tbody><tr>
+		<td><form action='build.php?gid=15' method='POST'><input type='hidden' name='cancel' value='1'><input type='hidden' name='c' value='".htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8')."'><button type='submit' title='Cancelar' aria-label='Cancelar demolición' style='border:0;background:transparent;padding:0'><img class='del' src='img/x.gif' alt='Cancelar'></button></form></td><td>
+		<b>".htmlspecialchars($name,ENT_QUOTES,'UTF-8')."</b></td><td><span id='timer1'>".$generator->getTimeFormat(max(0,$Demolition['timetofinish']-time()))."</span></td>
 		</tr></tbody></table>";
 	} else {
-		echo "
-		<form action=\"build.php?gid=15&amp;demolish=1&amp;cancel=0&amp;c=".$session->mchecker."\" method=\"POST\" style=\"display:inline\">
-		<select name=\"type\" class=\"dropdown\">";
-		for ($i=19; $i<=41; $i++) {
-			if ($VillageResourceLevels['f'.$i.'t'] >= 1) {
-				echo "<option value=".$i.">".$i.". ".$building->procResType($VillageResourceLevels['f'.$i.'t'])." ".$VillageResourceLevels['f'.$i]."</option>";
+		$options = '';
+		for($i = 19; $i <= 40; $i++) {
+			if((int)$VillageResourceLevels['f'.$i.'t'] >= 1 && (int)$VillageResourceLevels['f'.$i] >= 1
+				&& empty($database->getBuildingByField($village->wid,$i))
+				&& empty($database->getMasterJobsByField($village->wid,$i))) {
+				$name = $building->procResType($VillageResourceLevels['f'.$i.'t']);
+				$options .= '<option value="'.$i.'">'.$i.'. '.htmlspecialchars($name,ENT_QUOTES,'UTF-8').' '.(int)$VillageResourceLevels['f'.$i].'</option>';
 			}
 		}
-		echo "</select>
-        <button type=\"submit\" value=\"Lebontás\" id=\"btn_demolish\"><div class=\"button-container\"><div class=\"button-position\"><div class=\"btl\"><div class=\"btr\"><div class=\"btc\"></div></div></div><div class=\"bml\"><div class=\"bmr\"><div class=\"bmc\"></div></div></div><div class=\"bbl\"><div class=\"bbr\"><div class=\"bbc\"></div></div></div></div><div class=\"button-contents\">Demoler</div></div></button></form>";
+		if($options === '') {
+			echo '<p class="none">No hay edificios disponibles para demoler.</p>';
+		} else {
+			echo '<form action="build.php?gid=15" method="POST" style="display:inline">
+			<input type="hidden" name="demolish" value="1"><input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">
+			<select name="type" class="dropdown">'.$options.'</select>
+			<button type="submit" value="Demoler" id="btn_demolish"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Demoler</div></div></button></form>';
+		}
 	}
 }
 ?>

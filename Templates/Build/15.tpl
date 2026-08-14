@@ -30,7 +30,7 @@ include('build_level_help.tpl');
 	
 <?php 
 include("upgrade.tpl");
-if($village->resarray['f'.$id] >= 10){
+if($village->resarray['f'.$id] >= DEMOLISH_LEVEL_REQ){
 	include("Templates/Build/15_1.tpl");
 }
 ?>
