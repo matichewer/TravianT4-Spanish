@@ -2,6 +2,10 @@
 
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
+if(isset($_GET['newdid'])) {
+	$_SESSION['wid'] = $_GET['newdid'];
+	header("Location: ".$_SERVER['PHP_SELF']);
+}
 $simulationInput = $_POST;
 if(empty($_POST) && isset($_GET['oasis'])) {
 	$simulationInput = $battle->getOasisSimulationInput($_GET['oasis']);
