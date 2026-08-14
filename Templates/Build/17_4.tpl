@@ -14,7 +14,7 @@ include('build_level_help.tpl');
 include("upgrade.tpl");
 include("17_menu.tpl"); 
 
-if(isset($_GET['create']) && $session->gold > 1){
+if(isset($_GET['create'])){
 include("17_create.tpl");
 }else if(isset($_GET['action'],$_GET['routeid']) && $_GET['action'] === 'editRoute' && ctype_digit((string)$_GET['routeid'])){
 $edited_route = $database->getTradeRoute2((int)$_GET['routeid']);
