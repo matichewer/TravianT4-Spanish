@@ -13,7 +13,10 @@ else if(isset($_GET['r'])) {
 	header("Location: ".$_SERVER['PHP_SELF']."?r=".$_GET['r']);
 }
 else if(isset($_GET['o'])) {
-	header("Location: ".$_SERVER['PHP_SELF']."?o=".$_GET['o']);
+	// El link de "Saquear oasis" siempre manda z (el wref) junto con o: sin z,
+	// a2b.php mas abajo arma una query con wref vacio y mysqli_query() falla.
+	$oz = isset($_GET['z']) ? "&z=".$_GET['z'] : "";
+	header("Location: ".$_SERVER['PHP_SELF']."?o=".$_GET['o'].$oz);
 }
 else if(isset($_GET['z'])) {
 	header("Location: ".$_SERVER['PHP_SELF']."?z=".$_GET['z']);

@@ -42,7 +42,9 @@
 	}else if(isset($_GET['r'])) {
     	$vill = "&r=".$_GET['r'];
 	}else if(isset($_GET['o'])) {
-    	$vill = "&o=".$_GET['o'];
+    	// o siempre viaja con z (el wref del oasis a saquear): sin z, a2b.php
+    	// arma una query con wref vacio y mysqli_query() falla.
+    	$vill = "&o=".$_GET['o'].(isset($_GET['z']) ? "&z=".$_GET['z'] : "");
 	}else if(isset($_GET['z'])) {
     	$vill = "&z=".$_GET['z'];
 	}else if(isset($_GET['bid'])) {

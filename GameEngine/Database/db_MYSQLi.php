@@ -1081,6 +1081,7 @@
         	}
 
         	function getVillageField($ref, $field) {
+        		$ref = (int)$ref;
         		$q = "SELECT $field FROM " . TB_PREFIX . "vdata where wref = $ref";
         		$result = mysqli_query($this->connection,$q);
         		$dbarray = mysqli_fetch_array($result);
@@ -1089,6 +1090,7 @@
         	}
 
         	function getOasisField($ref, $field) {
+        		$ref = (int)$ref;
         		$q = "SELECT $field FROM " . TB_PREFIX . "odata where wref = $ref";
         		$result = mysqli_query($this->connection,$q);
         		$dbarray = mysqli_fetch_array($result);
