@@ -4,9 +4,15 @@
 </div> 
 <div class="list"> 
 	<ul>        
-<?php 
-    for($i=1;$i<=count($session->villages);$i++) {
-        $villageId = $session->villages[$i-1];
+<?php
+    // El cartel lista las aldeas en orden de fundacion, sin poner la capital
+    // primera. No se puede usar $session->villages para esto: esa lista arranca
+    // por la capital y hay codigo que cuenta con eso (aldea por defecto al
+    // entrar, premios de misiones, aldea natal del heroe).
+    $villageOrder = $database->getVillagesIDByFoundation($session->uid);
+    if(empty($villageOrder)) { $villageOrder = $session->villages; }
+    for($i=1;$i<=count($villageOrder);$i++) {
+        $villageId = $villageOrder[$i-1];
         $villageName = $database->getVillageField($villageId, 'name');
         $village_attack = "";
         // El tooltip no repite el nombre, que ya se lee en el cartel: muestra la
@@ -21,8 +27,8 @@
                 $village_attack_note = " - ataques a esta aldea: ".$aantal;
             }
         }
-    if($session->villages[$i-1] == $village->wid){ $select = "active"; $sid = "currentVillage"; }else{ $select = ""; $sid = ""; }
-    $coorproc = $database->getCoor($session->villages[$i-1]);
+    if($villageId == $village->wid){ $select = "active"; $sid = "currentVillage"; }else{ $select = ""; $sid = ""; }
+    $coorproc = $database->getCoor($villageId);
     // En build.php seguimos el edificio, no el hueco: si el hueco actual tiene un
     // edificio, cambiamos de aldea con &gid= para abrir el mismo tipo de edificio
     // alla (build.php manda a dorf2.php si esa aldea no lo tiene).

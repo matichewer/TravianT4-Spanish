@@ -989,6 +989,28 @@
         		return $newarray;
         	}
 
+			// Las mismas aldeas que getVillagesID() pero en orden de fundacion (la mas
+			// vieja primero) y sin poner la capital adelante: es el orden del cartel
+			// lateral. No reemplaza a getVillagesID(), que devuelve la capital primera
+			// y varios lugares dependen de eso ($session->villages[0]).
+			// `created` es la fecha de fundacion original, asi que una aldea conquistada
+			// conserva la del jugador que la fundo, no la de la conquista. El desempate
+			// por wref es para que el orden sea estable si dos comparten timestamp.
+			function getVillagesIDByFoundation($uid) {
+				$uid = (int) $uid;
+				$q = "SELECT wref FROM " . TB_PREFIX . "vdata WHERE owner = $uid ORDER BY created ASC, wref ASC";
+				$result = mysqli_query($this->connection,$q);
+				if(!$result) {
+					return array();
+				}
+				$array = $this->mysqli_fetch_all($result);
+				$newarray = array();
+				for($i = 0; $i < count($array); $i++) {
+					array_push($newarray, $array[$i]['wref']);
+				}
+				return $newarray;
+			}
+
 			function getPendingSettlementCountByOwner($uid, $excludeMoveId = 0, $target = 0) {
 				$uid = (int) $uid;
 				$excludeMoveId = (int) $excludeMoveId;
