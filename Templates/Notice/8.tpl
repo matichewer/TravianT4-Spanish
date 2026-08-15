@@ -107,5 +107,5 @@ $time = $generator->procDistanceTime($from,$to,300,0);
 <tr><td class="empty" colspan="12"></td></tr>
 <tr><th><?php echo REPORT_UPKEEP; ?></th>
 <td colspan="11">
-<?php echo $technology->getUpkeep($unitarray,$dataarray[2]); ?> <img src="img/x.gif" class="r4" title="<?php echo CROP; ?>"><?php echo REPORT_PER_HOURS; ?></td>
+<?php echo $technology->getUpkeep($unitarray,$dataarray[2],$dataarray[14]); ?> <img src="img/x.gif" class="r4" title="<?php echo CROP; ?>"><?php echo REPORT_PER_HOURS; ?></td>
 </tr></tbody></table></td></tr></tbody></table>

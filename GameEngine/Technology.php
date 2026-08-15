@@ -462,24 +462,32 @@ class Technology {
 		header("Location: build.php?id=".$fieldId);
 	}
 	
-	public function getUpkeep($array,$type) {
-		global $building,$database,$session;
+	// El Bebedero reduce el consumo de las tropas que están físicamente en la
+	// aldea con el edificio (propias o de refuerzo), no en la aldea activa de
+	// quien mira la pantalla. `$vid` (o `$array['vref']` si no se pasa) elige
+	// esa aldea; antes se miraba siempre la aldea activa de `$building`, así
+	// que un informe de refuerzo enviado o la lista de "Refuerzos" en la Plaza
+	// de reuniones mostraban el descuento de la aldea equivocada.
+	public function getUpkeep($array,$type,$vid=0) {
+		global $building,$database,$session,$village;
 		$upkeep = 0;
 		$nocrop = 0;
 		$horseDrinkingLevel = 0;
-		if((int)$session->tribe === 1) {
-			if(is_object($building) && method_exists($building,'getTypeLevel')) {
-				$horseDrinkingLevel = (int)$building->getTypeLevel(41);
-			} elseif(isset($array['vref']) && (int)$array['vref'] > 0) {
-				$fields = $database->getResourceLevel((int)$array['vref']);
-				if(is_array($fields)) {
-					for($field = 19; $field <= 38; $field++) {
-						if((int)$fields['f'.$field.'t'] === 41) {
-							$horseDrinkingLevel = max($horseDrinkingLevel,(int)$fields['f'.$field]);
-						}
-					}
-				}
-			}
+
+		$targetVid = 0;
+		if((int)$vid > 0) {
+			$targetVid = (int)$vid;
+		} elseif(isset($array['vref']) && (int)$array['vref'] > 0) {
+			$targetVid = (int)$array['vref'];
+		} elseif(is_object($village) && isset($village->wid)) {
+			$targetVid = (int)$village->wid;
+		}
+
+		if($targetVid > 0 && is_object($building) && method_exists($building,'getTypeLevel')) {
+			$currentVid = (is_object($village) && isset($village->wid)) ? (int)$village->wid : 0;
+			$horseDrinkingLevel = ($targetVid === $currentVid)
+				? (int)$building->getTypeLevel(41)
+				: (int)$building->getTypeLevel(41,$targetVid);
 		}
 		switch($type) {
 			case 0:
