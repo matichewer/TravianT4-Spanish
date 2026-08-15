@@ -70,7 +70,7 @@ if($isNature){
 	for($t=1;$t<=11;$t++){
         if($units[$y]['t'.$t]){
         	if($t!=7 or $t!=8 or $t!=8){
-				echo "<td>?</td>";
+				echo "<td class=\"none\">?</td>";
             }
 		}else{
 			echo "<td class=\"none\">?</td>";
