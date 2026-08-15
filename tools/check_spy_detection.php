@@ -202,7 +202,10 @@ spyDetectionAssert(
 );
 spyDetectionAssert(
 	strpos($automationSource, '$database->addNotice($reinforcementOwner, $to[\'wref\'], 0, 0') !== false
-		&& strpos($automationSource, "' espía a '.addslashes(\$to['name']).'', \$data2, \$AttackArrivalTime") !== false,
+		// $oasisTopicSuffix distingue el titulo del aviso cuando el objetivo es un oasis;
+		// se agrego despues de esta comprobacion y no cambia que el informe completo
+		// ($data2) sea lo que se manda.
+		&& strpos($automationSource, "' espía a '.addslashes(\$to['name']).\$oasisTopicSuffix.'', \$data2, \$AttackArrivalTime") !== false,
 	'El espionaje entrega al propietario del refuerzo el informe defensivo completo y no el resumen.'
 );
 
