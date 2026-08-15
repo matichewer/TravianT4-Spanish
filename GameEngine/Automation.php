@@ -1891,6 +1891,14 @@ class Automation {
 
     private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
         global $bid17, $database, $generator, $logging;
+        // La produccion solo se acredita a la base cuando alguien carga una pagina de
+        // esa aldea (Village.php::processProduction); un envio automatico (la salida de
+        // una ruta, o el siguiente tramo de un "envios x3" tras que el mercader vuelve)
+        // corre solo, sin que nadie la este mirando. Sin esto, "disponible" era el
+        // remanente congelado desde la ultima visita, no lo producido de verdad durante
+        // el viaje del mercader anterior — mismo patron que ya usan los cambios de nivel
+        // de campo/edificio y la anexion de oasis (ver accrueProductionBeforeChange).
+        $this->accrueProductionBeforeChange($from, null);
         $availableWood = $database->getWoodAvailable($from);
         $availableClay = $database->getClayAvailable($from);
         $availableIron = $database->getIronAvailable($from);

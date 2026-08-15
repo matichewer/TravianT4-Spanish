@@ -415,6 +415,20 @@ check(strpos($tplSource,'usort($edited_routes,function($a,$b){') !== false,
 	'el grupo se ordena por horario antes de mostrarlo, para que la posicion de cada horario en el formulario sea predecible');
 
 // ---------------------------------------------------------------------------
+section('M. sendResource2() pone al dia la produccion antes de revisar disponibilidad');
+// ---------------------------------------------------------------------------
+// Caso real: una ruta con "envios x3" mandaba el primer envio completo, pero el
+// segundo (recien cuando el mercader volvia del primero) llegaba con menos de lo
+// configurado aunque la aldea tuviera produccion de sobra. La columna de recursos en
+// la base solo se pone al dia cuando alguien carga una pagina de esa aldea
+// (Village.php::processProduction); un envio automatico corre solo, sin que nadie la
+// este mirando, asi que leia el remanente congelado desde la ultima visita.
+check(preg_match('/private function sendResource2\(.*?\)\s*\{\s*global[^;]*;\s*(?:\/\/[^\n]*\n\s*)*\$this->accrueProductionBeforeChange\(\$from, ?null\);/s',$automationSource) === 1,
+	'sendResource2() acredita la produccion real de la aldea de origen ANTES de leer cuanto hay disponible, no despues');
+check(strpos($automationSource,'protected function accrueProductionBeforeChange(') !== false,
+	'reutiliza la misma funcion de acreditar produccion que ya usan los cambios de nivel/oasis, no una copia nueva');
+
+// ---------------------------------------------------------------------------
 echo "\n";
 if(empty($GLOBALS['fails'])) {
 	echo "Trade route checks passed (".$GLOBALS['checks']." comprobaciones).\n";
