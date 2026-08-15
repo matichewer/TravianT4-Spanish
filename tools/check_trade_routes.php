@@ -429,6 +429,20 @@ check(strpos($automationSource,'protected function accrueProductionBeforeChange(
 	'reutiliza la misma funcion de acreditar produccion que ya usan los cambios de nivel/oasis, no una copia nueva');
 
 // ---------------------------------------------------------------------------
+section('N. "Gestionar desde esa aldea" lleva a esa aldea, al Mercado, a Rutas comerciales');
+// ---------------------------------------------------------------------------
+// Antes era texto suelto sin enlace: para gestionar una ruta que sale de otra aldea
+// propia, el jugador tenia que cambiar de aldea a mano y volver a navegar hasta la
+// pestaña. newdid ya cambia de aldea en un click, pero el redirect de build.php
+// descartaba cualquier parametro que no fuera id/gid (perdia la pestaña "t").
+$buildSource = file_get_contents(dirname(__DIR__).'/build.php');
+check(strpos($buildSource,"if(isset(\$_GET['t']) && is_scalar(\$_GET['t']) && ctype_digit((string)\$_GET['t'])) {") !== false
+	&& strpos($buildSource,"\$newdidLocation .= (strpos(\$newdidLocation,'?') !== false ? '&' : '?').'t='.(int)\$_GET['t'];") !== false,
+	'el redirect de newdid preserva la pestaña (t=N) cuando el enlace la pide, ademas del edificio');
+check(strpos($tplSource,"<a href=\"build.php?newdid=<?php echo (int)\$firstRoute['from']; ?>&amp;gid=17&amp;t=4\">gestionar desde esa aldea</a>") !== false,
+	'el enlace cambia a la aldea de origen de la ruta y aterriza directo en Mercado > Rutas comerciales');
+
+// ---------------------------------------------------------------------------
 echo "\n";
 if(empty($GLOBALS['fails'])) {
 	echo "Trade route checks passed (".$GLOBALS['checks']." comprobaciones).\n";

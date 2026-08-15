@@ -7,7 +7,8 @@ if(time() - (int)($_SESSION['time_p'] ?? 0) > 5) {
 }
 
 if(!empty($_POST) AND isset($_GET['action']) AND $_GET['action'] == 'change_capital') {
-  $pass = mysql_escape_string($_POST['pass']);
+  // No se escapa: la contraseña nunca entra en una consulta, solo en md5().
+  $pass = (string)($_POST['pass'] ?? '');
   $query = mysql_query('SELECT * FROM `' . TB_PREFIX . 'users` WHERE `id` = ' . $session->uid);
   $data = mysql_fetch_assoc($query);
   if($data['password'] == md5($pass)) {

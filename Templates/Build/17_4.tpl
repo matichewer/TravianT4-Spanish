@@ -179,7 +179,7 @@ echo '<span title="Cada vez que sale esta ruta, esos mercaderes hacen '.$routeDe
 <a href="build.php?id=<?php echo $id; ?>&amp;t=4&amp;action=editRoute<?php echo $groupIdsQuery; ?>">Editar</a><br>
 <a href="build.php?gid=17&amp;t=4&amp;action=delRoute<?php echo $groupIdsQuery; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>" onclick="return confirm('¿Eliminar esta ruta comercial<?php echo count($groupRoutes) > 1 ? ' y sus '.count($groupRoutes).' horarios' : ''; ?>?');">Eliminar</a>
 <?php }else{ ?>
-<small>gestionar desde esa aldea</small>
+<small><a href="build.php?newdid=<?php echo (int)$firstRoute['from']; ?>&amp;gid=17&amp;t=4">gestionar desde esa aldea</a></small>
 <?php } ?>
 </td>
 </tr>
