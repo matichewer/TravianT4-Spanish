@@ -61,6 +61,10 @@ if(isset($_SESSION['brewery_status'])) {
 				</div>
 <?php if($breweryEnd > time()) { ?>
 				<div class="contractLink"><span class="none">Activa durante <?php echo $generator->getTimeFormat($breweryEnd - time()); ?></span></div>
+<?php } elseif((int)$session->tribe !== 2 || (int)$village->capital !== 1) { ?>
+				<?php // Las mismas condiciones que valida brewery.php: sin esto una Cerveceria
+				      // que quedo fuera de la capital ofrecia un boton que el servidor rechaza. ?>
+				<div class="contractLink"><span class="none">Solo se puede celebrar en la capital germana</span></div>
 <?php } elseif($breweryCost['wood'] > $village->awood || $breweryCost['clay'] > $village->aclay || $breweryCost['iron'] > $village->airon || $breweryCost['crop'] > $village->acrop) { ?>
 				<div class="contractLink"><span class="none">No hay recursos suficientes</span></div>
 <?php } else { ?>
