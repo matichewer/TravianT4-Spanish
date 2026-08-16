@@ -30,14 +30,19 @@ include('build_level_help.tpl');
 	</table>
 <?php
 $breweryEnd = $database->getBreweryCelebrationEnd($session->uid);
-$breweryCost = array('wood' => 3870, 'clay' => 1680, 'iron' => 215, 'crop' => 10900);
-$breweryDuration = max(1, (int)round(259200 / SPEED));
+// Costo y duración salen de cel.php: misma definición que usa brewery.php para
+// cobrar y agendar, para que lo que se muestra sea lo que se paga.
+$breweryCost = breweryCelebrationCost();
+$breweryDuration = breweryCelebrationDuration();
 if(isset($_SESSION['brewery_status'])) {
 	$status = $_SESSION['brewery_status'];
 	unset($_SESSION['brewery_status']);
-	echo $status === 'success'
-		? '<p class="notice">La celebración de hidromiel ha comenzado.</p>'
-		: '<p class="error">No se pudo iniciar la celebración. Comprueba los recursos y que no haya otra activa.</p>';
+	$breweryMessages = array(
+		'success' => '<p class="notice">La celebración de hidromiel ha comenzado.</p>',
+		'active' => '<p class="error">Ya hay una celebración de hidromiel activa.</p>',
+		'failed' => '<p class="error">No se pudo iniciar la celebración: no hay recursos suficientes.</p>'
+	);
+	echo isset($breweryMessages[$status]) ? $breweryMessages[$status] : $breweryMessages['failed'];
 }
 ?>
 	<h4 class="spacer">Celebración de hidromiel</h4>

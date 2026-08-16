@@ -343,14 +343,19 @@ class Automation {
         );
     }
 
-    private function resolveCatapultAttacks($data, $battleResult, $stonemasonLevel, $targetVillage, $breweryLevel) {
+    private function resolveCatapultAttacks($data, $battleResult, $stonemasonLevel, $targetVillage, $breweryActive) {
         $firstTarget = isset($data['ctar1']) && $this->isAllowedCatapultTargetType($data['ctar1'])
             ? (int)$data['ctar1']
             : 0;
         $secondTarget = isset($data['ctar2']) && $this->isAllowedCatapultTargetType($data['ctar2'], true)
             ? (int)$data['ctar2']
             : 0;
-        if((int)$breweryLevel > 0) {
+        // El disparo al azar es la contra de la celebración, no del edificio: va atada a
+        // que la fiesta esté corriendo, igual que la persuasión de los jefes. Antes
+        // miraba el nivel de la Cervecería, así que una capital mudada o una Cervecería
+        // arrasada dejaba la celebración en pie con el castigo de los jefes pero sin el
+        // de las catapultas.
+        if($breweryActive) {
             $firstTarget = 0;
             $secondTarget = 0;
         }
@@ -1990,7 +1995,6 @@ class Automation {
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
             $breweryActive = false;
-            $breweryLevel = 0;
             $herosend_att = (int)$data['t11'];
             $cage = array('id' => 0, 'type' => 0);
             // Se reinicia por ataque: el foreach comparte el scope y si no, el oasis
@@ -2506,7 +2510,6 @@ class Automation {
                     $data['to']
                 );
                 $breweryActive = !empty($battlepart['brewery_active']);
-                $breweryLevel = isset($battlepart['brewery_level']) ? (int)$battlepart['brewery_level'] : 0;
                 if($DefenderHeroByTribe[1] > 0) {
                     $rom = '1';
                 }
@@ -3126,7 +3129,7 @@ class Automation {
                         $battlepart,
                         $stonemason,
                         $to,
-                        $breweryLevel
+                        $breweryActive
                     );
                     $info_cat = $catapultResolution['report'];
                     $catapultDestroyedVillage = $catapultResolution['village_destroyed'];

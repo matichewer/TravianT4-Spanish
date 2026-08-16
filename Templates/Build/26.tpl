@@ -31,8 +31,14 @@ if(!empty($_POST) AND isset($_GET['action']) AND $_GET['action'] == 'change_capi
           $error = '<b><font class="error">No se pudo bloquear la cola de construcción. Inténtalo nuevamente.</font></b><br />';
         } else {
           $pending = mysql_query('SELECT `id` FROM `' . TB_PREFIX . 'bdata` WHERE `wid` = '.$oldCapital.' AND `field` BETWEEN 1 AND 18 AND `type` BETWEEN 1 AND 4 AND `level` > 10 LIMIT 1');
+          // Un trabajo encolado sobre el Taller de cantería o la Cervecería vuelve a
+          // escribir `f<solar>t` cuando termina, así que resucitaría en la aldea vieja
+          // el edificio que la mudanza acaba de derribar.
+          $pendingCapitalOnly = mysql_query('SELECT `id` FROM `' . TB_PREFIX . 'bdata` WHERE `wid` = '.$oldCapital.' AND `type` IN (34,35) LIMIT 1');
           if($pending && mysql_num_rows($pending) > 0) {
           $error = '<b><font class="error">Finaliza o cancela las mejoras de campos superiores al nivel 10 antes de cambiar la capital.</font></b><br />';
+          } elseif($pendingCapitalOnly && mysql_num_rows($pendingCapitalOnly) > 0) {
+          $error = '<b><font class="error">Finaliza o cancela las obras del Taller de cantería y de la Cervecería antes de cambiar la capital.</font></b><br />';
           } else {
             mysql_query('LOCK TABLES `' . TB_PREFIX . 'vdata` WRITE, `' . TB_PREFIX . 'fdata` WRITE');
             $query2 = mysql_query('SELECT * FROM `' . TB_PREFIX . 'fdata` WHERE `vref` = '.$oldCapital);
@@ -50,14 +56,26 @@ if(!empty($_POST) AND isset($_GET['action']) AND $_GET['action'] == 'change_capi
                 $fieldUpdates[] = '`f'.$i.'` = 10';
               }
             }
+            // Los edificios que sólo existen en la capital se derriban al mudarla: el
+            // Taller de cantería (34) y la Cervecería (35). Si la Cervecería sobrevivía
+            // quedaba muerta en la aldea vieja —no daba bono (se lo busca en la capital),
+            // no se podía celebrar ni mejorar ni demoler— gastando población y un solar,
+            // y la cuenta podía levantar una segunda en la capital nueva.
+            $capitalOnlyBuildings = array(34, 35);
+            $breweryRemoved = false;
             for($i = 19; $i <= 40; ++$i) {
-              if((int)$data2['f'.$i.'t'] === 34) {
+              $slotType = (int)$data2['f'.$i.'t'];
+              if(in_array($slotType, $capitalOnlyBuildings, true)) {
+                $levelData = $GLOBALS['bid'.$slotType];
                 $level = (int)$data2['f'.$i];
                 for($currentLevel = $level; $currentLevel >= 1; --$currentLevel) {
-                  $populationLoss += (int)$bid34[$currentLevel]['pop'];
+                  $populationLoss += (int)$levelData[$currentLevel]['pop'];
                 }
                 $fieldUpdates[] = '`f'.$i.'t` = 0';
                 $fieldUpdates[] = '`f'.$i.'` = 0';
+                if($slotType === 35) {
+                  $breweryRemoved = true;
+                }
               }
             }
             if(!empty($fieldUpdates)) {
@@ -66,6 +84,11 @@ if(!empty($_POST) AND isset($_GET['action']) AND $_GET['action'] == 'change_capi
             mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `pop` = GREATEST(2, `pop` - '.$populationLoss.') WHERE `wref` = '.$oldCapital);
             mysql_query('UPDATE `' . TB_PREFIX . 'vdata` SET `capital` = CASE WHEN `wref` = '.$newCapital.' THEN 1 ELSE 0 END WHERE `owner` = '.$uid);
             mysql_query('UNLOCK TABLES');
+            // Sin Cervecería no hay bono de ataque, pero la fiesta seguía corriendo y con
+            // ella sus dos castigos: jefes a mitad de persuasión y catapultas al azar.
+            if($breweryRemoved) {
+              mysql_query('UPDATE `' . TB_PREFIX . 'users` SET `brewery` = 0 WHERE `id` = '.$uid);
+            }
           }
           mysql_query("SELECT RELEASE_LOCK('$buildLockName')");
         }

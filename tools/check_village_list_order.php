@@ -44,18 +44,35 @@ villageOrderAssert(
 global $database;
 $prefix = TB_PREFIX;
 
-villageOrderAssert(mysqli_query($database->connection,
+$fdataParts = array();
+for($field = 1; $field <= 40; $field++) {
+	$fdataParts[] = "f{$field} int NOT NULL DEFAULT 0";
+	$fdataParts[] = "f{$field}t int NOT NULL DEFAULT 0";
+}
+
+$tmp = array(
 	"CREATE TEMPORARY TABLE {$prefix}vdata (wref int NOT NULL, owner int NOT NULL,
 		capital tinyint NOT NULL DEFAULT 0, created int NOT NULL DEFAULT 0,
-		PRIMARY KEY(wref)) ENGINE=MyISAM") !== false,
-	'No se pudo crear la tabla temporal: '.mysqli_error($database->connection));
+		loyalty int NOT NULL DEFAULT 100, loyaltyupdate int NOT NULL DEFAULT 0,
+		celebration int NOT NULL DEFAULT 0, type int NOT NULL DEFAULT 0,
+		exp1 int NOT NULL DEFAULT 0, exp2 int NOT NULL DEFAULT 0, exp3 int NOT NULL DEFAULT 0,
+		pop int NOT NULL DEFAULT 0, PRIMARY KEY(wref)) ENGINE=MyISAM",
+	"CREATE TEMPORARY TABLE {$prefix}fdata (vref int NOT NULL, ".implode(', ', $fdataParts).",
+		PRIMARY KEY(vref)) ENGINE=MyISAM",
+	"CREATE TEMPORARY TABLE {$prefix}attacks (id int NOT NULL, t9 int NOT NULL DEFAULT 0, PRIMARY KEY(id)) ENGINE=MyISAM",
+	"CREATE TEMPORARY TABLE {$prefix}artefacts (vref int NOT NULL, owner int NOT NULL, PRIMARY KEY(vref)) ENGINE=MyISAM",
+	"CREATE TEMPORARY TABLE {$prefix}users (id int NOT NULL, cp int NOT NULL DEFAULT 0, PRIMARY KEY(id)) ENGINE=MyISAM"
+);
+foreach($tmp as $q) {
+	villageOrderAssert(mysqli_query($database->connection, $q) !== false,
+		'No se pudo crear la tabla temporal: '.mysqli_error($database->connection));
+}
 
 // Cuatro aldeas del jugador 91. Los wref van al revés que las fechas a propósito:
 // si el orden saliera por clave primaria (lo que hacía la lista vieja al no tener
 // desempate) la prueba pasaría por casualidad.
 //
-// La 900002 es la capital y no es la más vieja; la 900004 es una aldea conquistada,
-// que conserva el `created` del jugador que la fundó y por eso encabeza la lista.
+// La 900002 es la capital y no es la más vieja.
 mysqli_query($database->connection, "INSERT INTO {$prefix}vdata (wref,owner,capital,created) VALUES
 	(900004,91,0,1000),
 	(900003,91,0,2000),
@@ -95,5 +112,41 @@ villageOrderAssert($a === $b, 'Las dos listas no contienen las mismas aldeas');
 // Un jugador sin aldeas devuelve una lista vacía, no un aviso de PHP.
 villageOrderAssert($database->getVillagesIDByFoundation(99) === array(),
 	'Un jugador sin aldeas no devolvió una lista vacía');
+
+// --- Una aldea conquistada se refunda con el nuevo dueño ------------------------
+//
+// El jugador 92 tiene una aldea fundada mucho antes que cualquiera de las del 91.
+// Si la conquista dejara `created` como estaba, la aldea tomada aparecería primera
+// en el cartel del conquistador, antes incluso que su propia capital.
+$now = time();
+mysqli_query($database->connection, "INSERT INTO {$prefix}vdata (wref,owner,capital,created,loyalty) VALUES
+	(900005,92,0,500,10),
+	(900006,92,1,500,100)");
+// La aldea atacante (la capital del 91) tiene palacio nivel 20: 3 cupos de expansión.
+mysqli_query($database->connection, "INSERT INTO {$prefix}fdata (vref,f19t,f19) VALUES
+	(900001,0,0),(900002,26,20),(900003,0,0),(900004,0,0),(900005,0,0),(900006,0,0)");
+mysqli_query($database->connection, "INSERT INTO {$prefix}attacks (id,t9) VALUES (7101,1)");
+mysqli_query($database->connection, "INSERT INTO {$prefix}users (id,cp) VALUES (91,0),(92,0)");
+
+$conquest = $database->applyConquestLoyalty(900002, 900005, 91, 92, 7101, 100);
+villageOrderAssert(is_array($conquest) && isset($conquest['status']) && $conquest['status'] === 'conquered',
+	'La conquista de prueba no se concretó: '.(is_array($conquest) ? $conquest['status'] : 'sin estado'));
+
+$row = mysqli_fetch_assoc(mysqli_query($database->connection,
+	"SELECT owner, created FROM {$prefix}vdata WHERE wref = 900005"));
+villageOrderAssert((int)$row['owner'] === 91, 'La aldea no cambió de dueño');
+villageOrderAssert((int)$row['created'] >= $now,
+	'La aldea conquistada conservó la fecha del dueño anterior: created='.$row['created']);
+
+// Y por lo tanto entra última en el cartel del conquistador, no primera.
+$afterConquest = array_map('intval', $database->getVillagesIDByFoundation(91));
+villageOrderAssert($afterConquest === array(900004, 900003, 900002, 900001, 900005),
+	'La aldea conquistada no quedó al final de la lista: '.implode(',', $afterConquest));
+
+// El panel de administración traspasa aldeas entre cuentas: mismo evento, misma regla.
+$admin = file_get_contents(dirname(__DIR__).'/GameEngine/Admin/Mods/editVillageOwner.php');
+villageOrderAssert($admin !== false, 'No se pudo leer editVillageOwner.php');
+villageOrderAssert(preg_match('/created\s*=/', $admin) === 1,
+	'Cambiar el dueño desde el panel de administración no refunda la aldea');
 
 echo "OK: el cartel lista por fundación y \$session->villages sigue con la capital primero\n";

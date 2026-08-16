@@ -67,4 +67,20 @@ if(!function_exists('celebrationDuration')){
 		return max(1, (int)round($table[$level] / SPEED));
 	}
 }
+
+if(!function_exists('breweryCelebrationCost')){
+	// Costo y duración de la celebración de hidromiel de la Cervecería. Es la única
+	// definición: la usan brewery.php (que cobra y agenda) y Templates/Build/35.tpl
+	// (que muestra el costo y el reloj). Estaban escritos a mano en los dos lados y
+	// nada avisaba si uno se movía sin el otro: el jugador veía un precio y pagaba
+	// otro.
+	function breweryCelebrationCost(){
+		return array('wood' => 3870, 'clay' => 1680, 'iron' => 215, 'crop' => 10900);
+	}
+
+	// 72 horas a velocidad 1, igual que anuncia la ayuda del edificio.
+	function breweryCelebrationDuration(){
+		return max(1, (int)round(259200 / SPEED));
+	}
+}
 ?>

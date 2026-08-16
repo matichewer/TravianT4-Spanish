@@ -63,10 +63,12 @@ for($field = 1; $field <= 40; $field++) {
 $fdataColumns = implode(', ', $fdataParts);
 
 $tmp = array(
+	// `created` va porque la conquista refunda la aldea con el nuevo dueño (el cartel
+	// de aldeas ordena por esa fecha); ver check_village_list_order.php.
 	"CREATE TEMPORARY TABLE {$prefix}vdata (wref int NOT NULL, owner int NOT NULL, capital tinyint NOT NULL DEFAULT 0,
 		loyalty int NOT NULL DEFAULT 100, loyaltyupdate int NOT NULL DEFAULT 0, celebration int NOT NULL DEFAULT 0,
 		type int NOT NULL DEFAULT 0, exp1 int NOT NULL DEFAULT 0, exp2 int NOT NULL DEFAULT 0, exp3 int NOT NULL DEFAULT 0,
-		pop int NOT NULL DEFAULT 0, PRIMARY KEY(wref)) ENGINE=MyISAM",
+		pop int NOT NULL DEFAULT 0, created int NOT NULL DEFAULT 0, PRIMARY KEY(wref)) ENGINE=MyISAM",
 	"CREATE TEMPORARY TABLE {$prefix}fdata (vref int NOT NULL, ".$fdataColumns.", PRIMARY KEY(vref)) ENGINE=MyISAM",
 	"CREATE TEMPORARY TABLE {$prefix}attacks (id int NOT NULL, t9 int NOT NULL DEFAULT 0, PRIMARY KEY(id)) ENGINE=MyISAM",
 	"CREATE TEMPORARY TABLE {$prefix}artefacts (vref int NOT NULL, owner int NOT NULL, PRIMARY KEY(vref)) ENGINE=MyISAM",

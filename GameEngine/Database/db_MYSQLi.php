@@ -732,6 +732,11 @@
 							// conquista los puntos de cultura que pagó el defensor se los acredita
 							// el conquistador cuando la barrida la cierra.
 							. " destination.celebration = 0, destination.type = 0,"
+							// Para el conquistador la aldea nace hoy: `created` se reescribe con la
+							// hora de la conquista, que es la fecha que ordena el cartel de aldeas
+							// (getVillagesIDByFoundation). Sin esto una aldea vieja tomada a otro
+							// jugador se le colaba arriba de todo, antes de las suyas propias.
+							. " destination.created = " . time() . ","
 							. " fields.f40 = 0, fields.f40t = 0,"
 							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner"
 							. " WHERE source.wref = $from AND source.owner = $attackerOwner"
@@ -993,9 +998,12 @@
 			// vieja primero) y sin poner la capital adelante: es el orden del cartel
 			// lateral. No reemplaza a getVillagesID(), que devuelve la capital primera
 			// y varios lugares dependen de eso ($session->villages[0]).
-			// `created` es la fecha de fundacion original, asi que una aldea conquistada
-			// conserva la del jugador que la fundo, no la de la conquista. El desempate
-			// por wref es para que el orden sea estable si dos comparten timestamp.
+			// `created` es la fecha en que la aldea paso a ser de este jugador: la
+			// conquista (applyConquestLoyalty) y el traspaso desde el panel de
+			// administracion (editVillageOwner.php) la reescriben, asi que una aldea
+			// tomada a otro jugador entra al final de la lista y no arriba de todo.
+			// El desempate por wref es para que el orden sea estable si dos comparten
+			// timestamp.
 			function getVillagesIDByFoundation($uid) {
 				$uid = (int) $uid;
 				$q = "SELECT wref FROM " . TB_PREFIX . "vdata WHERE owner = $uid ORDER BY created ASC, wref ASC";
@@ -1159,12 +1167,16 @@
 				if(!$fields) {
 					return 0;
 				}
+				// Se queda con el nivel más alto, igual que Building::getTypeLevel(): si
+				// alguna vez quedan dos Cervecerías en la misma aldea, la primera del
+				// recorrido puede no ser la mejor.
+				$level = 0;
 				for($field = 19; $field <= 38; $field++) {
 					if((int)$fields['f'.$field.'t'] === 35) {
-						return max(0, min(10, (int)$fields['f'.$field]));
+						$level = max($level, (int)$fields['f'.$field]);
 					}
 				}
-				return 0;
+				return max(0, min(10, $level));
 			}
 
 			function getBreweryCelebrationEnd($uid) {
