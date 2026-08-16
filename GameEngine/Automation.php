@@ -4829,6 +4829,18 @@ class Automation {
 	        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
 	        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
 	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
+	        // Las guarniciones NPC (Support, Natars, Nature, Multihunter) no comen: no son
+	        // un ejército simulado sino parte del escenario, igual que en Travian, donde
+	        // las tropas natar no se entrenan, no se reponen y no consumen cereal. Con la
+	        // manutención puesta, una Aldea de la Maravilla producía -45.000 de cereal/h y
+	        // otra vez no acumulaba nada que saquear; la capital natar, -5.000.000/h.
+	        // Ver GameEngine/NatarVillage.php. Se mira el dueño de la aldea, que ya viene
+	        // en bountyinfoarray, y no $uid: son lo mismo en todos los llamadores de hoy,
+	        // pero el que manda acá es de quién es la aldea.
+	        $villageOwner = isset($this->bountyinfoarray['owner']) ? (int)$this->bountyinfoarray['owner'] : (int)$uid;
+	        if($villageOwner > 0 && $villageOwner <= 4) {
+	            $upkeep = 0;
+	        }
 	        $heroData = $database->getHeroData($uid);
 	        $heroProduction = heroVillageResourceBonus($heroData, $bountywid, SPEED);
 	        // Misma fórmula y mismos bonos de oro que ve el dueño en dorf1: esta

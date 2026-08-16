@@ -116,14 +116,17 @@ $before = garrisonSize($wonder);
 $plan = natarProvisionVillage($wonder);
 
 check($before > 0, "la aldea de prueba arranca con guarnición ($before tropas)");
-check($plan !== null && $plan['crop_level'] > 0,
-    "el plan sube los campos de cereal (nivel ".($plan ? $plan['crop_level'] : '?').")");
+check($plan !== null && $plan['crop_level'] === 10,
+    "los 18 campos quedan en nivel 10, como en el T4 oficial (nivel ".($plan ? $plan['crop_level'] : '?').")");
 check($plan['net_crop'] >= 0,
-    "el balance de cereal de una Maravilla queda en cero o mejor (".round($plan['net_crop'])."/h)");
+    "produce cereal de sobra mientras es natar: ".round($plan['net_crop'])."/h");
+check($plan['net_crop_as_player'] < 0,
+    "y con manutención esa misma guarnición daría ".round($plan['net_crop_as_player'])."/h, "
+    ."que es lo que la vaciaba");
 
 $measured = $netCrop->invoke($automation, $wonder);
 check($measured >= 0,
-    "la producción neta que mide Automation coincide con el plan (".round($measured)."/h)");
+    "Automation no le cobra manutención a una aldea NPC (".round($measured)."/h)");
 
 // --- B. starvation() no le toca una tropa ------------------------------------------
 // Se la fuerza a entrar en el barrido: cereal negativo es la condición de getStarvation().
@@ -142,9 +145,9 @@ $capital = scratchNatarVillage(natarCapitalGarrison());
 $database->query("UPDATE ".TB_PREFIX."vdata SET capital = 1, natar = 0 WHERE wref = $capital");
 $capitalBefore = garrisonSize($capital);
 $capitalPlan = natarProvisionVillage($capital);
-check($capitalPlan['net_crop'] < 0,
-    "la capital natar sigue en rojo por diseño: ningún campo alcanza para "
-    .number_format($capitalPlan['upkeep'])." de cereal/h");
+check($capitalPlan['net_crop'] >= 0,
+    "la capital natar también produce en positivo (".round($capitalPlan['net_crop'])."/h) pese a sus "
+    .number_format($capitalPlan['upkeep'])." de cereal/h de tropas, que ningún campo podría cubrir");
 for($pass = 1; $pass <= 3; $pass++) {
     $database->query("UPDATE ".TB_PREFIX."vdata SET crop = -1, starvupdate = 0 WHERE wref = $capital");
     @unlink('GameEngine/Prevention/starvation.txt');
@@ -166,6 +169,8 @@ if(is_array($player) && isset($player[0]['wref'])) {
     $slot = ($tribe >= 1 && $tribe <= 5 ? ($tribe - 1) * 10 : 0) + 1;
     $savedUnit = is_array($units) ? (int)$units['u'.$slot] : 0;
     $database->query("UPDATE ".TB_PREFIX."units SET u$slot = 100000 WHERE vref = $wref");
+    check($netCrop->invoke($automation, $wref) < 0,
+        "una aldea de jugador sí paga la manutención de sus tropas en la producción");
     $database->query("UPDATE ".TB_PREFIX."vdata SET crop = -1, starv = 0, starvupdate = 0 WHERE wref = $wref");
     @unlink('GameEngine/Prevention/starvation.txt');
     $starvation->invoke($automation);

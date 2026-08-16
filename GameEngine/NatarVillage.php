@@ -35,16 +35,21 @@ define('NATAR_LAST_RESOURCE_FIELD', 18);
 define('NATAR_FIRST_BUILDING_SLOT', 19);
 define('NATAR_LAST_BUILDING_SLOT', 38);
 
-// Nivel al que se dejan los campos que no son de cereal: es lo que hace que una aldea
-// natar limpiada valga la pena como granja, que es justo lo que pasa en Travian.
+// Los 18 campos, cereal incluido, en nivel 10: es lo que trae una Aldea de la Maravilla
+// en el T4 oficial cuando aparece como aldea natar.
 define('NATAR_RESOURCE_FIELD_LEVEL', 10);
-// Molino y panadería al tope: +50% sobre la producción de los campos de cereal.
+// Molino y panadería al tope, que es lo que hace que el cereal alcance para la
+// guarnición sin salirse del nivel 10 de los campos.
 define('NATAR_GRAINMILL_LEVEL', 5);
 define('NATAR_BAKERY_LEVEL', 5);
-// Almacén y granero: sin esto la aldea tiene tope 800 y el escondite nivel 10 (10.000
-// por recurso en este servidor) la vuelve imposible de saquear para siempre.
+// Almacén y granero: en el T4 oficial la aldea de Maravilla llega con ~91.800 de
+// capacidad; el nivel 20 de este servidor da 80.000, que es lo más cerca que llega su
+// tabla. Sin esto la aldea tiene tope 800 y el escondite nivel 10 (10.000 por recurso
+// acá) la vuelve imposible de saquear para siempre.
 define('NATAR_WAREHOUSE_LEVEL', 20);
 define('NATAR_GRANARY_LEVEL', 20);
+// Edificio principal nivel 15, también como en el T4 oficial.
+define('NATAR_MAIN_BUILDING_LEVEL', 15);
 
 /**
  * Los cuatro primeros ids de usuario son las cuentas del sistema que crea el
@@ -235,11 +240,17 @@ function natarFindBuildingSlot($fields, $type) {
 }
 
 /**
- * Arma la configuración de campos y edificios que sostiene a la guarnición que la aldea
- * tiene hoy: sube los campos de cereal (con molino y panadería) al nivel más bajo que
- * deja el balance en cero o mejor, y deja los demás campos y el almacenamiento fijos.
+ * Arma la configuración de una aldea natar: los 18 campos en nivel 10, molino,
+ * panadería, almacén, granero y edificio principal, tal como llegan las Aldeas de la
+ * Maravilla en el T4 oficial. Respeta lo que ya esté construido más alto.
  *
- * No escribe nada: devuelve el plan para que lo aplique natarProvisionVillage(), y para
+ * La guarnición NO entra en la cuenta de los niveles: una aldea NPC no paga manutención
+ * (ver Automation::bountycalculateProduction), así que no hay nada que compensar
+ * subiendo campos por encima del nivel oficial. `upkeep`
+ * viaja igual en el resultado porque es el número que hace falta mirar cuando la aldea
+ * cambia de dueño y pasa a ser una aldea de jugador de verdad.
+ *
+ * No escribe nada: devuelve el plan para que lo aplique natarProvisionVillage() y para
  * que los checkers puedan verificarlo sin tocar la base.
  */
 function natarVillagePlan($fields, $upkeep) {
@@ -251,16 +262,16 @@ function natarVillagePlan($fields, $upkeep) {
         }
         if((int)$plan['f'.$slot.'t'] === 4) {
             $cropFields[] = $slot;
-        } else {
-            $plan['f'.$slot] = NATAR_RESOURCE_FIELD_LEVEL;
         }
+        $plan['f'.$slot] = max(NATAR_RESOURCE_FIELD_LEVEL, (int)$plan['f'.$slot]);
     }
 
     $buildings = array(
         8 => NATAR_GRAINMILL_LEVEL,
         9 => NATAR_BAKERY_LEVEL,
         10 => NATAR_WAREHOUSE_LEVEL,
-        11 => NATAR_GRANARY_LEVEL
+        11 => NATAR_GRANARY_LEVEL,
+        15 => NATAR_MAIN_BUILDING_LEVEL
     );
     foreach($buildings as $type => $level) {
         $slot = natarFindBuildingSlot($plan, $type);
@@ -270,31 +281,19 @@ function natarVillagePlan($fields, $upkeep) {
         }
     }
 
-    $maxCropLevel = max(array_keys($GLOBALS['bid4']));
-    $chosen = $maxCropLevel;
-    for($level = 0; $level <= $maxCropLevel; $level++) {
-        foreach($cropFields as $slot) {
-            $plan['f'.$slot] = $level;
-        }
-        // La población depende del nivel elegido y también come cereal, así que entra
-        // en la comparación: es exactamente lo que descuenta bountycalculateProduction.
-        if(natarVillageGrossCrop($plan) - natarVillagePopulation($plan) - $upkeep >= 0) {
-            $chosen = $level;
-            break;
-        }
-    }
-    foreach($cropFields as $slot) {
-        $plan['f'.$slot] = $chosen;
-    }
-
+    $pop = natarVillagePopulation($plan);
+    $grossCrop = natarVillageGrossCrop($plan);
     return array(
         'fields' => $plan,
         'crop_fields' => $cropFields,
-        'crop_level' => $chosen,
-        'pop' => natarVillagePopulation($plan),
-        'gross_crop' => natarVillageGrossCrop($plan),
+        'crop_level' => NATAR_RESOURCE_FIELD_LEVEL,
+        'pop' => $pop,
+        'gross_crop' => $grossCrop,
         'upkeep' => $upkeep,
-        'net_crop' => natarVillageGrossCrop($plan) - natarVillagePopulation($plan) - $upkeep,
+        // Lo que produce de verdad mientras es natar: sin manutención de tropas.
+        'net_crop' => $grossCrop - $pop,
+        // Lo que produciría si fuera de un jugador, con esta misma guarnición.
+        'net_crop_as_player' => $grossCrop - $pop - $upkeep,
         'maxstore' => natarVillageStorage($plan, 'maxstore'),
         'maxcrop' => natarVillageStorage($plan, 'maxcrop')
     );

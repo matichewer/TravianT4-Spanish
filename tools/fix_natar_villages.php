@@ -85,13 +85,14 @@ foreach(array('capital' => 'CAPITAL', 'wonder' => 'MARAVILLA') as $kind => $labe
             $plan = natarVillagePlan($fields, natarGarrisonUpkeep($simulated));
         }
 
-        printf("   campos de cereal: nivel %d (x%d)   almacén/granero: %s / %s\n",
+        printf("   campos: nivel %d los 18 (%d de cereal)   almacén/granero: %s / %s\n",
             $plan['crop_level'], count($plan['crop_fields']),
             number_format($plan['maxstore']), number_format($plan['maxcrop']));
-        printf("   cereal: %s bruto/h  -  %s población  -  %s tropas  =  %s neto/h%s\n",
+        printf("   cereal: %s bruto/h  -  %s población  =  %s neto/h\n",
             number_format($plan['gross_crop']), number_format($plan['pop']),
-            number_format($plan['upkeep']), number_format($plan['net_crop']),
-            $plan['net_crop'] < 0 ? "  (la cubre starvation(), que no toca aldeas NPC)" : "");
+            number_format($plan['net_crop']));
+        printf("   (su guarnición comería %s de cereal/h, pero una aldea NPC no paga manutención)\n",
+            number_format($plan['upkeep']));
         echo "\n";
     }
 }

@@ -41,5 +41,7 @@ checkNatarAttack(strpos($installer, 'natarRestockGarrison($wid, natarCapitalGarr
 // cualquier aldea puede producir, así que sin esta salida se desarma sola.
 checkNatarAttack(strpos($automation, '(int)$starv[\'owner\'] > 0 && (int)$starv[\'owner\'] <= 4') !== false,
     'starvation() deja afuera a las cuentas del sistema (Support, Natars, Nature, Multihunter)');
+checkNatarAttack(strpos($automation, '$villageOwner > 0 && $villageOwner <= 4') !== false,
+    'la producción de una aldea NPC no le cobra manutención a la guarnición');
 
 exit(count($failures) ? 1 : 0);
