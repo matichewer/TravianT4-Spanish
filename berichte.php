@@ -20,6 +20,10 @@ else {
 include "Templates/html.tpl";
 ?>
 <body class="v35 webkit chrome reports">
+	<style type="text/css">
+		/* Temporary production trial: hide the decorative illustration in report details. */
+		#content.reports .reportImage { display: none; }
+	</style>
 	<div id="wrapper"> 
 		<img id="staticElements" src="img/x.gif" alt="" /> 
 		<div id="logoutContainer"> 
