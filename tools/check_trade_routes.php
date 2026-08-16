@@ -130,14 +130,21 @@ check(strpos($tradeRouteBody,'!== (int)$data[\'uid\']') !== false,
 	'la comprobación de dueño compara contra el uid guardado en la ruta');
 check(strpos($tradeRouteBody,"\$database->deleteTradeRoute(\$data['id'])") !== false,
 	'una ruta huérfana (aldea borrada o conquistada) se elimina en vez de reintentar para siempre');
-check(strpos($tradeRouteBody,'if(!$this->sendResource2(') !== false
+check(strpos($tradeRouteBody,'$sent = $this->sendResource2(') !== false
+	&& strpos($tradeRouteBody,'if(!$sent) {') !== false
 	&& strpos($tradeRouteBody,'retryTradeRoute(') !== false,
 	'un envío fallido se reprograma para reintento en vez de perder el día');
+// La fila se reclama (timestamp adelantado a mañana) ANTES de repartir. Si el reparto
+// lanza —una dependencia que el proceso que corre esto no cargó, por ejemplo—, sin este
+// catch el envío del día desaparecía en silencio y además se cortaba el barrido para el
+// resto de las rutas. Es exactamente lo que pasaba con el worker dedicado.
+check(preg_match('/try\s*\{\s*\$sent = \$this->sendResource2\(.*?\}\s*catch\(Throwable \$e\)\s*\{/s',$tradeRouteBody) === 1,
+	'un error fatal repartiendo una ruta la devuelve al reintento en vez de perder el día en silencio');
 
 // ---------------------------------------------------------------------------
 section('D. Market::procTradeRoutes(): pico de superposición, no la suma ciega');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,"\$database->getTradeRoutesFrom(\$village->wid,\$originalRouteIds)") !== false,
+check(strpos($marketSource,"Automation::routeScheduleEntries(\$village->wid,\$this->maxcarry,\$session->tribe,\$originalRouteIds)") !== false,
 	'procTradeRoutes() arma el calendario con las otras rutas de la misma aldea (excluyendo TODO el grupo que se edita, no solo una fila)');
 check(strpos($marketSource,'$peakDemand = Automation::peakConcurrentMerchants($peakEntries);') !== false,
 	'la validación usa el pico de mercaderes simultáneos calculado por Automation, no una suma local');
@@ -148,10 +155,17 @@ check(strpos($marketSource,'$reqMerc > $this->merchant)') === false,
 check(strpos($marketSource,"\$originalRouteIds = array();") !== false
 	&& strpos($marketSource,"if(\$postAction === 'editRoute' && isset(\$post['original_routeid'])") !== false,
 	'al editar, los ids del grupo completo se calculan antes de validar para poder excluirlos');
-check(strpos($marketSource,'private function merchantRoundTripSeconds(') !== false,
-	'existe merchantRoundTripSeconds(), que calcula el viaje real ida y vuelta entre dos aldeas');
-check(strpos($marketSource,'2 * (int)$generator->procDistanceTime($toCoor,$fromCoor,$session->tribe,0)') !== false,
+check(strpos($automationSource,'public static function routeTripSeconds(') !== false,
+	'existe routeTripSeconds(), que calcula cuánto están fuera los mercaderes de una salida');
+check(strpos($automationSource,'$roundTrip = 2 * (int)$generator->procDistanceTime($toCoor, $fromCoor, $tribe, 0);') !== false,
 	'el viaje se calcula con la misma fórmula que usa el envío manual, no una copia con otro número');
+// Con "envíos x3" los mercaderes vuelven y salen de nuevo sin liberar el cupo: el cupo
+// está tomado 3 viajes de ida y vuelta, no uno. Contando uno solo, el guardado aceptaba
+// rutas cuyas salidas sí se pisan de verdad, y el envío se caía recién a la hora de salir.
+check(strpos($automationSource,'return $roundTrip * max(1, min(3, (int)$deliveries));') !== false,
+	'el tiempo ocupado tiene en cuenta los envíos encadenados (x1/x2/x3), no solo un viaje');
+check(strpos($marketSource,'private function merchantRoundTripSeconds(') === false,
+	'Market ya no tiene su propia copia del cálculo de viaje');
 
 // ---------------------------------------------------------------------------
 section('E. Vista 17_4.tpl: no ofrecer borrar/editar la ruta de otra aldea');
@@ -233,8 +247,9 @@ check(strpos($marketSource,'if($peakDemand > $this->merchant)') !== false,
 	'crear una ruta sigue exigiendo que las salidas de la aldea entren en el Mercado en su momento de mayor superposición');
 $merchantsTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_merchants.tpl');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
-	&& strpos($merchantsTpl,'salen todos los días en') !== false,
-	'el contador del Mercado explica cuantos mercaderes salen en rutas y a que hora');
+	&& strpos($merchantsTpl,'a la vez en rutas comerciales') !== false
+	&& strpos($merchantsTpl,'$market->routeDepartureHours()') !== false,
+	'el contador del Mercado explica cuantos mercaderes viajan a la vez en rutas y a que hora salen');
 check(strpos($marketSource,'public function routeDepartureHours()') !== false,
 	'existe el horario de salida de las rutas para poder mostrarlo junto al contador');
 check(strpos($tplSource,'$market->routeMerchants($firstRoute)') !== false,
@@ -388,8 +403,17 @@ check(Automation::peakConcurrentMerchants(array(
 check(Automation::peakConcurrentMerchants(array()) === 0,
 	'sin salidas no hace falta ningun mercader');
 
-check(strpos($marketSource,"foreach(\$database->getTradeRoutesFrom(\$village->wid,\$originalRouteIds) as \$route) {") !== false,
+check(strpos($automationSource,"foreach(\$database->getTradeRoutesFrom(\$vid, \$excludeRouteIds) as \$route) {") !== false,
 	'el calendario de la aldea se arma con las rutas reales de esa aldea, no un supuesto');
+// El contador que se muestra ("N de esos mercaderes salen todos los días...") y la
+// validación al guardar tienen que salir del MISMO calendario. Cuando el contador sumaba
+// las salidas, una ruta de 8 mercaderes declarada en tres horarios que no se pisan decía
+// "24" en un Mercado que como mucho tiene 20 — un número imposible, y encima distinto del
+// que el guardado acababa de aceptar.
+check(strpos($automationSource,'return self::peakConcurrentMerchants(self::routeScheduleEntries($vid, $carryCapacity, $tribe, $excludeRouteIds));') !== false,
+	'routeMerchantsCommitted() devuelve el PICO de mercaderes de viaje a la vez, no la suma de todas las salidas del día');
+check(preg_match('/routeMerchantsCommitted\([^)]*\)\s*\{\s*\$total = 0;/',$automationSource) !== 1,
+	'ya no queda la suma ciega de las salidas del día');
 check(strpos($dbSource,'SELECT id, wid, wood, clay, iron, crop, start, start_minute, deliveries FROM') !== false,
 	'getTradeRoutesFrom() trae tambien el destino de cada ruta, necesario para calcular su viaje');
 

@@ -1702,24 +1702,89 @@ class Automation {
     }
 
     /**
-     * Mercaderes reservados por las rutas comerciales que salen de esta aldea.
-     *
-     * Se recalculan con la capacidad actual en vez de leer la columna `merchant` de la
-     * ruta: ese numero quedaba congelado en el que hacia falta el dia que se creo la
-     * ruta, asi que subir la Oficina de comercio no liberaba nunca los mercaderes que
-     * sobraban (una ruta de 7500 creada sin Oficina seguia reservando 10 mercaderes con
-     * la Oficina a 20, donde ya solo necesita 4).
+     * Mercaderes que da un Mercado de nivel $marketLevel. Sale de la tabla, no del
+     * nivel: coinciden por casualidad (bid17 da 1 mercader por nivel) y cada pantalla
+     * que use el nivel directamente se rompe el dia que esos valores cambien. Un nivel
+     * fuera de la tabla (editado desde el panel) se recorta en vez de dar null.
      */
-    public static function routeMerchantsCommitted($vid, $carryCapacity, $excludeRouteId = 0) {
+    public static function marketMerchants($marketLevel) {
+        global $bid17;
+        $marketLevel = (int)$marketLevel;
+        if($marketLevel <= 0 || empty($bid17)) {
+            return 0;
+        }
+        return (int)$bid17[min($marketLevel, count($bid17))]['attri'];
+    }
+
+    /**
+     * Segundos que los mercaderes de una salida estan fuera de casa: el viaje de ida y
+     * vuelta, multiplicado por la cantidad de envios encadenados (x1/x2/x3), porque en
+     * cada envio vuelven y salen de nuevo sin liberar el cupo.
+     *
+     * Misma formula de tiempo de viaje que usan la salida real (sendResource2) y el
+     * envio manual, para que el calendario de solapamiento no invente un viaje distinto
+     * del que despues ocurre.
+     */
+    public static function routeTripSeconds($fromVid, $toVid, $tribe, $deliveries = 1) {
+        global $database, $generator;
+        $fromVid = (int)$fromVid;
+        $toVid = (int)$toVid;
+        if($fromVid <= 0 || $toVid <= 0 || !is_object($generator)) {
+            return 0;
+        }
+        $fromCoor = $database->getCoor($fromVid);
+        $toCoor = $database->getCoor($toVid);
+        if(!is_array($fromCoor) || !is_array($toCoor)) {
+            return 0;
+        }
+        $roundTrip = 2 * (int)$generator->procDistanceTime($toCoor, $fromCoor, $tribe, 0);
+        return $roundTrip * max(1, min(3, (int)$deliveries));
+    }
+
+    /**
+     * Calendario de salidas de las rutas de una aldea, en el formato que consume
+     * peakConcurrentMerchants(). Unico lugar donde se arma: lo comparten la validacion
+     * al guardar una ruta (Market::procTradeRoutes, que le agrega los horarios que se
+     * estan por guardar) y el contador que se muestra en pantalla. Cuando cada uno lo
+     * armaba por su cuenta, la pantalla decia una cosa y el guardado aceptaba otra.
+     */
+    public static function routeScheduleEntries($vid, $carryCapacity, $tribe, $excludeRouteIds = array()) {
         global $database;
-        $total = 0;
-        foreach($database->getTradeRoutesFrom($vid, $excludeRouteId) as $route) {
-            $total += self::merchantsRequired(
+        $entries = array();
+        foreach($database->getTradeRoutesFrom($vid, $excludeRouteIds) as $route) {
+            $merchants = self::merchantsRequired(
                 (int)$route['wood'] + (int)$route['clay'] + (int)$route['iron'] + (int)$route['crop'],
                 $carryCapacity
             );
+            if($merchants <= 0) {
+                continue;
+            }
+            $entries[] = array(
+                'start' => ((int)$route['start']) * 3600 + ((int)$route['start_minute']) * 60,
+                'duration' => self::routeTripSeconds($vid, (int)$route['wid'], $tribe, isset($route['deliveries']) ? $route['deliveries'] : 1),
+                'merchants' => $merchants,
+            );
         }
-        return $total;
+        return $entries;
+    }
+
+    /**
+     * Mercaderes que las rutas comerciales de esta aldea tienen comprometidos: el PICO
+     * de mercaderes de viaje a la vez, no la suma de todas las salidas del dia.
+     *
+     * Sumar era lo que hacia decir "24 de esos mercaderes salen todos los dias" a una
+     * ruta de 8 mercaderes declarada en tres horarios que nunca se pisan (y en un
+     * Mercado que como mucho tiene 20): el numero no solo era imposible, ademas no
+     * coincidia con el que valida el guardado, que ya calculaba el solapamiento real.
+     *
+     * Los mercaderes se recalculan con la capacidad actual en vez de leer la columna
+     * `merchant` de la ruta: ese numero quedaba congelado en el que hacia falta el dia
+     * que se creo la ruta, asi que subir la Oficina de comercio no liberaba nunca los
+     * mercaderes que sobraban (una ruta de 7500 creada sin Oficina seguia reservando 10
+     * mercaderes con la Oficina a 20, donde ya solo necesita 4).
+     */
+    public static function routeMerchantsCommitted($vid, $carryCapacity, $tribe, $excludeRouteIds = array()) {
+        return self::peakConcurrentMerchants(self::routeScheduleEntries($vid, $carryCapacity, $tribe, $excludeRouteIds));
     }
 
     /**
@@ -1816,7 +1881,18 @@ class Automation {
                 continue;
             }
             $targettribe = $database->getUserField($fromOwner, "tribe", 0);
-            if(!$this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries'])) {
+            // El reclamo ya adelantó la fila al horario de mañana, así que a partir de
+            // acá CUALQUIER salida sin envío tiene que devolverla al reintento corto: si
+            // no, el envío del día se pierde en silencio. Un error fatal en el reparto
+            // (una dependencia que el proceso que corre esto no cargó, por ejemplo) hacía
+            // exactamente eso, y además cortaba el barrido para el resto de las rutas.
+            $sent = false;
+            try {
+                $sent = $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
+            } catch(Throwable $e) {
+                error_log('TradeRoute '.$data['id'].' falló: '.$e->getMessage().' ('.$e->getFile().':'.$e->getLine().')');
+            }
+            if(!$sent) {
                 // Recursos o mercaderes pueden faltar transitoriamente. El reclamo ya
                 // evita duplicados; devolver la fila a una espera corta evita perder
                 // por completo el envío de este día.
@@ -1918,10 +1994,7 @@ class Automation {
             // Mercaderes del Mercado de la aldea de origen. Coincidia con el nivel por
             // casualidad (bid17 da 1 mercader por nivel); leer la tabla es lo que hace el
             // resto del juego y no se rompe si esos valores cambian.
-            $marketLevel2 = (int)$this->getTypeLevel(17, $from);
-            $merchant2 = ($marketLevel2 > 0 && !empty($bid17))
-                ? (int)$bid17[min($marketLevel2, count($bid17))]['attri']
-                : 0;
+            $merchant2 = self::marketMerchants($this->getTypeLevel(17, $from));
             $used2 = $database->totalMerchantUsed($from);
             $merchantAvail2 = $merchant2 - $used2;
             $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));
@@ -4691,13 +4764,19 @@ class Automation {
 	        $this->bountyproduction['clay'] = $gross['production']['clay']+$heroProduction['clay'];
 	        $this->bountyproduction['iron'] = $gross['production']['iron']+$heroProduction['iron'];
 
-	        if($uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
+	        // Sin artefacto, las consultas devuelven null: leerles un índice llenaba el log
+	        // de "Trying to access array offset on value of type null" en cada acreditación
+	        // de producción, o sea prácticamente en cada carga de página.
+	        $normalA = is_array($normalA) ? $normalA : array();
+	        $largeA = is_array($largeA) ? $largeA : array();
+	        $uniqueA = is_array($uniqueA) ? $uniqueA : array();
+	        if(isset($uniqueA['size'],$uniqueA['owner']) && $uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
 	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
 
-	        } else if($normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
+	        } else if(isset($normalA['type'],$normalA['size'],$normalA['owner']) && $normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
 	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
-	        } else if($largeA['size'] == 2 && $largeA['owner'] == $uid) {
+	        } else if(isset($largeA['size'],$largeA['owner']) && $largeA['size'] == 2 && $largeA['owner'] == $uid) {
 	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
 
 	        } else {

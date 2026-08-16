@@ -81,8 +81,13 @@ check(strpos($marketSource,'public function routeDepartureHours()') !== false
 check(strpos($dbSource,'start, start_minute, deliveries FROM " . TB_PREFIX . "route') !== false,
 	'getTradeRoutesFrom() trae también el horario completo (hora y minuto) de la ruta');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
-	&& strpos($merchantsTpl,'salen todos los días en') !== false,
-	'el contador explica cuántos mercaderes salen en rutas y a qué hora');
+	&& strpos($merchantsTpl,'a la vez en rutas comerciales') !== false
+	&& strpos($merchantsTpl,'$market->routeDepartureHours()') !== false,
+	'el contador explica cuántos mercaderes viajan a la vez en rutas y a qué hora salen');
+// El texto dice "Hasta N ... a la vez", no "N salen todos los días": N es el pico de
+// mercaderes simultáneos, y sumarlos daba cifras mayores que el Mercado entero.
+check(strpos($merchantsTpl,'salen todos los días en') === false,
+	'el contador ya no presenta el número como una suma de todas las salidas del día');
 check(strpos($merchantsTpl,'Mientras no viajen podés usarlos') !== false,
 	'el texto aclara que esos mercaderes se pueden usar mientras tanto');
 
@@ -153,12 +158,22 @@ check(strpos($npcTpl,'$npcHasPreset') !== false,
 // ---------------------------------------------------------------------------
 section('F. El envío automático usa la tabla del edificio');
 // ---------------------------------------------------------------------------
-check(strpos($automationSource,'$merchant2 = ($marketLevel2 > 0 && !empty($bid17))') !== false,
-	'sendResource2() saca los mercaderes de bid17 y no del nivel del Mercado');
-check(preg_match('/function sendResource2\([^)]*\)\s*\{\s*global \$bid17,/',$automationSource) === 1,
-	'sendResource2() importa bid17');
-check(strpos($marketSource,'$bid17[min($marketLevel,count($bid17))]') !== false,
-	'loadMarket() recorta el nivel a la tabla (un nivel fuera de rango dejaba el Mercado inservible)');
+// Una sola fuente para "cuántos mercaderes da un Mercado de nivel N": coincide con el
+// nivel por casualidad (bid17 da 1 por nivel) y cada pantalla que leía el nivel directo
+// se rompía sola el día que esos valores cambiaran.
+check(strpos($automationSource,'public static function marketMerchants($marketLevel)') !== false,
+	'existe marketMerchants(), única traducción de nivel de Mercado a mercaderes');
+check(strpos($automationSource,'return (int)$bid17[min($marketLevel, count($bid17))][\'attri\'];') !== false,
+	'marketMerchants() sale de bid17 y recorta el nivel a la tabla (un nivel fuera de rango dejaba el Mercado inservible)');
+check(strpos($automationSource,'$merchant2 = self::marketMerchants($this->getTypeLevel(17, $from));') !== false,
+	'sendResource2() saca los mercaderes de la tabla y no del nivel del Mercado');
+check(strpos($marketSource,'$this->merchant = Automation::marketMerchants($building->getTypeLevel(17));') !== false,
+	'loadMarket() usa el mismo helper que el envío automático');
+foreach(array('Templates/dorf3/1.tpl','Templates/dorf3/2.tpl') as $resumen) {
+	$source = file_get_contents(dirname(__DIR__).'/'.$resumen);
+	check(strpos($source,'Automation::marketMerchants($building->getTypeLevel(17,$vid))') !== false,
+		$resumen.' cuenta los mercaderes con el helper, no con el nivel del edificio');
+}
 
 echo "\n";
 if(empty($GLOBALS['fails'])) {

@@ -43,11 +43,13 @@ if(!empty($market->routeError['code'])){
 
 if(isset($_GET['create'])){
 // Todas las rutas de la aldea tienen que caber a la vez en el Mercado: sin este dato a la
-// vista, pasarse de capacidad era la otra forma de que "guardar" no hiciera nada.
+// vista, pasarse de capacidad era la otra forma de que "guardar" no hiciera nada. Lo que
+// se cuenta es el momento de mayor superposición, la misma cuenta que valida el guardado:
+// dos salidas que nunca coinciden en el tiempo comparten los mismos mercaderes.
 $routeMerchantsUsed = (int)$market->routeMerchantsCommitted();
-echo '<p>Mercaderes que se pueden comprometer en rutas: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
+echo '<p>Mercaderes libres en el momento de mayor superposición: '.max(0,(int)$market->merchant - $routeMerchantsUsed).' de '.(int)$market->merchant
 	.' (cada uno transporta '.round($market->maxcarry).' recursos). Los mercaderes de una ruta'
-	.' sólo están ocupados mientras viajan.</p>';
+	.' sólo están ocupados mientras viajan, así que dos horarios que no se pisan pueden usar los mismos.</p>';
 include("17_create.tpl");
 }else if(isset($_GET['action']) && $_GET['action'] === 'editRoute' && isset($_GET['routeid'])){
 // Una ruta con varios horarios es varias filas: se piden todos los ids del grupo

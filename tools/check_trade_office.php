@@ -132,7 +132,7 @@ section('D. Las rutas reservan según la capacidad de hoy');
 // ---------------------------------------------------------------------------
 check(strpos($automationSource,'public static function routeMerchantsCommitted(') !== false,
 	'existe routeMerchantsCommitted(), que recalcula la reserva de cada ruta');
-check(strpos($automationSource,'$database->getTradeRoutesFrom($vid, $excludeRouteId)') !== false,
+check(strpos($automationSource,'$database->getTradeRoutesFrom($vid, $excludeRouteIds)') !== false,
 	'la reserva se calcula sobre los recursos de la ruta, no sobre la columna merchant');
 check(strpos($marketSource,'$this->routeReserved = $this->routeMerchantsCommitted();') !== false,
 	'el Mercado recalcula lo comprometido por rutas con la capacidad de hoy (para mostrarlo,'
@@ -154,10 +154,15 @@ check(strpos($rutasTpl,'$market->routeMerchantsCommitted()') !== false,
 check(strpos($rutasTpl,'(int)$market->maxcarry') === false,
 	'la capacidad por mercader no se trunca con (int) al mostrarla');
 
+// El resumen de aldeas y el Mercado tienen que dar el MISMO número de mercaderes libres.
+// El resumen restaba además lo comprometido por rutas, así que la misma aldea decía
+// "12/20" en dorf3 y "20/20" en el Mercado; las rutas no ocupan a nadie hasta que salen.
 foreach(array('Templates/dorf3/1.tpl','Templates/dorf3/2.tpl') as $resumen) {
 	$source = file_get_contents(dirname(__DIR__).'/'.$resumen);
-	check(strpos($source,'Automation::routeMerchantsCommitted(') !== false,
-		$resumen.' descuenta también los mercaderes reservados por rutas');
+	check(strpos($source,'Automation::routeMerchantsCommitted(') === false,
+		$resumen.' no descuenta las rutas: usa la misma definición de "ocupado" que el Mercado');
+	check(strpos($source,'$totalmerchants - (int)$database->totalMerchantUsed($vid)') !== false,
+		$resumen.' cuenta como ocupados sólo los mercaderes realmente de viaje');
 }
 
 // ---------------------------------------------------------------------------

@@ -207,20 +207,8 @@ class Market {
         // aunque nunca fueran a estar afuera a la vez. Aca se arma el calendario real
         // de esta aldea (las otras rutas ya guardadas + los horarios de este guardado)
         // y se valida contra el pico de mercaderes simultaneos, no contra la suma.
-        $peakEntries = array();
-        foreach($database->getTradeRoutesFrom($village->wid,$originalRouteIds) as $route) {
-            $otherReqMerc = $this->requiredMerchants((int)$route['wood'] + (int)$route['clay'] + (int)$route['iron'] + (int)$route['crop']);
-            if($otherReqMerc <= 0) {
-                continue;
-            }
-            $otherDuration = $this->merchantRoundTripSeconds($village->wid,(int)$route['wid']);
-            $peakEntries[] = array(
-                'start' => ((int)$route['start']) * 3600 + ((int)$route['start_minute']) * 60,
-                'duration' => $otherDuration,
-                'merchants' => $otherReqMerc,
-            );
-        }
-        $newRouteDuration = $this->merchantRoundTripSeconds($village->wid,$target);
+        $peakEntries = Automation::routeScheduleEntries($village->wid,$this->maxcarry,$session->tribe,$originalRouteIds);
+        $newRouteDuration = Automation::routeTripSeconds($village->wid,$target,$session->tribe,$deliveries);
         foreach($schedules as $schedule) {
             $peakEntries[] = array(
                 'start' => $schedule['hour'] * 3600 + $schedule['minute'] * 60,
@@ -337,10 +325,7 @@ class Market {
         $this->return  = $database->getMovement(2,$village->wid,1);
         // Un nivel fuera de la tabla (editado desde el panel) dejaba $merchant en null y
         // el Mercado sin poder mover nada; se recorta igual que la capacidad de carga.
-        $marketLevel = (int)$building->getTypeLevel(17);
-        $this->merchant = ($marketLevel > 0 && !empty($bid17))
-            ? (int)$bid17[min($marketLevel,count($bid17))]['attri']
-            : 0;
+        $this->merchant = Automation::marketMerchants($building->getTypeLevel(17));
         // La capacidad se calcula antes que los mercaderes ocupados porque las rutas
         // reservan segun la capacidad de hoy, no la del dia en que se crearon.
         $this->maxcarry = Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28));
@@ -484,11 +469,12 @@ class Market {
     }
 
     /**
-     * Mercaderes que las rutas de esta aldea tienen reservados hoy.
+     * Mercaderes que las rutas de esta aldea tienen comprometidos: el pico de los que
+     * estan de viaje a la vez, la misma cuenta que valida el guardado.
      */
-    public function routeMerchantsCommitted($excludeRouteId = 0) {
-        global $village;
-        return Automation::routeMerchantsCommitted($village->wid,$this->maxcarry,$excludeRouteId);
+    public function routeMerchantsCommitted($excludeRouteIds = array()) {
+        global $village,$session;
+        return Automation::routeMerchantsCommitted($village->wid,$this->maxcarry,$session->tribe,$excludeRouteIds);
     }
 
     /**
@@ -791,25 +777,6 @@ class Market {
         return Automation::merchantsRequired($amount,$this->maxcarry);
     }
 
-    /**
-     * Segundos que un mercader esta afuera en un viaje de ida y vuelta entre $fromVid
-     * y $toVid, a la velocidad de mercader de la propia tribu (misma formula que usa
-     * el envio manual y el reparto real de Automation::sendResource2, para que el
-     * calendario de solapamiento no invente un tiempo de viaje distinto del real).
-     */
-    private function merchantRoundTripSeconds($fromVid,$toVid) {
-        global $database,$session,$generator;
-        if($fromVid <= 0 || $toVid <= 0) {
-            return 0;
-        }
-        $fromCoor = $database->getCoor($fromVid);
-        $toCoor = $database->getCoor($toVid);
-        if(!is_array($fromCoor) || !is_array($toCoor)) {
-            return 0;
-        }
-        return 2 * (int)$generator->procDistanceTime($toCoor,$fromCoor,$session->tribe,0);
-    }
-     
     private function loadOnsale() { 
         global $database,$village,$session,$multisort,$generator; 
         $displayarray = $database->getMarket($village->wid,1); 

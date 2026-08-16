@@ -13,11 +13,12 @@
 		$vdata = $database->getVillage($vid);
 		$jobs = $database->getJobs($vid);
 		$unit = $database->getTraining($vid);
-		$totalmerchants = $building->getTypeLevel(17,$vid);
-		// Las rutas comerciales tambien reservan mercaderes: sin descontarlas, el resumen
-		// prometia mas mercaderes libres de los que el Mercado deja usar.
-		$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid)
-			- Automation::routeMerchantsCommitted($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid)));
+		// Misma definicion que el contador del Mercado (Market::merchantAvail): ocupados
+		// son solo los que estan realmente de viaje. Restar aca ademas los mercaderes
+		// comprometidos en rutas hacia que la misma aldea mostrara "12/20" en el resumen
+		// y "20/20" en el Mercado; las rutas no ocupan a nadie hasta que salen.
+		$totalmerchants = Automation::marketMerchants($building->getTypeLevel(17,$vid));
+		$availmerchants = max(0,$totalmerchants - (int)$database->totalMerchantUsed($vid));
 		$incoming_attacks = $database->getMovement(3,$vid,1);
 		$bui = '<span class="none">-</span>';
 		$tro = '<span class="none">-</span>';

@@ -18,9 +18,16 @@ if(!isset($marketShowCounter) || $marketShowCounter) {
 <?php
 	if((int)$market->routeReserved > 0) {
 		$marketRouteHours = $market->routeDepartureHours();
-		echo '<p class="none">'.(int)$market->routeReserved.' de esos mercaderes salen todos los días en '
-			.(count($marketRouteHours) > 1 ? 'rutas comerciales' : 'una ruta comercial')
-			.' ('.htmlspecialchars(implode(', ',$marketRouteHours),ENT_QUOTES,'UTF-8').'). '
+		// El numero es el PICO de mercaderes de viaje a la vez, no la suma de las salidas
+		// del dia: una misma ruta declarada en tres horarios que no se pisan usa los
+		// mismos mercaderes las tres veces. Sumarlos daba cifras imposibles ("24" en un
+		// Mercado de 20) y ademas no coincidian con lo que valida el guardado.
+		$marketRouteReserved = (int)$market->routeReserved;
+		echo '<p class="none">Hasta '.$marketRouteReserved.' de esos mercaderes '
+			.($marketRouteReserved === 1 ? 'está de viaje' : 'están de viaje')
+			.' a la vez en rutas comerciales ('
+			.(count($marketRouteHours) > 1 ? 'salidas: ' : 'salida: ')
+			.htmlspecialchars(implode(', ',$marketRouteHours),ENT_QUOTES,'UTF-8').'). '
 			.'Mientras no viajen podés usarlos para cualquier otro envío; si a esa hora están ocupados, '
 			.'la ruta se reintenta sola.';
 		if($session->goldclub == 1) {

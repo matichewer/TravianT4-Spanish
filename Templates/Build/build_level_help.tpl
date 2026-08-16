@@ -135,7 +135,17 @@ if ($buildingHelpType === 'rally-point') {
 		1 => 'Durante una celebración de hidromiel, aumenta un 1% el ataque de las tropas germanas de toda la cuenta, reduce a la mitad la persuasión de los jefes y obliga a las catapultas a disparar al azar.',
 		10 => 'Durante una celebración, alcanza el bono máximo de ataque del 10%.'
 	);
-	$buildingHelpNote = 'Solo puede construirse en la capital germana. La celebración dura 72 horas a velocidad 1 y su efecto se evalúa cuando llega cada ataque enviado desde cualquier aldea de la cuenta.';
+	// La duración sale de la misma definición que agenda brewery.php, no de una frase
+	// fija: el texto decía "72 horas" (el valor a velocidad 1) y en un servidor x3 el
+	// jugador leía 72 y recibía 24. El costo sí es fijo, así que a más velocidad la
+	// fiesta rinde menos horas por los mismos recursos.
+	$breweryHelpDuration = breweryCelebrationDuration();
+	$buildingHelpNote = 'Solo puede construirse en la capital germana. La celebración dura '
+		.$generator->getTimeFormat($breweryHelpDuration).' horas';
+	if ((int)SPEED !== 1) {
+		$buildingHelpNote .= ' (72:00:00 a velocidad 1; este servidor va a x'.SPEED.')';
+	}
+	$buildingHelpNote .= ' y su efecto se evalúa cuando llega cada ataque enviado desde cualquier aldea de la cuenta.';
 } elseif ($buildingHelpType === 'main-building') {
 	$buildingHelpTitle = 'Ventajas del Edificio principal';
 	$buildingHelpItems = array(

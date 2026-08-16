@@ -11,11 +11,12 @@ $varray = $database->getProfileVillages($session->uid);
 foreach($varray as $vil){  
 	$vid = $vil['wref'];
 	$vdata = $database->getVillage($vid);   
-	$totalmerchants = $building->getTypeLevel(17,$vid);
-	// Las rutas comerciales tambien reservan mercaderes: sin descontarlas, el resumen
-	// prometia mas mercaderes libres de los que el Mercado deja usar.
-	$availmerchants = $totalmerchants - $database->totalMerchantUsed($vid)
-		- Automation::routeMerchantsCommitted($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid)));
+	// Misma definicion que el contador del Mercado (Market::merchantAvail): ocupados son
+	// solo los que estan realmente de viaje. Restar aca ademas los mercaderes
+	// comprometidos en rutas hacia que la misma aldea mostrara "12/20" en el resumen y
+	// "20/20" en el Mercado; las rutas no ocupan a nadie hasta que salen.
+	$totalmerchants = Automation::marketMerchants($building->getTypeLevel(17,$vid));
+	$availmerchants = max(0,$totalmerchants - (int)$database->totalMerchantUsed($vid));
 	if($vdata['wood'] > $vdata['maxstore']) { $wood = $vdata['maxstore']; } else { $wood = $vdata['wood']; }
 	if($vdata['clay'] > $vdata['maxstore']) { $clay = $vdata['maxstore']; } else { $clay = $vdata['clay']; }
 	if($vdata['iron'] > $vdata['maxstore']) { $iron = $vdata['maxstore']; } else { $iron = $vdata['iron']; }
