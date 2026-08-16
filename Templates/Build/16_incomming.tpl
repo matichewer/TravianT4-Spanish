@@ -110,14 +110,20 @@ if($isNature){
 		$actionType = "Regreso a ";
 	}
 
-$to = $database->getMInfo($units[$y]['vref']);
+$originWref = (int)$units[$y]['from'];
+$destinationWref = (int)$units[$y]['to'];
+$originIsOasis = $database->isVillageOases($originWref);
+$origin = $originIsOasis ? $database->getOMInfo($originWref) : $database->getMInfo($originWref);
+$destination = $database->getMInfo($destinationWref);
+$originName = htmlspecialchars((string)$origin['name'], ENT_QUOTES, 'UTF-8');
+$destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'UTF-8');
 ?>
 <table class="troop_details inReturn" cellpadding="1" cellspacing="1">            
 	<thead>
 		<tr>
-			<td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
+			<td class="role"><a href="karte.php?d=<?php echo $originWref."&c=".$generator->getMapCheck($originWref); ?>"><?php echo $originName; ?></a></td>
             <?php if($units[$y]['t11']!=0){ $colspan = '11'; }else{ $colspan = '10'; } ?>
-			<td colspan="<?php echo $colspan; ?>" class="troopHeadline"><a href="karte.php?d=<?php echo $to['wref']."&c=".$generator->getMapCheck($to['wref']); ?>"><?php echo $actionType ." ". $to['name']; ?></a></td>
+			<td colspan="<?php echo $colspan; ?>" class="troopHeadline"><a href="karte.php?d=<?php echo $destinationWref."&c=".$generator->getMapCheck($destinationWref); ?>"><?php echo $actionType ." ". $destinationName; ?></a></td>
 		</tr>
 	</thead>
 	<tbody class="units">
@@ -125,7 +131,7 @@ $to = $database->getMInfo($units[$y]['vref']);
 				$tribe = $session->tribe;
                   $start = ($tribe-1)*10+1;
                   $end = ($tribe*10);
-                  $coor = $database->getCoor($units[$y]['vref']);
+                  $coor = $database->getCoor($originWref);
                   echo "<tr><th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
                     <span class=\"coordinateY\">(".$coor['x']."</span>

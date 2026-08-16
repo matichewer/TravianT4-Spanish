@@ -814,6 +814,12 @@ class Building {
 		} else {
 			$resourcearray = $database->getResourceLevel($vid);
 		}
+		// Los informes se conservan aunque una aldea haya sido borrada. En ese
+		// caso getResourceLevel() no devuelve una fila: no hay edificios que
+		// consultar y, en particular, tampoco un Abrevadero que aplicar.
+		if(!is_array($resourcearray)) {
+			return 0;
+		}
 		foreach(array_keys($resourcearray,$tid) as $key) {
 			if(strpos($key,'t')) {
 				$key = preg_replace("/[^0-9]/", '', $key);

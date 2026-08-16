@@ -6,9 +6,10 @@
 //      no la aldea activa de quien mira la pantalla — bug real que mostraba el consumo de cereal
 //      equivocado en el informe de refuerzo enviado (Notice/8.tpl) y en la lista de "Refuerzos"
 //      enviados de la Plaza de reuniones (Build/16.tpl) cuando el jugador tiene más de una aldea.
-//   D. El Abrevadero acelera el entrenamiento sólo en Establo/Gran establo (cobertura mínima; la
+//   D. Los informes viejos de aldeas eliminadas no generan warnings al buscar el Abrevadero.
+//   E. El Abrevadero acelera el entrenamiento sólo en Establo/Gran establo (cobertura mínima; la
 //      cobertura completa contra trainUnit() vive en check_hero_training_helmets.php).
-//   E. Sanidad de la tabla de datos (Data/buidata.php $bid41) contra el texto mostrado al jugador.
+//   F. Sanidad de la tabla de datos (Data/buidata.php $bid41) contra el texto mostrado al jugador.
 //
 //   docker compose exec -T web php /var/www/html/tools/check_horse_drinking_trough.php
 
@@ -59,6 +60,7 @@ function emptyResarray() {
 class TroughDatabaseStub {
 	public $jobs = array();
 	public function getJobs($wid) { return $this->jobs; }
+	public function getResourceLevel($wid) { return null; }
 }
 
 class TroughSessionStub {
@@ -310,7 +312,25 @@ troughAssert(
 $building = $savedBuilding;
 
 // ------------------------------------------------------------------------------
-// D. El Abrevadero sólo acelera Establo (20) y Gran establo (30)
+// D. Una aldea eliminada en un informe viejo equivale a no tener Abrevadero
+// ------------------------------------------------------------------------------
+
+$database = new TroughDatabaseStub();
+$building = new Building();
+$warning = null;
+set_error_handler(function($severity,$message) use (&$warning) {
+	$warning = $message;
+	return true;
+});
+$deletedVillageLevel = $building->getTypeLevel(41,999);
+restore_error_handler();
+troughAssert(
+	$deletedVillageLevel === 0 && $warning === null,
+	'Una aldea eliminada debería devolver nivel 0 sin warnings al renderizar un informe viejo'
+);
+
+// ------------------------------------------------------------------------------
+// E. El Abrevadero sólo acelera Establo (20) y Gran establo (30)
 // ------------------------------------------------------------------------------
 
 class TroughTrainingBuildingStub {
@@ -364,7 +384,7 @@ troughAssert(
 unset($GLOBALS['session'],$GLOBALS['database'],$GLOBALS['village'],$GLOBALS['building']);
 
 // ------------------------------------------------------------------------------
-// E. Sanidad de la tabla de datos contra el texto mostrado al jugador
+// F. Sanidad de la tabla de datos contra el texto mostrado al jugador
 // ------------------------------------------------------------------------------
 
 troughAssert(count($bid41) === 20,'bid41 debería tener exactamente 20 niveles');
