@@ -484,12 +484,45 @@ foreach(array('success', 'active', 'failed') as $estado) {
 		'35.tpl distingue el resultado "'.$estado.'"');
 }
 
-// La ayuda del edificio tiene que contar la misma duración que se agenda.
+// La ayuda del edificio tiene que contar la misma duración que se agenda, y eso
+// depende de SPEED: la frase fija "72 horas" mentía en cualquier servidor que no
+// fuera x1 (en x3 el jugador leía 72 y recibía 24).
 $helpPhp = file_get_contents(dirname(__DIR__).'/Templates/Build/build_level_help.tpl');
 check(strpos($helpPhp, "\$buildingHelpType === 'brewery'") !== false,
 	'la ayuda del edificio cubre la Cervecería');
-check(strpos($helpPhp, 'dura 72 horas a velocidad 1') !== false,
-	'la ayuda anuncia las mismas 72 horas que agenda el servidor');
+check(strpos($helpPhp, 'breweryCelebrationDuration()') !== false,
+	'la ayuda calcula la duración con la misma definición que agenda brewery.php');
+check(preg_match('/dura 72 horas/', $helpPhp) !== 1,
+	'la ayuda ya no anuncia una duración fija que sólo vale a velocidad 1');
+
+// Y el texto que sale, con la duración de verdad. Se arma acá el mismo bloque que
+// arma la plantilla, para cada velocidad de servidor.
+require_once dirname(__DIR__).'/GameEngine/GeneratorX.php';
+$generator = new GeneratorX();
+check($generator->getTimeFormat(breweryCelebrationDuration()) === '72:00:00',
+	'a velocidad 1 la ayuda dice 72:00:00');
+
+$helpStart = strpos($helpPhp, "\$buildingHelpType === 'brewery'");
+$helpEnd = strpos($helpPhp, 'elseif ($buildingHelpType', $helpStart + 10);
+$helpBrewery = substr($helpPhp, $helpStart, $helpEnd - $helpStart);
+check(strpos($helpBrewery, "(int)SPEED !== 1") !== false,
+	'la ayuda aclara la velocidad del servidor sólo cuando no es x1');
+check(strpos($helpBrewery, '72:00:00 a velocidad 1') !== false,
+	'y en ese caso sigue dando la referencia de x1 para comparar con la wiki');
+
+// Se renderiza el bloque de verdad (SPEED vale 1 en este proceso) y se mira el texto,
+// que es lo que termina leyendo el jugador.
+$buildingHelpType = 'brewery';
+$buildingHelpLevel = 7;
+ob_start();
+include dirname(__DIR__).'/Templates/Build/build_level_help.tpl';
+$helpRendered = ob_get_clean();
+check(strpos($helpRendered, 'La celebración dura 72:00:00 horas') !== false,
+	'a velocidad 1 el texto renderizado anuncia 72:00:00');
+check(strpos($helpRendered, 'este servidor va a x') === false,
+	'a velocidad 1 no se aclara la velocidad (sería ruido)');
+check(strpos($helpRendered, 'Ventajas de la Cervecería') !== false,
+	'el bloque renderizado es el de la Cervecería');
 
 // ---------------------------------------------------------------------------
 section('G. Mudar la capital derriba la Cervecería');
