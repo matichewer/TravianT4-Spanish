@@ -176,14 +176,14 @@ while($row = mysql_fetch_array($sql2)){
     }
 
 if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){
-    if ($dataarray[24]+$dataarray[25]+$dataarray[26]+$dataarray[27] == 0) {
+    if ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28] == 0) {
     $style = "empty";
-	} elseif ($dataarray[24]+$dataarray[25]+$dataarray[26]+$dataarray[27] != $dataarray[28]) {
+	} elseif ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28] != $dataarray[29]) {
     $style = "half";
     } else {
     $style = "full";
     }
-    $carry = ($dataarray[24]+$dataarray[25]+$dataarray[26]+$dataarray[27])."/".$dataarray[28];
+    $carry = ($dataarray[25]+$dataarray[26]+$dataarray[27]+$dataarray[28])."/".$dataarray[29];
     
     $outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$carry."\" src=\"img/x.gif\" class=\"reportInfo carry ".$style."\"></div>";
     
