@@ -1,6 +1,14 @@
 ﻿
 <?php
 $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales");
+
+// Informe de "la salida de la ruta comercial no se ejecuto" (ntype 26, lo escribe
+// Automation::reportFailedDeparture). Se agrega por separado en vez de alargar el
+// literal de arriba: las tres copias de esa lista tienen largos distintos y no
+// comparten los indices del final. El icono se reusa del resto del comercio, que es
+// la pestana donde vive; lo que lo distingue en la lista es el asunto.
+$noticeClass[Automation::NTYPE_ROUTE_NOT_SENT] = 'Ruta comercial sin ejecutar';
+$noticeIconType = array(Automation::NTYPE_ROUTE_NOT_SENT => 13);
 $prefix = "".TB_PREFIX."ndata";
 $noticeTypeFilterList = isset($noticeTypeFilter) && is_array($noticeTypeFilter) ? array_map('intval', $noticeTypeFilter) : array(isset($noticeTypeFilter) ? (int)$noticeTypeFilter : 8);
 $limit2 = "and (ntype IN (".implode(',', $noticeTypeFilterList)."))";
@@ -158,7 +166,7 @@ while($row = mysql_fetch_array($sql2)){
 
     $rowClass = ($viewed == 0) ? " class=\"reportUnread\"" : "";
     $outputList .= "<tr".$rowClass."><td class=\"sel\"><input class=\"check\" type=\"checkbox\" name=\"n".$name."\" value=\"".$id."\" /></td><td class=\"sub\">";
-    $outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$ntype\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
+    $outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport".(isset($noticeIconType[$ntype]) ? $noticeIconType[$ntype] : $ntype)."\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
 
     $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=".(int)$_GET['t']."\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }

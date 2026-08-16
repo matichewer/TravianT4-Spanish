@@ -13,7 +13,6 @@ class Automation {
     // tiene, y el cupo se repone entero en 10 minutos.
     const OASIS_RAID_SHARE = 0.10;
     const OASIS_RAID_WINDOW = 600;
-    const TRADE_ROUTE_RETRY_DELAY = 60;
 
     private $bountyresarray = array();
     private $bountyinfoarray = array();
@@ -1881,25 +1880,61 @@ class Automation {
                 continue;
             }
             $targettribe = $database->getUserField($fromOwner, "tribe", 0);
-            // El reclamo ya adelantó la fila al horario de mañana, así que a partir de
-            // acá CUALQUIER salida sin envío tiene que devolverla al reintento corto: si
-            // no, el envío del día se pierde en silencio. Un error fatal en el reparto
-            // (una dependencia que el proceso que corre esto no cargó, por ejemplo) hacía
-            // exactamente eso, y además cortaba el barrido para el resto de las rutas.
-            $sent = false;
+            // Una salida es todo o nada: si a su hora hay mercaderes, sale; si no, esa
+            // salida no se ejecuta y se avisa. No se reintenta.
+            //
+            // El reintento corto que habia aca no servia para lo que parecia: la aldea
+            // produce todo el tiempo, asi que "sin recursos" no dura ni un minuto, y lo
+            // que terminaba pasando es que la ruta salia 60 segundos mas tarde cargando 1
+            // triste unidad de lo primero que se produjera — gastando los mercaderes de
+            // un viaje entero y dando la salida por cumplida igual.
+            //
+            // Ojo con el orden: el reclamo ya adelanto la fila al horario de manana, asi
+            // que a partir de aca no queda ninguna fila que reintentar. Por eso el catch:
+            // un error fatal repartiendo (una dependencia que el proceso que corre esto no
+            // cargo, por ejemplo) se llevaba la salida sin dejar rastro y ademas cortaba el
+            // barrido para el resto de las rutas.
+            $status = self::SEND_FAILED;
             try {
-                $sent = $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
+                $status = $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
             } catch(Throwable $e) {
                 error_log('TradeRoute '.$data['id'].' falló: '.$e->getMessage().' ('.$e->getFile().':'.$e->getLine().')');
             }
-            if(!$sent) {
-                // Recursos o mercaderes pueden faltar transitoriamente. El reclamo ya
-                // evita duplicados; devolver la fila a una espera corta evita perder
-                // por completo el envío de este día.
-                $retryTimestamp = min($time + self::TRADE_ROUTE_RETRY_DELAY, $nextTimestamp - 1);
-                $database->retryTradeRoute($data['id'], $nextTimestamp, max($time, $retryTimestamp));
+            if($status !== self::SEND_OK) {
+                $this->reportFailedDeparture($data['from'], $data['wid'],
+                    array($data['wood'], $data['clay'], $data['iron'], $data['crop']),
+                    $status, 1, max(1, (int)$data['deliveries']), $time);
             }
         }
+    }
+
+    // Informe de "esta salida no se ejecutó" (Mercado > Comercio). Es el único aviso que
+    // le queda al jugador: la salida no se reintenta, y en medio de una cadena de envíos
+    // x2/x3 tampoco queda nada pendiente que la retome. Sin esto, la única señal de que
+    // el Mercado se quedó corto de mercaderes era que los recursos no llegaban nunca.
+    const NTYPE_ROUTE_NOT_SENT = 26;
+
+    private function reportFailedDeparture($from, $to, $payload, $status, $delivery, $totalDeliveries, $time) {
+        global $database;
+        $fromInfo = $database->getMInfo($from);
+        $toInfo = $database->getMInfo($to);
+        if(!is_array($fromInfo) || !is_array($toInfo)) {
+            return;
+        }
+        $owner = (int)$fromInfo['owner'];
+        if($owner <= 0) {
+            return;
+        }
+        $payload = array_map('intval', array_slice(array_values($payload), 0, 4));
+        $noticeData = implode(',', array(
+            (int)$fromInfo['wref'], (int)$toInfo['wref'],
+            $payload[0], $payload[1], $payload[2], $payload[3],
+            $status, max(1, (int)$delivery), max(1, (int)$totalDeliveries),
+        ));
+        $database->addNotice($owner, (int)$toInfo['wref'], $database->getUserField($owner, 'alliance', 0),
+            self::NTYPE_ROUTE_NOT_SENT,
+            addslashes($fromInfo['name']).' no pudo enviar recursos a '.addslashes($toInfo['name']),
+            $noticeData, (int)$time);
     }
 
     private function marketComplete() {
@@ -1947,7 +1982,13 @@ class Automation {
                 }
                 $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
                 $endtime = $travelTime + $data['endtime'];
-                $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], '0,0,0,0,0', $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], $totalDeliveries);
+                // El regreso lleva las dos cifras, que no son la misma: en las columnas,
+                // lo que ESTE tramo entrego (es lo que muestran los paneles de mercaderes,
+                // tanto a la ida como a la vuelta); en `data`, lo que la cadena PIDE, para
+                // que el tramo siguiente lo reintente completo en vez de heredar el
+                // recorte de este. `$data['data']` es del movimiento (la tabla `send` no
+                // tiene esa columna, asi que el SELECT * de arriba no la pisa).
+                $database->addMovement(2, $data['to'], $data['from'], $data['merchant'], (string)$data['data'], $endtime, $data['send'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], $totalDeliveries);
             }
 
             $q1 = "SELECT * FROM ".TB_PREFIX."movement where proc = 0 and sort_type = 2 and endtime <= $time";
@@ -1961,7 +2002,16 @@ class Automation {
                     $targettribe1 = $database->getUserField($database->getVillageField($data1['to'], "owner"), "tribe", 0);
                     $send = $data1['send'] - 1;
                     $totalDeliveries = (int)$data1['ref2'] > 0 ? (int)$data1['ref2'] : max(1, (int)$data1['send']);
-                    $this->sendResource2($data1['wood'], $data1['clay'], $data1['iron'], $data1['crop'], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime'], $totalDeliveries);
+                    // Lo PEDIDO por la cadena, no lo que cargo el tramo anterior.
+                    $payload = $this->chainPayload($data1);
+                    $status = $this->sendResource2($payload[0], $payload[1], $payload[2], $payload[3], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime'], $totalDeliveries);
+                    // El tramo que no sale corta la cadena entera: no queda ninguna fila
+                    // pendiente de la que reintentar, asi que un "x3" se convertia en un
+                    // "x1" sin dejar rastro. Al menos hay que contarselo al jugador.
+                    if($status !== self::SEND_OK) {
+                        $this->reportFailedDeparture($data1['to'], $data1['from'], $payload, $status,
+                            $totalDeliveries - $send + 1, $totalDeliveries, $data1['endtime']);
+                    }
                 }
             }
         } while($processed);
@@ -1970,8 +2020,33 @@ class Automation {
         }
     }
 
+    // Resultados de sendResource2(). Antes devolvia un booleano y quien llamaba no podia
+    // distinguir "no habia nada que mandar" de "no habia mercaderes libres", que son dos
+    // situaciones distintas para el jugador y merecen informes distintos.
+    const SEND_OK = 'sent';
+    const SEND_NO_RESOURCES = 'no_resources';
+    const SEND_NO_MERCHANTS = 'no_merchants';
+    const SEND_FAILED = 'failed';
+
+    /**
+     * Una salida de mercaderes automatica (una ruta comercial, o el siguiente tramo de un
+     * "envios x2/x3" cuando los mercaderes vuelven a casa).
+     *
+     * $wtrans..$crtrans son lo que la salida PIDE, no lo que finalmente carga: si la aldea
+     * no tiene tanto, se manda lo que haya. Los dos numeros se guardan por separado y hay
+     * que no mezclarlos:
+     *   - la fila de `send` y las columnas del movimiento guardan lo que REALMENTE viaja,
+     *     que es lo que se entrega y lo que muestran los paneles de mercaderes;
+     *   - la columna `data` del movimiento guarda lo PEDIDO, que es lo que el siguiente
+     *     tramo de la cadena tiene que volver a intentar.
+     * Sin esa separacion, el tramo 2 heredaba lo que cargo el tramo 1: una aldea con poco
+     * stock en el primer viaje dejaba la ruta clavada en esa cifra para todos los envios
+     * siguientes, aunque para entonces ya hubiera recursos de sobra.
+     *
+     * Devuelve una de las constantes SEND_*.
+     */
     private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
-        global $bid17, $database, $generator, $logging;
+        global $database, $generator;
         // La produccion solo se acredita a la base cuando alguien carga una pagina de
         // esa aldea (Village.php::processProduction); un envio automatico (la salida de
         // una ruta, o el siguiente tramo de un "envios x3" tras que el mercader vuelve)
@@ -1980,55 +2055,62 @@ class Automation {
         // el viaje del mercader anterior — mismo patron que ya usan los cambios de nivel
         // de campo/edificio y la anexion de oasis (ver accrueProductionBeforeChange).
         $this->accrueProductionBeforeChange($from, null);
-        $availableWood = $database->getWoodAvailable($from);
-        $availableClay = $database->getClayAvailable($from);
-        $availableIron = $database->getIronAvailable($from);
-        $availableCrop = $database->getCropAvailable($from);
+        // Lo pedido, antes de recortarlo por lo disponible: es lo que viaja con la cadena.
+        $requested = array((int)$wtrans, (int)$ctrans, (int)$itrans, (int)$crtrans);
         // si no alcanza para el envio completo, se manda lo que haya disponible
         // en vez de cancelar el resto de los envios pendientes
-        $wtrans = min((int)$wtrans, (int)floor($availableWood));
-        $ctrans = min((int)$ctrans, (int)floor($availableClay));
-        $itrans = min((int)$itrans, (int)floor($availableIron));
-        $crtrans = min((int)$crtrans, (int)floor($availableCrop));
-        if($wtrans > 0 OR $ctrans > 0 OR $itrans > 0 OR $crtrans > 0) {
-            // Mercaderes del Mercado de la aldea de origen. Coincidia con el nivel por
-            // casualidad (bid17 da 1 mercader por nivel); leer la tabla es lo que hace el
-            // resto del juego y no se rompe si esos valores cambian.
-            $merchant2 = self::marketMerchants($this->getTypeLevel(17, $from));
-            $used2 = $database->totalMerchantUsed($from);
-            $merchantAvail2 = $merchant2 - $used2;
-            $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));
-            $resource = array($wtrans, $ctrans, $itrans, $crtrans);
-            $reqMerc = self::merchantsRequired(array_sum($resource), $maxcarry2);
-            if($merchantAvail2 != 0 && $reqMerc <= $merchantAvail2) {
-                $coor = $database->getCoor($to);
-                $coor2 = $database->getCoor($from);
-                if($database->getVillageState($to)) {
-                    $timetaken = $generator->procDistanceTime($coor, $coor2, $tribe, 0);
-                    $res = $resource[0] + $resource[1] + $resource[2] + $resource[3];
-                    if($res != 0) {
-                        $resdata = "".$resource[0].",".$resource[1].",".$resource[2].",".$resource[3]."";
-                        if(!$database->deductResourcesIfAvailable($from, $resource[0], $resource[1], $resource[2], $resource[3])) {
-                            return false;
-                        }
-                        $reference = $database->sendResource($resource[0], $resource[1], $resource[2], $resource[3], $reqMerc, 0);
-                        if(!$reference) {
-                            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
-                            return false;
-                        }
-                        $departureTime = $departureTime === null ? time() : (int)$departureTime;
-                        $totalDeliveries = $totalDeliveries === null ? max(1, (int)$send) : max(1, (int)$totalDeliveries);
-                        if(!$database->addMovement(0, $from, $to, $reference, $resdata, $departureTime + $timetaken, $send, 0, 0, 0, 0, $totalDeliveries)) {
-                            $database->sendResource($reference, 0, 0, 0, 0, 1);
-                            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
-                            return false;
-                        }
-                        return true;
-                    }
-                }
-            }
+        $resource = array(
+            min($requested[0], (int)floor($database->getWoodAvailable($from))),
+            min($requested[1], (int)floor($database->getClayAvailable($from))),
+            min($requested[2], (int)floor($database->getIronAvailable($from))),
+            min($requested[3], (int)floor($database->getCropAvailable($from))),
+        );
+        if(array_sum($resource) <= 0) {
+            return self::SEND_NO_RESOURCES;
         }
-        return false;
+        // Mercaderes del Mercado de la aldea de origen. Coincidia con el nivel por
+        // casualidad (bid17 da 1 mercader por nivel); leer la tabla es lo que hace el
+        // resto del juego y no se rompe si esos valores cambian.
+        $merchantAvail2 = self::marketMerchants($this->getTypeLevel(17, $from)) - (int)$database->totalMerchantUsed($from);
+        $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));
+        $reqMerc = self::merchantsRequired(array_sum($resource), $maxcarry2);
+        if($reqMerc <= 0 || $reqMerc > $merchantAvail2) {
+            return self::SEND_NO_MERCHANTS;
+        }
+        if(!$database->getVillageState($to)) {
+            return self::SEND_FAILED;
+        }
+        $timetaken = $generator->procDistanceTime($database->getCoor($to), $database->getCoor($from), $tribe, 0);
+        if(!$database->deductResourcesIfAvailable($from, $resource[0], $resource[1], $resource[2], $resource[3])) {
+            return self::SEND_FAILED;
+        }
+        $reference = $database->sendResource($resource[0], $resource[1], $resource[2], $resource[3], $reqMerc, 0);
+        if(!$reference) {
+            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
+            return self::SEND_FAILED;
+        }
+        $departureTime = $departureTime === null ? time() : (int)$departureTime;
+        $totalDeliveries = $totalDeliveries === null ? max(1, (int)$send) : max(1, (int)$totalDeliveries);
+        if(!$database->addMovement(0, $from, $to, $reference, implode(',', $requested), $departureTime + $timetaken, $send, 0, 0, 0, 0, $totalDeliveries)) {
+            $database->sendResource($reference, 0, 0, 0, 0, 1);
+            $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
+            return self::SEND_FAILED;
+        }
+        return self::SEND_OK;
+    }
+
+    /**
+     * Carga que un tramo de la cadena tiene que volver a intentar, leida de la columna
+     * `data` del movimiento ("pedido", ver sendResource2()). Los movimientos que ya
+     * estaban viajando antes de este cambio traen ahi el '0,0,0,0,0' viejo: para esos se
+     * cae de nuevo en lo que cargo el tramo anterior, que es lo unico que se guardo.
+     */
+    private function chainPayload($movement) {
+        $payload = array_map('intval', explode(',', (string)$movement['data']));
+        if(count($payload) >= 4 && array_sum(array_slice($payload, 0, 4)) > 0) {
+            return array_slice($payload, 0, 4);
+        }
+        return array((int)$movement['wood'], (int)$movement['clay'], (int)$movement['iron'], (int)$movement['crop']);
     }
 
     private function sendunitsComplete() {

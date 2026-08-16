@@ -2827,17 +2827,12 @@
 				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
-			function retryTradeRoute($id,$claimedTimestamp,$retryTimestamp) {
-				$id = (int) $id;
-				$claimedTimestamp = (int) $claimedTimestamp;
-				$retryTimestamp = (int) $retryTimestamp;
-				if($id <= 0 || $claimedTimestamp <= 0 || $retryTimestamp <= 0 || $retryTimestamp >= $claimedTimestamp) {
-					return false;
-				}
-				$q = "UPDATE " . TB_PREFIX . "route SET timestamp = $retryTimestamp WHERE id = $id AND timestamp = $claimedTimestamp";
-				$result = mysqli_query($this->connection,$q);
-				return $result && mysqli_affected_rows($this->connection) === 1;
-			}
+			// retryTradeRoute() se removio: una salida que no puede ejecutarse ya no se
+			// reprograma unos minutos despues. La aldea produce todo el tiempo, asi que
+			// "sin recursos" no dura ni un minuto y el reintento terminaba sacando la ruta
+			// tarde con 1 unidad de lo primero que se produjera, gastando los mercaderes de
+			// un viaje entero y dando la salida por cumplida igual. Ahora sale o no sale, y
+			// si no sale queda el informe (Automation::reportFailedDeparture).
 
 			/**
 			 * Rutas comerciales que salen de una aldea. Los mercaderes que reservan se

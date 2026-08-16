@@ -105,9 +105,12 @@ check(strpos($dbSource,'SELECT SUM(merchant) FROM') === false,
 	'ya nadie suma la columna merchant guardada: quedaba congelada en la capacidad del día de creación');
 
 check(strpos($dbSource,'function deleteTradeRoute(') !== false,'sigue existiendo deleteTradeRoute() (borrado sin dueño, para limpieza del sistema)');
-check(strpos($dbSource,'function retryTradeRoute(') !== false,'existe retryTradeRoute() para fallos transitorios');
-check(strpos($dbSource,'WHERE id = $id AND timestamp = $claimedTimestamp') !== false,
-	'el reintento sólo revierte el reclamo que sigue perteneciendo a esta ejecución');
+// Una salida sale o no sale: ya no se reprograma unos minutos después. La aldea produce
+// todo el tiempo, así que "sin recursos" no dura ni un minuto, y lo que terminaba pasando
+// es que la ruta salía tarde cargando 1 unidad de lo primero que se produjera, gastando
+// los mercaderes de un viaje entero y dando la salida por cumplida igual.
+check(strpos($dbSource,'function retryTradeRoute(') === false,
+	'ya no existe retryTradeRoute(): una salida que no puede ejecutarse no se reprograma');
 
 // ---------------------------------------------------------------------------
 section('C. Automation::TradeRoute(): reclamo atómico y limpieza de huérfanas');
@@ -130,16 +133,18 @@ check(strpos($tradeRouteBody,'!== (int)$data[\'uid\']') !== false,
 	'la comprobación de dueño compara contra el uid guardado en la ruta');
 check(strpos($tradeRouteBody,"\$database->deleteTradeRoute(\$data['id'])") !== false,
 	'una ruta huérfana (aldea borrada o conquistada) se elimina en vez de reintentar para siempre');
-check(strpos($tradeRouteBody,'$sent = $this->sendResource2(') !== false
-	&& strpos($tradeRouteBody,'if(!$sent) {') !== false
-	&& strpos($tradeRouteBody,'retryTradeRoute(') !== false,
-	'un envío fallido se reprograma para reintento en vez de perder el día');
+check(strpos($tradeRouteBody,'$status = $this->sendResource2(') !== false
+	&& strpos($tradeRouteBody,'if($status !== self::SEND_OK) {') !== false
+	&& strpos($tradeRouteBody,'$this->reportFailedDeparture(') !== false,
+	'una salida que no se ejecuta deja un informe en vez de desaparecer en silencio');
+check(strpos($tradeRouteBody,'retryTradeRoute(') === false,
+	'no se reprograma la salida: si a su hora no hay mercaderes, esa salida no se ejecuta');
 // La fila se reclama (timestamp adelantado a mañana) ANTES de repartir. Si el reparto
 // lanza —una dependencia que el proceso que corre esto no cargó, por ejemplo—, sin este
 // catch el envío del día desaparecía en silencio y además se cortaba el barrido para el
 // resto de las rutas. Es exactamente lo que pasaba con el worker dedicado.
-check(preg_match('/try\s*\{\s*\$sent = \$this->sendResource2\(.*?\}\s*catch\(Throwable \$e\)\s*\{/s',$tradeRouteBody) === 1,
-	'un error fatal repartiendo una ruta la devuelve al reintento en vez de perder el día en silencio');
+check(preg_match('/try\s*\{\s*\$status = \$this->sendResource2\(.*?\}\s*catch\(Throwable \$e\)\s*\{/s',$tradeRouteBody) === 1,
+	'un error fatal repartiendo una ruta se atrapa en vez de cortar el barrido de las demás');
 
 // ---------------------------------------------------------------------------
 section('D. Market::procTradeRoutes(): pico de superposición, no la suma ciega');
@@ -254,8 +259,8 @@ check(strpos($marketSource,'public function routeDepartureHours()') !== false,
 	'existe el horario de salida de las rutas para poder mostrarlo junto al contador');
 check(strpos($tplSource,'$market->routeMerchants($firstRoute)') !== false,
 	'el listado muestra los mercaderes que la ruta ocupa hoy, no los del día en que se creó');
-check(strpos($tradeRouteBody,'TRADE_ROUTE_RETRY_DELAY') !== false,
-	'los fallos transitorios usan una espera acotada antes del siguiente intento');
+check(strpos($automationSource,'TRADE_ROUTE_RETRY_DELAY') === false,
+	'no queda rastro de la espera de reintento');
 
 // ---------------------------------------------------------------------------
 section('H. Crear una ruta no cuesta oro ni falla en silencio');

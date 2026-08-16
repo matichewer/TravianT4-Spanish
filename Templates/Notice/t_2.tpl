@@ -1,8 +1,16 @@
 ﻿
 <?php
 $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales");
+
+// Informe de "la salida de la ruta comercial no se ejecuto" (ntype 26, lo escribe
+// Automation::reportFailedDeparture). Se agrega por separado en vez de alargar el
+// literal de arriba: las tres copias de esa lista tienen largos distintos y no
+// comparten los indices del final. El icono se reusa del resto del comercio, que es
+// la pestana donde vive; lo que lo distingue en la lista es el asunto.
+$noticeClass[Automation::NTYPE_ROUTE_NOT_SENT] = 'Ruta comercial sin ejecutar';
+$noticeIconType = array(Automation::NTYPE_ROUTE_NOT_SENT => 13);
 $prefix = "".TB_PREFIX."ndata";
-$limit2 = "and (ntype = 10 or ntype = 11 or ntype = 12 or ntype = 13)";
+$limit2 = "and (ntype = 10 or ntype = 11 or ntype = 12 or ntype = 13 or ntype = ".Automation::NTYPE_ROUTE_NOT_SENT.")";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 $limit2 and del = 0 ORDER BY time DESC");
 $query = mysql_num_rows($sql);
 
@@ -164,7 +172,7 @@ while($row = mysql_fetch_array($sql2)){
     if($type==9){
     	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport21\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
     }else{
-    	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport$type\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
+    	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport".(isset($noticeIconType[$type]) ? $noticeIconType[$type] : $type)."\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
     }
 
 if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){

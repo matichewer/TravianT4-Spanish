@@ -23,7 +23,7 @@
  *      `global $loquesea` ahí, esto falla antes que producción).
  *   C. La cadena real de reparto de una ruta corre sin lanzar, en un proceso que sólo
  *      tiene el bootstrap del worker.
- *   D. Un fallo repartiendo devuelve la ruta al reintento en vez de perder el día.
+ *   D. Una salida que no se ejecuta deja un informe (no se reintenta).
  */
 
 if(PHP_SAPI !== 'cli') {
@@ -214,20 +214,21 @@ if((int)$probe['village'] > 0) {
 }
 
 // ---------------------------------------------------------------------------
-section('D. Un fallo repartiendo no se lleva el envío del día');
+section('D. Una salida que no se ejecuta deja constancia');
 // ---------------------------------------------------------------------------
 preg_match('/private function TradeRoute\(\).*?\n    \}/s', $automationSource, $tradeRouteBody);
 $tradeRouteBody = isset($tradeRouteBody[0]) ? $tradeRouteBody[0] : '';
 check($tradeRouteBody !== '', 'se puede leer el cuerpo de TradeRoute()');
 // El orden importa: la fila se reclama primero (para que dos workers no la dupliquen),
-// así que a partir de ahí cualquier salida sin envío tiene que reprogramarla.
+// así que a partir de ahí ya no queda ninguna fila que reintentar — de ahí que cualquier
+// salida sin envío tenga que dejar constancia.
 check(strpos($tradeRouteBody,'claimTradeRoute(') < strpos($tradeRouteBody,'sendResource2('),
 	'la fila se reclama antes de repartir (evita que dos procesos manden la misma ruta)');
 check(preg_match('/catch\(Throwable \$e\)/', $tradeRouteBody) === 1,
 	'un error fatal repartiendo se atrapa en vez de cortar el barrido y perder el día');
-check(strpos($tradeRouteBody,'if(!$sent) {') !== false
-	&& strpos($tradeRouteBody,'retryTradeRoute(') !== false,
-	'cualquier salida sin envío devuelve la ruta al reintento corto');
+check(strpos($tradeRouteBody,'if($status !== self::SEND_OK) {') !== false
+	&& strpos($tradeRouteBody,'$this->reportFailedDeparture(') !== false,
+	'cualquier salida sin envío deja un informe para el jugador');
 
 // ---------------------------------------------------------------------------
 echo "\n";

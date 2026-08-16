@@ -165,7 +165,7 @@ check(strpos($automationSource,'public static function marketMerchants($marketLe
 	'existe marketMerchants(), única traducción de nivel de Mercado a mercaderes');
 check(strpos($automationSource,'return (int)$bid17[min($marketLevel, count($bid17))][\'attri\'];') !== false,
 	'marketMerchants() sale de bid17 y recorta el nivel a la tabla (un nivel fuera de rango dejaba el Mercado inservible)');
-check(strpos($automationSource,'$merchant2 = self::marketMerchants($this->getTypeLevel(17, $from));') !== false,
+check(strpos($automationSource,'self::marketMerchants($this->getTypeLevel(17, $from)) - (int)$database->totalMerchantUsed($from)') !== false,
 	'sendResource2() saca los mercaderes de la tabla y no del nivel del Mercado');
 check(strpos($marketSource,'$this->merchant = Automation::marketMerchants($building->getTypeLevel(17));') !== false,
 	'loadMarket() usa el mismo helper que el envío automático');
