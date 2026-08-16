@@ -239,22 +239,28 @@ if($units_walking >= 1){
                   echo "<table class=\"troop_details\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">
                   <a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
                   if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
-                  // Un oasis no está en vdata: su nombre sale de odata o la fila queda vacía.
-                  $reinforcedName = $database->isVillageOases($enforce['vref']) != 0
+                  // Un oasis no está en vdata: su nombre sale de odata. Mostramos sus
+                  // coordenadas en el encabezado para distinguir varios oasis conquistados.
+                  $reinforcedIsOasis = $database->isVillageOases($enforce['vref']) != 0;
+                  $reinforcedName = $reinforcedIsOasis
                         ? $database->getOasisField($enforce['vref'],"name")
                         : $database->getVillageField($enforce['vref'],"name");
-                  echo "<a href=\"karte.php?d=".$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."\">Refuerzo a ".$reinforcedName."</a>";
+                  $reinforcedCoor = $database->getCoor($enforce['vref']);
+                  $reinforcedCoords = $reinforcedIsOasis && is_array($reinforcedCoor)
+                        ? " (".(int)$reinforcedCoor['x']."|".(int)$reinforcedCoor['y'].")"
+                        : "";
+                  echo "<a href=\"karte.php?d=".(int)$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."\">Refuerzo a ".htmlspecialchars($reinforcedName,ENT_QUOTES,'UTF-8').$reinforcedCoords."</a>";
                   echo "</td></tr></thead><tbody class=\"units\">";
                   $tribe = $database->getUserField($database->getVillageField($enforce['from'],"owner"),"tribe",0);
                   $start = ($tribe-1)*10+1;
                   $end = ($tribe*10);
-                  $coor = $database->getCoor($enforce['vref']);
+                  $coor = $reinforcedCoor;
                   echo "<tr>
                   <th class=\"coords\">
 					<span class=\"coordinates coordinatesAligned\">
-                    <span class=\"coordinateY\">(".$coor['y']."</span>
+                    <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
-                    <span class=\"coordinateX\">".$coor['x'].")</span>
+                    <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {
