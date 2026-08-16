@@ -1,0 +1,394 @@
+<?php
+/**
+ * Economía de las aldeas natar: la capital y las 13 "Aldeas de la Maravilla".
+ *
+ * Por qué existe. El instalador las creaba con miles de tropas natar y los 18 campos en
+ * nivel 0, así que su balance de cereal nacía en unos -45.000/h. Mientras nadie las
+ * tocaba no se notaba, porque `lastupdate` sólo avanza cuando alguien las ataca; pero el
+ * primer ataque —incluso un espionaje que fracasa— acredita de golpe todo el tiempo
+ * transcurrido desde la instalación (Automation::updateRes, que corre para cualquier
+ * ataque resuelto), el granero queda en rojo y starvation() se come la guarnición a
+ * razón de un contingente por minuto. En unos diez minutos la Maravilla quedaba
+ * indefensa sola, sin que ningún jugador la tocara.
+ *
+ * Acá se arma la economía que a esas aldeas les corresponde:
+ *   - campos de cereal, molino y panadería en el nivel mínimo que sostiene su
+ *     guarnición, para que no se mueran de hambre;
+ *   - el resto de los campos más almacén y granero, para que produzcan y guarden
+ *     recursos de verdad y se puedan saquear una vez limpiadas, como en Travian;
+ *   - población y topes de almacenamiento coherentes con esos niveles.
+ *
+ * La capital natar es un caso aparte y no tiene arreglo por campos: arranca con más de
+ * un millón de tropas, o sea unos 5.000.000 de cereal/h, y el máximo que puede dar una
+ * aldea son ~165.000/h. Para ella —y para cualquier aldea NPC— la hambruna directamente
+ * no corre (ver Automation::starvation), que es como se comporta el Travian original:
+ * la guarnición natar es estática, no se entrena, no se repone y no se muere de hambre.
+ */
+
+require_once __DIR__.'/Production.php';
+require_once __DIR__.'/Data/buidata.php';
+require_once __DIR__.'/Data/unitdata.php';
+
+// Campos de recursos (f1..f18), slots de edificios (f19..f38), plaza de reuniones y muralla.
+define('NATAR_FIRST_RESOURCE_FIELD', 1);
+define('NATAR_LAST_RESOURCE_FIELD', 18);
+define('NATAR_FIRST_BUILDING_SLOT', 19);
+define('NATAR_LAST_BUILDING_SLOT', 38);
+
+// Nivel al que se dejan los campos que no son de cereal: es lo que hace que una aldea
+// natar limpiada valga la pena como granja, que es justo lo que pasa en Travian.
+define('NATAR_RESOURCE_FIELD_LEVEL', 10);
+// Molino y panadería al tope: +50% sobre la producción de los campos de cereal.
+define('NATAR_GRAINMILL_LEVEL', 5);
+define('NATAR_BAKERY_LEVEL', 5);
+// Almacén y granero: sin esto la aldea tiene tope 800 y el escondite nivel 10 (10.000
+// por recurso en este servidor) la vuelve imposible de saquear para siempre.
+define('NATAR_WAREHOUSE_LEVEL', 20);
+define('NATAR_GRANARY_LEVEL', 20);
+
+/**
+ * Los cuatro primeros ids de usuario son las cuentas del sistema que crea el
+ * instalador: Support, Natars, Nature y Multihunter. Es la misma convención que ya
+ * usaba Automation::notifyStarvation().
+ */
+function natarIsNpcOwner($uid) {
+    $uid = (int)$uid;
+    return $uid > 0 && $uid <= 4;
+}
+
+function natarVillageIsNpcOwned($wref) {
+    global $database;
+    return natarIsNpcOwner($database->getVillageField((int)$wref, 'owner'));
+}
+
+/**
+ * Multiplicadores de tropas del instalador. La capital y las Maravillas nunca usaron el
+ * mismo corte (SPEED>3 contra SPEED>5); se respetan los dos para no cambiarle la
+ * guarnición a un mundo ya instalado. En SPEED 1..3 dan lo mismo.
+ */
+function natarGarrisonSpeedFactor() {
+    return SPEED > 5 ? 5 : SPEED;
+}
+
+function natarCapitalSpeedFactor() {
+    return SPEED > 3 ? 5 : SPEED;
+}
+
+/**
+ * Guarnición de referencia de una Aldea de la Maravilla, con los mismos números que
+ * usa el instalador. `$randomize` a false devuelve el promedio de cada rango, que es
+ * lo que conviene para reponer y para los checkers.
+ */
+function natarWonderGarrison($randomize = true) {
+    $ranges = array(
+        41 => array(1000, 2000),
+        42 => array(1500, 2000),
+        43 => array(2300, 2800),
+        44 => array(235, 575),
+        45 => array(1200, 1900),
+        46 => array(1500, 2000),
+        47 => array(500, 900),
+        48 => array(100, 300),
+        49 => array(1, 5),
+        50 => array(1, 5)
+    );
+    $factor = natarGarrisonSpeedFactor();
+    $garrison = array();
+    foreach($ranges as $unit => $range) {
+        $amount = $randomize
+            ? rand($range[0], $range[1])
+            : (int)round(($range[0] + $range[1]) / 2);
+        $garrison[$unit] = $amount * $factor;
+    }
+    return $garrison;
+}
+
+/**
+ * Guarnición de la capital natar, la aldea desde la que salen las oleadas contra las
+ * Maravillas. Mismos números que el instalador.
+ */
+function natarCapitalGarrison() {
+    $base = array(
+        41 => 94700, 42 => 295231, 43 => 180747, 44 => 1048, 45 => 364401,
+        46 => 217602, 47 => 2034, 48 => 1040, 49 => 1, 50 => 9
+    );
+    $factor = natarCapitalSpeedFactor();
+    $garrison = array();
+    foreach($base as $unit => $amount) {
+        $garrison[$unit] = $amount * $factor;
+    }
+    return $garrison;
+}
+
+/**
+ * Consumo de cereal por hora de un conjunto de tropas, leído de la tabla de unidades.
+ * Acepta tanto una fila de `units` (claves u1..u50) como un array id => cantidad.
+ */
+function natarGarrisonUpkeep($units) {
+    if(!is_array($units)) {
+        return 0;
+    }
+    $upkeep = 0;
+    for($unit = 1; $unit <= 50; $unit++) {
+        if(isset($units['u'.$unit])) {
+            $amount = (int)$units['u'.$unit];
+        } elseif(isset($units[$unit])) {
+            $amount = (int)$units[$unit];
+        } else {
+            continue;
+        }
+        if($amount <= 0) {
+            continue;
+        }
+        $data = isset($GLOBALS['u'.$unit]) ? $GLOBALS['u'.$unit] : null;
+        $upkeep += $amount * (is_array($data) && isset($data['pop']) ? (int)$data['pop'] : 0);
+    }
+    return $upkeep;
+}
+
+/**
+ * Población acumulada de una configuración de campos y edificios, sumando el `pop` de
+ * cada nivel construido igual que lo hace Building.php al levantar uno por uno.
+ */
+function natarVillagePopulation($fields) {
+    if(!is_array($fields)) {
+        return 0;
+    }
+    $pop = 0;
+    for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_BUILDING_SLOT + 2; $slot++) {
+        if(!isset($fields['f'.$slot.'t'])) {
+            continue;
+        }
+        $type = (int)$fields['f'.$slot.'t'];
+        $level = (int)$fields['f'.$slot];
+        if($type <= 0 || $level <= 0) {
+            continue;
+        }
+        $table = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : null;
+        if(!is_array($table)) {
+            continue;
+        }
+        $maxLevel = max(array_keys($table));
+        for($step = 1; $step <= min($level, $maxLevel); $step++) {
+            if(isset($table[$step]['pop'])) {
+                $pop += (int)$table[$step]['pop'];
+            }
+        }
+    }
+    return $pop;
+}
+
+/**
+ * Capacidad de almacenamiento que dan los edificios de una aldea, con la misma cuenta
+ * que Automation::applyStorageCapacityDelta (almacén 10 y gran almacén 38 para
+ * `maxstore`; granero 11 y gran granero 39 para `maxcrop`).
+ */
+function natarVillageStorage($fields, $column) {
+    $buildings = $column === 'maxcrop' ? array(11, 39) : array(10, 38);
+    $multiplier = defined('STORAGE_MULTIPLIER') ? (float)STORAGE_MULTIPLIER : 1;
+    $base = defined('STORAGE_BASE') ? (float)STORAGE_BASE : 800 * $multiplier;
+    $capacity = 0;
+    for($slot = NATAR_FIRST_BUILDING_SLOT; $slot <= NATAR_LAST_BUILDING_SLOT; $slot++) {
+        if(!isset($fields['f'.$slot.'t'])) {
+            continue;
+        }
+        $type = (int)$fields['f'.$slot.'t'];
+        $level = (int)$fields['f'.$slot];
+        if(!in_array($type, $buildings, true) || $level <= 0) {
+            continue;
+        }
+        $table = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : null;
+        if(is_array($table) && isset($table[$level]['attri'])) {
+            $capacity += (float)$table[$level]['attri'] * $multiplier;
+        }
+    }
+    return max($base, $capacity);
+}
+
+/**
+ * Producción bruta de cereal por hora de una configuración de campos. Pasa por la
+ * fórmula única de Production.php: las aldeas natar no tienen oasis anexados, bono de
+ * oro ni héroe, así que los tres modificadores van en cero.
+ */
+function natarVillageGrossCrop($fields) {
+    $gross = villageGrossProduction($fields, array(0, 0, 0, 0), array(0, 0, 0, 0), SPEED);
+    return $gross['production']['crop'];
+}
+
+/**
+ * Ubica un edificio dentro de la aldea. Devuelve el número de campo si ya existe, o el
+ * primer slot libre si no, o 0 si no queda lugar.
+ */
+function natarFindBuildingSlot($fields, $type) {
+    $type = (int)$type;
+    $free = 0;
+    for($slot = NATAR_FIRST_BUILDING_SLOT; $slot <= NATAR_LAST_BUILDING_SLOT; $slot++) {
+        $slotType = isset($fields['f'.$slot.'t']) ? (int)$fields['f'.$slot.'t'] : 0;
+        if($slotType === $type) {
+            return $slot;
+        }
+        if($slotType === 0 && $free === 0) {
+            $free = $slot;
+        }
+    }
+    return $free;
+}
+
+/**
+ * Arma la configuración de campos y edificios que sostiene a la guarnición que la aldea
+ * tiene hoy: sube los campos de cereal (con molino y panadería) al nivel más bajo que
+ * deja el balance en cero o mejor, y deja los demás campos y el almacenamiento fijos.
+ *
+ * No escribe nada: devuelve el plan para que lo aplique natarProvisionVillage(), y para
+ * que los checkers puedan verificarlo sin tocar la base.
+ */
+function natarVillagePlan($fields, $upkeep) {
+    $plan = is_array($fields) ? $fields : array();
+    $cropFields = array();
+    for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_RESOURCE_FIELD; $slot++) {
+        if(!isset($plan['f'.$slot.'t'])) {
+            continue;
+        }
+        if((int)$plan['f'.$slot.'t'] === 4) {
+            $cropFields[] = $slot;
+        } else {
+            $plan['f'.$slot] = NATAR_RESOURCE_FIELD_LEVEL;
+        }
+    }
+
+    $buildings = array(
+        8 => NATAR_GRAINMILL_LEVEL,
+        9 => NATAR_BAKERY_LEVEL,
+        10 => NATAR_WAREHOUSE_LEVEL,
+        11 => NATAR_GRANARY_LEVEL
+    );
+    foreach($buildings as $type => $level) {
+        $slot = natarFindBuildingSlot($plan, $type);
+        if($slot > 0) {
+            $plan['f'.$slot.'t'] = $type;
+            $plan['f'.$slot] = max($level, isset($plan['f'.$slot]) ? (int)$plan['f'.$slot] : 0);
+        }
+    }
+
+    $maxCropLevel = max(array_keys($GLOBALS['bid4']));
+    $chosen = $maxCropLevel;
+    for($level = 0; $level <= $maxCropLevel; $level++) {
+        foreach($cropFields as $slot) {
+            $plan['f'.$slot] = $level;
+        }
+        // La población depende del nivel elegido y también come cereal, así que entra
+        // en la comparación: es exactamente lo que descuenta bountycalculateProduction.
+        if(natarVillageGrossCrop($plan) - natarVillagePopulation($plan) - $upkeep >= 0) {
+            $chosen = $level;
+            break;
+        }
+    }
+    foreach($cropFields as $slot) {
+        $plan['f'.$slot] = $chosen;
+    }
+
+    return array(
+        'fields' => $plan,
+        'crop_fields' => $cropFields,
+        'crop_level' => $chosen,
+        'pop' => natarVillagePopulation($plan),
+        'gross_crop' => natarVillageGrossCrop($plan),
+        'upkeep' => $upkeep,
+        'net_crop' => natarVillageGrossCrop($plan) - natarVillagePopulation($plan) - $upkeep,
+        'maxstore' => natarVillageStorage($plan, 'maxstore'),
+        'maxcrop' => natarVillageStorage($plan, 'maxcrop')
+    );
+}
+
+/**
+ * Deja una aldea natar en condiciones: campos, edificios de bonus, almacenamiento,
+ * población y relojes. Devuelve el plan aplicado, con `net_crop` para que quien la
+ * llame pueda avisar si la guarnición sigue siendo demasiado grande para alimentarse
+ * (el caso de la capital natar).
+ *
+ * `lastupdate` se pone en la hora actual a propósito: si quedara la vieja, la primera
+ * acreditación de producción aplicaría de golpe todo el tiempo que la aldea pasó sin
+ * simularse.
+ */
+function natarProvisionVillage($wref) {
+    global $database;
+    $wref = (int)$wref;
+    if($wref <= 0) {
+        return null;
+    }
+    $fields = $database->getResourceLevel($wref);
+    if(!is_array($fields)) {
+        return null;
+    }
+    $upkeep = natarGarrisonUpkeep($database->getUnit($wref));
+    $plan = natarVillagePlan($fields, $upkeep);
+
+    $updates = array();
+    for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_BUILDING_SLOT; $slot++) {
+        if(!isset($plan['fields']['f'.$slot])) {
+            continue;
+        }
+        $updates[] = '`f'.$slot.'` = '.(int)$plan['fields']['f'.$slot];
+        $updates[] = '`f'.$slot.'t` = '.(int)$plan['fields']['f'.$slot.'t'];
+    }
+    if($updates) {
+        $database->query('UPDATE '.TB_PREFIX.'fdata SET '.implode(', ', $updates).' WHERE vref = '.$wref);
+    }
+
+    $time = time();
+    $database->query('UPDATE '.TB_PREFIX.'vdata SET '
+        .'pop = '.(int)$plan['pop'].', '
+        .'maxstore = '.(int)$plan['maxstore'].', '
+        .'maxcrop = '.(int)$plan['maxcrop'].', '
+        .'crop = '.(int)$plan['maxcrop'].', '
+        .'wood = LEAST(wood, '.(int)$plan['maxstore'].'), '
+        .'clay = LEAST(clay, '.(int)$plan['maxstore'].'), '
+        .'iron = LEAST(iron, '.(int)$plan['maxstore'].'), '
+        .'starv = 0, starvupdate = 0, lastupdate = '.$time.' '
+        .'WHERE wref = '.$wref);
+
+    return $plan;
+}
+
+/**
+ * Repone la guarnición de una aldea natar a sus valores de referencia. Sólo sube: no le
+ * saca tropas a una aldea que todavía tiene más de las que le tocan, para no deshacer
+ * lo que un jugador ya mató si el script se corre dos veces.
+ */
+function natarRestockGarrison($wref, $garrison) {
+    global $database;
+    $wref = (int)$wref;
+    $current = $database->getUnit($wref);
+    $updates = array();
+    $restored = 0;
+    foreach($garrison as $unit => $amount) {
+        $have = is_array($current) && isset($current['u'.$unit]) ? (int)$current['u'.$unit] : 0;
+        if($have >= $amount) {
+            continue;
+        }
+        $updates[] = '`u'.(int)$unit.'` = '.(int)$amount;
+        $restored += $amount - $have;
+    }
+    if($updates) {
+        $database->query('UPDATE '.TB_PREFIX.'units SET '.implode(', ', $updates).' WHERE vref = '.$wref);
+    }
+    return $restored;
+}
+
+/**
+ * Las aldeas natar del mundo, separadas en la capital (la que lanza las oleadas contra
+ * las Maravillas) y las Aldeas de la Maravilla.
+ */
+function natarVillages() {
+    global $database;
+    $rows = $database->query_return(
+        'SELECT v.wref, v.name, v.capital, v.natar, v.owner '
+        .'FROM '.TB_PREFIX.'vdata v JOIN '.TB_PREFIX.'users u ON u.id = v.owner '
+        ."WHERE u.username = 'Natars' ORDER BY v.capital DESC, v.wref ASC"
+    );
+    $villages = array('capital' => array(), 'wonder' => array());
+    foreach(is_array($rows) ? $rows : array() as $row) {
+        $villages[(int)$row['capital'] === 1 ? 'capital' : 'wonder'][] = $row;
+    }
+    return $villages;
+}

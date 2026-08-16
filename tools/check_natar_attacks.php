@@ -25,4 +25,21 @@ checkNatarAttack(strpos($automation, "`owner` = 3 and `capital` = 1") === false,
 checkNatarAttack(strpos($installer, 'SET capital = IF(wref = ') !== false,
     'new installations mark the central Natar village as capital');
 
+// Una instalación nueva tiene que dejar las aldeas natar aprovisionadas: sin campos de
+// cereal el balance nace en unos -45.000/h y la hambruna las vaciaba solas. El
+// comportamiento se comprueba de verdad en tools/check_natar_starvation.php; acá sólo se
+// fija que el instalador siga llamando al aprovisionamiento.
+checkNatarAttack(strpos($installer, 'NatarVillage.php') !== false,
+    'el instalador carga GameEngine/NatarVillage.php');
+checkNatarAttack(substr_count($installer, 'natarProvisionVillage(') === 2,
+    'el instalador aprovisiona la capital natar y las Aldeas de la Maravilla');
+checkNatarAttack(strpos($installer, 'natarRestockGarrison($wid, natarCapitalGarrison())') !== false
+    && strpos($installer, 'natarRestockGarrison($wid, natarWonderGarrison())') !== false,
+    'las guarniciones natar salen de GameEngine/NatarVillage.php y no de SQL suelto');
+
+// La hambruna no puede tocar aldeas NPC: la capital natar consume más cereal del que
+// cualquier aldea puede producir, así que sin esta salida se desarma sola.
+checkNatarAttack(strpos($automation, '(int)$starv[\'owner\'] > 0 && (int)$starv[\'owner\'] <= 4') !== false,
+    'starvation() deja afuera a las cuentas del sistema (Support, Natars, Nature, Multihunter)');
+
 exit(count($failures) ? 1 : 0);

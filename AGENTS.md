@@ -56,6 +56,10 @@ When adding logic, follow this pattern (`global $database, $session, ...`) rathe
 
 **Oasis annexation has exactly one radius**, `Automation::oasisWithinAnnexationRange()`: a square of 3 tiles (not a circle of radius 3), wrapping at the map edge. The conquest path and the "other oases" table of the hero's mansion (`Templates/Build/37_heromansion.tpl`) both go through it — the mansion used to sort by euclidean distance and offer oases the game would then refuse.
 
+**Natar villages are NPC garrisons, not simulated villages.** Their economy lives in `GameEngine/NatarVillage.php` — the installer and `tools/fix_natar_villages.php` both build them through `natarRestockGarrison()` + `natarProvisionVillage()`, never with hand-written SQL. Two rules follow from the numbers and must not be "simplified" away:
+- **`starvation()` skips owners 1–4** (Support, Natars, Nature, Multihunter). The Natar capital's garrison eats ~5.2M crop/h and no village can produce more than ~165k/h, so any starvation path that includes it disarms the endgame. This is also how real Travian behaves: Natar troops are static, never retrained, never reinforced, never starved. Before the exemption existed, the *first* attack on a Wonder village — a failed scouting run was enough, since `updateRes()` runs for every resolved attack — credited weeks of negative crop at once and starvation emptied the whole garrison in ~10 minutes.
+- **They must stay lootable.** `natarProvisionVillage()` gives them real fields plus a warehouse/granary precisely so `stored − cranny` is positive; with the installer's bare 800 storage against a level‑10 cranny (10,000/resource here) every raid returned 0 forever. Regression cover: `tools/check_natar_starvation.php`, `tools/check_natar_lootable.php`, `tools/check_natar_attacks.php`.
+
 ### Templates
 `.tpl` files are **plain PHP includes**, not a template engine — they mix HTML and `<?php ?>` and read the same globals. Edit them like PHP.
 

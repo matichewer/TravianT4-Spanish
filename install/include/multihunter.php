@@ -5,6 +5,7 @@
         include ("../../GameEngine/Admin/database.php");
         include ("../../GameEngine/Database.php");
         include ("../../GameEngine/Lang/".LANG.".php");
+        include ("../../GameEngine/NatarVillage.php");
 		
 		$StartNatars = true;
 /**
@@ -51,13 +52,12 @@ if($StartNatars){
         // Esta es la aldea desde la que parten las oleadas contra las Maravillas.
         // Debe ser la capital natar; las 13 aldeas de Maravilla no lo son.
         mysql_query("UPDATE " . TB_PREFIX . "vdata SET capital = IF(wref = " . (int)$wid . ", 1, 0) WHERE owner = $uid") or die(mysql_error());
-        mysql_query("UPDATE " . TB_PREFIX . "vdata SET pop = '781' WHERE owner = $uid") or die(mysql_error());
-        if(SPEED > 3) {
-        	$speed = 5;
-        } else {
-        	$speed = SPEED;
-        }
-        mysql_query("UPDATE " . TB_PREFIX . "units SET u41 = " . (94700 * $speed) . ", u42 = " . (295231 * $speed) . ", u43 = " . (180747 * $speed) . ", u44 = " . (1048 * $speed) . ", u45 = " . (364401 * $speed) . ", u46 = " . (217602 * $speed) . ", u47 = " . (2034 * $speed) . ", u48 = " . (1040 * $speed) . " , u49 = " . (1 * $speed) . ", u50 = " . (9 * $speed) . " WHERE vref = " . $wid . "") or die(mysql_error());
+        natarRestockGarrison($wid, natarCapitalGarrison());
+        // Le arma campos, almacenamiento y población coherentes con su guarnición. La
+        // capital consume más cereal del que cualquier aldea puede producir, así que
+        // igual queda en rojo: quien no la deja morir de hambre es starvation(), que no
+        // toca aldeas NPC. Ver GameEngine/NatarVillage.php.
+        natarProvisionVillage($wid);
 
 	for($i=1;$i<=14;$i++){
 		switch ($i) {
@@ -124,17 +124,15 @@ if($StartNatars){
         	$database->addUnits($wid);
         	$database->addTech($wid);
         	$database->addABTech($wid);
-			mysql_query("UPDATE " . TB_PREFIX . "vdata SET pop = '238' WHERE wref = '$wid'");
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET name = 'Aldea de la Maravilla' WHERE wref = '$wid'");
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET capital = 0 WHERE wref = '$wid'");
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET natar = 1 WHERE wref = '$wid'");
-			if(SPEED > 5) {
-				$speed = 5;
-			} else {
-				$speed = SPEED;
-			}
-			mysql_query("UPDATE " . TB_PREFIX . "units SET u41 = " . (rand(1000, 2000) * $speed) . ", u42 = " . (rand(1500, 2000) * $speed) . ", u43 = " . (rand(2300, 2800) * $speed) . ", u44 = " . (rand(235, 575) * $speed) . ", u45 = " . (rand(1200, 1900) * $speed) . ", u46 = " . (rand(1500, 2000) * $speed) . ", u47 = " . (rand(500, 900) * $speed) . ", u48 = " . (rand(100, 300) * $speed) . " , u49 = " . (rand(1, 5) * $speed) . ", u50 = " . (rand(1, 5) * $speed) . " WHERE vref = " . $wid . "");
 			mysql_query("UPDATE " . TB_PREFIX . "fdata SET f22t = 27, f22 = 10, f28t = 25, f28 = 10, f19t = 23, f19 = 10, f99t = 40, f26 = 0, f26t = 0, f21 = 1, f21t = 15, f39 = 1, f39t = 16 WHERE vref = " . $wid . "");
+			natarRestockGarrison($wid, natarWonderGarrison());
+			// Campos de cereal al nivel que sostiene la guarnición, más el resto de los
+			// campos, almacén y granero: sin esto la aldea nacía con el balance en unos
+			// -45.000/h y se vaciaba sola, y con tope 800 nunca daba botín.
+			natarProvisionVillage($wid);
         }
 	}
 }

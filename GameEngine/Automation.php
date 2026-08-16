@@ -5449,6 +5449,16 @@ class Automation {
             if($wref <= 0) {
                 continue;
             }
+            // Las aldeas NPC (Support, Natars, Nature, Multihunter) no pasan hambre.
+            // Su guarnición es estática —no se entrena ni se repone, igual que en
+            // Travian— y la de la capital natar consume unos 5.000.000 de cereal/h,
+            // que ninguna aldea puede producir: dejarlas entrar acá vaciaba las Aldeas
+            // de la Maravilla solas a los diez minutos del primer ataque que recibían.
+            // Se les corta el rojo para que la deuda no se arrastre.
+            if((int)$starv['owner'] > 0 && (int)$starv['owner'] <= 4) {
+                $this->clearStarvation($wref, -1);
+                continue;
+            }
             // Una tanda por minuto y por aldea, para que la mortandad no dependa
             // de cuántas veces se cargue una página.
             if((int)$starv['starvupdate'] + 60 > $time) {

@@ -4,13 +4,17 @@ $start=41;
 <table cellpadding="0" cellspacing="0">
 	<thead>
 		<tr>
-			<td class="role"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><div class="role">Defensor</div>	</div></div></td>
+			<td class="role"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><div class="role"><?php echo REPORT_DEFENDER; ?></div>	</div></div></td>
             <td class="troopHeadline" colspan="<?php if($dataarray[139]){ echo'11'; }else{ echo'10'; } ?>">
             <?php
+            // Igual que tribe_1..4: el nombre del jugador sale de la cuenta, no de la
+            // tribu. Acá estaba escrito "Natares" a mano y con un "aldea" suelto en
+            // lugar de REPORT_FROM_VIL, así que el mismo defensor aparecía como
+            // "Natares aldea X" en un informe y como "Natars de la aldea X" en otro.
             if($targettribe=='5'){
-            echo '<a href="spieler.php?uid='.$database->getUserField($dataarray[30],"id",0).'">';
-            echo "Natares";
-            echo '</a> aldea <a href="karte.php?d='.$dataarray[31].'&amp;c='.$generator->getMapCheck($dataarray[31]).'">
+            echo '<a href="spieler.php?uid='.$dataarray[30].'">';
+            echo htmlspecialchars(stripslashes($database->getUserField($dataarray[30],"username",0)), ENT_QUOTES, 'UTF-8');
+            echo '</a> '.REPORT_FROM_VIL.' <a href="karte.php?d='.$dataarray[31].'&amp;c='.$generator->getMapCheck($dataarray[31]).'">
             '.stripslashes($dataarray[32]).'</a>';
             } else {
             echo REPORT_REINF;
