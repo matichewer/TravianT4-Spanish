@@ -28,16 +28,17 @@ class Market {
      
     public function procMarket($post) { 
         global $session;
-        // La pantalla de confirmacion permite volver al formulario conservando todos
-        // los valores. El boton cancelar no debe pasar por el envio definitivo ni
-        // consumir el token de seguridad.
-        if(isset($post['cancel'])) {
-            return;
-        }
         // Las ofertas de otras aldeas las carga filterNeed() cuando se abre la pestaña
         // "Comprar" (procRemove, t=1). Cargarlas aca ademas, por una marca en la sesion,
         // repetia la lista entera —una consulta por oferta— en cada visita a esa pestaña.
         $this->loadMarket();
+        // La pantalla de confirmacion permite volver al formulario conservando todos
+        // los valores. El boton cancelar no debe pasar por el envio definitivo ni
+        // consumir el token de seguridad, pero el mercado ya debe estar cargado para
+        // que la vista conserve la capacidad y el contador de mercaderes.
+        if(isset($post['cancel'])) {
+            return;
+        }
         if(isset($post['ft'])) {
             switch($post['ft']) {
                 case "mk1":
