@@ -57,13 +57,39 @@ if(!isset($generator) || !is_object($generator)) {
 }
 
 /**
- * Todas las hojas de estilo del gpack. Se miran todas y no solo la del idioma activo porque
- * una clase puede estar definida en una y pisada en otra, y desde el navegador eso se ve
- * igual que si no estuviera.
+ * El gpack que el juego sirve de verdad, deducido de las propias plantillas.
+ *
+ * En `gpack/` conviven cuatro paquetes y sólo uno se usa: `GP_ENABLE` está en false, asi que
+ * la columna `users.gpack` no se mira y las plantillas traen la ruta fija. Mirar los cuatro
+ * es peor que inutil: `travian_basic` y `travian_default` definen `div.b13`, que el paquete
+ * activo no tiene, asi que una clase rota parece existir.
+ */
+function activeGpack($root) {
+    $counts = array();
+    foreach(array('Templates/html.tpl', 'Templates/Map/mapview.tpl', 'Templates/Map/mapviewlarge.tpl') as $file) {
+        if(!is_file($root.'/'.$file)) {
+            continue;
+        }
+        preg_match_all('#gpack/([a-zA-Z0-9_.]+)#', file_get_contents($root.'/'.$file), $m);
+        foreach($m[1] as $pack) {
+            $counts[$pack] = (isset($counts[$pack]) ? $counts[$pack] : 0) + 1;
+        }
+    }
+    if(empty($counts)) {
+        return 'travian_Travian_4.0_41';
+    }
+    arsort($counts);
+    return key($counts);
+}
+
+/**
+ * Las hojas de estilo del gpack activo. Se miran todas las de ese paquete porque una clase
+ * puede estar definida en una y pisada en otra, y desde el navegador eso se ve igual que si
+ * no estuviera.
  */
 function mapStylesheets($root) {
     $sheets = array();
-    $stack = array($root.'/gpack');
+    $stack = array($root.'/gpack/'.activeGpack($root));
     while($stack) {
         $dir = array_pop($stack);
         foreach((array)@scandir($dir) as $entry) {
@@ -107,22 +133,50 @@ function mapClassRules($class, $sheets, $root) {
 }
 
 /**
- * El mismo reparto de digitos que hace `mapview.tpl`: tamaño por poblacion, relacion con
- * quien mira, tribu del dueño.
+ * Los dos numeros que eligen el sprite: tamaño por poblacion y relacion con quien mira.
  */
-function mapSpriteClass($pop, $ownerUid, $ownerAlliance, $ownerTribe, $viewerUid, $viewerAlliance) {
+function mapSpriteSlot($pop, $ownerUid, $ownerAlliance, $viewerUid, $viewerAlliance) {
     $pop = (int)$pop;
     $size = $pop >= 500 ? 3 : ($pop >= 250 ? 2 : ($pop >= 100 ? 1 : 0));
     if((int)$ownerUid === (int)$viewerUid && (int)$viewerUid !== 0) {
-        $rel = 0; $why = 'aldea propia';
-    } elseif((int)$ownerAlliance === 0) {
-        $rel = 4; $why = 'el dueño no tiene alianza';
-    } elseif((int)$ownerAlliance === (int)$viewerAlliance && (int)$viewerAlliance !== 0) {
-        $rel = 3; $why = 'misma alianza que quien mira';
-    } else {
-        $rel = 4; $why = 'otra alianza';
+        return array($size, 0, 'aldea propia');
     }
-    return array('b'.$size.$rel.'-'.$ownerTribe, $size, $rel, $why);
+    if((int)$ownerAlliance === 0) {
+        return array($size, 4, 'el dueño no tiene alianza');
+    }
+    if((int)$ownerAlliance === (int)$viewerAlliance && (int)$viewerAlliance !== 0) {
+        return array($size, 3, 'misma alianza que quien mira');
+    }
+    return array($size, 4, 'otra alianza');
+}
+
+/**
+ * El nombre de clase que arma UNA plantilla concreta para ese hueco, leido de su codigo.
+ *
+ * No se reimplementa el ternario: se busca el literal en el fuente. Reimplementarlo fue
+ * exactamente el error que dejo pasar el bug de `mapviewlarge.tpl`, donde la rama de "misma
+ * alianza" emitia 'b13' sin el sufijo de tribu mientras `mapview.tpl` emitia 'b13-'.$tribe.
+ * Leyendo el fuente, una plantilla que se desvie se delata sola.
+ */
+function mapTemplateClass($source, $size, $rel, $tribe) {
+    $literal = 'b'.$size.$rel;
+    if(strpos($source, "'".$literal."-'.\$tribe") !== false) {
+        return $literal.'-'.$tribe;
+    }
+    if(strpos($source, "'".$literal."'") !== false) {
+        return $literal;
+    }
+    return null;                                  // esa rama no existe en esta plantilla
+}
+
+/**
+ * Las plantillas de mapa y su codigo, indexadas por el nombre de la pagina que las usa.
+ */
+function mapTemplates($root) {
+    return array(
+        'karte.php (mapa chico)'  => file_get_contents($root.'/Templates/Map/mapview.tpl'),
+        'karte2.php (mapa grande)' => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl')
+    );
 }
 
 // --- Barrido: todas las aldeas del mundo de una pasada ----------------------------------
@@ -138,31 +192,40 @@ if($sweep) {
         ."ORDER BY w.y DESC, w.x"
     );
 
-    // Se evalua desde dos puntos de vista, porque la relacion cambia la clase: un visitante
-    // sin alianza y un aliado. Si alguna de las dos no existe, alguien ve la casilla rota.
+    // Se evalua cada aldea en las dos plantillas de mapa y desde los dos puntos de vista que
+    // cambian la clase: alguien de otra alianza y un companero de la propia. El mapa chico y
+    // el grande no arman el nombre igual, asi que mirar uno solo deja pasar bugs.
+    $templates = mapTemplates($root);
     $cache = array();
     $broken = array();
     foreach($villages as $v) {
-        foreach(array(array(0, 0, 'visitante'), array(-1, (int)$v['alliance'], 'un aliado')) as $eye) {
-            if($eye[1] === 0 && $eye[0] === -1) {
-                continue;                       // sin alianza, ya lo cubre el visitante
-            }
-            list($class, , , $why) = mapSpriteClass($v['pop'], $v['owner'], $v['alliance'],
-                $v['tribe'], $eye[0], $eye[1]);
-            if(!isset($cache[$class])) {
-                $cache[$class] = mapClassRules($class, $sheets, $root);
-            }
-            $rules = $cache[$class];
-            $ok = false;
-            foreach($rules as $r) {
-                if($r['imagen'] !== false) {
-                    $ok = true;
+        $eyes = array(array(0, 0));                       // alguien de afuera
+        if((int)$v['alliance'] !== 0) {
+            $eyes[] = array(-1, (int)$v['alliance']);     // un companero de alianza
+        }
+        foreach($eyes as $eye) {
+            list($size, $rel, $why) = mapSpriteSlot($v['pop'], $v['owner'], $v['alliance'],
+                $eye[0], $eye[1]);
+            foreach($templates as $page => $source) {
+                $class = mapTemplateClass($source, $size, $rel, $v['tribe']);
+                if($class === null) {
+                    continue;
                 }
-            }
-            if(!$ok) {
-                $broken[] = sprintf("(%s|%s) %-28s %-12s pop %-5s -> %-8s %s",
-                    $v['x'], $v['y'], $v['name'], (string)$v['username'], $v['pop'], $class,
-                    empty($rules) ? 'SIN REGLA CSS' : 'IMAGEN AUSENTE ('.$rules[0]['url'].')');
+                if(!isset($cache[$class])) {
+                    $cache[$class] = mapClassRules($class, $sheets, $root);
+                }
+                $ok = false;
+                foreach($cache[$class] as $r) {
+                    if($r['imagen'] !== false) {
+                        $ok = true;
+                    }
+                }
+                if(!$ok) {
+                    $broken[] = sprintf("%-26s (%s|%s) %-22s %-12s pop %-5s %-9s -> %-9s %s",
+                        $page, $v['x'], $v['y'], $v['name'], (string)$v['username'], $v['pop'],
+                        'rel '.$rel, $class,
+                        empty($cache[$class]) ? 'SIN REGLA CSS' : 'IMAGEN AUSENTE');
+                }
             }
         }
     }
@@ -252,57 +315,66 @@ if(!is_array($raw) || !count($raw)) {
 }
 
 // --- La clase ---------------------------------------------------------------------------
-// Las ramas 1 (aliado), 2 (enemigo) y 5 (neutral) son inalcanzables hoy: `mapview.tpl`
-// inicializa `$friendarray`/`$enemyarray`/`$neutralarray` vacios y nunca los llena. No es
+// Las ramas 1 (aliado), 2 (enemigo) y 5 (neutral) son inalcanzables hoy: las plantillas
+// inicializan `$friendarray`/`$enemyarray`/`$neutralarray` vacios y nunca los llenan. No es
 // que falten sprites, es que no se usan.
-list($class, $size, $rel, $why) = mapSpriteClass($tile['pop'], $tileowner, $targetalliance,
-    $tribe, $viewerUid, $viewerAlliance);
+list($size, $rel, $why) = mapSpriteSlot($tile['pop'], $tileowner, $targetalliance,
+    $viewerUid, $viewerAlliance);
 printf("\nPoblacion %d -> tamaño %d · relacion %d (%s)\n", (int)$tile['pop'], $size, $rel, $why);
-printf("=> clase CSS:  %s\n", $class);
 
-// --- Y si esa clase existe --------------------------------------------------------------
 $sheets = mapStylesheets($root);
-$rules = mapClassRules($class, $sheets, $root);
+$allGood = true;
 
-if(empty($rules)) {
-    printf("   REGLA CSS:   NO EXISTE en ninguna de las %d hojas   <- casilla BLANCA\n", count($sheets));
-    exit(1);
-}
-
-$usable = false;
-foreach($rules as $entry) {
-    printf("\n   definida en: %s\n", $entry['hoja']);
-    printf("   regla:       %s\n", $entry['regla']);
-    if($entry['imagen'] === null) {
-        echo "   (la regla no trae imagen)\n";
-        $usable = true;
+// Cada pagina de mapa arma el nombre de clase con su propio codigo, y no siempre igual: se
+// resuelven las dos por separado, que es lo unico que distingue "la aldea esta mal cargada"
+// de "esta plantilla arma mal el nombre".
+foreach(mapTemplates($root) as $page => $source) {
+    $class = mapTemplateClass($source, $size, $rel, $tribe);
+    printf("\n--- %s\n", $page);
+    if($class === null) {
+        echo "   esta plantilla no tiene rama para este caso\n";
         continue;
     }
-    if($entry['imagen'] !== false) {
-        printf("   imagen:      %s (%d bytes)  OK\n",
-            str_replace($root.'/', '', $entry['imagen']), filesize($entry['imagen']));
-        $usable = true;
+    printf("   clase CSS:   %s\n", $class);
+    $rules = mapClassRules($class, $sheets, $root);
+    if(empty($rules)) {
+        printf("   REGLA CSS:   NO EXISTE en ninguna de las %d hojas   <- casilla BLANCA\n",
+            count($sheets));
+        $allGood = false;
         continue;
     }
-    // El caso que importa: la regla existe pero el archivo no. En Linux esto pasa sobre todo
-    // por mayusculas —`ally/nap/` en el CSS contra `ally/Nap/` en el disco— y da 404, no un
-    // error de PHP, asi que desde el juego se ve igual que un dato mal cargado.
-    $wanted = $root.'/gpack/'.$entry['url'];
-    printf("   imagen:      %s   <- NO EXISTE, casilla BLANCA\n", $entry['url']);
-    $dir = dirname(dirname($root.'/'.$entry['hoja']).'/'.$entry['url']);
-    $parent = dirname($dir);
-    if(is_dir($parent)) {
-        foreach((array)scandir($parent) as $sibling) {
-            if($sibling !== '.' && $sibling !== '..' && $sibling !== basename($dir)
-                && strcasecmp($sibling, basename($dir)) === 0) {
-                printf("   pero SI existe '%s/' (difiere en mayusculas del '%s/' que pide el CSS)\n",
-                    $sibling, basename($dir));
+    foreach($rules as $entry) {
+        printf("   definida en: %s\n", $entry['hoja']);
+        printf("   regla:       %s\n", $entry['regla']);
+        if($entry['imagen'] === null) {
+            echo "   (la regla no trae imagen)\n";
+            continue;
+        }
+        if($entry['imagen'] !== false) {
+            printf("   imagen:      %s (%d bytes)  OK\n",
+                str_replace($root.'/', '', $entry['imagen']), filesize($entry['imagen']));
+            continue;
+        }
+        // La regla existe pero el archivo no. En Linux esto pasa sobre todo por mayusculas
+        // —`ally/nap/` en el CSS contra `ally/Nap/` en el disco— y da 404, no un error de
+        // PHP, asi que desde el juego se ve igual que un dato mal cargado.
+        printf("   imagen:      %s   <- NO EXISTE, casilla BLANCA\n", $entry['url']);
+        $allGood = false;
+        $dir = dirname(dirname($root.'/'.$entry['hoja']).'/'.$entry['url']);
+        $parent = dirname($dir);
+        if(is_dir($parent)) {
+            foreach((array)scandir($parent) as $sibling) {
+                if($sibling !== '.' && $sibling !== '..' && $sibling !== basename($dir)
+                    && strcasecmp($sibling, basename($dir)) === 0) {
+                    printf("   pero SI existe '%s/' (difiere en mayusculas del '%s/' que pide el CSS)\n",
+                        $sibling, basename($dir));
+                }
             }
         }
     }
 }
 
-echo PHP_EOL.($usable
-    ? "=> La casilla deberia verse bien.\n"
-    : "=> La casilla se ve BLANCA: ninguna regla resuelve a una imagen existente.\n");
-exit($usable ? 0 : 1);
+echo PHP_EOL.($allGood
+    ? "=> La casilla deberia verse bien en las dos paginas.\n"
+    : "=> La casilla se ve BLANCA en al menos una pagina.\n");
+exit($allGood ? 0 : 1);

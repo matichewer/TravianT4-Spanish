@@ -37,9 +37,18 @@ if(!defined('GREY_ZONE_INNER_RADIUS')) {
     define('GREY_ZONE_INNER_RADIUS', 0);
 }
 if(!defined('GREY_ZONE_OUTER_RADIUS')) {
-    // 22 en el T4 oficial. 8 acá: el radio más grande que sigue dejando afuera las dos
-    // aldeas de Che_Bigote (la más cercana está a 8,06). Con 9 entrarían las dos.
-    define('GREY_ZONE_OUTER_RADIUS', 8);
+    // 22 en el T4 oficial. 7 acá, y el número sale de este mundo concreto, no de una teoría:
+    //
+    //   - con 9 o más entran las dos aldeas de Che_Bigote (la más cercana está a 8,06);
+    //   - con 8 entra el 15-cropper de (-6|5), que está a 7,81 y le importa a un jugador;
+    //   - con 7 los tres quedan afuera, y la única aldea de adentro es la de (5|2), que es
+    //     anterior a la regla y por eso está exenta (GREY_ZONE_GRANDFATHERED_BEFORE).
+    //
+    // El costo de bajar de 8 a 7 no es el tamaño del disco sino el NÚCLEO sembrable: el
+    // terreno premium sólo puede ir donde el cuadrado de anexión entero cae dentro de la
+    // zona (ver tools/seed_grey_zone_terrain.php), y eso baja de 33 casillas a 16. En un
+    // mundo nuevo, donde no hay 15-croppers de nadie que respetar, va 22.
+    define('GREY_ZONE_OUTER_RADIUS', 7);
 }
 if(!defined('GREY_ZONE_GRANDFATHERED_BEFORE')) {
     // Las aldeas fundadas antes de este instante son anteriores a la zona: no se pintan de

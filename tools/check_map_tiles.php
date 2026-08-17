@@ -136,8 +136,26 @@ foreach(array('Templates/Map/mapview.tpl', 'Templates/Map/mapviewlarge.tpl') as 
 // El sprite de una aldea es una clase CSS armada con población, relación y tribu. Si el
 // nombre resultante no tiene regla, o la regla apunta a un archivo que no existe, la casilla
 // sale BLANCA y no hay ningún error: ni PHP ni el navegador se quejan.
+// Sólo el gpack que el juego sirve de verdad. En `gpack/` conviven cuatro paquetes y
+// `GP_ENABLE` está en false, así que las plantillas traen la ruta fija del activo. Mirar los
+// cuatro es peor que inútil: `travian_basic` y `travian_default` definen `div.b13`, que el
+// paquete activo NO tiene, así que una clase rota pasaba por buena.
+$activePack = 'travian_Travian_4.0_41';
+$packCounts = array();
+preg_match_all('#gpack/([a-zA-Z0-9_.]+)#',
+    file_get_contents($root.'/Templates/Map/mapview.tpl')
+    .file_get_contents($root.'/Templates/Map/mapviewlarge.tpl'), $packMatches);
+foreach($packMatches[1] as $pack) {
+    $packCounts[$pack] = (isset($packCounts[$pack]) ? $packCounts[$pack] : 0) + 1;
+}
+if($packCounts) {
+    arsort($packCounts);
+    $activePack = key($packCounts);
+}
+echo '     gpack activo: '.$activePack.PHP_EOL;
+
 $sheets = array();
-$stack = array($root.'/gpack');
+$stack = array($root.'/gpack/'.$activePack);
 while($stack) {
     $dir = array_pop($stack);
     foreach((array)@scandir($dir) as $entry) {
@@ -163,46 +181,66 @@ $villages = $database->query_return(
     ."INNER JOIN ".TB_PREFIX."wdata w ON w.id = v.wref "
     ."LEFT JOIN ".TB_PREFIX."users u ON u.id = v.owner"
 );
+
+// El nombre de clase se LEE del código de cada plantilla en vez de reimplementarlo acá. La
+// copia era el bug: `mapviewlarge.tpl` emitía 'b13' sin el sufijo de tribu donde
+// `mapview.tpl` emitía 'b13-'.$tribe, y como los sprites sin tribu sólo existen para las
+// relaciones 1, 2 y 5 —nunca para la 3, la de la propia alianza— la aldea de un compañero
+// de alianza salía como una casilla beige vacía, pero sólo en karte2.php. Un checker que
+// repite la fórmula da por buenas las dos plantillas por igual y no ve la diferencia.
+$templates = array(
+    'karte.php'  => file_get_contents($root.'/Templates/Map/mapview.tpl'),
+    'karte2.php' => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl')
+);
+
 $blankTiles = array();
 $resolved = array();
 foreach($villages as $village) {
     $pop = (int)$village['pop'];
     $size = $pop >= 500 ? 3 : ($pop >= 250 ? 2 : ($pop >= 100 ? 1 : 0));
-    // Las dos relaciones que la plantilla puede producir hoy: la misma alianza que quien
-    // mira (3) y cualquier otro caso (4). La rama 0 usa el mismo arte que las demás.
+    // Las relaciones que las plantillas pueden producir hoy: la propia alianza (3) y
+    // cualquier otro caso (4). Las ramas 1, 2 y 5 son inalcanzables porque
+    // $friendarray/$enemyarray/$neutralarray se inicializan vacíos y nunca se llenan.
     foreach(array(3, 4) as $relation) {
         if($relation === 3 && (int)$village['alliance'] === 0) {
             continue;
         }
-        $class = 'b'.$size.$relation.'-'.$village['tribe'];
-        if(isset($resolved[$class])) {
-            $ok = $resolved[$class];
-        } else {
-            $ok = false;
-            foreach($sources as $sheet => $source) {
-                if(!preg_match('/div\.'.preg_quote($class, '/').'\s*\{([^}]*)\}/', $source, $m)) {
-                    continue;
-                }
-                if(!preg_match('/url\(([^)]*)\)/', $m[1], $u)) {
-                    $ok = true;
-                    break;
-                }
-                $image = realpath(dirname($sheet).'/'.trim($u[1], "'\" "));
-                if($image !== false && is_file($image)) {
-                    $ok = true;
-                    break;
-                }
+        foreach($templates as $page => $template) {
+            $literal = 'b'.$size.$relation;
+            if(strpos($template, "'".$literal."-'.\$tribe") !== false) {
+                $class = $literal.'-'.$village['tribe'];
+            } elseif(strpos($template, "'".$literal."'") !== false) {
+                $class = $literal;
+            } else {
+                continue;
             }
-            $resolved[$class] = $ok;
-        }
-        if(!$ok) {
-            $blankTiles[] = '('.$village['x'].'|'.$village['y'].') '.$village['name']
-                .' de '.$village['username'].' -> '.$class;
+            if(!isset($resolved[$class])) {
+                $ok = false;
+                foreach($sources as $sheet => $source) {
+                    if(!preg_match('/div\.'.preg_quote($class, '/').'\s*\{([^}]*)\}/', $source, $m)) {
+                        continue;
+                    }
+                    if(!preg_match('/url\(([^)]*)\)/', $m[1], $u)) {
+                        $ok = true;
+                        break;
+                    }
+                    $image = realpath(dirname($sheet).'/'.trim($u[1], "'\" "));
+                    if($image !== false && is_file($image)) {
+                        $ok = true;
+                        break;
+                    }
+                }
+                $resolved[$class] = $ok;
+            }
+            if(!$resolved[$class]) {
+                $blankTiles[] = $page.' ('.$village['x'].'|'.$village['y'].') '
+                    .$village['name'].' de '.$village['username'].' -> '.$class;
+            }
         }
     }
 }
 check(empty($blankTiles),
-    'las '.count($villages).' aldeas del mundo resuelven a un sprite que existe');
+    'las '.count($villages).' aldeas del mundo resuelven a un sprite que existe en las dos páginas de mapa');
 foreach(array_slice(array_unique($blankTiles), 0, 8) as $offender) {
     echo '        '.$offender.PHP_EOL;
 }
