@@ -5,6 +5,7 @@ require_once __DIR__.'/CombatRanking.php';
 // Database.php porque hay checkers que cargan Automation con un doble de la capa de
 // datos, sin pasar por ella.
 require_once __DIR__.'/Accounts.php';
+require_once __DIR__.'/NatarSettlement.php';
 require_once __DIR__.'/Hero.php';
 // Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
 require_once __DIR__.'/GeneratorX.php';
@@ -204,8 +205,13 @@ class Automation {
         global $database, $logging;
         $villageId = (int)$villageId;
         $owner = (int)$owner;
-        if($villageId <= 0 || $owner <= 0 || (int)$capital === 1
-            || count($database->getProfileVillages($owner)) === 1) {
+        if($villageId <= 0 || $owner <= 0 || (int)$capital === 1) {
+            return false;
+        }
+        // No dejar a un jugador sin ninguna aldea. La regla es sobre jugadores: a una
+        // cuenta NPC no le importa quedarse sin aldeas, y aplicársela volvía imposible
+        // arrasar la última aldea natar viva del mundo.
+        if(isPlayerAccount($owner) && count($database->getProfileVillages($owner)) === 1) {
             return false;
         }
 
@@ -592,6 +598,9 @@ class Automation {
         }
         if(!file_exists("GameEngine/Prevention/starvation.txt") or time() - filemtime("GameEngine/Prevention/starvation.txt") > 50) {
             $this->starvation();
+        }
+        if(!file_exists("GameEngine/Prevention/natarsettlement.txt") or time() - filemtime("GameEngine/Prevention/natarsettlement.txt") > 50) {
+            $this->natarSettlements();
         }
         $buildSweepDue = !file_exists("GameEngine/Prevention/build.txt")
             || time() - filemtime("GameEngine/Prevention/build.txt") > 50;
@@ -2136,6 +2145,15 @@ class Automation {
             // Bring the world up to the attack's arrival time, but never apply
             // a building level that completed after this attack.
             $this->buildComplete((int)$data['endtime'], false);
+            // Una aldea natar viva tiene que estar al día a la hora en que llega el
+            // ataque: si no, el atacante se topa con la guarnición que tenía la última vez
+            // que alguien la miró en lugar de la que le corresponde. Para cualquier otra
+            // aldea esto no hace nada.
+            natarSettlementBringUpToDate(
+                (int)$data['to'],
+                (int)$data['endtime'],
+                Closure::fromCallable(array($this, 'accrueProductionBeforeChange'))
+            );
             $totalattackdead = 0;
             $totaldead_att = $totaldead_def = $totalsend_def = 0;
             $totaltraped_att = $DefenderHeroRef = 0;
@@ -4833,16 +4851,19 @@ class Automation {
 	        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
 	        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
 	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
-	        // Las guarniciones del sistema (Support, Natars, Nature, Multihunter) no comen:
-	        // no son un ejército simulado sino parte del escenario, igual que en Travian,
-	        // donde las tropas natar no se entrenan, no se reponen y no consumen cereal.
-	        // Con la manutención puesta, una Aldea de la Maravilla producía -45.000 de
-	        // cereal/h y otra vez no acumulaba nada que saquear; la capital, -5.000.000/h.
-	        // Ver GameEngine/NatarVillage.php. Se mira el dueño de la aldea, que ya viene
-	        // en bountyinfoarray, y no $uid: son lo mismo en todos los llamadores de hoy,
-	        // pero el que manda acá es de quién es la aldea.
-	        $villageOwner = isset($this->bountyinfoarray['owner']) ? (int)$this->bountyinfoarray['owner'] : (int)$uid;
-	        if(isSystemAccount($villageOwner)) {
+	        // Las guarniciones estáticas no comen: no son un ejército simulado sino parte
+	        // del escenario, igual que en Travian, donde las tropas natar no se entrenan,
+	        // no se reponen y no consumen cereal. Con la manutención puesta, una Aldea de
+	        // la Maravilla producía -45.000 de cereal/h y otra vez no acumulaba nada que
+	        // saquear; la capital, -5.000.000/h. Ver GameEngine/NatarVillage.php.
+	        //
+	        // Las aldeas NPC vivas sí la pagan, y a propósito: es lo que hace que su
+	        // guarnición converja a lo que sus campos pueden alimentar.
+	        //
+	        // La fila ya viene en bountyinfoarray, así que la clase sale de ahí sin una
+	        // consulta extra; sólo se cae a $uid si por algún motivo no está cargada.
+	        $villageRow = is_array($this->bountyinfoarray) ? $this->bountyinfoarray : array('owner' => (int)$uid);
+	        if(isStaticNpcVillage($villageRow)) {
 	            $upkeep = 0;
 	        }
 	        $heroData = $database->getHeroData($uid);
@@ -5344,6 +5365,32 @@ class Automation {
         return trim($name);
     }
 
+    /**
+     * Aldeas natar independientes: las pone al día y, si toca, hace nacer una.
+     *
+     * Va colgado del barrido de carga de página, igual que addAdventures(): sin cron y sin
+     * demonio. Si no hay nadie jugando no pasa nada, que es lo correcto —no hay nadie ahí
+     * para saquearlas—, y como sólo puede nacer una por intervalo, volver después de días
+     * no dispara una avalancha.
+     */
+    private function natarSettlements() {
+        global $database;
+        if(file_exists("GameEngine/Prevention/natarsettlement.txt")) {
+            @unlink("GameEngine/Prevention/natarsettlement.txt");
+        }
+        $ourFileHandle = @fopen("GameEngine/Prevention/natarsettlement.txt", 'w');
+        @fclose($ourFileHandle);
+
+        $now = time();
+        // accrueProductionBeforeChange() es `protected`, así que el módulo no puede
+        // llamarlo. Se lo pasamos como closure armado acá adentro, que conserva el alcance.
+        $accrue = Closure::fromCallable(array($this, 'accrueProductionBeforeChange'));
+        foreach(natarSettlements() as $settlement) {
+            natarSettlementBringUpToDate((int)$settlement['wref'], $now, $accrue);
+        }
+        natarSettlementSpawn($now);
+    }
+
     private function addAdventures() {
         global $database;
         $time = time();
@@ -5465,13 +5512,16 @@ class Automation {
             if($wref <= 0) {
                 continue;
             }
-            // Las aldeas del sistema (Support, Natars, Nature, Multihunter) no pasan
-            // hambre. Su guarnición es estática —no se entrena ni se repone, igual que
-            // en Travian— y la de la capital natar consume unos 5.000.000 de cereal/h,
-            // que ninguna aldea puede producir: dejarlas entrar acá vaciaba las Aldeas
-            // de la Maravilla solas a los diez minutos del primer ataque que recibían.
-            // Se les corta el rojo para que la deuda no se arrastre.
-            if(isSystemAccount($starv['owner'])) {
+            // Las guarniciones estáticas (Maravillas y capital natar) no pasan hambre.
+            // Son escenario: no se entrenan ni se reponen, igual que en Travian, y la de
+            // la capital consume unos 5.000.000 de cereal/h, que ninguna aldea puede
+            // producir. Dejarlas entrar acá vaciaba las Aldeas de la Maravilla solas a
+            // los diez minutos del primer ataque que recibían. Se les corta el rojo para
+            // que la deuda no se arrastre.
+            //
+            // Las aldeas NPC vivas SÍ pasan hambre: son aldeas de verdad sin jugador
+            // detrás, y el cereal es justamente lo que les acota la guarnición.
+            if(isStaticNpcVillage($starv)) {
                 $this->clearStarvation($wref, -1);
                 continue;
             }
@@ -5688,7 +5738,7 @@ class Automation {
         $accessLimit = INCLUDE_ADMIN ? 10 : 8;
         $users = $database->query_return(
             "SELECT id FROM ".TB_PREFIX."users
-             WHERE oldrank = 0 AND id > 3 AND tribe <= 3 AND access < ".$accessLimit
+             WHERE oldrank = 0 AND ".playerAccountSql('id')." AND access < ".$accessLimit
         );
         foreach ($users as $user) {
             $database->syncClimberPopulation((int)$user['id']);

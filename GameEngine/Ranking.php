@@ -10,7 +10,7 @@
 				)totalpop
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY totalpop DESC, userid ASC";
 				$result = mysql_query($q);
@@ -28,7 +28,7 @@
 			public function getUserAttRank($uid) {
 				$q = "SELECT " . TB_PREFIX . "users.id userid, " . TB_PREFIX . "users.username username, " . TB_PREFIX . "users.apall apall
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY apall DESC, userid ASC";
 					
@@ -47,7 +47,7 @@
 			public function getUserDefRank($uid) {
 				$q = "SELECT " . TB_PREFIX . "users.id userid, " . TB_PREFIX . "users.username username, " . TB_PREFIX . "users.dpall dpall
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY dpall DESC, userid ASC";
 					
@@ -150,7 +150,7 @@
 				)allitag
 					
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY totalpop DESC, totalraid DESC, userid ASC $limit";
 				return mysql_query($q);
@@ -169,7 +169,7 @@
 				)totalvillages
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY apall DESC, userid ASC $limit";
 				return mysql_query($q);
@@ -189,7 +189,7 @@
 				)totalvillages
 					
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY dpall DESC, userid ASC $limit";
 				return mysql_query($q);
@@ -360,7 +360,7 @@
 			public function getVillageRank($wid) {
 				$q = "SELECT v.* FROM ".TB_PREFIX."vdata AS v
 				INNER JOIN ".TB_PREFIX."users AS u ON u.id = v.owner
-				WHERE v.wref != 0 AND u.tribe <= 3
+				WHERE v.wref != 0 AND ".playerAccountSql('u`.`id')."
 				AND u.access < ".(INCLUDE_ADMIN ? "10" : "8")."
 				ORDER BY v.pop DESC, v.owner DESC, v.lastupdate DESC";
 				$result = mysql_query($q);
@@ -378,7 +378,7 @@
 			public function procVillagesRanking($limit="") {				
 				$q = "SELECT v.* FROM ".TB_PREFIX."vdata AS v
 				INNER JOIN ".TB_PREFIX."users AS u ON u.id = v.owner
-				WHERE v.wref != 0 AND u.tribe <= 3
+				WHERE v.wref != 0 AND ".playerAccountSql('u`.`id')."
 				AND u.access < ".(INCLUDE_ADMIN ? "10" : "8")."
 				ORDER BY v.pop DESC, v.owner DESC, v.lastupdate DESC $limit";
 				return mysql_query($q);
@@ -407,7 +407,7 @@
 				)totalpop
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY experience DESC, totalpop ASC, userid ASC";
 				$result = mysql_query($q);
@@ -441,7 +441,7 @@
 				)totalpop
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY experience DESC, totalpop ASC, userid ASC $limit";
 				
@@ -461,7 +461,7 @@
 				)totalvillages
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY ap DESC, userid ASC";
 					
@@ -492,7 +492,7 @@
 				)totalvillages
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY dp DESC, userid ASC";
 					
@@ -523,7 +523,7 @@
 				)totalvillages
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY clp DESC, userid ASC";
 					
@@ -553,7 +553,7 @@
 				)totalvillages
 				
 				FROM " . TB_PREFIX . "users
-				WHERE " . TB_PREFIX . "users.tribe <= 3
+				WHERE " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 				AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . "
 				ORDER BY RR DESC, userid ASC";
 					

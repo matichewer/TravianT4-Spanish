@@ -337,6 +337,10 @@ function natarProvisionVillage($wref) {
         .'starv = 0, starvupdate = 0, lastupdate = '.$time.' '
         .'WHERE wref = '.$wref);
 
+    // Todo lo que pasa por acá es escenario: la capital y las 13 Maravillas. Las aldeas
+    // natar vivas tienen su propio camino (GameEngine/NatarSettlement.php).
+    $database->setVillageNpcKind($wref, NPC_KIND_STATIC);
+
     return $plan;
 }
 

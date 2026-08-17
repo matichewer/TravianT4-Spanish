@@ -32,6 +32,19 @@ if(!defined('UID_SUPPORT')) {
 }
 
 /**
+ * La cuenta no alcanza para decidir cómo se comporta una aldea: la cuenta Natars es dueña
+ * de dos cosas muy distintas. Las Maravillas y la capital son escenario —guarnición fija,
+ * sin manutención, sin hambruna—, mientras que las aldeas natar independientes son aldeas
+ * de verdad sin jugador detrás: producen, crecen, entrenan, comen y se mueren de hambre.
+ * Por eso la clase va por aldea, en `vdata.npckind`.
+ */
+if(!defined('NPC_KIND_PLAYER')) {
+    define('NPC_KIND_PLAYER', 0);
+    define('NPC_KIND_STATIC', 1);
+    define('NPC_KIND_LIVING', 2);
+}
+
+/**
  * Las cuentas del sistema, por nombre. El orden es el de sus ids.
  */
 function systemAccounts() {
@@ -110,4 +123,79 @@ function systemAccountId($username) {
  */
 function natarsAccountId() {
     return systemAccountId('Natars');
+}
+
+/**
+ * Clase NPC de una aldea, a partir de una fila de `vdata` que ya se tenga a mano.
+ *
+ * Si la columna todavía no existe —un deploy que llegó antes que la migración— se deduce
+ * del dueño, que es exactamente lo que hacía el código antes de que la clase existiera:
+ * un mundo sin migrar se comporta como ayer en vez de romperse.
+ */
+function villageKindFromRow($village) {
+    if(is_array($village) && isset($village['npckind'])) {
+        $kind = (int)$village['npckind'];
+        if($kind >= NPC_KIND_PLAYER && $kind <= NPC_KIND_LIVING) {
+            return $kind;
+        }
+    }
+    $owner = is_array($village) && isset($village['owner']) ? (int)$village['owner'] : 0;
+    return isSystemAccount($owner) ? NPC_KIND_STATIC : NPC_KIND_PLAYER;
+}
+
+/**
+ * Lo mismo cuando sólo se tiene el wref. Cuesta una consulta: si ya tenés la fila, usá
+ * villageKindFromRow().
+ */
+function villageKind($wref) {
+    global $database;
+    $wref = (int)$wref;
+    if($wref <= 0 || !isset($database) || !is_object($database)) {
+        return NPC_KIND_PLAYER;
+    }
+    $kind = $database->getVillageNpcKind($wref);
+    if($kind !== null) {
+        return (int)$kind;
+    }
+    return isSystemAccount($database->getVillageField($wref, 'owner'))
+        ? NPC_KIND_STATIC
+        : NPC_KIND_PLAYER;
+}
+
+/**
+ * Escenario: guarnición fija que no come, no crece y no pasa hambre.
+ */
+function isStaticNpcVillage($village) {
+    $kind = is_array($village) ? villageKindFromRow($village) : villageKind($village);
+    return $kind === NPC_KIND_STATIC;
+}
+
+/**
+ * Aldea NPC viva: se comporta como la de un jugador, sin jugador.
+ */
+function isLivingNpcVillage($village) {
+    $kind = is_array($village) ? villageKindFromRow($village) : villageKind($village);
+    return $kind === NPC_KIND_LIVING;
+}
+
+/**
+ * Fragmento SQL para filtrar por clase de aldea. Se cae a un filtro por dueño cuando la
+ * columna no existe todavía, para que las consultas no fallen en un mundo sin migrar.
+ */
+function villageKindSql($kind, $alias = '') {
+    global $database;
+    $prefix = $alias === '' ? '' : '`'.$alias.'`.';
+    $available = isset($database) && is_object($database) && $database->ensureNpcVillageColumns();
+    if($available) {
+        return $prefix.'`npckind` = '.(int)$kind;
+    }
+    $ownerColumn = $alias === '' ? 'owner' : $alias.'`.`owner';
+    if((int)$kind === NPC_KIND_STATIC) {
+        return systemAccountSql($ownerColumn);
+    }
+    if((int)$kind === NPC_KIND_PLAYER) {
+        return playerAccountSql($ownerColumn);
+    }
+    // Sin columna no puede haber aldeas vivas: todavía no existían.
+    return '0 = 1';
 }

@@ -329,3 +329,23 @@ SET a.ap = COALESCE(totals.ap, 0),
 -- declarar varios horarios en un mismo guardado (cada uno se guarda como su propia fila).
 ALTER TABLE s1_route
   ADD COLUMN IF NOT EXISTS start_minute tinyint(2) unsigned NOT NULL DEFAULT 0 AFTER start;
+
+-- 2026-08-17 - Clase de aldea NPC (aldeas natar independientes)
+-- Hasta ahora "esta aldea es escenario" se decidia por CUENTA: todo lo de Natars era
+-- guarnicion estatica. Las aldeas natar independientes son de la misma cuenta pero se
+-- comportan como aldeas normales (producen, crecen, entrenan, pasan hambre), asi que la
+-- distincion pasa a ser por ALDEA. `npckind`: 0 jugador, 1 NPC estatico, 2 NPC vivo.
+-- `npcupdate` es el reloj de tropas de una aldea viva; no puede compartir `lastupdate`,
+-- que es el de la produccion de recursos, por el mismo motivo que la lealtad tuvo que
+-- tener el suyo.
+-- El codigo tambien crea estas columnas solo si faltan (ensureNpcVillageColumns), asi que
+-- un deploy que llegue antes que esta migracion no rompe nada.
+ALTER TABLE s1_vdata
+  ADD COLUMN IF NOT EXISTS npckind tinyint(1) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS npcupdate int(11) unsigned NOT NULL DEFAULT 0;
+
+-- Backfill: todo lo que hoy pertenece a una cuenta del sistema es guarnicion estatica.
+UPDATE s1_vdata AS v
+INNER JOIN s1_users AS u ON u.id = v.owner
+SET v.npckind = 1
+WHERE u.id <= 4 AND v.npckind = 0;

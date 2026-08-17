@@ -64,7 +64,7 @@ $q = "
 			WHERE " . TB_PREFIX . "vdata.owner = userid
 	)pop
 	FROM " . TB_PREFIX . "users
-	WHERE " . TB_PREFIX . "users.apall >=0 AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . " AND " . TB_PREFIX . "users.tribe <= 3
+	WHERE " . TB_PREFIX . "users.apall >=0 AND " . TB_PREFIX . "users.access < " . (INCLUDE_ADMIN ? "10" : "8") . " AND " . playerAccountSql(TB_PREFIX . "users`.`id") . "
 	ORDER BY " . TB_PREFIX . "users.apall DESC, pop DESC, username ASC";
 
 	$result = mysql_query($q) or die(mysql_error());

@@ -4,6 +4,10 @@
         // addHero() cree la columna `autoregen` con heroBaseRegeneration() en vez de un
         // 10 suelto: el reconciliador y la fórmula de regeneración leen el mismo valor.
         require_once __DIR__."/../Hero.php";
+        // La frontera entre cuentas del sistema y de jugadores: esta capa arma con ella
+        // los filtros de las clasificaciones. Se declara acá y no sólo en Database.php
+        // porque hay checkers que cargan el driver solo, sin pasar por él.
+        require_once __DIR__."/../Accounts.php";
 
         class mysqli_DB {
         	var $connection;
@@ -1572,7 +1576,7 @@
 				}
 				$q = "UPDATE " . TB_PREFIX . "users u"
 					. " LEFT JOIN " . TB_PREFIX . "alidata a ON a.id = u.alliance"
-					. " AND u.tribe <= 3 AND u.access < $accessLimit"
+					. " AND " . playerAccountSql('u`.`id') . " AND u.access < $accessLimit"
 					. " SET u.`$field` = u.`$field` + ($amount),"
 					. " a.`$field` = a.`$field` + ($amount)"
 					. " WHERE u.id = $uid";
@@ -1589,7 +1593,7 @@
 					. " COALESCE(SUM(v.population),0) population"
 					. " FROM " . TB_PREFIX . "users u"
 					. " LEFT JOIN (SELECT owner,SUM(pop) population FROM " . TB_PREFIX . "vdata GROUP BY owner) v ON v.owner=u.id"
-					. " WHERE u.alliance > 0 AND u.tribe <= 3 AND u.access < $accessLimit"
+					. " WHERE u.alliance > 0 AND " . playerAccountSql('u`.`id') . " AND u.access < $accessLimit"
 					. " GROUP BY u.alliance"
 					. ") totals ON totals.alliance = a.id"
 					. " SET a.ap = COALESCE(totals.ap,0), a.dp = COALESCE(totals.dp,0),"
@@ -1746,7 +1750,7 @@
 				$result = mysqli_query(
 					$this->connection,
 					"SELECT id FROM " . TB_PREFIX . "users
-					 WHERE id > 3 AND tribe <= 3 AND access < $accessLimit"
+					 WHERE " . playerAccountSql('id') . " AND access < $accessLimit"
 				);
 				if(!$result) {
 					return false;
@@ -2008,6 +2012,86 @@
 				}
 				$available = (bool)$added;
 				return $available;
+			}
+
+			/**
+			 * `npckind` dice si una aldea es de un jugador, una guarnicion NPC estatica
+			 * (Maravillas y capital natar) o una aldea NPC viva, y `npcupdate` es el reloj
+			 * de tropas de esta ultima: no puede compartir `lastupdate`, que es el de la
+			 * produccion de recursos, por el mismo motivo que la lealtad necesito el suyo.
+			 *
+			 * Se crean solas por lo mismo que las de lealtad: un deploy que llegue antes
+			 * que la migracion manual no puede dejar el mundo roto. Mientras falten, todo
+			 * el codigo se cae al comportamiento viejo (ver villageKindFromRow).
+			 */
+			function ensureNpcVillageColumns() {
+				static $available = null;
+				if($available !== null) {
+					return $available;
+				}
+				$table = TB_PREFIX . "vdata";
+				$result = mysqli_query($this->connection,"SHOW COLUMNS FROM `$table` LIKE 'npckind'");
+				if($result && mysqli_num_rows($result) > 0) {
+					$available = true;
+					return $available;
+				}
+				$added = mysqli_query(
+					$this->connection,
+					"ALTER TABLE `$table` "
+					."ADD COLUMN IF NOT EXISTS `npckind` tinyint(1) unsigned NOT NULL DEFAULT 0, "
+					."ADD COLUMN IF NOT EXISTS `npcupdate` int(11) unsigned NOT NULL DEFAULT 0"
+				);
+				if($added) {
+					// Backfill: lo que hoy es de una cuenta del sistema es guarnicion estatica.
+					mysqli_query(
+						$this->connection,
+						"UPDATE `$table` AS v INNER JOIN " . TB_PREFIX . "users AS u ON u.id = v.owner "
+						."SET v.npckind = " . NPC_KIND_STATIC . " "
+						."WHERE " . systemAccountSql('u`.`id') . " AND v.npckind = " . NPC_KIND_PLAYER
+					);
+				}
+				$available = (bool)$added;
+				return $available;
+			}
+
+			/**
+			 * Clase NPC de una aldea, o null si la columna todavia no existe.
+			 */
+			function getVillageNpcKind($wref) {
+				$wref = (int)$wref;
+				if($wref <= 0 || !$this->ensureNpcVillageColumns()) {
+					return null;
+				}
+				$result = mysqli_query($this->connection,"SELECT npckind FROM " . TB_PREFIX . "vdata WHERE wref = $wref");
+				$row = $result ? mysqli_fetch_assoc($result) : null;
+				return is_array($row) ? (int)$row['npckind'] : null;
+			}
+
+			function setVillageNpcKind($wref, $kind) {
+				$wref = (int)$wref;
+				$kind = (int)$kind;
+				if($wref <= 0 || !$this->ensureNpcVillageColumns()) {
+					return false;
+				}
+				return mysqli_query($this->connection,"UPDATE " . TB_PREFIX . "vdata SET npckind = $kind WHERE wref = $wref");
+			}
+
+			/**
+			 * Avanza el reloj de tropas de una aldea NPC viva solo si nadie lo movio desde
+			 * que quien llama lo leyo. Es el mismo compare-and-swap que usa
+			 * accrueVillageResources: sin esto, dos requests simultaneos acreditarian el
+			 * mismo intervalo de entrenamiento dos veces.
+			 */
+			function advanceNpcVillageClock($wref, $expected, $now) {
+				$wref = (int)$wref;
+				$expected = (int)$expected;
+				$now = (int)$now;
+				if($wref <= 0 || !$this->ensureNpcVillageColumns()) {
+					return false;
+				}
+				$q = "UPDATE " . TB_PREFIX . "vdata SET npcupdate = $now WHERE wref = $wref AND npcupdate = $expected";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
 			/**
@@ -3696,7 +3780,7 @@
         	}
 
         	function getRanking() {
-        		$q = "SELECT id,username,alliance,ap,apall,dp,dpall,access FROM " . TB_PREFIX . "users WHERE tribe<=3 AND access<" . (INCLUDE_ADMIN ? "10" : "8");
+        		$q = "SELECT id,username,alliance,ap,apall,dp,dpall,access FROM " . TB_PREFIX . "users WHERE " . playerAccountSql('id') . " AND access<" . (INCLUDE_ADMIN ? "10" : "8");
         		$result = mysqli_query($this->connection,$q);
         		return $this->mysqli_fetch_all($result);
         	}
@@ -3710,7 +3794,7 @@
 			}
 
         	function getVRanking() {
-        		$q = "SELECT v.wref,v.name,v.owner,v.pop FROM " . TB_PREFIX . "vdata AS v," . TB_PREFIX . "users AS u WHERE v.owner=u.id AND u.tribe<=3 AND v.wref != '' AND u.access<" . (INCLUDE_ADMIN ? "10" : "8");
+        		$q = "SELECT v.wref,v.name,v.owner,v.pop FROM " . TB_PREFIX . "vdata AS v," . TB_PREFIX . "users AS u WHERE v.owner=u.id AND " . playerAccountSql('u`.`id') . " AND v.wref != '' AND u.access<" . (INCLUDE_ADMIN ? "10" : "8");
         		$result = mysqli_query($this->connection,$q);
         		return $this->mysqli_fetch_all($result);
         	}
@@ -3740,7 +3824,7 @@
         	}
 
 		function getAllMember($aid, $rankOnly = false) {
-				$rankFilter = $rankOnly ? " AND tribe <= 3 AND access < " . (INCLUDE_ADMIN ? "10" : "8") : "";
+				$rankFilter = $rankOnly ? " AND " . playerAccountSql('id') . " AND access < " . (INCLUDE_ADMIN ? "10" : "8") : "";
 				$q = "SELECT * FROM " . TB_PREFIX . "users WHERE alliance = $aid" . $rankFilter . " ORDER BY (SELECT sum(pop) FROM " . TB_PREFIX . "vdata WHERE owner =  " . TB_PREFIX . "users.id) DESC";
         		$result = mysqli_query($this->connection,$q);
         		return $this->mysqli_fetch_all($result);

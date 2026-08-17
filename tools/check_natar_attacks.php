@@ -39,11 +39,13 @@ checkNatarAttack(strpos($installer, 'natarRestockGarrison($wid, natarCapitalGarr
 
 // La hambruna no puede tocar aldeas NPC: la capital natar consume más cereal del que
 // cualquier aldea puede producir, así que sin esta salida se desarma sola.
-// La frontera de cuentas del sistema vive en GameEngine/Accounts.php y tiene su propio
-// checker (tools/check_npc_accounts.php); acá sólo se fija que estos dos caminos la usen.
-checkNatarAttack(strpos($automation, 'isSystemAccount($starv[\'owner\'])') !== false,
-    'starvation() deja afuera a las cuentas del sistema (Support, Natars, Nature, Multihunter)');
-checkNatarAttack(strpos($automation, 'isSystemAccount($villageOwner)') !== false,
-    'la producción de una aldea del sistema no le cobra manutención a la guarnición');
+// La frontera vive en GameEngine/Accounts.php y tiene su propio checker
+// (tools/check_npc_accounts.php); acá sólo se fija que estos dos caminos la usen. Desde
+// que existen las aldeas natar vivas la exención es por ALDEA, no por cuenta: la cuenta
+// Natars es dueña de las dos clases.
+checkNatarAttack(strpos($automation, 'isStaticNpcVillage($starv)') !== false,
+    'starvation() deja afuera a las guarniciones estáticas, no a toda la cuenta');
+checkNatarAttack(strpos($automation, 'isStaticNpcVillage($villageRow)') !== false,
+    'la producción de una guarnición estática no le cobra manutención');
 
 exit(count($failures) ? 1 : 0);

@@ -4,7 +4,7 @@
    $tribe2 = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE tribe = 2 AND access < ".$statisticsAccessLimit);
    $tribe3 = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE tribe = 3 AND access < ".$statisticsAccessLimit);
    $tribes = array(mysql_num_rows($tribe1), mysql_num_rows($tribe2), mysql_num_rows($tribe3));
-   $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$statisticsAccessLimit)); ?>
+   $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$statisticsAccessLimit)); ?>
 
 <h4 class="round">Estadísticas</h4>
 <table cellpadding="1" cellspacing="1" id="world_player" class="transparent">
@@ -16,12 +16,12 @@
      <tr>
       <th>Jugadores activos</th>
       <td><?php
-                   $active = mysql_num_rows(mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$statisticsAccessLimit." AND ".time()."-timestamp < (3600*24)"));
+                   $active = mysql_num_rows(mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$statisticsAccessLimit." AND ".time()."-timestamp < (3600*24)"));
                    echo number_format($active, 0, ',', '.'); ?></td>
      </tr>     <tr>
       <th>Jugadores en línea</th>
       <td><?php
-				$result = mysql_query("SELECT o.* FROM ".TB_PREFIX."online AS o INNER JOIN ".TB_PREFIX."users AS u ON u.username = o.name WHERE u.tribe <= 3 AND u.access < ".$statisticsAccessLimit);
+				$result = mysql_query("SELECT o.* FROM ".TB_PREFIX."online AS o INNER JOIN ".TB_PREFIX."users AS u ON u.username = o.name WHERE ".playerAccountSql('u`.`id')." AND u.access < ".$statisticsAccessLimit);
 				$num_rows = mysql_num_rows($result);
 				echo number_format($num_rows, 0, ',', '.');
 				?></td>

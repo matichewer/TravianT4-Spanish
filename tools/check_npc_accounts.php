@@ -116,7 +116,15 @@ $spellings = array(
     // El lookbehind deja pasar la asignación PHP `$username = "Natars"`, que no es una
     // grafía de la frontera sino el instalador nombrando la cuenta que está creando.
     '/(?<![\$\w])username`?\s*=\s*\\\\?[\'"]Natars[\'"]/i' => "búsqueda de la cuenta natar por nombre (usá natarsAccountId())",
-    '/tribe\s*!=\s*0\s*AND\s*tribe\s*!=\s*4/i'   => 'contador de jugadores filtrando por tribu (usá playerAccountSql())'
+    '/tribe\s*!=\s*0\s*AND\s*tribe\s*!=\s*4/i'   => 'contador de jugadores filtrando por tribu (usá playerAccountSql())',
+    // La octava grafía: las clasificaciones excluían a las cuatro cuentas del sistema por
+    // la conjunción de dos condiciones sueltas —Natars y Nature caían por tribu, Support y
+    // Multihunter por `access`—. Daba el resultado correcto de casualidad.
+    //
+    // Se exige que `access` aparezca cerca: `tribe <= 3` a secas es un recorrido de las
+    // tres tribus jugables (Battle.php lo hace varias veces) y no tiene nada que ver.
+    '/tribe\s*<=\s*3[^;]{0,120}access\s*</is'    => 'clasificación filtrando por tribu (usá playerAccountSql())',
+    '/access\s*<[^;]{0,120}tribe\s*<=\s*3/is'    => 'clasificación filtrando por tribu (usá playerAccountSql())'
 );
 
 $exempt = array(

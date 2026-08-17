@@ -494,6 +494,13 @@ class Units {
 						$form->addError("error",$reinforceError);
 					}
 				}
+				// Una aldea natar no acepta refuerzos, igual que en Travian: son NPC y no
+				// se las puede apuntalar. Se revalida acá para que una petición armada a
+				// mano tampoco pueda.
+				if((int)$data['type'] === 2 && $database->isVillageOases($data['to_vid']) == 0
+					&& isSystemAccount($database->getVillageField($data['to_vid'],'owner'))) {
+					$form->addError("error","No puedes enviar refuerzos a una aldea natar.");
+				}
 				// Idem con la exploración: se revalida en la confirmación para que una
 				// petición armada a mano no pueda espiar sin enviar espías.
 				if((int)$data['type'] === 1) {

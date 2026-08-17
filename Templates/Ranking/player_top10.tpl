@@ -3,8 +3,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY ap DESC, id ASC LIMIT 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY ap DESC, id ASC LIMIT 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY ap DESC, id ASC LIMIT 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY ap DESC, id ASC LIMIT 1");
     $attRank = $ranking->getTop10AttRank($session->uid);
     $defRank = $ranking->getTop10DefRank($session->uid);
     $clpRank = $ranking->getTop10ClpRank($session->uid);
@@ -78,8 +78,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY dp DESC, id ASC Limit 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY dp DESC, id ASC Limit 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY dp DESC, id ASC Limit 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY dp DESC, id ASC Limit 1");
 ?>
 <h4 class="round small spacer top top10_defs">Top 10 defensores</h4>
 <table cellpadding="1" cellspacing="1" id="top10_defs" class="top10 row_table_data">
@@ -116,8 +116,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY `clp` DESC, id ASC Limit 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY `clp` DESC, id ASC Limit 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY `clp` DESC, id ASC Limit 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY `clp` DESC, id ASC Limit 1");
 ?>
 <h4 class="round small  top top10_climbers">Top 10 en crecimiento</h4>
 <table cellpadding="1" cellspacing="1" id="top10_climbers" class="top10 row_table_data">
@@ -151,8 +151,8 @@
     for($i=1;$i<=0;$i++) {
     echo "Row ".$i;
     }
-    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 10");
-    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND tribe <= 3 AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 1");
+    $result = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 10");
+    $result2 = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = '".$session->uid."' AND ".playerAccountSql('id')." AND access < ".$rankingAccessLimit." ORDER BY RR DESC, id ASC Limit 1");
 ?>
 <h4 class="round small spacer top top10_raiders">Top 10 saqueadores</h4>
 <table cellpadding="1" cellspacing="1" id="top10_raiders" class="top10 row_table_data">

@@ -6,7 +6,7 @@ if(WW == True){
                         INNER JOIN ".TB_PREFIX."vdata ON ".TB_PREFIX."users.id = ".TB_PREFIX."vdata.owner
                         INNER JOIN ".TB_PREFIX."fdata ON ".TB_PREFIX."fdata.vref = ".TB_PREFIX."vdata.wref
                         WHERE ".TB_PREFIX."fdata.f99t = 40
-						AND ".TB_PREFIX."users.tribe <= 3
+						AND ".playerAccountSql(TB_PREFIX."users`.`id")."
 						AND ".TB_PREFIX."users.access < ".$rankingAccessLimit."
 						ORDER BY ".TB_PREFIX."fdata.f99 Desc Limit 20");
 ?>
