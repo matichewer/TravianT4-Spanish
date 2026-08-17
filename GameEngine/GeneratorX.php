@@ -194,8 +194,34 @@ class GeneratorX {
 		return array($day,$new);
 	}
    
+	/**
+	 * Id de la casilla en (x|y), a partir del orden en que el instalador generó `wdata`.
+	 *
+	 * El radio sale del mundo REAL y no de WORLD_MAX. La fórmula depende de que los dos
+	 * coincidan, y cuando no coinciden no falla ruidosamente: devuelve el id de otra
+	 * casilla, o de ninguna. Un mundo generado a ±25 con WORLD_MAX en 100 —el caso del
+	 * Docker de desarrollo— hacía que el mapa entero saliera en blanco, porque cada
+	 * consulta pedía una casilla inexistente. En un mundo bien instalado los dos números
+	 * son el mismo y esto no cambia nada.
+	 */
 	public function getBaseID($x,$y) {
-	return ((WORLD_MAX-$y) * (WORLD_MAX*2+1)) + (WORLD_MAX +$x + 1);
+		global $database;
+		$radius = 0;
+		if(isset($database) && is_object($database) && method_exists($database,'getWorldRadius')){
+			$radius = (int)$database->getWorldRadius();
+		}
+		if($radius <= 0){
+			$radius = (int)WORLD_MAX;
+		}
+		// El mundo da la vuelta por los bordes: pasarse del norte lleva al sur, igual que
+		// en Travian, y es lo que ya hacen todas las cuentas de distancia del motor
+		// (procDistanceTime, la anexión de oasis, la zona gris). getBaseID() no lo hacía,
+		// así que una vista de mapa cerca de un borde pedía casillas inexistentes y salía
+		// media pantalla en blanco. Dentro de rango esto no cambia nada.
+		$span = $radius * 2 + 1;
+		$x = ((((int)$x + $radius) % $span) + $span) % $span - $radius;
+		$y = ((((int)$y + $radius) % $span) + $span) % $span - $radius;
+		return (($radius-$y) * $span) + ($radius + $x + 1);
 	}
    
 	public function getMapCheck($wref) {

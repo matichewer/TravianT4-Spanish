@@ -174,7 +174,12 @@ break;
 }
 
 
-   	$image = ($maparray[$index]['occupied'] == 1 && $maparray[$index]['fieldtype'] > 0)? (($maparray[$index]['owner'] == $session->uid)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b30-'.$tribe: 'b20-'.$tribe :'b10-'.$tribe : 'b00-'.$tribe) : (($targetalliance != 0)? (in_array($targetalliance,$friendarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b31': 'b21' :'b11' : 'b01') : (in_array($targetalliance,$enemyarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b32': 'b22' :'b12' : 'b02') : (in_array($targetalliance,$neutralarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b35': 'b25' :'b15' : 'b05') : ($targetalliance == $session->alliance? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b33': 'b23' :'b13' : 'b03') : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))))) : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))) : $maparray[$index]['image'];
+    // Una casilla marcada como ocupada pero sin fila en `vdata` no tiene dueño ni tribu,
+    // así que la clase del sprite salía como `b04-0`, que no existe: la casilla se veía
+    // BLANCA en el mapa. Pasa cuando algún camino borra una aldea sin liberar el campo.
+    // Ante la duda se dibuja el terreno, que es lo que la casilla realmente es.
+    $hasVillage = isset($maparray[$index]['wref']) && $maparray[$index]['wref'] !== null;
+   	$image = ($maparray[$index]['occupied'] == 1 && $maparray[$index]['fieldtype'] > 0 && $hasVillage)? (($maparray[$index]['owner'] == $session->uid)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b30-'.$tribe: 'b20-'.$tribe :'b10-'.$tribe : 'b00-'.$tribe) : (($targetalliance != 0)? (in_array($targetalliance,$friendarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b31': 'b21' :'b11' : 'b01') : (in_array($targetalliance,$enemyarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b32': 'b22' :'b12' : 'b02') : (in_array($targetalliance,$neutralarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b35': 'b25' :'b15' : 'b05') : ($targetalliance == $session->alliance? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b33': 'b23' :'b13' : 'b03') : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))))) : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))) : $maparray[$index]['image'];
 
     if($targetalliance!=0) {
     	$allyname = $database->getAllianceName($targetalliance);
@@ -195,7 +200,13 @@ break;
     $targettitle = "<font color='white'><b>".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Jugador: ".$username."<br>Población: ".$maparray[$index]['pop']."<br>Alianza ".$allyname."<br>Tribu: ".$tribename."";
     }
     if($maparray[$index]['oasistype'] == 0 && $maparray[$index]['occupied'] == 0) {
-    $targettitle = "<font color='white'><b>Valle abandonado ".$tt."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")";
+    // La zona gris tiene que verse, o fundar ahí es una trampa: el jugador no puede
+    // adivinar dónde empieza. Sólo se marca en los valles libres, que son los únicos donde
+    // la advertencia sirve para algo.
+    $greyZoneWarning = greyZoneContainsCoordinates($maparray[$index]['x'], $maparray[$index]['y'])
+        ? "<br><b>Zona gris</b>: fundar acá despierta a los natars"
+        : "";
+    $targettitle = "<font color='white'><b>Valle abandonado ".$tt."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")".$greyZoneWarning;
     }
 
     if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0 && $maparray[$index]['occupied'] == 0) {
@@ -224,7 +235,39 @@ break;
     if(!$maparray[$index]['fieldtype'] && $maparray[$index]['oasistype'] && $maparray[$index]['occupied']){
     	$occupied = "-s";
     }else{ $occupied = ""; }
-    echo "<a class=\"mapTileLink\" href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied."\" title=\"".$targettitle."\" onclick=\"return TravianMapTileDetails(event,".(int)$maparray[$index]['x'].",".(int)$maparray[$index]['y'].");\">";
+    // El tinte va en TODA casilla de la zona, ocupada o libre: lo que el jugador tiene
+    // que poder ver de un vistazo es la región entera, no sólo dónde puede fundar.
+    // Una aldea anterior a la zona se ve como siempre: su dueño se instaló ahí cuando la
+    // regla no existía, y pintarla de ceniza sería contarle una historia que no vivió.
+    $greyZoneTile = (greyZoneContainsCoordinates($maparray[$index]['x'], $maparray[$index]['y'])
+        && greyZoneAffectsVillage($maparray[$index]))
+        ? ' greyzone'
+        : '';
+    // El suelo de la zona gris es CENIZA, no pasto tintado: así se ve en el T4 oficial, y
+    // el sprite está en el gpack Travian_4.0_41 que ya vive en el repo. Los t0..t9 son
+    // todos variantes de pasto con adornos distintos, así que el reemplazo es directo.
+    // Los oasis (oN) y las aldeas (bNN-T) conservan su propio sprite: ahí el tinte alcanza
+    // para que se lea que están dentro de la zona.
+    // El volcán del centro va antes que la ceniza: es el que la escupe. Sólo se dibuja en
+    // casillas sin aldea ni oasis — en este servidor (0|0) y (1|0) tienen la capital natar
+    // y a Multihunter, y taparlas dejaría dos aldeas invisibles e inalcanzables desde el
+    // mapa. Se pierden dos casillas del dibujo y se ganan dos aldeas clicables.
+    $volcanoTile = (!$hasVillage && (int)$maparray[$index]['oasistype'] === 0)
+        ? greyZoneVolcanoClass($maparray[$index]['x'], $maparray[$index]['y'])
+        : '';
+    if($volcanoTile !== '') {
+        $image = $volcanoTile;
+        $greyZoneTile = '';
+    }
+    elseif($greyZoneTile !== '' && preg_match('/^t[0-9]$/', $image)) {
+        $image = 'ashland';
+        // Con el suelo de ceniza el tinte sobra: el oficial no tiñe nada, la zona SE VE
+        // porque el terreno es distinto. El tinte queda sólo para los oasis y las aldeas
+        // de adentro, que conservan su propio sprite y si no no se leerían como parte de
+        // la región.
+        $greyZoneTile = '';
+    }
+    echo "<a class=\"mapTileLink\" href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile."\" title=\"".$targettitle."\" onclick=\"return TravianMapTileDetails(event,".(int)$maparray[$index]['x'].",".(int)$maparray[$index]['y'].");\">";
     if($session->plus) {
     echo $att;
     }
@@ -291,6 +334,19 @@ break;
 </form>	</div>
 </div>
 <style type="text/css">
+/* La zona gris tiene que verse de un vistazo: un tooltip obliga a pasar el mouse por la
+   casilla exacta y en la práctica es invisible. El tinte va como capa encima del sprite,
+   con pointer-events:none para no robarle el clic ni el tooltip a la casilla. */
+.tile.greyzone{position:relative;}
+/* El suelo de ceniza del T4 oficial. La ruta es absoluta porque la spritesheet vive en un
+   gpack distinto del que el jugador tenga activo. */
+div.ashland{background-image:url('/gpack/travian_Travian_4.0_41/img/map/lowRes/tiles.png');
+  background-position:-60px 0;background-repeat:no-repeat;}
+<?php echo greyZoneVolcanoCss(); ?>
+.tile.greyzone:after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;
+  background:rgba(74,76,96,.30);box-shadow:inset 0 0 0 1px rgba(74,76,96,.55);
+  pointer-events:none;}
+
 html{overflow-y:hidden;}
 body.map{background:#c8dd9b;overflow-y:hidden;}
 .mapTopBar{position:fixed;top:12px;right:20px;z-index:1000;}

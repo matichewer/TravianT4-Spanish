@@ -3,12 +3,13 @@ include_once('../installconfig/connection.php');
 include_once('../installconfig/constant.php');
 include("database.php");
 
-function isgrayfield($x, $y) {
-	$result = round(sqrt(pow($x,2)+pow($y,2)));
-	if ($result <= 22)
-		return true;
-	return false;
-}
+// La zona gris la define GameEngine/GreyZone.php, no este archivo. Antes había acá una
+// isgrayfield() con el radio 22 escrito a mano que NUNCA se llamaba: el terreno especial
+// del centro quedó a medio hacer en el proyecto original. Compartir la definición es lo
+// que garantiza que el terreno y las oleadas hablen de la misma región — si mañana se
+// cambian los radios, las dos cosas se mueven juntas.
+include_once(dirname(__DIR__, 2).'/GameEngine/GreyZone.php');
+
 
 $xyas=(1+(2*WORLD_MAX));
 
@@ -26,6 +27,9 @@ $y=(WORLD_MAX-$i);
 	else if ($x == 0 & $y == 0) {
 		$typ='1';
 		$otype='0';
+	}
+	else if(greyZoneContainsCoordinates($x, $y)){
+	list($typ, $otype) = greyZoneTerrain($x, $y);
 	}
 	else{
 	$rand=rand(1, 1000);

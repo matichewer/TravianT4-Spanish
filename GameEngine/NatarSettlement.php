@@ -547,10 +547,32 @@ function natarSettlementFindField($x, $y) {
     if(!is_array($candidates) || !$candidates) {
         return 0;
     }
+    // La distancia mínima hay que medirla contra TODAS las aldeas de jugador, no sólo
+    // contra el ancla. Los jugadores se agrupan: en este mundo hay cuatro aldeas a menos de
+    // cuatro casillas entre sí, así que una casilla a 5 del ancla podía quedar a 1,4 de la
+    // aldea de al lado y la aldea natar nacía pegada a alguien.
+    $players = $database->query_return(
+        'SELECT w.`x`, w.`y` FROM '.TB_PREFIX.'vdata v '
+        .'INNER JOIN '.TB_PREFIX.'wdata w ON w.`id` = v.`wref` '
+        .'WHERE '.playerAccountSql('v`.`owner')
+    );
+    $players = is_array($players) ? $players : array();
+
     $inBand = array();
     foreach($candidates as $candidate) {
         $distance = natarSettlementDistance($x, $y, (int)$candidate['x'], (int)$candidate['y']);
-        if($distance >= NATAR_SETTLEMENT_MIN_DISTANCE && $distance <= $max) {
+        if($distance < NATAR_SETTLEMENT_MIN_DISTANCE || $distance > $max) {
+            continue;
+        }
+        $tooClose = false;
+        foreach($players as $player) {
+            if(natarSettlementDistance((int)$candidate['x'], (int)$candidate['y'],
+                (int)$player['x'], (int)$player['y']) < NATAR_SETTLEMENT_MIN_DISTANCE) {
+                $tooClose = true;
+                break;
+            }
+        }
+        if(!$tooClose) {
             $inBand[] = (int)$candidate['id'];
         }
     }

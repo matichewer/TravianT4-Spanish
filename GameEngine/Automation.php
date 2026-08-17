@@ -6,6 +6,7 @@ require_once __DIR__.'/CombatRanking.php';
 // datos, sin pasar por ella.
 require_once __DIR__.'/Accounts.php';
 require_once __DIR__.'/NatarSettlement.php';
+require_once __DIR__.'/GreyZone.php';
 require_once __DIR__.'/Hero.php';
 // Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
 require_once __DIR__.'/GeneratorX.php';
@@ -220,6 +221,13 @@ class Automation {
         $database->query("DELETE FROM ".TB_PREFIX."enforcement WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."fdata WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."market WHERE vref = ".$villageId);
+        // Las filas de `attacks` a las que apuntan esos movimientos se van con ellos. Sin
+        // esto quedaban huérfanas para siempre, y se nota sobre todo con el asalto de la
+        // zona gris: catorce oleadas contra una aldea nueva la arrasan a mitad de camino y
+        // las que faltaban dejaban su fila colgada.
+        $database->query("DELETE a FROM ".TB_PREFIX."attacks a "
+            ."INNER JOIN ".TB_PREFIX."movement m ON m.ref = a.id "
+            ."WHERE m.`to` = ".$villageId." OR m.`from` = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."movement WHERE `to` = ".$villageId." OR `from` = ".$villageId);
         // Los prisioneros no sobreviven a la aldea. Va después de vaciar `movement` (si no,
         // el regreso recién creado se borraría con el resto) y antes de tirar `units` y
@@ -4447,6 +4455,10 @@ class Automation {
                     $database->markFollowupQuestAchieved($owner,9);
                     $database->markFollowupQuestAchieved($owner,10);
                 }
+                // Fundar en la zona gris despierta a los natars: catorce oleadas que
+                // llegan a las ~24 h. Va después de que la aldea esté creada y el
+                // movimiento marcado, para que un fundado que falló no dispare nada.
+                greyZoneScheduleAssault((int)$data['to']);
             } finally {
                 $database->releaseSettlementLock($owner);
             }
