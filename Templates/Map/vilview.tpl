@@ -12,6 +12,16 @@ if($database->getOasisV($d)){
     $basearray = $database->getMInfo($d);
 }
 
+// Una casilla marcada como ocupada pero sin fila en `vdata` no tiene dueño: consultar sus
+// datos de jugador arma un `WHERE id = ` sin valor y MySQL devuelve false, que termina en
+// dos warnings de mysqli_fetch_*. Pasa con las casillas reservadas del volcán y con
+// cualquier campo que haya quedado ocupado sin aldea detrás. Para todo lo que sigue, una
+// casilla así es un valle vacío, que es lo que realmente es.
+$hasVillage = isset($basearray['wref']) && $basearray['wref'] !== null;
+if(!$hasVillage && !$basearray['oasistype']) {
+	$basearray['occupied'] = 0;
+}
+
 if($tileDetailsPopup) {
 	if(!$basearray['occupied'] && $basearray['oasistype'] && !$basearray['fieldtype']) {
 		$tileDetailsTitle = 'Oasis desocupado';
