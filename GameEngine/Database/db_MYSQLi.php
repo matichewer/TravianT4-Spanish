@@ -6242,7 +6242,7 @@ break;
 			}
 
 		function getFieldDistance($wid) {
-		$q = "SELECT * FROM " . TB_PREFIX . "vdata where owner > 4 and wref != $wid";
+		$q = "SELECT * FROM " . TB_PREFIX . "vdata where " . playerAccountSql('owner') . " and wref != $wid";
 		$array = $this->query_return($q);
 		$coor = $this->getCoor($wid);
 		$x1 = intval($coor['x']);

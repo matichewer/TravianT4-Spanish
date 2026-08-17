@@ -159,7 +159,7 @@ check(garrisonSize($capital) === $capitalBefore,
 // --- D. Una aldea de jugador sí pasa hambre ----------------------------------------
 // El arreglo no puede haber apagado la hambruna para todos.
 $player = $database->query_return(
-    "SELECT v.wref FROM ".TB_PREFIX."vdata v WHERE v.owner > 4 LIMIT 1"
+    "SELECT `wref` FROM ".TB_PREFIX."vdata WHERE ".playerAccountSql('owner')." LIMIT 1"
 );
 if(is_array($player) && isset($player[0]['wref'])) {
     $wref = (int)$player[0]['wref'];

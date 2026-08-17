@@ -1,6 +1,10 @@
 <?php
 
 require_once __DIR__.'/CombatRanking.php';
+// La frontera entre cuentas del sistema y de jugadores. Se declara acá y no sólo en
+// Database.php porque hay checkers que cargan Automation con un doble de la capa de
+// datos, sin pasar por ella.
+require_once __DIR__.'/Accounts.php';
 require_once __DIR__.'/Hero.php';
 // Por tournamentSquareSpeedFactor(), que procDistanceTime comparte con GeneratorX.
 require_once __DIR__.'/GeneratorX.php';
@@ -1613,14 +1617,14 @@ class Automation {
             return false;
         }
 
-        // Las instalaciones actuales crean a Natars con uid 2. Algunos mundos
-        // antiguos dejaron su aldea central sin la marca de capital, por lo que
-        // usamos como respaldo la unica aldea natar que no es una aldea WW.
+        // La cuenta natar la resuelve GameEngine/Accounts.php, que prefiere el nombre y
+        // cae al id del instalador; acá alcanza con filtrar por dueño, que está indexado.
+        // Algunos mundos antiguos dejaron su aldea central sin la marca de capital, por
+        // lo que usamos como respaldo la unica aldea natar que no es una aldea WW.
         $query = mysql_query(
-            'SELECT v.`wref` FROM `'.TB_PREFIX.'vdata` v '
-            .'INNER JOIN `'.TB_PREFIX.'users` u ON u.`id` = v.`owner` '
-            .'WHERE u.`username` = \'Natars\' '
-            .'ORDER BY v.`capital` DESC, v.`natar` ASC, v.`wref` ASC LIMIT 1'
+            'SELECT `wref` FROM `'.TB_PREFIX.'vdata` '
+            .'WHERE `owner` = '.natarsAccountId().' '
+            .'ORDER BY `capital` DESC, `natar` ASC, `wref` ASC LIMIT 1'
         ) or die(mysql_error());
         $row = mysql_fetch_assoc($query);
         if(!$row || empty($row['wref'])) {
@@ -4829,16 +4833,16 @@ class Automation {
 	        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
 	        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
 	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
-	        // Las guarniciones NPC (Support, Natars, Nature, Multihunter) no comen: no son
-	        // un ejército simulado sino parte del escenario, igual que en Travian, donde
-	        // las tropas natar no se entrenan, no se reponen y no consumen cereal. Con la
-	        // manutención puesta, una Aldea de la Maravilla producía -45.000 de cereal/h y
-	        // otra vez no acumulaba nada que saquear; la capital natar, -5.000.000/h.
+	        // Las guarniciones del sistema (Support, Natars, Nature, Multihunter) no comen:
+	        // no son un ejército simulado sino parte del escenario, igual que en Travian,
+	        // donde las tropas natar no se entrenan, no se reponen y no consumen cereal.
+	        // Con la manutención puesta, una Aldea de la Maravilla producía -45.000 de
+	        // cereal/h y otra vez no acumulaba nada que saquear; la capital, -5.000.000/h.
 	        // Ver GameEngine/NatarVillage.php. Se mira el dueño de la aldea, que ya viene
 	        // en bountyinfoarray, y no $uid: son lo mismo en todos los llamadores de hoy,
 	        // pero el que manda acá es de quién es la aldea.
 	        $villageOwner = isset($this->bountyinfoarray['owner']) ? (int)$this->bountyinfoarray['owner'] : (int)$uid;
-	        if($villageOwner > 0 && $villageOwner <= 4) {
+	        if(isSystemAccount($villageOwner)) {
 	            $upkeep = 0;
 	        }
 	        $heroData = $database->getHeroData($uid);
@@ -5461,13 +5465,13 @@ class Automation {
             if($wref <= 0) {
                 continue;
             }
-            // Las aldeas NPC (Support, Natars, Nature, Multihunter) no pasan hambre.
-            // Su guarnición es estática —no se entrena ni se repone, igual que en
-            // Travian— y la de la capital natar consume unos 5.000.000 de cereal/h,
+            // Las aldeas del sistema (Support, Natars, Nature, Multihunter) no pasan
+            // hambre. Su guarnición es estática —no se entrena ni se repone, igual que
+            // en Travian— y la de la capital natar consume unos 5.000.000 de cereal/h,
             // que ninguna aldea puede producir: dejarlas entrar acá vaciaba las Aldeas
             // de la Maravilla solas a los diez minutos del primer ataque que recibían.
             // Se les corta el rojo para que la deuda no se arrastre.
-            if((int)$starv['owner'] > 0 && (int)$starv['owner'] <= 4) {
+            if(isSystemAccount($starv['owner'])) {
                 $this->clearStarvation($wref, -1);
                 continue;
             }
@@ -5594,14 +5598,15 @@ class Automation {
     private function notifyStarvation($wref) {
         global $database;
         $owner = (int)$database->getVillageField($wref, 'owner');
-        if($owner <= 4) {
+        // Nadie lee el buzón de una cuenta del sistema.
+        if(!isPlayerAccount($owner)) {
             return;
         }
         $name = $database->getVillageField($wref, 'name');
         $message = "[message]Tu granero en [b]".addslashes($name)."[/b] se quedó vacío y el balance de cereal sigue en negativo."
             ." Las tropas empezaron a morir de hambre y seguirán muriendo hasta que la producción vuelva a cero."
             ." Amplía las plantaciones de cereal, reduce el ejército o manda tropas a otra aldea.[/message]";
-        $database->sendMessage($owner, 4, 'Hambruna en '.addslashes($name), $message, 0, 0, 0, 0, 0);
+        $database->sendMessage($owner, UID_MULTIHUNTER, 'Hambruna en '.addslashes($name), $message, 0, 0, 0, 0, 0);
     }
 
     // by SlimShady95, aka Manuel Mannhardt < manuel_mannhardt@web.de > UPDATED FROM songeriux < haroldas.snei@gmail.com >

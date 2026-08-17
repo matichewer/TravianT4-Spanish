@@ -3,6 +3,10 @@
 include_once(dirname(__FILE__).'/../config/connection.php');
 include_once(dirname(__FILE__).'/../config/config.php');
 require_once(dirname(__FILE__).'/Production.php');
+// La frontera entre cuentas del sistema y de jugadores. Va acá porque es el único
+// include que comparten el motor, esta capa y las páginas públicas (index, serverLogin,
+// serverRegister), que no cargan la sesión ni las tablas de juego.
+require_once(dirname(__FILE__).'/Accounts.php');
 
 // Sólo queda el driver MySQLi. El de `mysql_*` (DB_TYPE 0) no podía correr en PHP 7
 // —la extensión no existe desde PHP 7.0— y sobrevivía como una copia paralela del

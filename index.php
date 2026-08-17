@@ -83,12 +83,12 @@
                             <div class="clear"></div>
 							<div class="stat type"><?php echo PLAYERS_ACTIVE; ?>:</div>
                             <div class="stat value"><?php $time = time() - 3600*24;
-							$active = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND tribe!=0 AND tribe!=4 AND tribe!=5"));							
+							$active = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND " . playerAccountSql('id') . ""));							
 							echo $active; ?></div>
 							<div class="clear"></div>
                             <div class="stat type"><?php echo PLAYERS_ONLINE; ?>:</div>
                             <div class="stat value"><?php $time = time() - 60*10;
-							$online = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND tribe!=0 AND tribe!=4 AND tribe!=5"));
+							$online = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND " . playerAccountSql('id') . ""));
 							echo $online; ?></div>
 							<div class="clear"></div>
 	                	</div>

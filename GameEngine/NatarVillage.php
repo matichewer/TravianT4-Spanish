@@ -25,6 +25,7 @@
  * la guarnición natar es estática, no se entrena, no se repone y no se muere de hambre.
  */
 
+require_once __DIR__.'/Accounts.php';
 require_once __DIR__.'/Production.php';
 require_once __DIR__.'/Data/buidata.php';
 require_once __DIR__.'/Data/unitdata.php';
@@ -51,19 +52,9 @@ define('NATAR_GRANARY_LEVEL', 20);
 // Edificio principal nivel 15, también como en el T4 oficial.
 define('NATAR_MAIN_BUILDING_LEVEL', 15);
 
-/**
- * Los cuatro primeros ids de usuario son las cuentas del sistema que crea el
- * instalador: Support, Natars, Nature y Multihunter. Es la misma convención que ya
- * usaba Automation::notifyStarvation().
- */
-function natarIsNpcOwner($uid) {
-    $uid = (int)$uid;
-    return $uid > 0 && $uid <= 4;
-}
-
 function natarVillageIsNpcOwned($wref) {
     global $database;
-    return natarIsNpcOwner($database->getVillageField((int)$wref, 'owner'));
+    return isSystemAccount($database->getVillageField((int)$wref, 'owner'));
 }
 
 /**
@@ -381,9 +372,8 @@ function natarRestockGarrison($wref, $garrison) {
 function natarVillages() {
     global $database;
     $rows = $database->query_return(
-        'SELECT v.wref, v.name, v.capital, v.natar, v.owner '
-        .'FROM '.TB_PREFIX.'vdata v JOIN '.TB_PREFIX.'users u ON u.id = v.owner '
-        ."WHERE u.username = 'Natars' ORDER BY v.capital DESC, v.wref ASC"
+        'SELECT `wref`, `name`, `capital`, `natar`, `owner` FROM '.TB_PREFIX.'vdata '
+        .'WHERE `owner` = '.natarsAccountId().' ORDER BY `capital` DESC, `wref` ASC'
     );
     $villages = array('capital' => array(), 'wonder' => array());
     foreach(is_array($rows) ? $rows : array() as $row) {

@@ -24,7 +24,7 @@ header("Location: install/");
        include ("GameEngine/Lang/".$result['lang'].".php");
 	   $users = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users"));
 	   $time = time() - 60*10;
-	   $online = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND tribe!=0 AND tribe!=4 AND tribe!=5"));
+	   $online = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "users WHERE timestamp > $time AND " . playerAccountSql('id') . ""));
 ?>
 <h3 class="pop popgreen bold">Elige un servidor.</h3>
 <div class="server serverA serverbig servernormal serverbignormal ">

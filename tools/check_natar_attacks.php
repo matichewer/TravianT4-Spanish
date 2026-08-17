@@ -16,9 +16,9 @@ function checkNatarAttack($condition, $message) {
     }
 }
 
-checkNatarAttack(strpos($automation, "u.`username` = \\'Natars\\'") !== false,
-    'WW waves resolve their source through the Natars account');
-checkNatarAttack(strpos($automation, "v.`natar` ASC") !== false,
+checkNatarAttack(strpos($automation, "'.natarsAccountId().'") !== false,
+    'WW waves resolve their source through the shared Natar account resolver');
+checkNatarAttack(strpos($automation, "`natar` ASC") !== false,
     'the non-WW Natar village is the fallback when no capital is marked');
 checkNatarAttack(strpos($automation, "`owner` = 3 and `capital` = 1") === false,
     'WW waves no longer use the Nature account as their source');
@@ -39,9 +39,11 @@ checkNatarAttack(strpos($installer, 'natarRestockGarrison($wid, natarCapitalGarr
 
 // La hambruna no puede tocar aldeas NPC: la capital natar consume más cereal del que
 // cualquier aldea puede producir, así que sin esta salida se desarma sola.
-checkNatarAttack(strpos($automation, '(int)$starv[\'owner\'] > 0 && (int)$starv[\'owner\'] <= 4') !== false,
+// La frontera de cuentas del sistema vive en GameEngine/Accounts.php y tiene su propio
+// checker (tools/check_npc_accounts.php); acá sólo se fija que estos dos caminos la usen.
+checkNatarAttack(strpos($automation, 'isSystemAccount($starv[\'owner\'])') !== false,
     'starvation() deja afuera a las cuentas del sistema (Support, Natars, Nature, Multihunter)');
-checkNatarAttack(strpos($automation, '$villageOwner > 0 && $villageOwner <= 4') !== false,
-    'la producción de una aldea NPC no le cobra manutención a la guarnición');
+checkNatarAttack(strpos($automation, 'isSystemAccount($villageOwner)') !== false,
+    'la producción de una aldea del sistema no le cobra manutención a la guarnición');
 
 exit(count($failures) ? 1 : 0);
