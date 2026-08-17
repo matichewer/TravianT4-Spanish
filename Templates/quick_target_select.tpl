@@ -20,14 +20,18 @@ foreach($session->villages as $quickTargetVillageId) {
 	if((int)$quickTargetVillage['wref'] == (int)$village->wid) {
 		continue;
 	}
-	$quickTargetOwn .= '<option value="'.(int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'].'">'
+	$quickTargetValue = (int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'];
+	$quickTargetSelectedAttr = isset($quickTargetSelected) && (string)$quickTargetSelected === $quickTargetValue ? ' selected="selected"' : '';
+	$quickTargetOwn .= '<option value="'.$quickTargetValue.'"'.$quickTargetSelectedAttr.'>'
 		.htmlspecialchars((string)$quickTargetVillage['name'],ENT_QUOTES,'UTF-8')
 		.' ('.(int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'].')</option>';
 }
 $quickTargetAlly = '';
 if((int)$session->alliance > 0) {
 	foreach($database->getAllianceVillagesWithCoor($session->alliance,$session->uid) as $quickTargetVillage) {
-		$quickTargetAlly .= '<option value="'.(int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'].'">'
+		$quickTargetValue = (int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'];
+		$quickTargetSelectedAttr = isset($quickTargetSelected) && (string)$quickTargetSelected === $quickTargetValue ? ' selected="selected"' : '';
+		$quickTargetAlly .= '<option value="'.$quickTargetValue.'"'.$quickTargetSelectedAttr.'>'
 			.htmlspecialchars((string)$quickTargetVillage['username'],ENT_QUOTES,'UTF-8').': '
 			.htmlspecialchars((string)$quickTargetVillage['name'],ENT_QUOTES,'UTF-8')
 			.' ('.(int)$quickTargetVillage['x'].'|'.(int)$quickTargetVillage['y'].')</option>';

@@ -36,6 +36,24 @@ checkMarketUi(substr_count($template,'updateQuickAddState();') >= 3,
 	'el color se actualiza al cargar la página, sumar o editar recursos');
 checkMarketUi(strpos($template,'$canSend = $market->maxcarry * $market->merchantAvail();') !== false,
 	'la confirmación del formulario conserva el límite total del lado del servidor');
+checkMarketUi(strpos($template,'name="cancel"') !== false && strpos($template,'>Editar</div>') !== false,
+	'la confirmación ofrece volver al formulario mediante un botón Editar');
+checkMarketUi(strpos($template,'name="x" value="<?php echo htmlspecialchars($marketX') !== false
+	&& strpos($template,'name="y" value="<?php echo htmlspecialchars($marketY') !== false
+	&& strpos($template,'name="dname" value="<?php echo htmlspecialchars($marketVillageName') !== false,
+	'Cancelar conserva destino y nombre seleccionados');
+checkMarketUi(strpos($template,"&& !isset(\$_POST['cancel'])") !== false,
+	'Editar evita volver a mostrar la pantalla de confirmación');
+checkMarketUi(strpos($marketEngine,"if(isset(\$post['cancel']))") !== false,
+	'Editar no procesa el envío ni consume el token de seguridad');
+checkMarketUi(strpos($template,"\$marketSendCount === 2 ? ' selected=\"selected\"'") !== false
+	&& strpos($template,"\$marketSendCount === 3 ? ' selected=\"selected\"'") !== false,
+	'Editar conserva la cantidad de envíos seleccionada');
+checkMarketUi(strpos($template,"\$quickTargetSelected = \$marketCoordinatesValid ? ((int)\$marketX).'|'.((int)\$marketY) : '';") !== false
+	&& strpos($template,'$marketTargetCoor = $database->getCoor($getwref);') !== false,
+	'Editar conserva las coordenadas para preseleccionar el destino rápido');
+checkMarketUi(strpos(file_get_contents(dirname(__DIR__).'/Templates/quick_target_select.tpl'),'selected="selected"') !== false,
+	'el selector de destino rápido marca la aldea conservada');
 checkMarketUi(strpos($marketEngine,'$reqMerc > $this->merchantAvail()') !== false,
 	'el envío definitivo también rechaza pedidos sin mercaderes suficientes');
 checkMarketUi(strpos($marketEngine,"\$_SESSION['marketOfferDraft'][\$village->wid]") !== false,

@@ -37,7 +37,7 @@ if(!$session->goldclub || $marketSendCount < 1 || $marketSendCount > 3) {
 }
 $marketCoordinatesValid = preg_match('/^-?\d+$/',$marketX) && preg_match('/^-?\d+$/',$marketY)
 	&& abs((int)$marketX) <= WORLD_MAX && abs((int)$marketY) <= WORLD_MAX;
-$quickTargetSelected = $marketCoordinatesValid ? $marketX.'|'.$marketY : '';
+$quickTargetSelected = $marketCoordinatesValid ? ((int)$marketX).'|'.((int)$marketY) : '';
 $_POST['x'] = $marketX;
 $_POST['y'] = $marketY;
 $_POST['dname'] = $marketVillageName;
@@ -52,6 +52,14 @@ if($marketCoordinatesValid){
 else if($marketVillageName !== ''){
 	$getwref = $database->getVillageByName($marketVillageName);
 	$checkexist = $database->checkVilExist($getwref);
+}
+// Usar las coordenadas canonicas de la aldea resuelta evita que el selector quede
+// en "Elegir aldea" por diferencias de formato en el POST (signos o ceros).
+if($checkexist) {
+	$marketTargetCoor = $database->getCoor($getwref);
+	if(is_array($marketTargetCoor) && isset($marketTargetCoor['x'],$marketTargetCoor['y'])) {
+		$quickTargetSelected = ((int)$marketTargetCoor['x']).'|'.((int)$marketTargetCoor['y']);
+	}
 }
 // Need to set the max allowed to send as maxcarry * available merchants
 $canSend = $market->maxcarry * $market->merchantAvail();
