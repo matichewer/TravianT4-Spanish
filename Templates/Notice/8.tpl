@@ -1,4 +1,13 @@
 <?php include __DIR__ . "/report_data.tpl"; ?>
+<?php
+$reportTargetIsOasis = $database->isVillageOases($dataarray[14]) != 0;
+if($reportTargetIsOasis) {
+	$reportTargetCoor = $database->getCoor($dataarray[14]);
+	$reportTargetName = $database->getOasisField($dataarray[14], 'name')." (".$reportTargetCoor['x']."|".$reportTargetCoor['y'].")";
+} else {
+	$reportTargetName = $database->getVillageField($dataarray[14], 'name');
+}
+?>
 				<table cellpadding="1" cellspacing="1" id="report_surround">
 				<thead class="theader">
 					<tr>
@@ -47,7 +56,7 @@
 
 <div class="headline"><?php echo REPORT_RECEIVER; ?></div>
 <a href="spieler.php?uid=<?php echo $database->getUserField($dataarray[15],"id",0); ?>"><?php if($database->getUserField($dataarray['15'],"username",0)=='Natars'){ echo NATARS; }else{ echo $database->getUserField($dataarray['15'],"username",0); } ?></a> <?php echo REPORT_FROM_VIL; ?><br>
-<a href="<?php echo "karte.php?d=".$dataarray[14]."&amp;c=".$generator->getMapCheck($dataarray[14]).""; ?>"><?php echo $database->getVillageField($dataarray[14],'name'); ?></a>
+<a href="<?php echo "karte.php?d=".$dataarray[14]."&amp;c=".$generator->getMapCheck($dataarray[14]).""; ?>"><?php echo $reportTargetName; ?></a>
 </div>
 				</div></td>
 	</tr>
@@ -57,7 +66,7 @@
 		<tr>
 <td class="role"></td>
 <td class="troopHeadline" colspan="11">
-<a href="karte.php?d=<?php echo $dataarray[0]."&amp;c=".$generator->getMapCheck($dataarray[0]); ?>"><?php echo $database->getVillageField($dataarray[0],'name'); ?></a> <?php echo REPORT_SEND_REINF_TO; ?> <a href="karte.php?d=<?php echo $dataarray[14]."&amp;c=".$generator->getMapCheck($dataarray[14]); ?>"><?php echo $database->getVillageField($dataarray[14],'name'); ?></a>
+<a href="karte.php?d=<?php echo $dataarray[0]."&amp;c=".$generator->getMapCheck($dataarray[0]); ?>"><?php echo $database->getVillageField($dataarray[0],'name'); ?></a> <?php echo REPORT_SEND_REINF_TO; ?> <a href="karte.php?d=<?php echo $dataarray[14]."&amp;c=".$generator->getMapCheck($dataarray[14]); ?>"><?php echo $reportTargetName; ?></a>
 </td>
 </tr></thead>
 <tbody class="units"><tr>
