@@ -8,37 +8,6 @@ Los cambios activos **no** viven en este archivo: `openspec list` es la fuente d
 
 ---
 
-## Aldeas natar independientes
-
-**Qué falta.** El T4 oficial tiene tres clases de aldea natar; este servidor implementa dos
-(la capital y las 13 Aldeas de la Maravilla). Faltan las *independientes*: aparecen de a
-poco durante la partida, funcionan como aldeas normales —producen, suben campos,
-construyen y entrenan tropas de a poco en cuartel y establo—, se pueden saquear y
-conquistar, no reciben refuerzos y desaparecen si las bajan a población 0 con catapultas.
-En el oficial son las que sostienen el saqueo en el servidor tardío.
-
-**La tensión de fondo.** El motor es *pull*: no hay cron ni tick, `Automation` corre en el
-constructor en cada request. Una aldea que crece sola necesita que algo la empuje, y a las
-4 de la mañana con el servidor vacío no hay nadie. Antes de escribir código hay que decidir
-si crecen en tiempo real (hace falta un planificador, o colgarse del barrido existente) o
-en tiempo lógico (se calcula su estado al vuelo la primera vez que alguien las mira, como
-ya hace `lastupdate` con los recursos). Lo segundo es mucho más barato y encaja con el
-motor que ya existe.
-
-**Preguntas abiertas.** ¿Entrenan de verdad en `tdata` o se simula el resultado? ¿Qué
-impide que una limpieza las convierta en un cajero automático permanente? ¿Se pueden
-conquistar, con todo lo que eso arrastra de lealtad, senadores y cupos de expansión?
-
-**Tamaño.** Grande. Es el que más cambia el juego.
-
-### Fase 2: conquistarlas
-
-En el oficial las aldeas natar independientes se pueden conquistar con senadores, no sólo
-saquear y destruir. Queda explícitamente para después de la primera entrega: arrastra
-lealtad, cupos de expansión y el camino de conquista entero, y saquear más destruir con
-catapultas ya da la mayor parte del valor. **Matias lo quiere hecho en algún momento.**
-
----
 
 
 

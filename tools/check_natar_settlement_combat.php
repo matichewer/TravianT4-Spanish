@@ -247,6 +247,61 @@ while($row = mysql_fetch_assoc($result)) {
 }
 check(!$rankedAccount, 'ni la cuenta natar en la clasificación de jugadores');
 
+// --- F. Conquistar una aldea natar: cambia de dueño y entrega vacía -----------------------
+$conqTarget = natarSettlementSpawn($now, true);
+if($conqTarget > 0) {
+    $created[] = $conqTarget;
+    $attacker = $database->query_return(
+        "SELECT wref, owner FROM ".TB_PREFIX."vdata WHERE ".playerAccountSql('owner')." LIMIT 1"
+    );
+    if(is_array($attacker) && isset($attacker[0]['wref'])) {
+        $attackerVillage = (int)$attacker[0]['wref'];
+        $attackerOwner = (int)$attacker[0]['owner'];
+        $savedFields = $database->getResourceLevel($attackerVillage);
+        // Residencia nivel 10 para que tenga un cupo de expansión libre.
+        $database->query("UPDATE ".TB_PREFIX."fdata SET f30t = 25, f30 = 10 WHERE vref = $attackerVillage");
+        $database->query("UPDATE ".TB_PREFIX."vdata SET exp1 = 0, exp2 = 0, exp3 = 0 WHERE wref = $attackerVillage");
+        $chiefAttack = $database->addAttack($attackerVillage, 0,0,0,0,0,0,0,0, 1, 0, 0, 3, 0, 0, 0, 0);
+
+        $garrisonAtConquest = 0;
+        $unitsBefore = $database->getUnit($conqTarget);
+        for($unit = 1; $unit <= 50; $unit++) {
+            $garrisonAtConquest += is_array($unitsBefore) ? (int)$unitsBefore['u'.$unit] : 0;
+        }
+        check($garrisonAtConquest > 0, 'la aldea a conquistar tiene guarnición ('.$garrisonAtConquest.' tropas)');
+
+        $outcome = '';
+        for($hit = 1; $hit <= 5 && (int)$database->getVillageField($conqTarget, 'owner') === natarsAccountId(); $hit++) {
+            $outcome = $database->applyConquestLoyalty(
+                $attackerVillage, $conqTarget, $attackerOwner, natarsAccountId(), $chiefAttack, 34
+            )['status'];
+        }
+        check($outcome === 'conquered', 'una aldea natar viva se puede conquistar con jefes');
+
+        $conquered = $database->getVillage($conqTarget);
+        check((int)$conquered['owner'] === $attackerOwner, 'pasa a ser del jugador');
+        check(!isLivingNpcVillage($conquered) && !isStaticNpcVillage($conquered),
+            'y deja de ser una aldea NPC, así que paga manutención y puede pasar hambre');
+
+        $unitsAfter = $database->getUnit($conqTarget);
+        $inherited = 0;
+        for($unit = 1; $unit <= 50; $unit++) {
+            $inherited += is_array($unitsAfter) ? (int)$unitsAfter['u'.$unit] : 0;
+        }
+        check($inherited === 0,
+            'la guarnición que sobrevivió se disuelve: el conquistador no hereda tropas natar');
+
+        check(count(array_filter(natarSettlements(), function ($settlement) use ($conqTarget) {
+            return (int)$settlement['wref'] === $conqTarget;
+        })) === 0, 'y sale del padrón de aldeas vivas, así que deja de crecer');
+
+        $database->query("UPDATE ".TB_PREFIX."fdata SET f30t = ".(int)$savedFields['f30t']
+            .", f30 = ".(int)$savedFields['f30']." WHERE vref = $attackerVillage");
+        $database->query("UPDATE ".TB_PREFIX."vdata SET exp1 = 0, exp2 = 0, exp3 = 0 WHERE wref = $attackerVillage");
+        $database->removeAttack($chiefAttack);
+    }
+}
+
 dropScratch();
 
 echo PHP_EOL.(count($failures) ? count($failures)." FALLA(S)" : "todo en orden").PHP_EOL;

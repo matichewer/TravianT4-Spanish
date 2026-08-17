@@ -119,7 +119,7 @@ foreach($ages as $label => $delta) {
     $at = $now + $delta;
     $fields = $database->getResourceLevel($wref);
     $levels[$label] = natarSettlementFieldLevel($village, $at);
-    $targets[$label] = array_sum(natarSettlementGarrisonTarget($fields, $village, $at));
+    $targets[$label] = array_sum(natarSettlementGarrisonTargetForAge($fields, $village, $at));
     printf("     %-16s campos n%-2d   guarnición sostenible %s\n", $label, $levels[$label], number_format($targets[$label]));
 }
 check($levels['recién nacida'] === NATAR_SETTLEMENT_START_FIELD_LEVEL,
@@ -135,8 +135,8 @@ check($targets['un año'] > $targets['recién nacida'] * 3,
 
 // --- B. Reproducible ----------------------------------------------------------------
 $fields = $database->getResourceLevel($wref);
-$first = natarSettlementGarrisonTarget($fields, $village, $now + 604800);
-$second = natarSettlementGarrisonTarget($fields, $village, $now + 604800);
+$first = natarSettlementGarrisonTargetForAge($fields, $village, $now + 604800);
+$second = natarSettlementGarrisonTargetForAge($fields, $village, $now + 604800);
 check($first === $second, 'el objetivo es el mismo si se calcula dos veces');
 
 $before = garrison($wref);
@@ -149,7 +149,7 @@ $database->query("UPDATE ".TB_PREFIX."vdata SET npcupdate = ".(int)$now." WHERE 
 natarSettlementBringUpToDate($wref, $far, $accrue);
 $afterCatchup = garrison($wref);
 $fields = $database->getResourceLevel($wref);
-$ceiling = array_sum(natarSettlementGarrisonTarget($fields, $village, $far));
+$ceiling = array_sum(natarSettlementGarrisonTargetForAge($fields, $village, $far));
 check($afterCatchup <= $ceiling,
     'tras tres años sin que nadie la toque, la guarnición ('.number_format($afterCatchup)
     .') no supera lo que el cereal alimenta ('.number_format($ceiling).')');
@@ -226,6 +226,62 @@ $database->setVillageNpcKind($wref, NPC_KIND_STATIC);
 check($netCrop->invoke($automation, $wref) >= 0,
     'la misma aldea marcada como estática deja de pagar manutención');
 $database->setVillageNpcKind($wref, NPC_KIND_LIVING);
+
+
+// --- H. El daño de las catapultas persiste y se repara ------------------------------------
+// Antes los campos se derivaban de la edad y el barrido los imponía en cada pasada, así que
+// un campo volado volvía a su nivel en 60 segundos: catapultear una aldea natar no servía
+// para nada. Ahora el nivel se ACERCA al ideal, así que el daño dura.
+$database->query("UPDATE ".TB_PREFIX."vdata SET created = ".(int)($now - 12 * 86400)
+    .", npcupdate = ".(int)($now - 12 * 86400)." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now, $accrue);
+$grown = (int)$database->getResourceLevel($wref)['f1'];
+check($grown > 0, 'la aldea de prueba tiene campos construidos (n'.$grown.')');
+
+$targetBefore = array_sum(natarSettlementGarrisonTarget($database->getResourceLevel($wref), $village, $now));
+// Se rompen los campos de CEREAL: son los que sostienen la guarnición. Volar madera, barro
+// o hierro baja la producción y el botín pero SUBE la guarnición sostenible, porque también
+// baja la población, y la población come cereal. Es la aritmética correcta de Travian, no
+// un artefacto: quien quiera desarmar una aldea natar tiene que apuntarle al cereal.
+$cropDamage = array('f1 = 0');
+$layout = $database->getResourceLevel($wref);
+for($slot = 1; $slot <= 18; $slot++) {
+    if((int)$layout['f'.$slot.'t'] === 4) {
+        $cropDamage[] = 'f'.$slot.' = 0';
+    }
+}
+$database->query("UPDATE ".TB_PREFIX."fdata SET ".implode(', ', $cropDamage)." WHERE vref = $wref");
+natarSettlementBringUpToDate($wref, $now + 60, $accrue);
+check((int)$database->getResourceLevel($wref)['f1'] === 0,
+    'un campo destruido sigue destruido un minuto después');
+
+$targetAfter = array_sum(natarSettlementGarrisonTarget($database->getResourceLevel($wref), $village, $now));
+check($targetAfter < $targetBefore,
+    'romperle el cereal le baja la guarnición sostenible ('.number_format($targetBefore).' -> '
+    .number_format($targetAfter).'): el daño llega a las tropas');
+
+$database->query("UPDATE ".TB_PREFIX."vdata SET npcupdate = ".(int)$now." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now + NATAR_SETTLEMENT_REPAIR_INTERVAL + 60, $accrue);
+$repaired = (int)$database->getResourceLevel($wref)['f1'];
+check($repaired === 1,
+    'tras un intervalo de reparación repone exactamente un nivel (n'.$repaired.')');
+
+$database->query("UPDATE ".TB_PREFIX."vdata SET npcupdate = ".(int)$now." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now + NATAR_SETTLEMENT_REPAIR_INTERVAL * 4 + 60, $accrue);
+check((int)$database->getResourceLevel($wref)['f1'] > $repaired,
+    'y sigue reponiendo con el tiempo, sin pasarse del nivel que le toca por edad');
+check(NATAR_SETTLEMENT_REPAIR_INTERVAL < NATAR_SETTLEMENT_GROWTH_INTERVAL,
+    'repara un poco más rápido de lo que crece ('.(NATAR_SETTLEMENT_REPAIR_INTERVAL/3600).' h contra '
+    .(NATAR_SETTLEMENT_GROWTH_INTERVAL/3600).' h)');
+
+// --- I. El nombre se cura solo ------------------------------------------------------------
+$database->query("UPDATE ".TB_PREFIX."vdata SET name = 'Aldea natar' WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now + 1, $accrue);
+$healed = $database->getVillageField($wref, 'name');
+check($healed === natarSettlementName($wref),
+    'una aldea con el nombre viejo se renombra sola en el barrido ("'.$healed.'")');
+check(strpos($healed, '|') !== false,
+    'y el nombre lleva la coordenada, para poder ubicarla desde un informe');
 
 dropScratch();
 

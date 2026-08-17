@@ -60,6 +60,12 @@ if(!defined('NATAR_SETTLEMENT_GROWTH_INTERVAL')) {
     // Un nivel de campo cada 3 días.
     define('NATAR_SETTLEMENT_GROWTH_INTERVAL', 259200);
 }
+if(!defined('NATAR_SETTLEMENT_REPAIR_INTERVAL')) {
+    // Cada cuánto una aldea repone UN nivel de cada campo o edificio que le hayan
+    // destruido. Un poco más rápido que el crecimiento (3 días) a propósito: le da algo
+    // de dinamismo sin que catapultearla deje de valer la pena.
+    define('NATAR_SETTLEMENT_REPAIR_INTERVAL', 172800);
+}
 if(!defined('NATAR_SETTLEMENT_MAX_FIELD_LEVEL')) {
     // El mismo tope que trae una Aldea de la Maravilla en el T4 oficial.
     define('NATAR_SETTLEMENT_MAX_FIELD_LEVEL', 10);
@@ -147,6 +153,26 @@ function natarSettlementName($wref, $x = null, $y = null) {
 }
 
 /**
+ * Corrige el nombre de una aldea viva si no es el que le corresponde.
+ *
+ * El nombre también se deriva de la semilla, así que el barrido puede repararlo: las
+ * aldeas que nacieron antes de que los nombres llevaran coordenada se arreglan solas en
+ * lugar de necesitar un UPDATE a mano. Sólo toca aldeas vivas —una conquistada ya no pasa
+ * por acá—, así que no le pisa el nombre a nadie.
+ */
+function natarSettlementHealName($wref, $village) {
+    global $database;
+    $expected = natarSettlementName((int)$wref);
+    $current = is_array($village) && isset($village['name']) ? (string)$village['name'] : '';
+    if($current === $expected) {
+        return false;
+    }
+    $database->query('UPDATE '.TB_PREFIX.'vdata SET `name` = \''.mysql_real_escape_string($expected)
+        .'\' WHERE `wref` = '.(int)$wref);
+    return true;
+}
+
+/**
  * Edad de la aldea en segundos.
  */
 function natarSettlementAge($village, $now = null) {
@@ -222,7 +248,10 @@ function natarSettlementPlan($fields, $village, $now = null) {
  * se pasara, la hambruna —que a una aldea viva sí la toca— se encargaría.
  */
 function natarSettlementGarrisonTarget($fields, $village, $now = null) {
-    $plan = natarSettlementPlan($fields, $village, $now);
+    // Ojo: se calcula sobre los campos REALES, no sobre el plan de su edad. Es lo que
+    // hace que romperle campos con catapultas le baje la guarnición sostenible, y no sólo
+    // la producción: si le tiran el cereal, la aldea no puede alimentar lo que tenía.
+    $plan = is_array($fields) ? $fields : array();
     $netCrop = natarVillageGrossCrop($plan) - natarVillagePopulation($plan);
     if($netCrop <= 0) {
         return array_fill_keys(array_keys(natarSettlementComposition()), 0);
@@ -250,12 +279,22 @@ function natarSettlementGarrisonTarget($fields, $village, $now = null) {
 }
 
 /**
+ * La guarnición que le correspondería a esta edad si nadie la hubiera tocado. Sirve para
+ * informar y para los checkers; el motor usa la de arriba, que mira el daño.
+ */
+function natarSettlementGarrisonTargetForAge($fields, $village, $now = null) {
+    return natarSettlementGarrisonTarget(natarSettlementPlan($fields, $village, $now), $village, $now);
+}
+
+/**
  * Tropas por hora que la aldea puede entrenar, a partir del cuartel y el establo que
  * tiene construidos y de los tiempos de `unitdata`. Es el mismo insumo que usa una aldea
  * de jugador, así que "entrena como una aldea de verdad" es literal.
  */
 function natarSettlementTrainingRate($fields, $village, $now = null) {
-    $plan = natarSettlementPlan($fields, $village, $now);
+    // Igual que la guarnición: sobre los edificios reales. Volarle el cuartel con
+    // catapultas le frena el reentrenamiento hasta que lo reconstruya.
+    $plan = is_array($fields) ? $fields : array();
     $barracks = productionBuildingLevel($plan, 19);
     $stable = productionBuildingLevel($plan, 20);
 
@@ -308,9 +347,11 @@ function natarSettlementBringUpToDate($wref, $now = null, $accrue = null) {
     }
     $elapsed = max(0, $now - $clock);
     $intervals = (int)floor($elapsed / max(1, NATAR_SETTLEMENT_TRAINING_INTERVAL));
+    natarSettlementHealName($wref, $village);
     if($intervals <= 0) {
         // Igual hay que mantener los campos al día: crecen con la edad, no con el reloj.
-        natarSettlementApplyGrowth($wref, $fields, $village, $now, $accrue);
+        natarSettlementApplyGrowth($wref, $fields, $village, $now, $accrue,
+            natarSettlementRepairSteps($village, $clock, $now));
         return true;
     }
     $consumed = min($intervals, NATAR_SETTLEMENT_CATCHUP_CAP);
@@ -329,7 +370,8 @@ function natarSettlementBringUpToDate($wref, $now = null, $accrue = null) {
         return false;
     }
 
-    natarSettlementApplyGrowth($wref, $fields, $village, $now, $accrue);
+    natarSettlementApplyGrowth($wref, $fields, $village, $now, $accrue,
+        natarSettlementRepairSteps($village, $clock, $now));
 
     $fields = $database->getResourceLevel($wref);
     $target = natarSettlementGarrisonTarget($fields, $village, $now);
@@ -354,7 +396,7 @@ function natarSettlementBringUpToDate($wref, $now = null, $accrue = null) {
  * Escribe los campos, la población y los topes de almacenamiento que le tocan por edad.
  * Sólo toca la base si algo cambió, para no escribir en cada carga de página.
  */
-function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accrue = null) {
+function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accrue = null, $steps = null) {
     global $database;
     $plan = natarSettlementPlan($fields, $village, $now);
 
@@ -363,12 +405,20 @@ function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accr
         if(!isset($plan['f'.$slot])) {
             continue;
         }
-        if((int)$plan['f'.$slot] === (int)$fields['f'.$slot]
-            && (int)$plan['f'.$slot.'t'] === (int)$fields['f'.$slot.'t']) {
+        $current = isset($fields['f'.$slot]) ? (int)$fields['f'.$slot] : 0;
+        $ideal = (int)$plan['f'.$slot];
+        // $steps null = "poné el nivel que le toca ya" (al nacer). Con un número, el nivel
+        // se ACERCA al ideal de a un escalón por intervalo de reparación, así que el daño
+        // de las catapultas persiste y la aldea lo repone con el tiempo. Antes se imponía
+        // el ideal en cada barrido: un campo volado volvía a su nivel en 60 segundos y
+        // catapultear una aldea natar no servía para nada.
+        $target = $steps === null ? $ideal : (int)min($ideal, $current + max(0, (int)$steps));
+        if($target === $current && (int)$plan['f'.$slot.'t'] === (int)$fields['f'.$slot.'t']) {
             continue;
         }
-        $updates[] = '`f'.$slot.'` = '.(int)$plan['f'.$slot];
+        $updates[] = '`f'.$slot.'` = '.$target;
         $updates[] = '`f'.$slot.'t` = '.(int)$plan['f'.$slot.'t'];
+        $plan['f'.$slot] = $target;
     }
     if(!$updates) {
         return false;
@@ -388,6 +438,22 @@ function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accr
         .'maxcrop = '.(int)natarVillageStorage($plan, 'maxcrop').' '
         .'WHERE wref = '.(int)$wref);
     return true;
+}
+
+/**
+ * Cuántos escalones de reparación le corresponden a la aldea entre dos instantes. Se
+ * deriva del nacimiento, así que no hace falta guardar nada: `npcupdate` hace de marca de
+ * "última vez que la miramos".
+ */
+function natarSettlementRepairSteps($village, $lastSeen, $now) {
+    $created = is_array($village) && isset($village['created']) ? (int)$village['created'] : 0;
+    if($created <= 0) {
+        return 0;
+    }
+    $interval = max(1, NATAR_SETTLEMENT_REPAIR_INTERVAL);
+    $before = (int)floor(max(0, (int)$lastSeen - $created) / $interval);
+    $after = (int)floor(max(0, (int)$now - $created) / $interval);
+    return max(0, $after - $before);
 }
 
 // --- Aparición -----------------------------------------------------------------------
@@ -561,7 +627,7 @@ function natarSettlementSpawn($now = null, $force = false) {
     // Nace con sus campos, su guarnición inicial y su granero lleno.
     $village = $database->getVillage($wref);
     $fields = $database->getResourceLevel($wref);
-    natarSettlementApplyGrowth($wref, $fields, $village, $now);
+    natarSettlementApplyGrowth($wref, $fields, $village, $now, null, null);
     $fields = $database->getResourceLevel($wref);
     foreach(natarSettlementGarrisonTarget($fields, $village, $now) as $unit => $amount) {
         if($amount > 0) {

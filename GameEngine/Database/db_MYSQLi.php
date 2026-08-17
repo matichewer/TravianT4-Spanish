@@ -759,6 +759,28 @@
 							return array('status' => 'no_chief');
 						}
 
+						// La guarnición que sobrevivió no cambia de bando: se disuelve.
+						//
+						// Antes el conquistador heredaba lo que quedara adentro. Con una aldea
+						// natar eso es directamente malo —te quedás con tropas de una tribu que
+						// no podés reentrenar nunca y que te cobran cereal—, y tomar una
+						// Maravilla significaba heredar la manutención de lo que aguantó.
+						//
+						// Va DESPUES del cambio de dueño, no antes: si la escritura de conquista
+						// no llega a aplicarse (otro jugador la tomó primero, o no quedaban
+						// jefes), la aldea sigue siendo del defensor y su guarnición no se toca.
+						// `hero` queda afuera a propósito: el héroe tiene su propio ciclo de
+						// vida y reassignHeroHomeVillage() se ocupa de él.
+						$unitColumns = array();
+						for($unit = 1; $unit <= 50; $unit++) {
+							$unitColumns[] = "u$unit = 0";
+						}
+						mysqli_query(
+							$this->connection,
+							"UPDATE " . TB_PREFIX . "units SET " . implode(', ', $unitColumns)
+							. " WHERE vref = $target"
+						);
+
 						$cleanup = mysqli_query(
 							$this->connection,
 							"UPDATE " . TB_PREFIX . "vdata SET"
