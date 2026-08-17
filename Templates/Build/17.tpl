@@ -249,7 +249,7 @@ $coor['y'] = $marketY;
 								</div>
 				</div>
 <?php if($session->goldclub == 1){?>
-<p><select name="send3"><option value="1" selected="selected">1x</option><option value="2">2x</option><option value="3">3x</option></select> envíos</p>
+<p><select name="send3"><option value="1"<?php echo $marketSendCount === 1 ? ' selected="selected"' : ''; ?>>1x</option><option value="2"<?php echo $marketSendCount === 2 ? ' selected="selected"' : ''; ?>>2x</option><option value="3"<?php echo $marketSendCount === 3 ? ' selected="selected"' : ''; ?>>3x</option></select> envíos</p>
 <?php
 }else{
 ?>
