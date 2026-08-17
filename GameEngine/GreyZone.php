@@ -37,8 +37,9 @@ if(!defined('GREY_ZONE_INNER_RADIUS')) {
     define('GREY_ZONE_INNER_RADIUS', 0);
 }
 if(!defined('GREY_ZONE_OUTER_RADIUS')) {
-    // 22 en el T4 oficial. 6 acá, por lo explicado arriba.
-    define('GREY_ZONE_OUTER_RADIUS', 6);
+    // 22 en el T4 oficial. 8 acá: el radio más grande que sigue dejando afuera las dos
+    // aldeas de Che_Bigote (la más cercana está a 8,06). Con 9 entrarían las dos.
+    define('GREY_ZONE_OUTER_RADIUS', 8);
 }
 if(!defined('GREY_ZONE_GRANDFATHERED_BEFORE')) {
     // Las aldeas fundadas antes de este instante son anteriores a la zona: no se pintan de
@@ -389,4 +390,60 @@ function greyZoneReserveVolcano($apply = false) {
         $report['reservadas']++;
     }
     return $report;
+}
+
+// --- Variantes del suelo de ceniza ------------------------------------------------------
+
+/**
+ * Las cinco piezas de suelo que trae el gpack oficial para la zona: ceniza pelada, y ceniza
+ * con montaña, con agua, con barro y con bosque.
+ *
+ * Usar sólo la primera dejaba la zona visualmente lisa: cientos de casillas idénticas. El
+ * arte para variarla ya estaba en el repo sin usar.
+ */
+function greyZoneAshSprites() {
+    return array(
+        'ashland'        => array(60, 0),
+        'ashland-hill'   => array(0, 60),
+        'ashland-lake'   => array(180, 120),
+        'ashland-clay'   => array(360, 180),
+        'ashland-forest' => array(120, 300)
+    );
+}
+
+/**
+ * Qué pieza de ceniza le toca a una casilla.
+ *
+ * Se elige por coordenada y no al azar: la misma casilla tiene que dar siempre lo mismo, o
+ * el mapa cambiaría de aspecto en cada recarga. La mayoría queda pelada y los accidentes
+ * salpicados, que es como se ve en el juego original.
+ */
+function greyZoneAshClass($x, $y) {
+    $hash = abs(crc32('ash#'.(int)$x.'|'.(int)$y)) % 100;
+    if($hash < 58) {
+        return 'ashland';
+    }
+    if($hash < 71) {
+        return 'ashland-hill';
+    }
+    if($hash < 82) {
+        return 'ashland-forest';
+    }
+    if($hash < 92) {
+        return 'ashland-clay';
+    }
+    return 'ashland-lake';
+}
+
+/**
+ * Las reglas CSS de las cinco piezas, desde el mismo mapa de coordenadas.
+ */
+function greyZoneAshCss() {
+    $sheet = '/gpack/travian_Travian_4.0_41/img/map/lowRes/tiles.png';
+    $rules = array();
+    foreach(greyZoneAshSprites() as $name => $pos) {
+        $rules[] = 'div.'.$name.'{background-image:url(\''.$sheet.'\');'
+            .'background-position:-'.$pos[0].'px -'.$pos[1].'px;background-repeat:no-repeat;}';
+    }
+    return implode("\n", $rules);
 }

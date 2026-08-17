@@ -363,3 +363,14 @@ SET v.name = 'Capital natar'
 WHERE u.username = 'Natars'
   AND v.capital = 1
   AND (v.name LIKE '%1\'s village%' OR v.name LIKE 'Aldea de 1%');
+
+-- 2026-08-17 - La aldea del Multihunter se llamaba "Multihunter's village"
+-- Mismo caso que la capital natar de arriba: el nombre lo genero una instalacion vieja en
+-- ingles. El instalador ya lo fija en espanol, pero eso no renombra un mundo instalado, y
+-- el nombre se ve en el mapa justo al lado de la capital natar.
+-- Solo se pisa si sigue teniendo un nombre generado, nunca uno puesto a mano.
+UPDATE s1_vdata AS v
+INNER JOIN s1_users AS u ON u.id = v.owner
+SET v.name = 'Aldea del Multihunter'
+WHERE u.username = 'Multihunter'
+  AND (v.name LIKE '%Multihunter\'s village%' OR v.name LIKE 'Aldea de Multihunter%');

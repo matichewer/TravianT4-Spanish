@@ -26,6 +26,11 @@
         		$database->addUnits($wid);
         		$database->addTech($wid);
         		$database->addABTech($wid);
+        		// El nombre se fija a mano y no se deja armar a addVillage(): esa funcion
+        		// devuelve "Aldea de Multihunter", sin el articulo, y las instalaciones
+        		// viejas dejaban directamente el "Multihunter's village" en ingles. Se ve
+        		// en el mapa, al lado de la capital natar.
+        		mysql_query("UPDATE " . TB_PREFIX . "vdata SET name = 'Aldea del Multihunter' WHERE wref = " . (int)$wid);
         	}
         }
 

@@ -205,6 +205,19 @@ mysqli_query($connection, "UPDATE ".TB_PREFIX."vdata SET name='Capital natar', c
 natarRestockGarrison($capitalWref, natarCapitalGarrison());
 natarProvisionVillage($capitalWref);
 
+// Multihunter vive en (1|0), pegado a la capital natar y por lo tanto dentro de la zona
+// gris. Faltaba en el espejo, que es justamente donde hay que ver cómo queda esa esquina.
+$mhWref = $generator->getBaseID(1, 0);
+if(!$database->getVillageState($mhWref)) {
+    $database->setFieldTaken($mhWref);
+    $database->addVillage($mhWref, UID_MULTIHUNTER, 'Multihunter', '1');
+    $database->addResourceFields($mhWref, $database->getVillageType($mhWref));
+    $database->addUnits($mhWref);
+    $database->addTech($mhWref);
+    $database->addABTech($mhWref);
+    mysqli_query($connection, "UPDATE ".TB_PREFIX."vdata SET name='Aldea del Multihunter' WHERE wref = $mhWref");
+}
+
 foreach($wonderCoords as $coord) {
     $wref = $generator->getBaseID($coord[0], $coord[1]);
     if($database->getVillageState($wref)) {

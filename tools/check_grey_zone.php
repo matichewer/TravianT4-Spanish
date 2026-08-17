@@ -277,14 +277,73 @@ check($garrisonAfter === $garrisonBefore,
 // la práctica la zona era invisible. Tiene que verse de un vistazo.
 foreach(array('Templates/Map/mapview.tpl', 'Templates/Map/mapviewlarge.tpl') as $template) {
     $source = file_get_contents($root.'/'.$template);
-    check(strpos($source, "\$image = 'ashland'") !== false,
+    check(strpos($source, 'greyZoneAshClass(') !== false,
         basename($template).' pinta el suelo de la zona con la ceniza del T4 oficial');
-    check(strpos($source, 'travian_Travian_4.0_41/img/map/lowRes/tiles.png') !== false,
-        basename($template).' usa la spritesheet oficial que ya vive en el repo');
+    check(strpos($source, 'greyZoneAshCss()') !== false,
+        basename($template).' emite las reglas de la ceniza desde GreyZone.php');
+    // La spritesheet se nombra una sola vez, en GreyZone.php, y no copiada en cada
+    // plantilla: eran dos literales que había que cambiar a la par.
+    check(strpos($source, 'travian_Travian_4.0_41/img/map/lowRes/tiles.png') === false,
+        basename($template).' no repite la ruta de la spritesheet');
     check(strpos($source, '.tile.greyzone:after') !== false
         && strpos($source, 'pointer-events:none') !== false,
         basename($template).' tiñe los oasis y aldeas de adentro sin robarles el clic');
 }
+
+// El suelo de ceniza se dibujaba con una sola pieza y cientos de casillas idénticas dejaban
+// la zona visualmente lisa, aunque el gpack oficial trae cinco variantes.
+$ashSprites = greyZoneAshSprites();
+check(count($ashSprites) === 5, 'la ceniza tiene sus 5 variantes ('.count($ashSprites).')');
+$sheetFile = $root.'/gpack/travian_Travian_4.0_41/img/map/lowRes/tiles.png';
+$sheetSize = is_file($sheetFile) ? getimagesize($sheetFile) : false;
+check($sheetSize !== false, 'la spritesheet oficial está en el repo');
+$outside = array();
+foreach($ashSprites as $ashName => $ashPos) {
+    if($sheetSize !== false && ($ashPos[0] + 60 > $sheetSize[0] || $ashPos[1] + 60 > $sheetSize[1])) {
+        $outside[] = $ashName;
+    }
+}
+check(empty($outside),
+    'las cinco piezas caen dentro de la spritesheet'.($outside ? ': '.implode(', ', $outside) : ''));
+check(strpos(greyZoneAshCss(), 'travian_Travian_4.0_41/img/map/lowRes/tiles.png') !== false,
+    'greyZoneAshCss() es el único lugar que nombra la spritesheet de la ceniza');
+$missingRule = array();
+foreach(array_keys($ashSprites) as $ashName) {
+    if(strpos(greyZoneAshCss(), 'div.'.$ashName.'{') === false) {
+        $missingRule[] = $ashName;
+    }
+}
+check(empty($missingRule),
+    'cada variante tiene su regla CSS'.($missingRule ? ': '.implode(', ', $missingRule) : ''));
+
+// La elección va por coordenada y no con rand(): el mapa se vuelve a calcular en cada
+// carga, así que un sorteo al azar haría parpadear el terreno entre recargas.
+$stable = true;
+$unknown = array();
+$mix = array();
+for($ax = -GREY_ZONE_OUTER_RADIUS; $ax <= GREY_ZONE_OUTER_RADIUS; $ax++) {
+    for($ay = -GREY_ZONE_OUTER_RADIUS; $ay <= GREY_ZONE_OUTER_RADIUS; $ay++) {
+        if(!greyZoneContainsCoordinates($ax, $ay)) {
+            continue;
+        }
+        $first = greyZoneAshClass($ax, $ay);
+        if($first !== greyZoneAshClass($ax, $ay)) {
+            $stable = false;
+        }
+        if(!isset($ashSprites[$first])) {
+            $unknown[] = $first;
+        }
+        $mix[$first] = (isset($mix[$first]) ? $mix[$first] : 0) + 1;
+    }
+}
+check($stable, 'la misma casilla devuelve siempre la misma pieza');
+check(empty($unknown), 'nunca devuelve una pieza sin sprite'.($unknown ? ': '.implode(', ', array_unique($unknown)) : ''));
+check(count($mix) === 5, 'las cinco aparecen de verdad en el disco ('.count($mix).')');
+$totalAsh = array_sum($mix);
+$plain = isset($mix['ashland']) ? $mix['ashland'] : 0;
+check($totalAsh > 0 && $plain / $totalAsh > 0.4 && $plain / $totalAsh < 0.8,
+    sprintf('el cenizal pelado sigue dominando pero no solo (%.0f%% de %d casillas)',
+        100 * $plain / max(1, $totalAsh), $totalAsh));
 
 
 // El volcán del centro, que es de donde sale la ceniza. El arte estaba en el repo sin

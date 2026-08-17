@@ -133,5 +133,79 @@ foreach(array('Templates/Map/mapview.tpl', 'Templates/Map/mapviewlarge.tpl') as 
         basename($template).' dibuja el terreno cuando la casilla no tiene aldea detrás');
 }
 
+// El sprite de una aldea es una clase CSS armada con población, relación y tribu. Si el
+// nombre resultante no tiene regla, o la regla apunta a un archivo que no existe, la casilla
+// sale BLANCA y no hay ningún error: ni PHP ni el navegador se quejan.
+$sheets = array();
+$stack = array($root.'/gpack');
+while($stack) {
+    $dir = array_pop($stack);
+    foreach((array)@scandir($dir) as $entry) {
+        if($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $path = $dir.'/'.$entry;
+        if(is_dir($path)) {
+            $stack[] = $path;
+        } elseif(substr($entry, -4) === '.css') {
+            $sheets[] = $path;
+        }
+    }
+}
+$sources = array();
+foreach($sheets as $sheet) {
+    $sources[$sheet] = file_get_contents($sheet);
+}
+
+$villages = $database->query_return(
+    "SELECT w.x, w.y, v.name, v.pop, u.username, u.tribe, u.alliance "
+    ."FROM ".TB_PREFIX."vdata v "
+    ."INNER JOIN ".TB_PREFIX."wdata w ON w.id = v.wref "
+    ."LEFT JOIN ".TB_PREFIX."users u ON u.id = v.owner"
+);
+$blankTiles = array();
+$resolved = array();
+foreach($villages as $village) {
+    $pop = (int)$village['pop'];
+    $size = $pop >= 500 ? 3 : ($pop >= 250 ? 2 : ($pop >= 100 ? 1 : 0));
+    // Las dos relaciones que la plantilla puede producir hoy: la misma alianza que quien
+    // mira (3) y cualquier otro caso (4). La rama 0 usa el mismo arte que las demás.
+    foreach(array(3, 4) as $relation) {
+        if($relation === 3 && (int)$village['alliance'] === 0) {
+            continue;
+        }
+        $class = 'b'.$size.$relation.'-'.$village['tribe'];
+        if(isset($resolved[$class])) {
+            $ok = $resolved[$class];
+        } else {
+            $ok = false;
+            foreach($sources as $sheet => $source) {
+                if(!preg_match('/div\.'.preg_quote($class, '/').'\s*\{([^}]*)\}/', $source, $m)) {
+                    continue;
+                }
+                if(!preg_match('/url\(([^)]*)\)/', $m[1], $u)) {
+                    $ok = true;
+                    break;
+                }
+                $image = realpath(dirname($sheet).'/'.trim($u[1], "'\" "));
+                if($image !== false && is_file($image)) {
+                    $ok = true;
+                    break;
+                }
+            }
+            $resolved[$class] = $ok;
+        }
+        if(!$ok) {
+            $blankTiles[] = '('.$village['x'].'|'.$village['y'].') '.$village['name']
+                .' de '.$village['username'].' -> '.$class;
+        }
+    }
+}
+check(empty($blankTiles),
+    'las '.count($villages).' aldeas del mundo resuelven a un sprite que existe');
+foreach(array_slice(array_unique($blankTiles), 0, 8) as $offender) {
+    echo '        '.$offender.PHP_EOL;
+}
+
 echo PHP_EOL.(count($failures) ? count($failures)." FALLA(S)" : "todo en orden").PHP_EOL;
 exit(count($failures) ? 1 : 0);

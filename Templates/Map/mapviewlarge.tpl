@@ -260,7 +260,7 @@ break;
         $greyZoneTile = '';
     }
     elseif($greyZoneTile !== '' && preg_match('/^t[0-9]$/', $image)) {
-        $image = 'ashland';
+        $image = greyZoneAshClass($maparray[$index]['x'], $maparray[$index]['y']);
         // Con el suelo de ceniza el tinte sobra: el oficial no tiñe nada, la zona SE VE
         // porque el terreno es distinto. El tinte queda sólo para los oasis y las aldeas
         // de adentro, que conservan su propio sprite y si no no se leerían como parte de
@@ -340,8 +340,7 @@ break;
 .tile.greyzone{position:relative;}
 /* El suelo de ceniza del T4 oficial. La ruta es absoluta porque la spritesheet vive en un
    gpack distinto del que el jugador tenga activo. */
-div.ashland{background-image:url('/gpack/travian_Travian_4.0_41/img/map/lowRes/tiles.png');
-  background-position:-60px 0;background-repeat:no-repeat;}
+<?php echo greyZoneAshCss(); ?>
 <?php echo greyZoneVolcanoCss(); ?>
 .tile.greyzone:after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;
   background:rgba(74,76,96,.30);box-shadow:inset 0 0 0 1px rgba(74,76,96,.55);
