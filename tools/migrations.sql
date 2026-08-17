@@ -349,3 +349,17 @@ UPDATE s1_vdata AS v
 INNER JOIN s1_users AS u ON u.id = v.owner
 SET v.npckind = 1
 WHERE u.id <= 4 AND v.npckind = 0;
+
+-- 2026-08-17 - La capital natar se llamaba "1's village"
+-- install/include/multihunter.php llamaba a addVillage($wid,$uid,$username,$capital) con
+-- los dos ultimos argumentos invertidos, asi que el nombre se armaba a partir del literal
+-- '1' en vez de 'Natars'. Arreglar el instalador no renombra un mundo ya instalado, y el
+-- nombre se ve en el mapa y en el perfil de la cuenta natar.
+-- Se ataca por wref (la capital marcada) y solo si todavia tiene un nombre generado a
+-- partir del '1', para no pisar un nombre que alguien haya puesto a mano.
+UPDATE s1_vdata AS v
+INNER JOIN s1_users AS u ON u.id = v.owner
+SET v.name = 'Capital natar'
+WHERE u.username = 'Natars'
+  AND v.capital = 1
+  AND (v.name LIKE '%1\'s village%' OR v.name LIKE 'Aldea de 1%');

@@ -55,7 +55,18 @@ if($total === 0) {
 }
 
 echo "Aldeas natar encontradas: ".count($villages['capital'])." capital, "
-    .count($villages['wonder'])." de Maravilla.\n\n";
+    .count($villages['wonder'])." de Maravilla, "
+    .count($villages['living'])." independiente(s).\n\n";
+
+// Las independientes NO se tocan: son aldeas vivas que crecen y entrenan solas, y
+// rellenarlas con la guarnición de una Maravilla las convertiría en otra cosa.
+if($villages['living']) {
+    echo "Las independientes se dejan como están (crecen solas):\n";
+    foreach($villages['living'] as $settlement) {
+        printf("   %-28s (wref %d)\n", $settlement['name'], (int)$settlement['wref']);
+    }
+    echo "\n";
+}
 
 $restockedTotal = 0;
 foreach(array('capital' => 'CAPITAL', 'wonder' => 'MARAVILLA') as $kind => $label) {
@@ -85,9 +96,17 @@ foreach(array('capital' => 'CAPITAL', 'wonder' => 'MARAVILLA') as $kind => $labe
             $plan = natarVillagePlan($fields, natarGarrisonUpkeep($simulated));
         }
 
-        printf("   campos: nivel %d los 18 (%d de cereal)   almacén/granero: %s / %s\n",
-            $plan['crop_level'], count($plan['crop_fields']),
+        $measured = $plan['measured_min_level'] === $plan['measured_max_level']
+            ? 'n'.$plan['measured_min_level']
+            : 'n'.$plan['measured_min_level'].'-n'.$plan['measured_max_level'];
+        printf("   campos: %s -> n%d (18, %d de cereal)   almacén/granero: %s / %s\n",
+            $measured, $plan['crop_level'], count($plan['crop_fields']),
             number_format($plan['maxstore']), number_format($plan['maxcrop']));
+        if($plan['above_max'] > 0) {
+            printf("   AVISO: %d campo(s) por encima del nivel oficial n%d. La reparación sólo sube\n"
+                ."          niveles, así que esos quedan como están: hay que bajarlos a mano.\n",
+                $plan['above_max'], $plan['crop_level']);
+        }
         printf("   cereal: %s bruto/h  -  %s población  =  %s neto/h\n",
             number_format($plan['gross_crop']), number_format($plan['pop']),
             number_format($plan['net_crop']));

@@ -247,6 +247,10 @@ function natarFindBuildingSlot($fields, $type) {
 function natarVillagePlan($fields, $upkeep) {
     $plan = is_array($fields) ? $fields : array();
     $cropFields = array();
+    // Lo que la aldea tiene HOY, antes de que el plan lo pise. Sin esto el informe de
+    // tools/fix_natar_villages.php mostraba la constante del plan pasara lo que pasara,
+    // o sea que decía "nivel 10" aunque los campos estuvieran en otro lado.
+    $measured = array();
     for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_RESOURCE_FIELD; $slot++) {
         if(!isset($plan['f'.$slot.'t'])) {
             continue;
@@ -254,6 +258,7 @@ function natarVillagePlan($fields, $upkeep) {
         if((int)$plan['f'.$slot.'t'] === 4) {
             $cropFields[] = $slot;
         }
+        $measured[] = (int)$plan['f'.$slot];
         $plan['f'.$slot] = max(NATAR_RESOURCE_FIELD_LEVEL, (int)$plan['f'.$slot]);
     }
 
@@ -278,6 +283,14 @@ function natarVillagePlan($fields, $upkeep) {
         'fields' => $plan,
         'crop_fields' => $cropFields,
         'crop_level' => NATAR_RESOURCE_FIELD_LEVEL,
+        // Medido, no planeado. `above_max` importa porque el plan sólo sube niveles con
+        // max(): un campo por encima del nivel oficial es invisible para la reparación y
+        // hay que decirlo en vez de dejarlo pasar.
+        'measured_min_level' => $measured ? min($measured) : 0,
+        'measured_max_level' => $measured ? max($measured) : 0,
+        'above_max' => $measured ? count(array_filter($measured, function ($level) {
+            return $level > NATAR_RESOURCE_FIELD_LEVEL;
+        })) : 0,
         'pop' => $pop,
         'gross_crop' => $grossCrop,
         'upkeep' => $upkeep,
@@ -370,18 +383,31 @@ function natarRestockGarrison($wref, $garrison) {
 }
 
 /**
- * Las aldeas natar del mundo, separadas en la capital (la que lanza las oleadas contra
- * las Maravillas) y las Aldeas de la Maravilla.
+ * Las aldeas natar del mundo, en sus tres clases: la capital (la que lanza las oleadas
+ * contra las Maravillas), las Aldeas de la Maravilla, y las independientes.
+ *
+ * La clase sale de `npckind`, no de la marca de capital. Cuando esto separaba sólo por
+ * `capital`, una aldea natar VIVA caía en el grupo de las Maravillas, y la herramienta de
+ * reparación la habría rellenado con 31.000 tropas y convertido en guarnición estática:
+ * justo lo contrario de lo que es.
  */
 function natarVillages() {
     global $database;
     $rows = $database->query_return(
-        'SELECT `wref`, `name`, `capital`, `natar`, `owner` FROM '.TB_PREFIX.'vdata '
+        // SELECT *: villageKindFromRow() necesita `npckind`, y nombrarla en la lista
+        // reventaría la consulta en un mundo donde la columna todavía no existe.
+        'SELECT * FROM '.TB_PREFIX.'vdata '
         .'WHERE `owner` = '.natarsAccountId().' ORDER BY `capital` DESC, `wref` ASC'
     );
-    $villages = array('capital' => array(), 'wonder' => array());
+    $villages = array('capital' => array(), 'wonder' => array(), 'living' => array());
     foreach(is_array($rows) ? $rows : array() as $row) {
-        $villages[(int)$row['capital'] === 1 ? 'capital' : 'wonder'][] = $row;
+        if(villageKindFromRow($row) === NPC_KIND_LIVING) {
+            $villages['living'][] = $row;
+        } elseif((int)$row['capital'] === 1) {
+            $villages['capital'][] = $row;
+        } else {
+            $villages['wonder'][] = $row;
+        }
     }
     return $villages;
 }

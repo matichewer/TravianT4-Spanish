@@ -12,8 +12,11 @@
 ini_set('max_execution_time', 1000);
 error_reporting(E_ALL);
 
-include_once("../../config.php");
-include_once("../../Database.php"); 
+// Database.php ya arrastra config/connection.php y config/config.php. El
+// include_once("../../config.php") que habia aca apuntaba a GameEngine/config.php, que
+// no existe: este mod estaba roto desde antes de tocarlo.
+include_once("../../Database.php");
+include_once("../../NatarVillage.php"); 
 
 $session = $_POST['admid'];
 
@@ -38,16 +41,18 @@ if(count($result) > 1) ## Natar Account Exists
 		$wid = $database->generateBase($kid); 
 		$type = $database->getVillageType($wid); 
 		$database->setFieldTaken($wid); 
-        mysql_query("INSERT INTO `".TB_PREFIX."vdata`(`wref`,`owner`,`name`,`capital`,`pop`,`cp`,`celebration`,`type`,`wood`,`clay`,`iron`,`maxstore`,`crop`,`maxcrop`,`lastupdate`,`loyalty`,`exp1`,`exp2`,`exp3`,`created`) values ('$wid','3','Aldea de la Maravilla',0,200,0,0,0,80000.00,80000.00,80000.00,80000,80000.00,80000,1314974534,100,0,0,0,1314968914)") or die(mysql_error()); 
-        $database->addResourceFields($wid, $type); 
-        ## Add residence and treasury: Residence  =  25 (Level 20) 
-        mysql_query("UPDATE `".TB_PREFIX."fdata` SET `f28` = '20', `f28t` = '25', `f99t` = '40', `f99` = '0', `wwname` = 'Maravilla del mundo' WHERE `vref` = $wid") or die(mysql_error()); 
-        $database->addUnits($wid); 
-        $database->addTech($wid); 
-        $database->addABTech($wid); 
-        ## Random number of units 
-		mysql_query("UPDATE ".TB_PREFIX."units SET u41 = ".(rand($_POST['ww1u41'], $_POST['ww2u41']) * $speed).", u42 = ".(rand($_POST['ww1u42'],  $_POST['ww2u42']) * $speed).", u43 = ".(rand($_POST['ww1u43'], $_POST['ww2u43']) * $speed).", u44 = ".(rand($_POST['ww1u44'], $_POST['ww2u44']) * $speed).", u45 = ".(rand($_POST['ww1u45'], $_POST['ww2u45']) * $speed).", u46 = ".(rand($_POST['ww1u46'],  $_POST['ww2u46']) * $speed).", u47 = ".(rand($_POST['ww1u47'],  $_POST['ww2u47']) * $speed).", u48 = ".(rand($_POST['ww1u48'], $_POST['ww2u48']) * $speed)." , u49 = ".(rand($_POST['ww1u49'], $_POST['ww2u49']) * $speed).", u50 = ".(rand($_POST['ww1u50'], $_POST['ww2u50']) * $speed)." WHERE vref = ".$wid."");
-        ##mysql_query("UPDATE ".TB_PREFIX."units SET u41 = ".rand(1000, 10000).", u42 = ".rand(1000, 10000).", u43 = ".rand(1000, 10000).", u44 = ".rand(1000, 10000).", u45 = ".rand(1000, 10000).", u46 = ".rand(1000, 10000).", u47 = ".rand(1000, 10000).", u48 = ".rand(1000, 10000)." , u49 = ".rand(1000, 10000).", u50 = ".rand(1000, 10000)." WHERE vref = ".$wid."") or die(mysql_error()); 
+        // Mismo camino que el instalador: dueno, economia y clase NPC salen de
+        // GameEngine/NatarVillage.php. Antes esto insertaba la aldea a mano con
+        // `owner` = 3, que en las instalaciones actuales es la Naturaleza y no los Natars.
+        $database->addVillage($wid, natarsAccountId(), 'Natars', '0');
+        $database->addResourceFields($wid, $type);
+        $database->addUnits($wid);
+        $database->addTech($wid);
+        $database->addABTech($wid);
+        mysql_query("UPDATE `".TB_PREFIX."vdata` SET `name` = 'Aldea de la Maravilla', `capital` = 0, `natar` = 1 WHERE `wref` = ".(int)$wid) or die(mysql_error());
+        mysql_query("UPDATE `".TB_PREFIX."fdata` SET `f22t` = 27, `f22` = 10, `f28t` = 25, `f28` = 10, `f19t` = 23, `f19` = 10, `f99t` = 40, `f26` = 0, `f26t` = 0, `f21` = 1, `f21t` = 15, `f39` = 1, `f39t` = 16 WHERE `vref` = ".(int)$wid) or die(mysql_error());
+        natarRestockGarrison($wid, natarWonderGarrison());
+        natarProvisionVillage($wid);
     }
     header("Location: ../../../Admin/admin.php?p=addWW&g&amt=".$_POST['amount'].""); 
 }

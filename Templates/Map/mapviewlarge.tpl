@@ -189,7 +189,10 @@ break;
     	$tribename = "Natares";
         }
     if($maparray[$index]['fieldtype'] > 0 && $maparray[$index]['occupied'] == 1) {
-    $targettitle = "<font color='white'><b>Aldea ".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Jugador: ".$username."<br>Población: ".$maparray[$index]['pop']."<br>Alianza ".$allyname."<br>Tribu: ".$tribename."";
+    // Sin "Aldea " adelante: el nombre ya suele traer la palabra —"Aldea de la
+    // Maravilla" salía como "Aldea Aldea de la Maravilla"— y el tooltip ya dice de qué
+    // se trata en las líneas de Jugador, Población y Tribu.
+    $targettitle = "<font color='white'><b>".$maparray[$index]['name']."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br>Jugador: ".$username."<br>Población: ".$maparray[$index]['pop']."<br>Alianza ".$allyname."<br>Tribu: ".$tribename."";
     }
     if($maparray[$index]['oasistype'] == 0 && $maparray[$index]['occupied'] == 0) {
     $targettitle = "<font color='white'><b>Valle abandonado ".$tt."</b></font><br>(".$maparray[$index]['x']."|".$maparray[$index]['y'].")";

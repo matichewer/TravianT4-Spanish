@@ -75,59 +75,8 @@ tiene un balance imposible de sostener.
 
 ---
 
-## `addWW.php` y `natarend.php` crean Maravillas de la Naturaleza
 
-**Qué pasa.** `GameEngine/Admin/Mods/addWW.php:41` y `GameEngine/Admin/Mods/natarend.php:39`
-insertan la aldea con `owner = 3`, que en las instalaciones actuales es **Nature**, no
-Natars (uid 2). Si se agregan Maravillas desde el panel de administración salen como
-aldeas de la naturaleza: tribu equivocada en los informes, y quedan fuera de todo lo que
-busca aldeas natar por cuenta.
 
-Los dos archivos siguen además escribiendo la aldea con SQL a mano en vez de pasar por
-`natarRestockGarrison()` + `natarProvisionVillage()`, así que nacen sin la economía que
-`GameEngine/NatarVillage.php` les arma.
-
-**Tamaño.** Chico.
-
----
-
-## `fix_natar_villages.php` informa el plan, no lo medido
-
-**Qué pasa.** `natarVillagePlan()` devuelve `'crop_level' => NATAR_RESOURCE_FIELD_LEVEL`, una
-constante, así que la simulación imprime "campos: nivel 10 los 18" pase lo que pase. Es lo
-que *va a poner*, no lo que hay. Y como el plan sube los campos con `max()` y nunca los
-baja, una aldea que hubiera quedado con niveles viejos más altos no se vería en el informe
-ni se corregiría.
-
-`gross_crop` sí sale del plan aplicado sobre los campos reales, así que hoy es el único
-número de la salida que delata el estado verdadero: 5.400/h en un 6-cropper significa
-nivel 10.
-
-**Qué faltaría.** Que el informe muestre nivel actual → nivel planeado, y que avise cuando
-encuentra un campo por encima del nivel oficial en vez de dejarlo pasar en silencio.
-
-**Tamaño.** Chico.
-
----
-
-## La capital natar se llama "1's village"
-
-**Qué pasa.** `install/include/multihunter.php:45` llama
-`addVillage($wid, $uid, '1', 'Natars')`, pero la firma es
-`addVillage($wid, $uid, $username, $capital)`: los dos últimos argumentos están invertidos.
-El nombre de la aldea se arma como `"Aldea de " . $username`, así que la capital natar
-queda nombrada con el `1`. La línea 122, la de las Maravillas, los pasa en el orden
-correcto.
-
-El `capital` mal pasado no hace daño porque la línea siguiente lo corrige con
-`SET capital = IF(wref = ...)`, pero el nombre queda, y se ve en el mapa.
-
-**Ojo al arreglarlo.** Cambiar el instalador no renombra un mundo ya instalado; hace falta
-un `UPDATE` sobre la aldea existente.
-
-**Tamaño.** Chico.
-
----
 
 ## `canClaimArtifact()` no comprueba nada
 

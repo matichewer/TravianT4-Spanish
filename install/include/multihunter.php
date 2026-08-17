@@ -43,7 +43,12 @@ if($StartNatars){
         $status = $database->getVillageState($wid);
         if($status == 0) {
         	$database->setFieldTaken($wid);
-            $database->addVillage($wid, $uid, '1', 'Natars');
+            // addVillage($wid, $uid, $username, $capital): los dos últimos argumentos
+            // estaban invertidos, así que la capital natar terminaba nombrada con el '1'
+            // ("Aldea de 1"). El `capital` mal pasado no hacía daño porque la línea de
+            // más abajo lo corrige, pero el nombre quedaba a la vista en el mapa.
+            $database->addVillage($wid, $uid, 'Natars', '1');
+            mysql_query("UPDATE " . TB_PREFIX . "vdata SET name = 'Capital natar' WHERE wref = " . (int)$wid);
         	$database->addResourceFields($wid, $database->getVillageType($wid));
         	$database->addUnits($wid);
         	$database->addTech($wid);

@@ -117,6 +117,36 @@ function natarSettlementJitter($wref, $purpose, $min, $max) {
 }
 
 /**
+ * Nombre de una aldea viva.
+ *
+ * Sale de la semilla, así que es estable: recalcular el estado de la aldea no la
+ * renombra. Y lleva la coordenada al final para que doce aldeas en el mapa se puedan
+ * distinguir de un vistazo, que es justo lo que no pasaba cuando todas se llamaban igual.
+ *
+ * Ninguno arranca con "Aldea": el mapa y varios listados anteponen esa palabra.
+ */
+function natarSettlementName($wref, $x = null, $y = null) {
+    global $database;
+    $places = array(
+        'Baluarte natar', 'Puesto natar', 'Atalaya natar', 'Vado natar', 'Reducto natar',
+        'Campamento natar', 'Bastión natar', 'Cantera natar', 'Fortín natar', 'Talud natar',
+        'Cerco natar', 'Villar natar'
+    );
+    $place = $places[natarSettlementJitter($wref, 'name', 0, count($places) - 1)];
+    if($x === null || $y === null) {
+        $coor = $database->getCoor((int)$wref);
+        if(is_array($coor)) {
+            $x = (int)$coor['x'];
+            $y = (int)$coor['y'];
+        }
+    }
+    if($x === null || $y === null) {
+        return $place;
+    }
+    return $place.' ('.(int)$x.'|'.(int)$y.')';
+}
+
+/**
  * Edad de la aldea en segundos.
  */
 function natarSettlementAge($village, $now = null) {
@@ -368,7 +398,9 @@ function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accr
 function natarSettlements() {
     global $database;
     $rows = $database->query_return(
-        'SELECT `wref`, `name`, `owner`, `created`, `npckind`, `npcupdate` FROM '.TB_PREFIX.'vdata '
+        // SELECT *: nombrar `npckind` en la lista reventaría la consulta en un mundo sin
+        // migrar, aunque el WHERE ya sea imposible de satisfacer ahí.
+        'SELECT * FROM '.TB_PREFIX.'vdata '
         .'WHERE '.villageKindSql(NPC_KIND_LIVING).' ORDER BY `created` ASC'
     );
     return is_array($rows) ? $rows : array();
@@ -518,8 +550,10 @@ function natarSettlementSpawn($now = null, $force = false) {
     $database->addUnits($wref);
     $database->addTech($wref);
     $database->addABTech($wref);
+    $coor = $database->getCoor($wref);
+    $name = natarSettlementName($wref, isset($coor['x']) ? (int)$coor['x'] : null, isset($coor['y']) ? (int)$coor['y'] : null);
     $database->query('UPDATE '.TB_PREFIX.'vdata SET '
-        ."`name` = 'Aldea natar', `capital` = 0, `natar` = 0, "
+        ."`name` = '".mysql_real_escape_string($name)."', `capital` = 0, `natar` = 0, "
         .'`created` = '.$now.', `lastupdate` = '.$now.', `npcupdate` = '.$now.' '
         .'WHERE `wref` = '.(int)$wref);
     $database->setVillageNpcKind($wref, NPC_KIND_LIVING);
