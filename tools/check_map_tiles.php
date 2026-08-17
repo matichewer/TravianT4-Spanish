@@ -133,6 +133,22 @@ foreach(array('Templates/Map/mapview.tpl', 'Templates/Map/mapviewlarge.tpl') as 
         basename($template).' dibuja el terreno cuando la casilla no tiene aldea detrás');
 }
 
+// El mapa dibuja `wdata.image`, no `oasistype`/`fieldtype`. Cambiar el tipo sin mover la
+// imagen deja la casilla mintiendo: el tooltip dice "Cereal 50%" y el dibujo muestra pasto
+// —o ceniza, si cae en la zona gris— o el arte de un oasis de madera. Se ve raro y no hay
+// ningún error. Lo repara `tools/seed_grey_zone_terrain.php --aplicar`.
+$mismatched = $database->query_return(
+    "SELECT x, y, oasistype, image FROM ".TB_PREFIX."wdata "
+    ."WHERE (oasistype > 0 AND image <> CONCAT('o', oasistype)) "
+    ."   OR (oasistype = 0 AND image LIKE 'o%')"
+);
+check(empty($mismatched),
+    'el dibujo de cada casilla coincide con su tipo ('.count($mismatched).' incoherentes)');
+foreach(array_slice($mismatched, 0, 5) as $bad) {
+    echo '        ('.$bad['x'].'|'.$bad['y'].') tipo '.$bad['oasistype']
+        ." pero dibuja '".$bad['image']."'".PHP_EOL;
+}
+
 // El sprite de una aldea es una clase CSS armada con población, relación y tribu. Si el
 // nombre resultante no tiene regla, o la regla apunta a un archivo que no existe, la casilla
 // sale BLANCA y no hay ningún error: ni PHP ni el navegador se quejan.

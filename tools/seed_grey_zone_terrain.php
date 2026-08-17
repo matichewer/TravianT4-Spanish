@@ -79,6 +79,43 @@ printf("Zona gris: disco de radio %d · margen exigido: %d casillas%s\n\n",
     GREY_ZONE_OUTER_RADIUS, $depth,
     $depth === Automation::OASIS_ANNEX_RANGE ? ' (el rango de anexión de oasis)' : '');
 
+// --- 0. Reparar `image` donde no coincida con el tipo -----------------------------------
+// El mapa dibuja la columna `image`, no `oasistype`/`fieldtype`. Cualquier cosa que cambie
+// el tipo sin mover `image` deja la casilla mintiendo: el tooltip dice una cosa y el dibujo
+// muestra otra. Se revisa el mundo entero y no sólo la zona, porque la incoherencia se ve
+// igual en cualquier lado, y se hace siempre —aun sin sembrar nada— para que una corrida
+// vieja quede arreglada sin tener que acordarse de nada.
+$mismatched = $database->query_return(
+    "SELECT id, x, y, oasistype, image FROM ".TB_PREFIX."wdata "
+    ."WHERE (oasistype > 0 AND image <> CONCAT('o', oasistype)) "
+    ."   OR (oasistype = 0 AND image LIKE 'o%')"
+);
+if($mismatched) {
+    printf("Casillas cuyo dibujo no coincide con su tipo: %d\n", count($mismatched));
+    foreach(array_slice($mismatched, 0, 12) as $bad) {
+        printf("   (%s|%s) tipo %s pero dibuja '%s'\n",
+            $bad['x'], $bad['y'], $bad['oasistype'], $bad['image']);
+    }
+    if(count($mismatched) > 12) {
+        printf("   ... y %d más\n", count($mismatched) - 12);
+    }
+    if($apply) {
+        foreach($mismatched as $bad) {
+            // Un valle no tiene un sprite "correcto" único: los t0..t9 son variantes de
+            // pasto. Se elige por coordenada para que sea estable entre corridas.
+            $image = (int)$bad['oasistype'] > 0
+                ? 'o'.(int)$bad['oasistype']
+                : 't'.(abs(crc32('tile#'.$bad['x'].'|'.$bad['y'])) % 10);
+            mysqli_query($database->connection, "UPDATE ".TB_PREFIX."wdata SET image = '"
+                .$image."' WHERE id = ".(int)$bad['id']);
+        }
+        printf("   reparadas.\n");
+    } else {
+        echo "   (se reparan al correr con --aplicar)\n";
+    }
+    echo PHP_EOL;
+}
+
 // --- 1. El núcleo sembrable -------------------------------------------------------------
 // Una casilla sirve sólo si TODO su cuadrado de anexión sigue dentro de la zona: si alguna
 // esquina cae afuera, ahí se puede fundar y anexar sin pisar la zona gris.
@@ -258,8 +295,12 @@ $FIELD_15C = 6;                            // el valle 1-1-1-15
 
 foreach($oasisPicks as $pick) {
     list($x, $y, $wref, $wasOasis) = $pick;
+    // `image` es el sprite guardado y hay que moverlo junto con `oasistype`: el mapa dibuja
+    // esa columna, no el tipo. Sin esto un valle convertido en oasis conservaba su 't3' y
+    // salía como pasto (o como ceniza, dentro de la zona gris), y un oasis mejorado seguía
+    // mostrando el arte de madera o hierro con el tooltip diciendo "Cereal 50%".
     mysqli_query($connection, "UPDATE ".TB_PREFIX."wdata SET oasistype = ".$OASIS_CROP_50
-        .", fieldtype = 0 WHERE id = ".(int)$wref);
+        .", fieldtype = 0, image = 'o".$OASIS_CROP_50."' WHERE id = ".(int)$wref);
     // Se borra y se rehace la fila de odata para que los topes de recursos correspondan al
     // tipo nuevo. Es seguro porque más arriba se descartó todo oasis con dueño.
     mysqli_query($connection, "DELETE FROM ".TB_PREFIX."odata WHERE wref = ".(int)$wref);
