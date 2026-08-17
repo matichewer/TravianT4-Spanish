@@ -55,7 +55,7 @@ else if($marketVillageName !== ''){
 // Need to set the max allowed to send as maxcarry * available merchants
 $canSend = $market->maxcarry * $market->merchantAvail();
 
-if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($marketCoordinatesValid || $marketVillageName !== '') && !empty($checkexist)){
+if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($marketCoordinatesValid || $marketVillageName !== '') && !empty($checkexist) && !isset($_POST['cancel'])){
 ?>
 <form method="POST" name="snd" action="build.php"> 
 	<input type="hidden" name="ft" value="mk1">
@@ -63,6 +63,9 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 	<input type="hidden" name="a" value="<?php echo $session->mchecker; ?>">
 <input type="hidden" name="send3" value="<?php echo $marketSendCount; ?>">
 <input type="hidden" name="vid" value="<?php echo $getwref; ?>">
+<input type="hidden" name="x" value="<?php echo htmlspecialchars($marketX,ENT_QUOTES,'UTF-8'); ?>">
+<input type="hidden" name="y" value="<?php echo htmlspecialchars($marketY,ENT_QUOTES,'UTF-8'); ?>">
+<input type="hidden" name="dname" value="<?php echo htmlspecialchars($marketVillageName,ENT_QUOTES,'UTF-8'); ?>">
 <table id="send_select" class="send_res" cellpadding="1" cellspacing="1">
 	<tr>
 		<td class="ico"><img class="r1" src="img/x.gif" alt="Madera" title="Madera" /></td> 
@@ -131,6 +134,7 @@ if($marketFormType === 'check' && $allres > 0 && $allres <= $canSend && ($market
 <div class="clear"></div>
 <p>
 <button type="submit" value="ok" name="s1" id="btn_ok" class="dynamic_img" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Enviar mercaderes</div></div></button>
+<button type="submit" value="cancel" name="cancel" class="dynamic_img"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Cancelar</div></div></button>
 </p></form>
 <?php }else{ ?>
 <form method="POST" name="snd" action="build.php"> 
@@ -223,8 +227,8 @@ if(isset($_GET['z']) && is_scalar($_GET['z']) && ctype_digit((string)$_GET['z'])
 $coor = $database->getCoor((int)$_GET['z']);
 }
 if(!is_array($coor)){
-$coor['x'] = "";
-$coor['y'] = "";
+$coor['x'] = $marketX;
+$coor['y'] = $marketY;
 }
 ?>			<div class="coordinatesInput">
 				<div class="xCoord">
