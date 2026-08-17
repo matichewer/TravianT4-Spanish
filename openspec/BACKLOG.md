@@ -40,40 +40,7 @@ catapultas ya da la mayor parte del valor. **Matias lo quiere hecho en algún mo
 
 ---
 
-## La capital natar crece sola
 
-**Qué pasa.** Las oleadas contra la Maravilla salen de la nada: `startNatarAttack()` llama
-a `addAttack()`, que sólo inserta una fila y nunca descuenta de `units`. Pero al volver,
-`returnunitsComplete()` acredita los sobrevivientes con `modifyUnit(..., 1)` sobre la aldea
-de origen. Resultado: cada Maravilla que alguien construye engorda la guarnición de la
-capital, para siempre.
-
-**La pregunta de diseño detrás.** La capital cumple hoy dos roles que no tienen relación:
-es un depósito defensivo de 3,4 M de tropas *y* es el remitente nominal de unas oleadas
-cuya composición está hardcodeada por nivel de Maravilla. Si las oleadas son escenario, el
-arreglo correcto probablemente no sea "descontarlas al salir" sino "que no vuelvan".
-
-**Tamaño.** Una tarde.
-
----
-
-## Nadie valida que una tasa de producción sea sensata
-
-**Qué pasa.** La acreditación de recursos tiene techo hacia arriba
-(`LEAST(maxstore, ...)`) pero no tiene piso hacia abajo: el cereal puede irse a menos
-infinito. Para jugadores está bien resuelto —`starvation()` mata en función de la *tasa* y
-después pone `crop = 0`, así que descarta la deuda y nadie recibe un castigo retroactivo
-por haber estado ausente—. El bug natar fue letal no por el reloj perezoso sino porque la
-*tasa* era absurda (-45.000/h en una Maravilla, -5.200.000/h en la capital) y nada lo
-notó.
-
-**Qué faltaría.** Algo que detecte una tasa fuera de rango y avise, en vez de aplicarla en
-silencio. Puede ser tan chico como un checker que barra el mundo y falle si alguna aldea
-tiene un balance imposible de sostener.
-
-**Tamaño.** Chico, pero hay que definir qué es "imposible".
-
----
 
 
 

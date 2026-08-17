@@ -3650,6 +3650,17 @@ class Automation {
                 // If the dead units not equal the ammount sent they will return and report
                 // Lo que las trampas soltaron vuelve con el ejército, así que solo lo que
                 // sigue preso descuenta del regreso y decide si el ataque tuvo pérdidas.
+                // Las oleadas contra la Maravilla salen de la capital natar y son escenario:
+                // startNatarAttack() las inventa con addAttack() y NUNCA las descuenta de
+                // `units`. Pero al volver, returnunitsComplete() se las suma a la aldea de
+                // origen, así que la capital engordaba con cada Maravilla que alguien
+                // construía, para siempre. No se arregla descontándolas al salir —son una
+                // tabla fija por nivel de Maravilla, no un ejército de verdad— sino haciendo
+                // que no vuelvan.
+                //
+                // Se decide por la clase de la aldea de origen: sólo una guarnición estática
+                // manda ataques que nadie descontó, y ningún jugador tiene una.
+                $attackerIsScenery = isset($fromF) && is_array($fromF) && isStaticNpcVillage($fromF);
                 if($totalsend_att - ($totaldead_att + $totalstilltraped_att) > 0) {
                     $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus, $travelBonus) + $AttackArrivalTime;
                     //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
@@ -3674,7 +3685,14 @@ class Automation {
 
                     $database->setMovementProc($data['moveid']);
                     $datar = "".$steal[0].",".$steal[1].",".$steal[2].",".$steal[3].",".$battlepart['bounty']."";
-                    $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
+                    if($attackerIsScenery) {
+                        // Sin regreso, la fila de `attacks` ya no la referencia nadie: el
+                        // camino normal la deja para que la reutilice el movimiento de
+                        // vuelta, y acá ese movimiento no existe.
+                        $database->removeAttack($data['ref']);
+                    } else {
+                        $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
+                    }
 
                     // send the bounty on type 6.
                     if($type !== 1) {

@@ -165,6 +165,56 @@ if(is_array($capital) && isset($capital[0]['wref'])) {
     echo "[--] este mundo no tiene capital natar: no se pudo comprobar".PHP_EOL;
 }
 
+// --- C bis. Las oleadas no engordan la capital -------------------------------------------
+// startNatarAttack() inventa las tropas con addAttack() y nunca las descuenta de `units`,
+// pero returnunitsComplete() se las sumaba al volver: la capital crecía con cada Maravilla
+// que alguien construía. Son escenario, así que no vuelven.
+if(isset($capitalWref)) {
+    $startWave = $reflection->getMethod('startNatarAttack');
+    $startWave->setAccessible(true);
+    $resolveAttacks = $reflection->getMethod('sendunitsComplete');
+    $resolveAttacks->setAccessible(true);
+    $resolveReturns = $reflection->getMethod('returnunitsComplete');
+    $resolveReturns->setAccessible(true);
+
+    $victim = $database->query_return(
+        "SELECT wref FROM ".TB_PREFIX."vdata WHERE ".playerAccountSql('owner')." LIMIT 1"
+    );
+    if(is_array($victim) && isset($victim[0]['wref'])) {
+        function capitalGarrison($wref) {
+            global $database;
+            $units = $database->getUnit($wref);
+            $total = 0;
+            for($unit = 1; $unit <= 50; $unit++) {
+                $total += is_array($units) && isset($units['u'.$unit]) ? (int)$units['u'.$unit] : 0;
+            }
+            return $total;
+        }
+        $garrisonBefore = capitalGarrison($capitalWref);
+        $attackRowsBefore = (int)$database->query_return("SELECT COUNT(*) AS n FROM ".TB_PREFIX."attacks")[0]['n'];
+
+        $startWave->invoke($automation, 5, (int)$victim[0]['wref']);
+        $database->query("UPDATE ".TB_PREFIX."movement SET endtime = ".(time() - 10)
+            ." WHERE `from` = $capitalWref AND proc = 0");
+        @unlink('GameEngine/Prevention/sendunits.txt');
+        $resolveAttacks->invoke($automation);
+        @unlink('GameEngine/Prevention/returnunits.txt');
+        $resolveReturns->invoke($automation);
+        $database->query("UPDATE ".TB_PREFIX."movement SET endtime = ".(time() - 10)
+            ." WHERE `to` = $capitalWref AND proc = 0");
+        $resolveReturns->invoke($automation);
+
+        check(capitalGarrison($capitalWref) === $garrisonBefore,
+            'una oleada contra la Maravilla no le suma tropas a la capital ('
+            .number_format($garrisonBefore).' antes y después)');
+        check((int)$database->query_return("SELECT COUNT(*) AS n FROM ".TB_PREFIX."attacks")[0]['n'] === $attackRowsBefore,
+            'y no deja filas de `attacks` huérfanas al no crear el movimiento de regreso');
+
+        $database->query("DELETE FROM ".TB_PREFIX."movement WHERE `from` = $capitalWref OR `to` = $capitalWref");
+        $database->query("DELETE FROM ".TB_PREFIX."ww_attacks");
+    }
+}
+
 // --- D. No acepta refuerzos ------------------------------------------------------------
 $unitsSource = file_get_contents($root.'/GameEngine/Units.php');
 check(strpos($unitsSource, 'No puedes enviar refuerzos a una aldea natar.') !== false

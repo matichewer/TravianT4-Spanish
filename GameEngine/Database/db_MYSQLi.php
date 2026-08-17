@@ -730,6 +730,11 @@
 							. " INNER JOIN " . TB_PREFIX . "attacks AS attack ON attack.id = $attackId"
 							. " LEFT JOIN " . TB_PREFIX . "artefacts AS artefact ON artefact.vref = destination.wref"
 							. " SET source.exp$slot = $target, destination.owner = $attackerOwner,"
+							// Una aldea conquistada deja de ser NPC en la misma escritura que
+							// cambia de dueño. Sin esto, quien le derribara la residencia a una
+							// Aldea de la Maravilla y la tomara se quedaba con una aldea marcada
+							// como escenario: sin manutención de tropas y a prueba de hambruna.
+							. ($this->ensureNpcVillageColumns() ? " destination.npckind = " . NPC_KIND_PLAYER . ", destination.npcupdate = 0," : "")
 							. " destination.loyalty = 33" . ($loyaltyClock === "" ? "" : ", destination.loyaltyupdate = " . time()) . ","
 							// La celebración se cancela junto con el cambio de dueño: iba en la
 							// misma escritura a propósito, porque si la fiesta sobrevive a la

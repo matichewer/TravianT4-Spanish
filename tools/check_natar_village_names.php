@@ -155,5 +155,15 @@ check(strpos($tool, "\$plan['measured_min_level']") !== false,
 check(strpos($tool, 'AVISO:') !== false,
     'y avisa cuando encuentra un campo por encima del nivel oficial');
 
+// --- F. Conquistar una aldea natar la devuelve al mundo de los jugadores -----------------
+// Las Maravillas tienen residencia nivel 10, asi que se pueden conquistar una vez que las
+// catapultas la derriban. Si la aldea conservara `npckind` estatico, el conquistador se
+// quedaria con una aldea sin manutencion de tropas y a prueba de hambruna.
+$conquest = file_get_contents($root.'/GameEngine/Database/db_MYSQLi.php');
+check(strpos($conquest, 'destination.npckind = " . NPC_KIND_PLAYER') !== false,
+    'la conquista devuelve la aldea a la clase de jugador en la misma escritura que cambia el dueno');
+check(strpos($conquest, 'destination.npcupdate = 0') !== false,
+    'y le limpia el reloj de tropas de NPC');
+
 echo PHP_EOL.(count($failures) ? count($failures)." FALLA(S)" : "todo en orden").PHP_EOL;
 exit(count($failures) ? 1 : 0);
