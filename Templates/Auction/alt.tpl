@@ -51,33 +51,33 @@
 		}
         if($type==10){
         	$name = "Casco del Jinete";
-			$title = "Tiempo de entrenamiento en el establo reducido en 10%";
+			$title = "Tiempo de entrenamiento en el establo reducido en 10% (solo en la aldea natal del héroe)";
             $item = "10";
             $effect = "10";
 		}elseif($type==11){
         	$name = "Casco de la Caballería";
-			$title = "Tiempo de entrenamiento en el establo reducido en 15%";
+			$title = "Tiempo de entrenamiento en el establo reducido en 15% (solo en la aldea natal del héroe)";
             $item = "11";
             $effect = "15";
 		}elseif($type==12){
         	$name = "Casco de la Caballería Pesada";
-			$title = "Tiempo de entrenamiento en el establo reducido en 20%";
+			$title = "Tiempo de entrenamiento en el establo reducido en 20% (solo en la aldea natal del héroe)";
             $item = "12";
             $effect = "20";
 		}
         if($type==13){
         	$name = "Casco del Mercenario";
-			$title = "Tiempo de entrenamiento en el cuartel reducido en 10%";
+			$title = "Tiempo de entrenamiento en el cuartel reducido en 10% (solo en la aldea natal del héroe)";
             $item = "13";
             $effect = "10";
 		}elseif($type==14){
         	$name = "Casco del Guerrero";
-			$title = "Tiempo de entrenamiento en el cuartel reducido en 15%";
+			$title = "Tiempo de entrenamiento en el cuartel reducido en 15% (solo en la aldea natal del héroe)";
             $item = "14";
             $effect = "15";
 		}elseif($type==15){
         	$name = "Casco del Arconte";
-			$title = "Tiempo de entrenamiento en el cuartel reducido en 20%";
+			$title = "Tiempo de entrenamiento en el cuartel reducido en 20% (solo en la aldea natal del héroe)";
             $item = "15";
             $effect = "20";
 		}
