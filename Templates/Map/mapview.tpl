@@ -90,6 +90,17 @@ $index = 0;
 $row1 = 0;
 
 
+
+// La diplomacia de la alianza de quien mira, resuelta una sola vez para toda la vista.
+// Antes estos tres arreglos se creaban vacios dentro del bucle, casilla por casilla, asi que
+// las ramas de aliado y enemigo del sprite eran inalcanzables por construccion: un aliado se
+// veia igual que un desconocido. Se calcula aca, fuera del bucle, porque el mapa ya hace una
+// consulta por casilla y esto seria una mas por cada una.
+include_once(dirname(__DIR__, 2)."/GameEngine/Diplomacy.php");
+$friendarray = friendlyAlliances($session->alliance);
+$enemyarray = hostileAlliances($session->alliance);
+$neutralarray = array();     // el gpack no trae arte neutral; ver mapDiplomacyCss()
+
 for($i=0;$i<count($maparray);$i++) {
 	$row1 = intdiv($i, $COLS);
 	$targetalliance = 0;
@@ -108,9 +119,8 @@ for($i=0;$i<count($maparray);$i++) {
     $tribe = $database->getUserField($tileowner,"tribe",0);
     $username = $database->getUserField($tileowner,"username",0);
     $uinfo = $username;
-    $friendarray = array();
-    $enemyarray = array();
-    $neutralarray = array();
+    // Los tres arreglos se calculan UNA vez antes del bucle (ver arriba): antes se
+    // reinicializaban vacios en cada casilla, asi que la diplomacia nunca podia influir.
     }
     
     
@@ -367,6 +377,7 @@ break;
 /* El suelo de ceniza del T4 oficial. La ruta es absoluta porque la spritesheet vive en un
    gpack distinto del que el jugador tenga activo. */
 <?php echo greyZoneAshCss(); ?>
+<?php echo mapDiplomacyCss(); ?>
 <?php echo greyZoneVolcanoCss(); ?>
 .tile.greyzone:after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;
   background:rgba(74,76,96,.30);box-shadow:inset 0 0 0 1px rgba(74,76,96,.55);

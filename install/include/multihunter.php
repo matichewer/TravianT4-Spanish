@@ -137,7 +137,11 @@ if($StartNatars){
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET name = 'Aldea de la Maravilla' WHERE wref = '$wid'");
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET capital = 0 WHERE wref = '$wid'");
 			mysql_query("UPDATE " . TB_PREFIX . "vdata SET natar = 1 WHERE wref = '$wid'");
-			mysql_query("UPDATE " . TB_PREFIX . "fdata SET f22t = 27, f22 = 10, f28t = 25, f28 = 10, f19t = 23, f19 = 10, f99t = 40, f26 = 0, f26t = 0, f21 = 1, f21t = 15, f39 = 1, f39t = 16 WHERE vref = " . $wid . "");
+			// Sin residencia (f28): en el T4 oficial las Aldeas de la Maravilla no tienen ni
+			// residencia ni palacio. `getConquestEligibility()` se niega a conquistar mientras
+			// quede una en pie, asi que ponerla obligaba a derribarla con catapultas antes de
+			// mandar los jefes, y volvia estas aldeas bastante mas duras que las del original.
+			mysql_query("UPDATE " . TB_PREFIX . "fdata SET f22t = 27, f22 = 10, f28t = 0, f28 = 0, f19t = 23, f19 = 10, f99t = 40, f26 = 0, f26t = 0, f21 = 1, f21t = 15, f39 = 1, f39t = 16 WHERE vref = " . $wid . "");
 			natarRestockGarrison($wid, natarWonderGarrison());
 			// Campos de cereal al nivel que sostiene la guarnición, más el resto de los
 			// campos, almacén y granero: sin esto la aldea nacía con el balance en unos

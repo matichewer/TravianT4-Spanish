@@ -192,7 +192,7 @@ foreach($sheets as $sheet) {
 }
 
 $villages = $database->query_return(
-    "SELECT w.x, w.y, v.name, v.pop, u.username, u.tribe, u.alliance "
+    "SELECT w.x, w.y, v.name, v.pop, v.owner, u.username, u.tribe, u.alliance "
     ."FROM ".TB_PREFIX."vdata v "
     ."INNER JOIN ".TB_PREFIX."wdata w ON w.id = v.wref "
     ."LEFT JOIN ".TB_PREFIX."users u ON u.id = v.owner"
@@ -205,9 +205,16 @@ $villages = $database->query_return(
 // de alianza salía como una casilla beige vacía, pero sólo en karte2.php. Un checker que
 // repite la fórmula da por buenas las dos plantillas por igual y no ve la diferencia.
 $templates = array(
-    'karte.php'  => file_get_contents($root.'/Templates/Map/mapview.tpl'),
-    'karte2.php' => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl')
+    'karte.php'   => file_get_contents($root.'/Templates/Map/mapview.tpl'),
+    'karte2.php'  => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl'),
+    'ajax mapLowRes' => file_get_contents($root.'/Templates/Ajax/mapscroll.tpl')
 );
+
+// El sprite de enemigo no vive en compact.css sino inline en la pagina, para no tener que
+// versionar una hoja que Cloudflare cachea cuatro horas. El checker tiene que mirar los dos
+// sitios o daria por rota una clase que en el navegador funciona.
+require_once $root.'/GameEngine/Diplomacy.php';
+$sources['(inline) mapDiplomacyCss'] = mapDiplomacyCss();
 
 $blankTiles = array();
 $resolved = array();
@@ -217,8 +224,16 @@ foreach($villages as $village) {
     // Las relaciones que las plantillas pueden producir hoy: la propia alianza (3) y
     // cualquier otro caso (4). Las ramas 1, 2 y 5 son inalcanzables porque
     // $friendarray/$enemyarray/$neutralarray se inicializan vacíos y nunca se llenan.
-    foreach(array(3, 4) as $relation) {
-        if($relation === 3 && (int)$village['alliance'] === 0) {
+    // Las cinco relaciones que las plantillas pueden emitir hoy: propia (0), aliado o NAP
+    // (1), en guerra (2), la propia alianza (3) y cualquier otro (4). La 5 (neutral) queda
+    // fuera a proposito: `$neutralarray` se deja vacio porque el gpack no trae ese arte.
+    foreach(array(0, 1, 2, 3, 4) as $relation) {
+        if(in_array($relation, array(1, 2, 3), true) && (int)$village['alliance'] === 0) {
+            continue;                       // sin alianza no hay diplomacia posible
+        }
+        // La relación 0 es "la aldea es mía", así que sólo puede darse en una aldea de
+        // jugador: nadie mira el mapa siendo los Natars, y el gpack no trae `d?0-5`.
+        if($relation === 0 && !isPlayerAccount((int)$village['owner'])) {
             continue;
         }
         foreach($templates as $page => $template) {
@@ -240,7 +255,12 @@ foreach($villages as $village) {
                         $ok = true;
                         break;
                     }
-                    $image = realpath(dirname($sheet).'/'.trim($u[1], "'\" "));
+                    $url = trim($u[1], "'\" ");
+                    // El CSS inline usa rutas absolutas desde la raiz web; el de las hojas,
+                    // relativas al archivo.
+                    $image = ($url !== '' && $url[0] === '/')
+                        ? realpath($root.$url)
+                        : realpath(dirname($sheet).'/'.$url);
                     if($image !== false && is_file($image)) {
                         $ok = true;
                         break;

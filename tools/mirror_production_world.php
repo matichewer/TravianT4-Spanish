@@ -99,7 +99,7 @@ echo "Regenerando el mundo local a ±$radius (".pow($radius * 2 + 1, 2)." casill
 foreach(array('wdata', 'vdata', 'fdata', 'units', 'tdata', 'abdata', 'odata', 'movement',
     'attacks', 'ndata', 'enforcement', 'training', 'research', 'market', 'send', 'mdata',
     'hero', 'heroinventory', 'prisoners', 'a2b', 'farmlist', 'raidlist', 'ww_attacks',
-    'adventure', 'bdata', 'demolition', 'route') as $table) {
+    'adventure', 'bdata', 'demolition', 'route', 'alidata', 'diplomacy') as $table) {
     mysqli_query($connection, "TRUNCATE TABLE ".TB_PREFIX.$table);
 }
 mysqli_query($connection, "DELETE FROM ".TB_PREFIX."users WHERE ".playerAccountSql('id'));
@@ -166,6 +166,16 @@ foreach($tribes as $name => $tribe) {
         .strtolower($name)."@local.invalid',".time().",$tribe,'','',0,25,35,'0,0,0,0,0,0,0,0,0,0,0')");
     $userIds[$name] = (int)mysqli_insert_id($connection);
 }
+
+// La alianza de producción. Sin esto el espejo no reproducía el caso que importa: las ramas
+// del sprite de aldea que dependen de la diplomacia sólo se recorren si quien mira TIENE
+// alianza, así que un bug en ellas era invisible en local aunque el mapa estuviera roto en
+// producción. Es exactamente lo que pasó con las celdas beige de Che_Bigote.
+mysqli_query($connection,
+    "INSERT INTO ".TB_PREFIX."alidata (id,name,tag,leader,coor,advisor,recruiter,notice,`desc`,max) "
+    ."VALUES (1,'RDC','RDC',".$userIds['chewer'].",0,0,0,'','',60)");
+mysqli_query($connection,
+    "UPDATE ".TB_PREFIX."users SET alliance = 1 WHERE username IN ('chewer','Che_Bigote')");
 
 // Plus para la cuenta del administrador del servidor, que es con la que se prueba: la
 // columna `plus` es el instante hasta el que dura, así que un año alcanza. Sobrevive a

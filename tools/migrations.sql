@@ -374,3 +374,20 @@ INNER JOIN s1_users AS u ON u.id = v.owner
 SET v.name = 'Aldea del Multihunter'
 WHERE u.username = 'Multihunter'
   AND (v.name LIKE '%Multihunter\'s village%' OR v.name LIKE 'Aldea de Multihunter%');
+
+-- 2026-08-19 - Las Aldeas de la Maravilla no llevan residencia
+-- install/include/multihunter.php les ponia una residencia nivel 10 (f28t = 25). En el T4
+-- oficial las Maravillas no tienen ni residencia ni palacio, y getConquestEligibility() se
+-- niega a conquistar una aldea mientras quede una en pie: habia que derribarla con catapultas
+-- antes de poder mandar los jefes, cosa que en el juego original no hace falta.
+-- Arreglar el instalador no cambia un mundo ya instalado.
+-- OJO: esto vuelve las 13 Maravillas notablemente mas faciles de tomar de inmediato.
+-- Se ataca solo la ranura 28 y solo si sigue teniendo la residencia que puso el instalador,
+-- para no borrar algo que alguien haya construido ahi despues.
+UPDATE s1_fdata AS f
+INNER JOIN s1_vdata AS v ON v.wref = f.vref
+INNER JOIN s1_users AS u ON u.id = v.owner
+SET f.f28t = 0, f.f28 = 0
+WHERE u.username = 'Natars'
+  AND v.natar = 1
+  AND f.f28t = 25;

@@ -6239,46 +6239,59 @@ break;
 				return $text;
 			}
 
-			public function canClaimArtifact ($vref,$type) {
-				$DefenderFields = $this->getResourceLevel($vref);
-                for($i=19;$i<=38;$i++) {
-                    if($AttackerFields['f'.$i.'t'] == 27) {
-                        $defcanclaim = FALSE;
-                        $defTresuaryLevel = $AttackerFields['f'.$i];
-                    } else {
-                        $defcanclaim = TRUE;
-                    }
-                }
-                $AttackerFields = $this->getResourceLevel($vref);
-                for($i=19;$i<=38;$i++) {
-                	if($AttackerFields['f'.$i.'t'] == 27) {
-                		$attTresuaryLevel = $AttackerFields['f'.$i];
-                		if ($attTresuaryLevel >= 10){
-                			$villageartifact = TRUE;
-                		}else{
-                			$villageartifact = FALSE;
-                		}
-                		if ($attTresuaryLevel == 20){
-                			$accountartifact = TRUE;
-                		}else{
-                			$accountartifact = FALSE;
-                		}
-                	}
-                }
-                if ($type == 1) {
-					if ($defcanclaim == TRUE && $villageartifact == TRUE){
-						return TRUE;
+			/**
+			 * Si la aldea ATACANTE puede quedarse con un artefacto de ese tamaño.
+			 *
+			 * En el T4 oficial lo que decide es la tesorería de quien se lo lleva: nivel 10 para
+			 * un artefacto de aldea y nivel 20 para uno de cuenta o único. Esta función miraba la
+			 * aldea equivocada y encima nunca llegaba a mirarla:
+			 *
+			 *   - el primer bucle leía `$AttackerFields` ANTES de asignarla, así que la variable
+			 *     estaba indefinida, la condición nunca se cumplía y `$defcanclaim` terminaba
+			 *     siempre en TRUE;
+			 *   - `$DefenderFields` se cargaba y no se usaba;
+			 *   - el segundo `getResourceLevel()` consultaba OTRA VEZ `$vref`, que era la aldea
+			 *     defensora, así que el requisito se comprobaba contra la tesorería de la víctima.
+			 *
+			 * Funcionaba de casualidad contra las Maravillas, porque su tesorería nivel 10
+			 * satisfacía la condición equivocada.
+			 *
+			 * Las ranuras van de la 19 a la 40, como en el resto del motor: el 38 de antes dejaba
+			 * fuera dos ranuras de edificio.
+			 */
+			public function canClaimArtifact($attackerVillage, $size) {
+				$attackerVillage = (int)$attackerVillage;
+				$size = (int)$size;
+				if($attackerVillage <= 0) {
+					return false;
+				}
+				// Una aldea sostiene un solo artefacto, como en el original.
+				$held = $this->getOwnArtefactInfo($attackerVillage);
+				if(is_array($held) && isset($held['vref']) && (int)$held['vref'] === $attackerVillage) {
+					return false;
+				}
+				$fields = $this->getResourceLevel($attackerVillage);
+				if(!is_array($fields)) {
+					return false;
+				}
+				$treasury = 0;
+				for($slot = 19; $slot <= 40; $slot++) {
+					if(isset($fields['f'.$slot.'t']) && (int)$fields['f'.$slot.'t'] === 27) {
+						// El nivel mayor, por si quedaran dos tesorerías y una estuviera dañada.
+						$treasury = max($treasury, (int)$fields['f'.$slot]);
 					}
-                }else if($type == 2) {
-                	if ($defcanclaim == TRUE && $accountartifact == TRUE){
-                		return TRUE;
-                	}
-                }else if($type == 3) {
-                	if ($defcanclaim == TRUE && $accountartifact == TRUE){
-                		return TRUE;
-                	}
-                }else { return FALSE; }
-            }
+				}
+				if($treasury <= 0) {
+					return false;
+				}
+				if($size === 1) {
+					return $treasury >= 10;      // artefacto de aldea
+				}
+				if($size === 2 || $size === 3) {
+					return $treasury >= 20;      // de cuenta y único
+				}
+				return false;
+			}
 
 			function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){
 				if(!isset($pct)){

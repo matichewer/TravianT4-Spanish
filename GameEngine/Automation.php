@@ -3512,8 +3512,12 @@ class Automation {
                     } else {
                         $artifact = $database->getOwnArtefactInfo($data['to']);
                         if($artifact['vref'] == $data['to']) {
-                            if($database->canClaimArtifact($artifact['vref'], $artifact['size'])) {
-                                $database->claimArtefact($data['to'], $data['to'], $database->getVillageField($data['from'], "owner"));
+                            // El requisito de tesorería es de la aldea ATACANTE, y el artefacto
+                            // se muda a ella. Antes se preguntaba por la aldea atacada y se
+                            // llamaba a claimArtefact() con el destino repetido, así que el
+                            // artefacto se quedaba donde estaba y sólo cambiaba de dueño.
+                            if($database->canClaimArtifact($data['from'], $artifact['size'])) {
+                                $database->claimArtefact($data['from'], $data['to'], $database->getVillageField($data['from'], "owner"));
                                 $info_chief = "".$hero_pic.", tu héroe lleva un artefacto de regreso a la aldea.";
                             } else {
                                 $info_chief = "";
