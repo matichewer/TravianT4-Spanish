@@ -46,8 +46,11 @@
         $database->addUnits($wid);
         $database->addTech($wid);
         $database->addABTech($wid);
-        mysql_query("UPDATE `".TB_PREFIX."vdata` SET `name` = 'Aldea de la Maravilla', `capital` = 0, `natar` = 1 WHERE `wref` = ".(int)$wid) or die(mysql_error());
-        mysql_query("UPDATE `".TB_PREFIX."fdata` SET `f22t` = 27, `f22` = 10, `f28t` = 25, `f28` = 10, `f19t` = 23, `f19` = 10, `f99t` = 40, `f26` = 0, `f26t` = 0, `f21` = 1, `f21t` = 15, `f39` = 1, `f39t` = 16 WHERE `vref` = ".(int)$wid) or die(mysql_error());
+        mysql_query("UPDATE `".TB_PREFIX."vdata` SET `name` = '".mysql_real_escape_string(natarWonderVillageName($wid))."', `capital` = 0, `natar` = 1 WHERE `wref` = ".(int)$wid) or die(mysql_error());
+        // Los edificios salen de GameEngine/NatarVillage.php. Esta linea traia todavia la
+        // residencia (f28t = 25) que el instalador ya no pone, asi que una Maravilla creada
+        // desde el panel nacia inconquistable sin catapultas.
+        natarWonderBuildings($wid);
         natarRestockGarrison($wid, natarWonderGarrison());
         natarProvisionVillage($wid);
 

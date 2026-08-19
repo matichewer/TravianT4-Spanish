@@ -411,3 +411,55 @@ function natarVillages() {
     }
     return $villages;
 }
+
+/**
+ * El nombre de una Aldea de la Maravilla, con su coordenada.
+ *
+ * Por que lleva la coordenada. En el T4 oficial las aldeas natar se distinguen justamente
+ * por ahi: su nombre normal es de estilo coordenada (`Natars -71|24`), y solo las que
+ * guardan un artefacto usan otro. Aca las 13 compartian el literal 'Aldea de la Maravilla',
+ * asi que en el ranking, en los informes y en la lista de aldeas salian trece filas
+ * identicas y no habia forma de saber cual era cual. Las aldeas natar independientes ya
+ * seguian este criterio (`natarSettlementName()`); esto lo extiende a las Maravillas.
+ */
+function natarWonderVillageName($wref, $x = null, $y = null) {
+    global $database;
+    if($x === null || $y === null) {
+        $coor = is_object($database) && method_exists($database, 'getCoor')
+            ? $database->getCoor((int)$wref) : null;
+        if(is_array($coor) && isset($coor['x'], $coor['y'])) {
+            $x = (int)$coor['x'];
+            $y = (int)$coor['y'];
+        }
+    }
+    if($x === null || $y === null) {
+        return 'Aldea de la Maravilla';
+    }
+    return 'Aldea de la Maravilla ('.(int)$x.'|'.(int)$y.')';
+}
+
+/**
+ * Los edificios fijos de una Aldea de la Maravilla.
+ *
+ * Vive aca y no copiado en el instalador y en los dos modulos del panel de administracion
+ * porque ya se desincronizo una vez: al sacarle la residencia (f28) para igualar al T4
+ * oficial se corrigio el instalador y las dos copias del panel quedaron poniendola igual,
+ * asi que una Maravilla creada desde el panel nacia otra vez inconquistable sin catapultas.
+ *
+ * Sin residencia ni palacio, como en el original. Tesoreria 10, escondite 10, Maravilla en
+ * la ranura 99, edificio principal y punto de reunion en 1.
+ */
+function natarWonderBuildings($wref) {
+    global $database;
+    $wref = (int)$wref;
+    return mysqli_query($database->connection,
+        "UPDATE ".TB_PREFIX."fdata SET "
+        ."`f22t` = 27, `f22` = 10, "      // tesoreria
+        ."`f28t` = 0,  `f28` = 0, "       // sin residencia: ver el comentario de arriba
+        ."`f19t` = 23, `f19` = 10, "      // escondite
+        ."`f99t` = 40, "                  // la Maravilla
+        ."`f26t` = 0,  `f26` = 0, "       // sin muralla
+        ."`f21t` = 15, `f21` = 1, "       // edificio principal
+        ."`f39t` = 16, `f39` = 1 "        // punto de reunion
+        ."WHERE `vref` = ".$wref);
+}

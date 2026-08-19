@@ -239,8 +239,10 @@ foreach($wonderCoords as $coord) {
     $database->addUnits($wref);
     $database->addTech($wref);
     $database->addABTech($wref);
-    mysqli_query($connection, "UPDATE ".TB_PREFIX."vdata SET name='Aldea de la Maravilla', capital=0, natar=1 WHERE wref = $wref");
-    mysqli_query($connection, "UPDATE ".TB_PREFIX."fdata SET f22t=27,f22=10,f28t=25,f28=10,f19t=23,f19=10,f99t=40,f26=0,f26t=0,f21=1,f21t=15,f39=1,f39t=16 WHERE vref = $wref");
+    mysqli_query($connection, "UPDATE ".TB_PREFIX."vdata SET name='"
+        .mysqli_real_escape_string($connection, natarWonderVillageName($wref, $coord[0], $coord[1]))
+        ."', capital=0, natar=1 WHERE wref = $wref");
+    natarWonderBuildings($wref);
     natarRestockGarrison($wref, natarWonderGarrison());
     natarProvisionVillage($wref);
 }

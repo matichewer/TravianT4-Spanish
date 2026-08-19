@@ -391,3 +391,18 @@ SET f.f28t = 0, f.f28 = 0
 WHERE u.username = 'Natars'
   AND v.natar = 1
   AND f.f28t = 25;
+
+-- 2026-08-19 - Las 13 Aldeas de la Maravilla se llamaban todas igual
+-- El instalador les ponia el literal 'Aldea de la Maravilla' sin nada que las distinguiera,
+-- asi que en el ranking y en la lista de aldeas salian trece filas identicas. En el T4
+-- oficial las aldeas natar se distinguen justamente por la coordenada (su nombre normal es
+-- de estilo `Natars -71|24`); las aldeas natar independientes de este servidor ya lo hacian.
+-- Se ataca solo por el marcador `natar = 1` y solo si conserva el nombre generado, para no
+-- pisar el de una Maravilla que algun jugador haya conquistado y renombrado.
+UPDATE s1_vdata AS v
+INNER JOIN s1_wdata AS w ON w.id = v.wref
+INNER JOIN s1_users AS u ON u.id = v.owner
+SET v.name = CONCAT('Aldea de la Maravilla (', w.x, '|', w.y, ')')
+WHERE u.username = 'Natars'
+  AND v.natar = 1
+  AND v.name IN ('Aldea de la Maravilla', 'WW Village');

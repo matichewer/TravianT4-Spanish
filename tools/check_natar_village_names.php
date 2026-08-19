@@ -155,9 +155,68 @@ check(strpos($tool, "\$plan['measured_min_level']") !== false,
 check(strpos($tool, 'AVISO:') !== false,
     'y avisa cuando encuentra un campo por encima del nivel oficial');
 
+// --- E bis. Las Maravillas se distinguen entre si ---------------------------------------
+// Las 13 compartian el literal 'Aldea de la Maravilla', asi que en el ranking y en la lista
+// de aldeas salian trece filas identicas. En el T4 oficial las aldeas natar se distinguen
+// por la coordenada: su nombre normal es de estilo `Natars -71|24`.
+check(natarWonderVillageName(0, 15, -15) === 'Aldea de la Maravilla (15|-15)',
+    'el nombre de una Maravilla lleva su coordenada');
+check(natarWonderVillageName(0, 15, -15) !== natarWonderVillageName(0, -15, 15),
+    'y dos Maravillas distintas no pueden llamarse igual');
+
+$wonderNames = $database->query_return(
+    "SELECT v.name, COUNT(*) AS repetidas FROM ".TB_PREFIX."vdata v "
+    ."INNER JOIN ".TB_PREFIX."users u ON u.id = v.owner "
+    ."WHERE ".systemAccountSql('v`.`owner')." GROUP BY v.name HAVING COUNT(*) > 1"
+);
+check(empty($wonderNames),
+    'ninguna aldea NPC de ESTE mundo comparte nombre con otra ('.count($wonderNames).' repetidos)');
+foreach(array_slice($wonderNames, 0, 3) as $clash) {
+    echo '        "'.$clash['name'].'" x'.$clash['repetidas'].PHP_EOL;
+}
+
+// El nombre dejo de ser un identificador: quien necesite saber si una aldea es Maravilla
+// tiene que mirar `vdata.natar`. La comparacion por texto de BBCode.php se rompia sola al
+// renombrarlas, y en silencio: las mostraba como "Aldea de los Natares".
+$bbcode = file_get_contents($root.'/GameEngine/BBCode.php');
+check(strpos($bbcode, '$villageName === "Aldea de la Maravilla"') === false,
+    'BBCode.php ya no reconoce una Maravilla comparando el nombre como texto');
+check(strpos($bbcode, 'getVillageField($wref, "natar")') !== false,
+    'sino por su marcador vdata.natar');
+
+// --- E ter. Los edificios de la Maravilla, en un solo lugar -----------------------------
+// La linea estaba copiada en el instalador y en los dos modulos del panel, y al quitarle la
+// residencia se desincronizo: el panel seguia creandolas con residencia nivel 10.
+/** El codigo de un archivo sin sus comentarios. */
+function codeWithoutComments($file) {
+    $code = '';
+    foreach(token_get_all(file_get_contents($file)) as $token) {
+        if(is_array($token)) {
+            if($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+                continue;
+            }
+            $code .= $token[1];
+        } else {
+            $code .= $token;
+        }
+    }
+    return $code;
+}
+
+foreach(array('install/include/multihunter.php', 'GameEngine/Admin/Mods/addWW.php',
+    'GameEngine/Admin/Mods/natarend.php') as $creator) {
+    // Se miran los tokens y no el texto crudo: el comentario que explica POR QUE ya no se
+    // pone la residencia menciona `f28t = 25`, y una busqueda de texto lo tomaba por codigo.
+    $code = codeWithoutComments($root.'/'.$creator);
+    check(strpos($code, 'natarWonderBuildings(') !== false,
+        basename($creator).' arma la Maravilla con el ayudante compartido');
+    check(preg_match('/f28t`?\s*=\s*(\x27)?25/', $code) === 0,
+        basename($creator).' no le pone residencia');
+}
+
 // --- F. Conquistar una aldea natar la devuelve al mundo de los jugadores -----------------
-// Las Maravillas tienen residencia nivel 10, asi que se pueden conquistar una vez que las
-// catapultas la derriban. Si la aldea conservara `npckind` estatico, el conquistador se
+// Sin residencia ni palacio, como en el T4 oficial, una Maravilla se chiefea despues de
+// limpiarle la guarnicion. Si la aldea conservara `npckind` estatico, el conquistador se
 // quedaria con una aldea sin manutencion de tropas y a prueba de hambruna.
 $conquest = file_get_contents($root.'/GameEngine/Database/db_MYSQLi.php');
 check(strpos($conquest, 'destination.npckind = " . NPC_KIND_PLAYER') !== false,

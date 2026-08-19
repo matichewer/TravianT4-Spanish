@@ -262,7 +262,13 @@ $ownerId = $database->getVillageField($wref, "owner");
 $ownerTribe = $database->getUserField((int)$ownerId, "tribe", 0);
 $villageName = $database->getVillageField($wref,"name");
 if((int)$ownerTribe === 5){
-$vname = ($villageName === "WW Village" || $villageName === "Aldea de la Maravilla")
+// Una Aldea de la Maravilla se reconoce por `vdata.natar`, que es su marcador real, y no
+// comparando el nombre como texto. La comparacion de antes se rompia sola en cuanto el
+// nombre cambiaba —y cambio, al agregarle la coordenada para que las trece dejaran de
+// llamarse igual—: las Maravillas pasaban a mostrarse como "Aldea de los Natares" sin que
+// nada fallara. El nombre real igual no se muestra: el enlace enmascara todas las aldeas
+// natar y agrega la coordenada por su cuenta.
+$vname = ((int)$database->getVillageField($wref, "natar") === 1)
     ? "Aldea de la Maravilla"
     : "Aldea de los Natares";
 }else{
