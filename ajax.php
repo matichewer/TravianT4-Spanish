@@ -124,15 +124,6 @@ if($_GET){
 				mysql_query($q);
 			break;
 			
-			case 'mapLowRes':
-				$x = $_POST['x'];
-				$y = $_POST['y'];
-				$xx = $_POST['width'];
-				$yy = $_POST['height'];
-				
-				include("Templates/Ajax/mapscroll.tpl");
-			break;
-
 			case 'viewTileDetails':
 				include_once("GameEngine/Village.php");
 

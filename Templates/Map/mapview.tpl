@@ -97,9 +97,9 @@ $row1 = 0;
 // veia igual que un desconocido. Se calcula aca, fuera del bucle, porque el mapa ya hace una
 // consulta por casilla y esto seria una mas por cada una.
 include_once(dirname(__DIR__, 2)."/GameEngine/Diplomacy.php");
-$friendarray = friendlyAlliances($session->alliance);
-$enemyarray = hostileAlliances($session->alliance);
-$neutralarray = array();     // el gpack no trae arte neutral; ver mapDiplomacyCss()
+$friendarray = alliedAlliances($session->alliance);      // marco verde
+$enemyarray = hostileAlliances($session->alliance);      // marco rojo
+$neutralarray = napAlliances($session->alliance);        // marco cian
 
 for($i=0;$i<count($maparray);$i++) {
 	$row1 = intdiv($i, $COLS);
@@ -354,21 +354,10 @@ break;
 </form>
 </div>
 </div>
-<script type="text/javascript">
-		window.addEvent('domready', function()
-	{
-		
-		Travian.Game.Map.LowRes.Options.default.tileDisplayInformation.type = 'dialog';
-		new Travian.Game.Map.LowRes.Container($merge(Travian.Game.Map.LowRes.Options.default,
-		{
-			fullScreen:	false,
-			mapInitialPosition:
-			{
-				x:	<?php echo $x; ?>,
-				y:	<?php echo $y; ?>			}
-		}));
-	});
-</script>
+<?php /* Aca vivia un bloque que instanciaba Travian.Game.Map.LowRes.Container. Esa clase
+   solo estaba definida en crypt-lowres.js, que no lo cargaba ninguna pagina, asi que el
+   bloque lanzaba un TypeError en cada carga del mapa. El arrastre y el desplazamiento los
+   resuelve el JS de mas abajo, que recarga karte.php con las coordenadas nuevas. */ ?>
 <style type="text/css">
 /* La zona gris tiene que verse de un vistazo: un tooltip obliga a pasar el mouse por la
    casilla exacta y en la práctica es invisible. El tinte va como capa encima del sprite,

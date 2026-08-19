@@ -206,8 +206,7 @@ $villages = $database->query_return(
 // repite la fórmula da por buenas las dos plantillas por igual y no ve la diferencia.
 $templates = array(
     'karte.php'   => file_get_contents($root.'/Templates/Map/mapview.tpl'),
-    'karte2.php'  => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl'),
-    'ajax mapLowRes' => file_get_contents($root.'/Templates/Ajax/mapscroll.tpl')
+    'karte2.php'  => file_get_contents($root.'/Templates/Map/mapviewlarge.tpl')
 );
 
 // El sprite de enemigo no vive en compact.css sino inline en la pagina, para no tener que
@@ -224,11 +223,12 @@ foreach($villages as $village) {
     // Las relaciones que las plantillas pueden producir hoy: la propia alianza (3) y
     // cualquier otro caso (4). Las ramas 1, 2 y 5 son inalcanzables porque
     // $friendarray/$enemyarray/$neutralarray se inicializan vacíos y nunca se llenan.
-    // Las cinco relaciones que las plantillas pueden emitir hoy: propia (0), aliado o NAP
-    // (1), en guerra (2), la propia alianza (3) y cualquier otro (4). La 5 (neutral) queda
-    // fuera a proposito: `$neutralarray` se deja vacio porque el gpack no trae ese arte.
-    foreach(array(0, 1, 2, 3, 4) as $relation) {
-        if(in_array($relation, array(1, 2, 3), true) && (int)$village['alliance'] === 0) {
+    // Las seis relaciones que las plantillas pueden emitir: propia (0), aliado (1), en
+    // guerra (2), la propia alianza (3), cualquier otro (4) y pacto de no agresion (5).
+    // Las de guerra y NAP no viven en el gpack: su arte lo genera
+    // `tools/make_map_sprites.php` y sus reglas salen inline de `mapDiplomacyCss()`.
+    foreach(array(0, 1, 2, 3, 4, 5) as $relation) {
+        if(in_array($relation, array(1, 2, 3, 5), true) && (int)$village['alliance'] === 0) {
             continue;                       // sin alianza no hay diplomacia posible
         }
         // La relación 0 es "la aldea es mía", así que sólo puede darse en una aldea de

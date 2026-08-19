@@ -8,42 +8,15 @@ Los cambios activos **no** viven en este archivo: `openspec list` es la fuente d
 
 ---
 
+*(vacío — las dos entradas que había se implementaron el 2026-08-19)*
 
+## Hecho
 
-
-
-
-
-## Las Maravillas tienen residencia y en el T4 oficial no
-
-**Qué pasa.** `install/include/multihunter.php` le pone a cada Aldea de la Maravilla una
-residencia nivel 10 (`f28t = 25`). En el T4 oficial las Maravillas **no tienen ni
-residencia ni palacio** —tampoco muralla, eso sí lo cumplimos—.
-
-**Por qué importa.** `getConquestEligibility()` se niega a conquistar una aldea mientras le
-quede residencia o palacio en pie. O sea que acá hay que derribarle la residencia con
-catapultas antes de poder mandar los jefes, mientras que en el oficial se limpia la
-guarnición y se chiefea directo. Nuestras Maravillas son bastante más difíciles de tomar
-que las del juego original.
-
-**Qué haría falta.** Sacar la residencia del instalador, y una migración para las 13 que ya
-existen. Ojo que eso las vuelve notablemente más tomables de un día para el otro: conviene
-avisarles a los jugadores antes de aplicarlo.
-
-**Tamaño.** Chico el código, pero es un cambio de dificultad del endgame.
-
----
-
-## `canClaimArtifact()` no comprueba nada
-
-**Qué pasa.** `GameEngine/Database/db_MYSQLi.php:6160` lee `$AttackerFields` en el primer
-bucle **antes** de asignarla —queda indefinida, así que `$defcanclaim` termina siempre en
-`TRUE`— y después consulta `getResourceLevel($vref)` una segunda vez sobre la *misma*
-aldea. O sea que nunca mira la tesorería del atacante, que es el requisito real del T4.
-Funciona por accidente contra las Maravillas, porque su tesorería nivel 10 satisface la
-condición equivocada.
-
-**Cuándo importa.** Sólo si se usan artefactos. Hoy no hay ninguno colocado: aparecen
-únicamente si se agregan desde el panel de administración.
-
-**Tamaño.** Chico, pero conviene arreglarlo *antes* de colocar el primer artefacto.
+- **Las Maravillas tienen residencia y en el T4 oficial no.** Resuelto: el instalador ya no
+  la construye y `tools/migrations.sql` trae la migración para mundos ya instalados, aplicada
+  en producción. Cubierto por la prueba de `getConquestEligibility()`, que pasó de devolver
+  `residence` a dejar seguir.
+- **`canClaimArtifact()` no comprueba nada.** Resuelto: leía una variable antes de asignarla,
+  cargaba los campos del defensor sin usarlos y medía la tesorería de la aldea equivocada;
+  además el artefacto no se mudaba a la aldea del atacante. Cubierto por
+  `tools/check_artifact_claim.php`.

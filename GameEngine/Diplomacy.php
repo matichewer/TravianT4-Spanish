@@ -58,18 +58,27 @@ function allianceDiplomacy($allianceId) {
 }
 
 /**
- * Las alianzas que el mapa tiene que pintar como amigas.
- *
- * Aliados y NAP comparten sprite —el del borde verde— porque el gpack trae un solo juego de
- * arte "amistoso". Distinguirlos necesitaria arte que no existe.
+ * Las alianzas con un pacto de alianza (confederacion). Van con el marco verde.
  */
-function friendlyAlliances($allianceId) {
+function alliedAlliances($allianceId) {
     $relations = allianceDiplomacy($allianceId);
-    return array_values(array_unique(array_merge($relations[DIPLOMACY_ALLY], $relations[DIPLOMACY_NAP])));
+    return $relations[DIPLOMACY_ALLY];
 }
 
 /**
- * Las alianzas con las que la propia esta en guerra.
+ * Las alianzas con un pacto de no agresion. Van con el marco cian.
+ *
+ * Se pintan distinto de los aliados a proposito: el juego distingue los dos pactos en la
+ * pantalla de diplomacia y en el perfil de la alianza, asi que meterlos en el mismo color
+ * perdia informacion que el jugador ya tiene en otro lado.
+ */
+function napAlliances($allianceId) {
+    $relations = allianceDiplomacy($allianceId);
+    return $relations[DIPLOMACY_NAP];
+}
+
+/**
+ * Las alianzas con las que la propia esta en guerra. Van con el marco rojo.
  */
 function hostileAlliances($allianceId) {
     $relations = allianceDiplomacy($allianceId);
@@ -81,22 +90,25 @@ function hostileAlliances($allianceId) {
 if(!function_exists('mapDiplomacyCss')) {
 
 /**
- * Las reglas del sprite de aldea enemiga.
+ * Las reglas de los dos sprites que el gpack no trae: guerra (rojo) y NAP (cian).
  *
  * Van INLINE en la pagina y no en `compact.css` a proposito: esa hoja la cachea Cloudflare
  * cuatro horas, asi que tocarla obliga a versionar la URL y a coreografiar el despliegue.
- * El arte si es nuevo (`tools/make_enemy_sprites.php`), pero como son archivos que antes no
+ * El arte si es nuevo (`tools/make_map_sprites.php`), pero como son archivos que antes no
  * existian nadie tiene nada cacheado bajo esas URLs.
  *
- * Las otras cuatro relaciones ya tienen su regla en el gpack: propia (b?0), aliado/NAP (b?1,
- * en `ally/nap/`), alianza propia (b?3, en `ally/`) y cualquier otro (b?4).
+ * Las otras tres relaciones ya tienen su regla en el gpack: propia (b?0), aliado (b?1, en
+ * `ally/nap/`), alianza propia (b?3, en `ally/`) y cualquier otro (b?4).
  */
 function mapDiplomacyCss() {
     $rules = array();
-    foreach(array(0, 1, 2, 3) as $size) {
-        foreach(array(1, 2, 3) as $tribe) {
-            $rules[] = 'div.b'.$size.'2-'.$tribe
-                .'{background-image:url(\'/gpack/travian_Travian_4.0_41/img/map/d02-'.$tribe.'.gif\');}';
+    foreach(array(2, 5) as $relation) {
+        foreach(array(0, 1, 2, 3) as $size) {
+            foreach(array(1, 2, 3) as $tribe) {
+                $rules[] = 'div.b'.$size.$relation.'-'.$tribe
+                    .'{background-image:url(\'/gpack/travian_Travian_4.0_41/img/map/d0'
+                    .$relation.'-'.$tribe.'.gif\');}';
+            }
         }
     }
     return implode("\n", $rules);

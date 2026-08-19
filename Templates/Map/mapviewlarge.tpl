@@ -79,9 +79,9 @@ $row1 = 0;
 // veia igual que un desconocido. Se calcula aca, fuera del bucle, porque el mapa ya hace una
 // consulta por casilla y esto seria una mas por cada una.
 include_once(dirname(__DIR__, 2)."/GameEngine/Diplomacy.php");
-$friendarray = friendlyAlliances($session->alliance);
-$enemyarray = hostileAlliances($session->alliance);
-$neutralarray = array();     // el gpack no trae arte neutral; ver mapDiplomacyCss()
+$friendarray = alliedAlliances($session->alliance);      // marco verde
+$enemyarray = hostileAlliances($session->alliance);      // marco rojo
+$neutralarray = napAlliances($session->alliance);        // marco cian
 
 for($i=0;$i<count($maparray);$i++) {
 	$row1 = intdiv($i, $COLS);
