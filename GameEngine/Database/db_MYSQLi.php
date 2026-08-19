@@ -4892,6 +4892,73 @@ break;
 				return max(0, (int)floor(rand((int)$min, (int)$max) * $factor));
 			}
 
+			/**
+			 * Orden y rango de cada especie por tipo de oasis, de la más débil a la
+			 * más fuerte. Los ids de unidad ya respetan ese orden (rata=31 ...
+			 * elefante=40), así que alcanza con listarlas en ese orden por bioma.
+			 */
+			private function oasisAnimalChain($oasistype) {
+				switch($oasistype) {
+					case 1:
+					case 2:
+						return array('u35' => array(5, 30), 'u36' => array(5, 30), 'u37' => array(0, 30));
+					case 3:
+						return array(
+							'u35' => array(5, 30), 'u36' => array(5, 30), 'u37' => array(1, 30),
+							'u39' => array(0, 10), 'u40' => array(0, 4),
+						);
+					case 4:
+					case 5:
+						return array('u31' => array(5, 40), 'u32' => array(5, 30), 'u35' => array(0, 25));
+					case 6:
+						return array(
+							'u31' => array(5, 40), 'u32' => array(5, 30), 'u35' => array(1, 25),
+							'u38' => array(0, 15), 'u40' => array(0, 4),
+						);
+					case 7:
+					case 8:
+						return array('u31' => array(5, 40), 'u32' => array(5, 30), 'u34' => array(0, 25));
+					case 9:
+						return array(
+							'u31' => array(5, 40), 'u32' => array(5, 30), 'u34' => array(1, 25),
+							'u37' => array(0, 15), 'u40' => array(0, 4),
+						);
+					case 10:
+					case 11:
+						return array(
+							'u31' => array(5, 40), 'u33' => array(5, 30),
+							'u37' => array(1, 25), 'u39' => array(0, 25),
+						);
+					case 12:
+						return array(
+							'u31' => array(5, 40), 'u33' => array(5, 30), 'u38' => array(1, 25),
+							'u39' => array(0, 25), 'u40' => array(0, 4),
+						);
+					default:
+						return array();
+				}
+			}
+
+			/**
+			 * Qué especies de la cadena pueden crecer esta pasada: la más débil
+			 * siempre puede, y cada una siguiente sólo si la anterior ya llegó a la
+			 * mitad de su propio rango. Así, tras vaciar un oasis, los animales
+			 * fuertes no aparecen hasta que la base de la cadena ya se repobló, en
+			 * vez de saltar de 0 a una decena en un solo día.
+			 */
+			function oasisAnimalRegenEligibleColumns($oasistype, $units) {
+				$eligible = array();
+				$prevReady = true;
+				foreach ($this->oasisAnimalChain($oasistype) as $column => $range) {
+					if($prevReady) {
+						$eligible[] = $column;
+					}
+					$current = isset($units[$column]) ? (int)$units[$column] : 0;
+					$prevReady = $prevReady && $current >= $range[1] * 0.5;
+				}
+				return $eligible;
+			}
+
 			function populateOasisUnitsLow() {
         		$q2 = "SELECT * FROM " . TB_PREFIX . "wdata where oasistype != 0";
         		$result2 = mysqli_query($this->connection, $q2);
@@ -5010,125 +5077,29 @@ break;
 			}
 
 			function populateOasisUnitsLow2($wid) {
-        			$basearray = $this->getMInfo($wid);
-							$max = $this->oasisAnimalAmount(80, 120);
-        			//each Troop is a Set for oasis type like mountains have rats spiders and snakes fields tigers elphants clay wolves so on stonger one more not so less
-        			switch($basearray['oasistype']) {
-        				case 1:
-        				case 2:
-							// Oasis Random populate
-							$UP35 = $this->oasisAnimalAmount(5, 30);
-							$UP36 = $this->oasisAnimalAmount(5, 30);
-							$UP37 = $this->oasisAnimalAmount(0, 30);
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "' WHERE vref = '" . $wid . "' AND u35 <= ".$max." AND u36 <= ".$max." AND u37 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 3:
-							// Oasis Random populate
-							$UP35 = $this->oasisAnimalAmount(5, 30);
-							$UP36 = $this->oasisAnimalAmount(5, 30);
-							$UP37 = $this->oasisAnimalAmount(1, 30);
-							$UP39 = $this->oasisAnimalAmount(0, 10);
-							$fil = rand(0,10);
-							if($fil == 1){
-							$UP40 = $this->oasisAnimalAmount(0, 31);
-							}else{
-								$UP40 = 0;
-							}
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u35 = u35 +  '" . $UP35 . "', u36 = u36 + '" . $UP36 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u35 <= ".$max." AND u36 <= ".$max." AND u37 <= ".$max."  AND u39 <= ".$max." AND u40 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 4:
-        				case 5:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP32 = $this->oasisAnimalAmount(5, 30);
-							$UP35 = $this->oasisAnimalAmount(0, 25);
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u35 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 6:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP32 = $this->oasisAnimalAmount(5, 30);
-							$UP35 = $this->oasisAnimalAmount(1, 25);
-							$UP38 = $this->oasisAnimalAmount(0, 15);
-							$fil = rand(0,10);
-							if($fil == 1){
-							$UP40 = $this->oasisAnimalAmount(0, 31);
-							}else{
-								$UP40 = 0;
-							}
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u35 = u35 + '" . $UP35 . "', u38 = u38 + '" . $UP38 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u35 <= ".$max." AND u38 <= ".$max." AND u40 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 7:
-        				case 8:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP32 = $this->oasisAnimalAmount(5, 30);
-							$UP34 = $this->oasisAnimalAmount(0, 25);
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u34 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 9:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP32 = $this->oasisAnimalAmount(5, 30);
-							$UP34 = $this->oasisAnimalAmount(1, 25);
-							$UP37 = $this->oasisAnimalAmount(0, 15);
-							$fil = rand(0,10);
-							if($fil == 1){
-							$UP40 = $this->oasisAnimalAmount(0, 31);
-							}else{
-								$UP40 = 0;
-							}
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u32 = u32 + '" . $UP32 . "', u34 = u34 + '" . $UP34 . "', u37 = u37 + '" . $UP37 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u32 <= ".$max." AND u34 <= ".$max." AND u37 <= ".$max." AND u40 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 10:
-        				case 11:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP33 = $this->oasisAnimalAmount(5, 30);
-							$UP37 = $this->oasisAnimalAmount(1, 25);
-							$UP39 = $this->oasisAnimalAmount(0, 25);
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u37 = u37 + '" . $UP37 . "', u39 = u39 + '" . $UP39 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u33 <= ".$max." AND u37 <= ".$max." AND u39 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        				case 12:
-							// Oasis Random populate
-							$UP31 = $this->oasisAnimalAmount(5, 40);
-							$UP33 = $this->oasisAnimalAmount(5, 30);
-							$UP38 = $this->oasisAnimalAmount(1, 25);
-							$UP39 = $this->oasisAnimalAmount(0, 25);
-							$fil = rand(0,10);
-							if($fil == 1){
-							$UP40 = $this->oasisAnimalAmount(0, 31);
-							}else{
-								$UP40 = 0;
-							}
-							//+25% lumber per hour
-        					$q = "UPDATE " . TB_PREFIX . "units SET u31 = u31 +  '" . $UP31 . "', u33 = u33 + '" . $UP33 . "', u38 = u38 + '" . $UP38 . "', u39 = u39 + '" . $UP39 . "', u40 = u40 + '" . $UP40 . "' WHERE vref = '" . $wid . "' AND u31 <= ".$max." AND u33 <= ".$max." AND u38 <= ".$max." AND u39 <= ".$max." AND u40 <= ".$max."";
-        					$result = mysqli_query($this->connection,$q);
-        					break;
-        			}
-					$q = "UPDATE " . TB_PREFIX . "units SET "
-						."u31 = LEAST(u31,".$max."), u32 = LEAST(u32,".$max."), "
-						."u33 = LEAST(u33,".$max."), u34 = LEAST(u34,".$max."), "
-						."u35 = LEAST(u35,".$max."), u36 = LEAST(u36,".$max."), "
-						."u37 = LEAST(u37,".$max."), u38 = LEAST(u38,".$max."), "
-						."u39 = LEAST(u39,".$max."), u40 = LEAST(u40,".$max.") "
-						."WHERE vref = '".$wid."'";
-					mysqli_query($this->connection,$q);
-        	}
+				$basearray = $this->getMInfo($wid);
+				$units = $this->getUnit($wid);
+				if(empty($units)) {
+					return;
+				}
+				$max = $this->oasisAnimalAmount(80, 120);
+				$chain = $this->oasisAnimalChain($basearray['oasistype']);
+				$eligible = $this->oasisAnimalRegenEligibleColumns($basearray['oasistype'], $units);
+
+				$sets = array();
+				foreach ($eligible as $column) {
+					list($min, $rangeMax) = $chain[$column];
+					$gain = $this->oasisAnimalAmount($min, $rangeMax);
+					if($gain > 0) {
+						$sets[] = "$column = LEAST($max, $column + $gain)";
+					}
+				}
+				if(empty($sets)) {
+					return;
+				}
+				$q = "UPDATE " . TB_PREFIX . "units SET " . implode(', ', $sets) . " WHERE vref = '" . $wid . "'";
+				mysqli_query($this->connection, $q);
+			}
 
 			public function hasBeginnerProtection($vid) {
 				$q = "SELECT u.protect FROM ".TB_PREFIX."users u,".TB_PREFIX."vdata v WHERE u.id=v.owner AND v.wref=".$vid;
