@@ -23,6 +23,16 @@
        include ("GameEngine/Database.php");
        include ("GameEngine/Lang/".$result['lang'].".php");
 
+       // Esta pagina no carga Session.php (ver comentario en Database.php), asi que
+       // sin esto nunca se enteraba de que ya habia una sesion valida: mostraba
+       // siempre el menu de login aunque la cookie existiera.
+       session_set_cookie_params(COOKIE_EXPIRE, COOKIE_PATH);
+       session_start();
+       if(isset($_SESSION['username']) && isset($_SESSION['sessid']) && $database->checkActiveSession($_SESSION['username'], $_SESSION['sessid'])) {
+        header("Location: dorf1.php");
+        exit;
+       }
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
