@@ -16,6 +16,14 @@ if(empty($simulationInput) && !isset($_GET['newdid'])) {
 	$refillAttackerFromVillage = !empty($_SESSION['warsimRefillAttacker']);
 	unset($_SESSION['warsimRefillAttacker']);
 }
+if(empty($_POST) && isset($_GET['bid'])) {
+	// Botón "simular" de un informe: precarga el combate tal como lo vio el jugador.
+	$simulationInput = $battle->getReportSimulationInput($_GET['bid']);
+	if($simulationInput === false) {
+		$form->addError('bid', 'No se pudo cargar el informe seleccionado.');
+		$simulationInput = array();
+	}
+}
 if(empty($_POST) && isset($_GET['oasis'])) {
 	$simulationInput = $battle->getOasisSimulationInput($_GET['oasis']);
 	if($simulationInput === false) {
@@ -104,7 +112,9 @@ if(isset($_POST['result'])) {
         }
     }
     if(isset($_POST['result']['wall_level_after'])) {
-        $defenderTribe = (int)$target[0];
+        $defenderTribe = isset($_POST['village_tribe']) && in_array((int)$_POST['village_tribe'], array_map('intval', $target), true)
+            ? (int)$_POST['village_tribe']
+            : (int)$target[0];
         $wallSubjects = array(1 => 'La muralla', 2 => 'El terraplén', 3 => 'La empalizada');
         $wallObjects = array(1 => 'de la muralla', 2 => 'del terraplén', 3 => 'de la empalizada');
         $wallLevel = (int)$form->getValue('wall'.$defenderTribe);
@@ -121,6 +131,12 @@ $tribe = isset($_POST['mytribe'])? $_POST['mytribe'] : $session->tribe;
 if(count($target) > 0) {
 	echo '<input type="hidden" name="displayed_attacker" value="'.(int)$tribe.'">';
 	echo '<input type="hidden" name="displayed_targets" value="'.implode(',', array_map('intval', $target)).'">';
+	// Cuál de las tribus marcadas es la aldea: sobrevive al re-envío del formulario,
+	// que no tiene ningún control visible para elegirla.
+	$formVillageTribe = isset($_POST['village_tribe']) && in_array((int)$_POST['village_tribe'], array_map('intval', $target), true)
+		? (int)$_POST['village_tribe']
+		: (int)$target[0];
+	echo '<input type="hidden" name="a2_village" value="'.$formVillageTribe.'">';
     include("Templates/Simulator/att_".$tribe.".tpl");
 	echo '<div id="defender"><div class="fighterType"><div class="boxes boxesColor green"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents">'.WARSIM_DEFENDER.'</div></div></div><div class="clear"></div>';
 

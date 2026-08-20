@@ -319,7 +319,161 @@ class Battle {
 
 		return $input;
 	}
-	
+
+	/**
+	 * Escenario precargado desde un informe de combate o espionaje (`warsim.php?bid=`).
+	 *
+	 * El CSV del informe (ver Automation::sendunitsComplete) tiene un prefijo de ancho
+	 * fijo que es el único tramo confiable: lo que viene después de la posición 150 son
+	 * mensajes libres que a veces traen comas propias, por eso los `.tpl` buscan el
+	 * marcador `trap-data-v1` en lugar de contar campos.
+	 *
+	 *    0 uid atacante · 1 aldea atacante · 2 tribu atacante
+	 *    3..12 tropas enviadas · 13 héroe · 14..24 bajas
+	 *    30 uid defensor · 31 aldea defensora · 32 nombre · 33 tribu de la aldea
+	 *    36 + (t-1)*23  bandera de la tribu t, +1..+10 tropas, +11 héroe, +12..+22 bajas
+	 */
+	public function getReportSimulationInput($noticeId) {
+		global $database, $session, $village;
+
+		$noticeId = (int)$noticeId;
+		if($noticeId <= 0 || !isset($session->uid)) {
+			return false;
+		}
+		$notice = $database->getAuthorizedNotice(
+			(int)$session->uid,
+			isset($session->alliance) ? (int)$session->alliance : 0,
+			$noticeId
+		);
+		if(!is_array($notice) || !isset($notice['data'])) {
+			return false;
+		}
+		$data = explode(',', $notice['data']);
+		if(count($data) < 151) {
+			return false;
+		}
+
+		$input = array('ktyp' => 0);
+		$villageTribe = isset($data[33]) ? (int)$data[33] : 0;
+		$defenderTotal = 0;
+		for($tribe = 1; $tribe <= 5; $tribe++) {
+			$block = 36 + ($tribe - 1) * 23;
+			$tribeTotal = 0;
+			for($position = 1; $position <= 10; $position++) {
+				$unit = ($tribe - 1) * 10 + $position;
+				$amount = isset($data[$block + $position]) ? max(0, (int)$data[$block + $position]) : 0;
+				$input['a2_'.$unit] = $amount;
+				$tribeTotal += $amount;
+			}
+			$hero = isset($data[$block + 11]) ? max(0, (int)$data[$block + 11]) : 0;
+			if($tribe <= 3) {
+				$input['a2_hero_'.$tribe] = $hero > 0 ? 1 : 0;
+			}
+			$tribeTotal += $hero;
+			$defenderTotal += $tribeTotal;
+			// La aldea siempre se marca aunque el espionaje la encontrara vacía: es la
+			// que define muralla, población y edificio objetivo.
+			if($tribeTotal > 0 || $tribe === $villageTribe) {
+				$input['a2_v'.$tribe] = 1;
+			}
+		}
+		if(empty($input['a2_v1']) && empty($input['a2_v2']) && empty($input['a2_v3'])
+			&& empty($input['a2_v4']) && empty($input['a2_v5'])) {
+			return false;
+		}
+		if($villageTribe >= 1 && $villageTribe <= 5) {
+			// Sin esta pista manda "la primera tribu marcada", y un refuerzo romano
+			// le cambiaría la muralla a la aldea gala que reforzó.
+			$input['a2_village'] = $villageTribe;
+		}
+
+		$reportTribe = isset($data[2]) ? (int)$data[2] : 0;
+		$sessionTribe = isset($session->tribe) ? (int)$session->tribe : 0;
+		$attackerTribe = $reportTribe >= 1 && $reportTribe <= 3 ? $reportTribe : $sessionTribe;
+		if($attackerTribe < 1 || $attackerTribe > 3) {
+			return false;
+		}
+		$input['a1_v'] = $attackerTribe;
+
+		$scoutingUnits = scoutUnitIds();
+		$attackerStart = ($attackerTribe - 1) * 10 + 1;
+		$reportUnits = array();
+		$reportFighters = 0;
+		if($reportTribe === $attackerTribe) {
+			for($position = 1; $position <= 10; $position++) {
+				$amount = isset($data[2 + $position]) ? max(0, (int)$data[2 + $position]) : 0;
+				$reportUnits[$position] = $amount;
+				if(!in_array($attackerStart + $position - 1, $scoutingUnits, true)) {
+					$reportFighters += $amount;
+				}
+			}
+		}
+		// Un informe de espionaje solo trae exploradores, y con tres exploradores no se
+		// planifica nada: en ese caso el atacante se precarga con el ejército de la
+		// aldea actual, igual que hace el enlace de saqueo de oasis.
+		$useOwnArmy = $reportFighters <= 0;
+		$villageId = isset($village->wid) ? (int)$village->wid : 0;
+		$ownUnits = $useOwnArmy && $villageId > 0 ? $database->getUnit($villageId) : false;
+		$upgrades = $attackerTribe === $sessionTribe && $villageId > 0 ? $database->getABTech($villageId) : false;
+		for($position = 1; $position <= 10; $position++) {
+			$unitId = $attackerStart + $position - 1;
+			if($useOwnArmy) {
+				$input['a1_'.$position] = is_array($ownUnits) && isset($ownUnits['u'.$unitId])
+					&& !in_array($unitId, $scoutingUnits, true)
+					? max(0, (int)$ownUnits['u'.$unitId])
+					: 0;
+			} else {
+				$input['a1_'.$position] = isset($reportUnits[$position]) ? $reportUnits[$position] : 0;
+			}
+			if($position <= 8) {
+				$input['f1_'.$position] = is_array($upgrades) && isset($upgrades['b'.$position])
+					? max(0, min(20, (int)$upgrades['b'.$position]))
+					: 0;
+			}
+		}
+		$input['a1_hero'] = $useOwnArmy || (isset($data[13]) && (int)$data[13] > 0) ? 1 : 0;
+
+		// La población de la aldea atacada es pública (se ve en el mapa), así que sale
+		// de vdata; el oasis no tiene y procSim ya le pone el 100 fijo.
+		$targetVillage = isset($data[31]) ? (int)$data[31] : 0;
+		if($villageTribe !== 4 && $targetVillage > 0) {
+			$targetPopulation = (int)$database->getVillageField($targetVillage, 'pop');
+			if($targetPopulation > 0) {
+				$input['ew2'] = $targetPopulation;
+			}
+		}
+
+		$defenses = $this->getReportDefenceLevels($notice['data']);
+		$input['palast'] = $defenses['residence'];
+		if($villageTribe >= 1 && $villageTribe <= 3) {
+			$input['wall'.$villageTribe] = $defenses['wall'];
+		}
+
+		return $input;
+	}
+
+	/**
+	 * Niveles de residencia y muralla que el espionaje reveló. Viajan como HTML dentro
+	 * del propio informe (`$info_spy` en Automation), no como campos del CSV, así que se
+	 * leen del bloque "Defensas" y se descartan en silencio si el informe no lo trae:
+	 * un ataque normal no revela edificios y ahí corresponde arrancar en 0.
+	 */
+	private function getReportDefenceLevels($reportData) {
+		$levels = array('residence' => 0, 'wall' => 0);
+		$block = strstr((string)$reportData, '<th>Defensas</th>');
+		if($block === false) {
+			return $levels;
+		}
+		if(preg_match('/g(?:25|26)Icon.*?Nivel\s*(\d+)/s', $block, $match)) {
+			$levels['residence'] = max(0, min(20, (int)$match[1]));
+		}
+		if(preg_match('/g3[123]Icon.*?Nivel\s*(\d+)/s', $block, $match)) {
+			$levels['wall'] = max(0, min(20, (int)$match[1]));
+		}
+
+		return $levels;
+	}
+
 	public function procSim($post) {
 		global $database, $form, $session, $village;
 
@@ -348,6 +502,13 @@ class Battle {
 		}
 
 		$defenderTribe = $target[0];
+		// Cuál de las tribus marcadas es la aldea (y no un refuerzo) no se puede deducir
+		// del orden: sin la pista, un refuerzo romano en una aldea gala le cambiaría la
+		// muralla y la población al defensor.
+		if(isset($post['a2_village']) && in_array((int)$post['a2_village'], $target, true)) {
+			$defenderTribe = (int)$post['a2_village'];
+		}
+		$_POST['village_tribe'] = $defenderTribe;
 		$configurationChanged = isset($post['displayed_attacker'])
 			&& (
 				(int)$post['displayed_attacker'] !== $attackerTribe
@@ -357,6 +518,7 @@ class Battle {
 		$values = $post;
 		$values['a1_v'] = $attackerTribe;
 		$values['tribe'] = $defenderTribe;
+		$values['a2_village'] = $defenderTribe;
 		$values['ktyp'] = isset($post['ktyp']) && (int)$post['ktyp'] === 1 ? 1 : 0;
 
 		$defaultHeroPower = 100;

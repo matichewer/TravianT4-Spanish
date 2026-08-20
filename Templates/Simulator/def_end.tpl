@@ -1,5 +1,9 @@
 <?php
-$defenderTribe = (int)$target[0];
+// Cuál de las tribus marcadas es la aldea la decide procSim; sólo vale si sigue
+// estando entre las marcadas, porque el formulario se puede reenviar con otras.
+$defenderTribe = isset($_POST['village_tribe']) && in_array((int)$_POST['village_tribe'], array_map('intval', $target), true)
+	? (int)$_POST['village_tribe']
+	: (int)$target[0];
 $isNature = $defenderTribe === 4;
 // Los natares defienden una aldea de verdad (poblacion, cantero, residencia y
 // catapultables), pero no construyen muralla: Battle::wallFactors les da 1.
