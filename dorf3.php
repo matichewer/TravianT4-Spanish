@@ -6,11 +6,13 @@ if(isset($_GET['ok'])){
 	$database->updateUserField($session->username,'ok','0','0'); $_SESSION['ok'] = '0'; }
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
-	if(isset($_GET['s'])){
-	header("Location: ".$_SERVER['PHP_SELF']."?s=".$_GET['s']);
-	}else{
-	header("Location: ".$_SERVER['PHP_SELF']);
-}
+	// Volver a la misma pestaña, subpestaña incluida: cambiar de aldea desde la lista
+	// lateral estando en "Tropas en aldeas" devolvia a "Tropas propias".
+	$query = array();
+	if(isset($_GET['s'])) { $query[] = 's='.(int)$_GET['s']; }
+	if(isset($_GET['su'])) { $query[] = 'su='.(int)$_GET['su']; }
+	header("Location: ".$_SERVER['PHP_SELF'].(empty($query) ? '' : '?'.implode('&',$query)));
+	exit;
 }
 else {
 	$building->procBuild($_GET);

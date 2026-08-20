@@ -1,100 +1,226 @@
-﻿<?php
+<?php
+/**
+ * Resumen de aldeas -> Tropas. Dos pestañas, como en el T4 oficial:
+ *
+ *   ?s=5        "Tropas propias"  — matriz aldea x unidad de TODO lo que tiene cada aldea,
+ *                                   esté en casa, de refuerzo en otra aldea (propia o
+ *                                   ajena), en camino, colonizando o atrapada. El total es
+ *                                   el ejército real del jugador.
+ *   ?s=5&su=2   "Tropas en aldeas" — lo que hay DENTRO de cada aldea propia, incluidos los
+ *                                   refuerzos de otros jugadores y la guarnición de los
+ *                                   oasis anexados, con el consumo de cereal.
+ *
+ * La segunda pestaña era un <span> muerto y la primera leía sólo la tabla `units`, así que
+ * un ejército de refuerzo no aparecía en ninguna de las dos. La agregación vive entera en
+ * GameEngine/TroopOverview.php; acá sólo se imprime.
+ */
 
 include('menu.tpl');
 
-?>
-<?php
+$troopTab = (isset($_GET['su']) && (int)$_GET['su'] === 2) ? 2 : 1;
+$varray = $database->getProfileVillages($session->uid);
+$villageIds = array();
+$villageRows = array();
+foreach($varray as $vil) {
+	$wref = (int)$vil['wref'];
+	$villageIds[] = $wref;
+	$villageRows[$wref] = $vil;
+}
+$tribe = (int)$session->tribe;
+$ownRange = troopOverviewTribeRange($tribe);
+if($ownRange === null) {
+	$ownRange = array(1,10);
+}
+list($ownStart,$ownEnd) = $ownRange;
 
-$varray = $database->getProfileVillages($session->uid);  
-
-$tribe = $session->tribe;
-
-if($tribe == 1){$t = 1;}elseif($tribe == 2){$t = 11;}elseif($tribe == 3){$t = 21;}elseif($tribe == 4){$t = 41;} 
-
+// Una celda de tropas: el gpack pinta en gris las que están a cero (class "none").
+$troopCell = function($amount) {
+	$amount = (int)$amount;
+	return '<td class="'.($amount != 0 ? '' : 'none').'">'.$amount.'</td>';
+};
+$unitIcons = function($start, $end, $hero = true) use ($technology) {
+	$html = '';
+	for($id = (int)$start; $id <= (int)$end; $id++) {
+		$name = htmlspecialchars((string)$technology->getUnitName($id),ENT_QUOTES,'UTF-8');
+		$html .= '<td><img class="unit u'.$id.'" src="img/x.gif" title="'.$name.'" alt="'.$name.'"></td>';
+	}
+	if($hero) {
+		$name = htmlspecialchars((string)$technology->getUnitName(52),ENT_QUOTES,'UTF-8');
+		$html .= '<td><img class="unit uhero" src="img/x.gif" title="'.$name.'" alt="'.$name.'"></td>';
+	}
+	return $html;
+};
 ?>
 <div class="contentNavi tabNavi">
-	<div class="container active">
+	<div class="container <?php echo $troopTab == 1 ? 'active' : 'normal'; ?>">
 		<div class="background-start">&nbsp;</div>
 		<div class="background-end">&nbsp;</div>
-		<div class="content"><span class="tabItem">Tropas propias</span></div>
+		<div class="content"><a href="dorf3.php?s=5"><span class="tabItem">Tropas propias</span></a></div>
 	</div>
-    <div class="container normal">
+	<div class="container <?php echo $troopTab == 2 ? 'active' : 'normal'; ?>">
 		<div class="background-start">&nbsp;</div>
 		<div class="background-end">&nbsp;</div>
-		<div class="content"><span class="tabItem">Tropas en aldeas</span></div>
+		<div class="content"><a href="dorf3.php?s=5&amp;su=2"><span class="tabItem">Tropas en aldeas</span></a></div>
 	</div>
 	<div class="clear"></div>
 </div>
-<table cellpadding="1" cellspacing="1" id="troops">
-<thead>
-<tr>
-
-<th>Aldea</th>
-
-	<?php        
-
-  for ($i = $t; $i <= $t+9; $i++) {
-
-    echo '<td><img class="unit u'.$i.'" src="img/x.gif"></td>';
-
-  }
-  echo '<td><img class="unit uhero" src="img/x.gif"></td>';
-
-  ?>
-
-</tr></thead>
-<tbody>
-
 <?php
+if($troopTab == 1) {
+	$own = troopOverviewOwnTroops($villageIds,$tribe);
 
-foreach($varray as $vil){
+	// Los destinos sólo hacen falta para el detalle de lo que está fuera: se resuelven de
+	// una vez para toda la tabla en lugar de una consulta por grupo.
+	$destinations = array();
+	foreach($own as $data) {
+		foreach($data['groups'] as $group) {
+			$destinations[] = $group['where'];
+		}
+	}
+	$places = troopOverviewResolvePlaces($destinations);
+	$coords = troopOverviewResolveCoords($destinations);
+	$groupLabels = array(
+		'support' => 'De refuerzo en',
+		'moving' => 'En camino hacia',
+		'settlers' => 'Colonizando',
+		'adventure' => 'De aventura en',
+		'captive' => 'Atrapadas en',
+	);
 
-$vid = $vil['wref'];
+	$totals = troopOverviewEmptyUnits($ownStart,$ownEnd);
+	$awayTotals = troopOverviewEmptyUnits($ownStart,$ownEnd);
+	echo '<table cellpadding="1" cellspacing="1" id="troops"><thead><tr><th>Aldea</th>'
+		.$unitIcons($ownStart,$ownEnd).'</tr></thead><tbody>';
 
-if($vil['capital'] == 1){$class = 'hl';}else{$class = 'hover';}        
+	foreach($villageIds as $vid) {
+		$vil = $villageRows[$vid];
+		$data = isset($own[$vid])
+			? $own[$vid]
+			: array('home' => troopOverviewEmptyUnits($ownStart,$ownEnd), 'away' => troopOverviewEmptyUnits($ownStart,$ownEnd), 'total' => troopOverviewEmptyUnits($ownStart,$ownEnd), 'groups' => array());
+		$class = $vil['capital'] == 1 ? 'hl' : 'hover';
 
-  $unit = $database->getUnit($vid);            
+		echo '<tr class="'.$class.'"><th class="vil fc"><a href="dorf1.php?newdid='.$vid.'">'.$vil['name'].'</a></th>';
+		for($id = $ownStart; $id <= $ownEnd; $id++) {
+			echo $troopCell($data['total']['u'.$id]);
+		}
+		echo $troopCell($data['total']['hero']);
+		echo '</tr>';
 
-  echo '<tr class="'.$class.'">
-  <th class="vil fc"><a href="dorf1.php?newdid='.$vid.'">'.$vil['name'].'</a></th>';
+		// Fila chica con lo que está fuera de la aldea. Sólo aparece si hay algo fuera, y
+		// dice dónde: es la respuesta a "tengo tropas reforzando a un aliado, ¿dónde las veo?".
+		if(troopOverviewCount($data['away']) > 0) {
+			$where = array();
+			foreach($data['groups'] as $group) {
+				if(troopOverviewCount($group['units']) === 0) {
+					continue;
+				}
+				$label = isset($groupLabels[$group['kind']]) ? $groupLabels[$group['kind']] : 'Fuera de la aldea';
+				if($group['kind'] === 'moving' && !empty($group['back'])) {
+					$label = 'Volviendo de';
+				}
+				$where[] = $label.' '.troopOverviewPlaceLabel($group['where'],$places,$coords);
+			}
+			echo '<tr class="small '.$class.'"><th class="vil fc">de ellas, fuera de la aldea</th>';
+			for($id = $ownStart; $id <= $ownEnd; $id++) {
+				echo $troopCell($data['away']['u'.$id]);
+			}
+			echo $troopCell($data['away']['hero']);
+			echo '</tr>';
+			echo '<tr class="small '.$class.'"><td class="vil fc" colspan="12">'.implode(' · ',$where).'</td></tr>';
+		}
 
-  for ($i = $t; $i <= $t+9; $i++) {
+		$totals = troopOverviewSumUnits($totals,$data['total']);
+		$awayTotals = troopOverviewSumUnits($awayTotals,$data['away']);
+	}
 
-    $uni[$i] += $unit['u'.$i];
+	echo '<tr><td colspan="12" class="empty"></td></tr>';
+	echo '<tr class="sum"><th class="vil fc">Total</th>';
+	for($id = $ownStart; $id <= $ownEnd; $id++) {
+		echo $troopCell($totals['u'.$id]);
+	}
+	echo $troopCell($totals['hero']);
+	echo '</tr>';
+	if(troopOverviewCount($awayTotals) > 0) {
+		echo '<tr class="small sum"><th class="vil fc">de ellas, fuera de su aldea</th>';
+		for($id = $ownStart; $id <= $ownEnd; $id++) {
+			echo $troopCell($awayTotals['u'.$id]);
+		}
+		echo $troopCell($awayTotals['hero']);
+		echo '</tr>';
+	}
+	echo '</tbody></table>';
+} else {
+	$garrisons = troopOverviewVillageGarrisons($villageIds,$tribe);
 
-    if($unit['u'.$i] !=0){$cl = '';}else{$cl = 'none';}
+	$labelRefs = array();
+	$ownerIds = array();
+	foreach($garrisons as $groups) {
+		foreach($groups as $group) {
+			$labelRefs[] = $group['where'];
+			$labelRefs[] = $group['from'];
+			if(!empty($group['owner'])) {
+				$ownerIds[] = $group['owner'];
+			}
+		}
+	}
+	$places = troopOverviewResolvePlaces($labelRefs);
+	$coords = troopOverviewResolveCoords($labelRefs);
+	$users = troopOverviewResolveUsers($ownerIds);
 
-    echo '<td class="'.$cl.'">'.$unit['u'.$i].'</td>';
+	foreach($villageIds as $vid) {
+		$vil = $villageRows[$vid];
+		$groups = isset($garrisons[$vid]) ? $garrisons[$vid] : array();
+		$class = $vil['capital'] == 1 ? 'hl' : 'hover';
+		$upkeep = 0;
 
-  }       
-  echo '<td class="'.$cl.'">'.$unit['hero'].'</td>';
-  echo '</tr>';    
+		echo '<table cellpadding="1" cellspacing="1" class="vil_troops"><thead><tr class="'.$class.'">'
+			.'<th class="vil fc" colspan="12"><a href="dorf1.php?newdid='.$vid.'">'.$vil['name'].'</a></th>'
+			.'</tr></thead><tbody>';
 
+		if(empty($groups)) {
+			echo '<tr><th>Tropas</th><td colspan="11" class="none">Sin tropas en la aldea</td></tr>';
+		}
+
+		$printedTribe = null;
+		foreach($groups as $group) {
+			// Cada tribu trae sus propias diez columnas: un refuerzo galo en una aldea
+			// romana no se puede imprimir bajo los iconos romanos. La fila de iconos se
+			// repite sólo cuando cambia la tribu.
+			if($printedTribe !== $group['tribe']) {
+				echo '<tr><th>&nbsp;</th>'.$unitIcons($group['start'],$group['end']).'</tr>';
+				$printedTribe = $group['tribe'];
+			}
+
+			if($group['kind'] === 'own') {
+				$label = 'Tropas propias';
+			} elseif($group['kind'] === 'caged') {
+				$label = 'Animales enjaulados';
+			} elseif($group['kind'] === 'oasis') {
+				$label = 'En el oasis '.troopOverviewPlaceLabel($group['where'],$places,$coords);
+			} elseif((int)$group['from'] === 0) {
+				$label = 'Tropas de la Naturaleza';
+			} else {
+				$owner = !empty($group['owner']) && isset($users[$group['owner']])
+					? htmlspecialchars($users[$group['owner']]['username'],ENT_QUOTES,'UTF-8')
+					: 'jugador desconocido';
+				$label = 'Refuerzo de '.troopOverviewPlaceLabel($group['from'],$places,$coords).' ('.$owner.')';
+			}
+
+			echo '<tr><th>'.$label.'</th>';
+			for($id = $group['start']; $id <= $group['end']; $id++) {
+				echo $troopCell($group['units']['u'.$id]);
+			}
+			echo $troopCell($group['units']['hero']);
+			echo '</tr>';
+
+			// El consumo se pide con la tribu y la aldea del grupo, no con las del jugador
+			// que mira: si no, getUpkeep() cobra por el rango equivocado y busca el
+			// abrevadero en la aldea actual en lugar de en ésta.
+			$upkeep += (int)$technology->getUpkeep($group['units'],$group['tribe'],$vid);
+		}
+
+		echo '</tbody><tbody class="upkeep"><tr><th>Consumo de cereal</th><td colspan="11">'
+			.number_format($upkeep,0,',','.').' <img class="r4" src="img/x.gif" title="Cereal" alt="Cereal"> por hora</td>'
+			.'</tr></tbody></table>';
+	}
 }
-
 ?>
-
-
-
-<tr><td colspan="12" class="empty"></td></tr>
-
-<th>Total</th>
-
-<?php
-
-foreach($uni as $u){
-
-if($u !=0){$cl = '';}else{$cl = 'none';}
-
-echo '<td class="'.$cl.'">'.$u.'</td>';
-
-}
-if($unit['hero'] == 0){
-echo '<td class="none">0</td>';
-}else{
-echo '<td class="">1</td>';
-}
-
-?>
-
-</tr></tbody></table>
