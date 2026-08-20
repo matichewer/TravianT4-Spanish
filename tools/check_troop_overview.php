@@ -135,42 +135,59 @@ function addPlainMove($sortType, $from, $to) {
 }
 
 // ---------------------------------------------------------------------------
-section('A. "Tropas propias" muestra lo que está EN la aldea, como el T4 oficial');
+section('A. "Tropas propias": las tropas del jugador contadas donde están');
 // ---------------------------------------------------------------------------
 
-// A entrena 100 legionarios y manda 50 de refuerzo a la aldea de un aliado, 20 a otra
-// aldea propia, 10 de ataque, y tiene 3 colonos y 7 prisioneras fuera.
-addUnits($A, array('u1' => 100, 'u2' => 8, 'hero' => 1));
-addEnforce($A, $ALLY, array('u1' => 50));
+$UID = 990009;
+// A entrena 100 legionarios: 30 se quedan, 20 van de refuerzo a B (aldea propia) y 50 a la
+// aldea de un aliado. Además tiene 10 de ataque en camino, 3 colonos y 7 prisioneras.
+addUnits($A, array('u1' => 30, 'u2' => 8, 'hero' => 1));
+addUnits($B, array('u1' => 40));
 addEnforce($A, $B,    array('u1' => 20));
+addEnforce($A, $ALLY, array('u1' => 50));
 addMove(3, $A, $FOREIGN, $A, array(1 => 10));
 addPlainMove(5, $A, $FOREIGN);
 $database->query("INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) VALUES ($FOREIGN,$A,7,0,0,0,0,0,0,0,0,0,0)");
+// Quién es dueño de qué: A y B son del jugador, la del aliado no.
+$database->query("INSERT INTO ".TB_PREFIX."vdata (wref,owner,name) VALUES ($A,$UID,'Aldea propia A'),($B,$UID,'Aldea propia B'),($ALLY,777001,'Aldea del aliado')");
 
-$own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
+$own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
 
-check($own[$A]['u1'] === 100,
-    'la fila de la aldea son los 100 que están en ella, no los 187 que tiene en total (dio '.$own[$A]['u1'].')');
-check($own[$A]['u2'] === 8, 'las demás unidades de la aldea se muestran igual');
+check($own[$A]['u1'] === 30,
+    'la aldea que los entrenó muestra los 30 que se quedaron (dio '.$own[$A]['u1'].')');
+check($own[$B]['u1'] === 60,
+    'los 20 alojados en la otra aldea propia se cuentan EN esa aldea: 40 + 20 (dio '.$own[$B]['u1'].')');
+check($own[$A]['u1'] + $own[$B]['u1'] === 90,
+    'y una sola vez: el total no los duplica (esperado 90)');
 check($own[$A]['hero'] === 1, 'el héroe se muestra en la aldea donde está');
+check($own[$A]['u2'] === 8, 'las demás unidades de la aldea se muestran igual');
 
-// Cada uno de esos caminos por separado, para que quede claro cuál es la regla y no
-// parezca que sólo se probó el refuerzo.
-$away = troopOverviewOwnTroops(array($A), $ROMAN);
-check($away[$A]['u1'] === 100,
-    'ni el refuerzo al aliado, ni el refuerzo intra-cuenta, ni lo en camino, ni las prisioneras se suman acá');
-check($away[$A]['u10'] === 0, 'los colonos en camino tampoco');
+// Lo que está fuera de las aldeas del jugador no aparece acá, y eso es la regla: se ve en
+// la plaza de reuniones, como en el T4 oficial.
+check($own[$A]['u1'] + $own[$B]['u1'] !== 140,
+    'los 50 que refuerzan al aliado no se muestran en esta pantalla');
+check($own[$A]['u10'] === 0, 'los colonos en camino tampoco');
 
 // ---------------------------------------------------------------------------
-section('B. Un refuerzo alojado no se cuela en las tropas propias de quien lo hospeda');
+section('B. Los refuerzos ajenos no son tropas propias');
 // ---------------------------------------------------------------------------
 
-addUnits($B, array('u1' => 40));
-$own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$B]['u1'] === 40,
-    'los 20 legionarios de A que están en B no son tropas propias de B (esperado 40, dio '.$own[$B]['u1'].')');
-check($own[$A]['u1'] + $own[$B]['u1'] === 140,
-    'el total de la pestaña es lo que hay en las aldeas, sin duplicar el refuerzo (esperado 140)');
+addEnforce($FOREIGN, $B, array('u1' => 500));
+$own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
+check($own[$B]['u1'] === 60,
+    'un refuerzo de otro jugador alojado en B no engorda las tropas propias de B (esperado 60, dio '.$own[$B]['u1'].')');
+
+// El invariante que evita que las dos pestañas vuelvan a discrepar.
+$garrisonsB = troopOverviewVillageGarrisons(array($B), $ROMAN, $UID);
+$sum = troopOverviewEmptyUnits(1,10);
+foreach($garrisonsB[$B] as $group) {
+    if((int)$group['owner'] === $UID) {
+        $sum = troopOverviewSumUnits($sum,$group['units']);
+    }
+}
+check($sum['u1'] === $own[$B]['u1'],
+    'la celda de la pestaña 1 es la suma de los grupos propios de la pestaña 2');
+
 
 // ---------------------------------------------------------------------------
 section('E. "Tropas en aldeas" agrupa por ubicación');
@@ -184,14 +201,14 @@ $database->query("UPDATE ".TB_PREFIX."units SET u32 = 6 WHERE vref = $A");
 $database->query("INSERT INTO ".TB_PREFIX."odata (wref,conqured,name) VALUES ($OASIS,$A,'Oasis de prueba')");
 addEnforce($B, $OASIS, array('u1' => 12));
 
-$garrisons = troopOverviewVillageGarrisons(array($A,$B), $ROMAN);
+$garrisons = troopOverviewVillageGarrisons(array($A,$B), $ROMAN, $UID);
 $byKind = array();
 foreach($garrisons[$A] as $group) {
     $byKind[$group['kind']][] = $group;
 }
 
-check(isset($byKind['own']) && $byKind['own'][0]['units']['u1'] === 100,
-    'el grupo propio muestra sólo lo que está en la aldea (100), no el ejército entero');
+check(isset($byKind['own']) && $byKind['own'][0]['units']['u1'] === 30,
+    'el grupo propio son las tropas que la aldea tiene en su fila de `units` (30)');
 check(isset($byKind['support']),'los refuerzos de otros jugadores aparecen como grupo aparte');
 
 $gaul = null; $nature = null;
@@ -218,9 +235,9 @@ check(count($garrisons[$B]) >= 1, 'una aldea sin refuerzos igual aparece con su 
 // pestaña 1 no aparece, porque no está en B.
 // (Los 20 legionarios que hay en B son de A, no de B: en `enforcement` `from` es la aldea
 // natal y `vref` el destino, y confundirlos es justo el error que esta pestaña arrastraba.)
-$own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$B]['u1'] === 40,
-    'los 12 que B tiene en el oasis de A no cuentan como tropas propias de B (dio '.$own[$B]['u1'].')');
+$own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
+check($own[$A]['u1'] === 30 + 12,
+    'los 12 que B tiene en el oasis de A se cuentan en A, que es donde está el oasis (dio '.$own[$A]['u1'].')');
 
 $oasisGroup = null;
 foreach($garrisons[$A] as $group) {

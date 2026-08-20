@@ -2,13 +2,21 @@
 /**
  * Fuente única de las dos pestañas de tropas del resumen de aldeas (dorf3.php?s=5).
  *
- * Las dos agrupan por UBICACIÓN, como en el T4 oficial:
+ * Las dos agrupan por UBICACIÓN, como en el T4 oficial, y se calculan con la misma
+ * función para que no puedan discrepar:
  *
- *   - **Tropas propias**: matriz aldea x unidad con las tropas del jugador que están EN
- *     cada aldea, más un total por tipo. Compacta y comparable entre aldeas.
- *   - **Tropas en aldeas**: una tabla por aldea con todo lo que hay dentro, incluidos los
- *     refuerzos de otros jugadores y la guarnición de los oasis anexados, con el consumo
- *     de cereal.
+ *   - **Tropas propias**: matriz aldea x unidad con las tropas DEL JUGADOR que están en
+ *     cada aldea. Incluye las que mandó de refuerzo desde otra aldea suya y las de sus
+ *     oasis anexados: están ahí, son suyas, y se cuentan donde están. No incluye los
+ *     refuerzos de otros jugadores, que son de otro dueño.
+ *   - **Tropas en aldeas**: la misma lista sin resumir — una tabla por aldea con cada
+ *     grupo por separado, los refuerzos ajenos incluidos, y el consumo de cereal.
+ *
+ * Invariante: la celda de la pestaña 1 para una aldea es la suma de los grupos propios que
+ * la pestaña 2 muestra para esa aldea. Por eso la pestaña 1 se deriva de la 2 y no tiene
+ * consultas propias: una versión anterior leía sólo `units` y las tropas alojadas en otra
+ * aldea de la misma cuenta no aparecían en ninguna fila, con lo que el Total dejaba de ser
+ * un total.
  *
  * **Lo que está fuera de la aldea no se muestra acá, y es a propósito.** Un ejército que
  * refuerza otra aldea sale de `units` y pasa a `enforcement`; uno en camino vive en
@@ -229,33 +237,34 @@ function troopOverviewPlaceLabel($wref, $places, $coords) {
 }
 
 /**
- * Pestaña "Tropas propias": lo que el jugador tiene EN cada una de sus aldeas.
+ * Pestaña "Tropas propias": las tropas del jugador que están en cada una de sus aldeas.
  *
- * Devuelve wref => acumulador de la tribu del jugador. No incluye lo que está fuera (ver
- * la cabecera del archivo) ni los refuerzos ajenos, que son de otro dueño y van en la otra
- * pestaña.
- *
- * Una sola consulta para toda la página: un jugador con veinte aldeas abre esta pestaña
- * igual que uno con dos.
+ * Se deriva de troopOverviewVillageGarrisons() quedándose con los grupos cuyo dueño es el
+ * jugador: las de la aldea, las que mandó de refuerzo desde otra aldea suya, y las de sus
+ * oasis anexados. Lo que está fuera de sus aldeas —refuerzo a un aliado, tropas en
+ * camino— no se muestra acá, igual que en el T4 oficial: eso se ve en la plaza de
+ * reuniones. Ver la cabecera del archivo.
  */
-function troopOverviewOwnTroops($villageIds, $tribe) {
-	global $database;
+function troopOverviewOwnTroops($villageIds, $tribe, $uid) {
 	$range = troopOverviewTribeRange($tribe);
 	$ids = troopOverviewIdList($villageIds);
 	$out = array();
 	if($range === null || empty($ids)) {
 		return $out;
 	}
-	list($start,$end) = $range;
-	$empty = troopOverviewEmptyUnits($start,$end);
+	$empty = troopOverviewEmptyUnits($range[0],$range[1]);
 	foreach($ids as $id) {
 		$out[$id] = $empty;
 	}
-	$in = implode(',',$ids);
-	foreach($database->query_return("SELECT * FROM ".TB_PREFIX."units WHERE vref IN ($in)") as $row) {
-		$vid = (int)$row['vref'];
-		if(isset($out[$vid])) {
-			$out[$vid] = troopOverviewAddUnitRow($out[$vid],$row);
+	foreach(troopOverviewVillageGarrisons($ids,$tribe,$uid) as $vid => $groups) {
+		if(!isset($out[$vid])) {
+			continue;
+		}
+		foreach($groups as $group) {
+			if((int)$group['owner'] !== (int)$uid) {
+				continue;
+			}
+			$out[$vid] = troopOverviewSumUnits($out[$vid],$group['units']);
 		}
 	}
 	return $out;
@@ -270,7 +279,7 @@ function troopOverviewOwnTroops($villageIds, $tribe) {
  * `Technology::getAllUnits`). Cada grupo trae su tribu porque las columnas que se imprimen
  * son las de la tribu del grupo, no las del jugador que mira.
  */
-function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
+function troopOverviewVillageGarrisons($villageIds, $ownerTribe, $ownerUid = 0) {
 	global $database;
 	$ids = troopOverviewIdList($villageIds);
 	$out = array();
@@ -299,6 +308,7 @@ function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
 				'end' => $ownRange[1],
 				'where' => $vid,
 				'from' => $vid,
+				'owner' => (int)$ownerUid,
 				'units' => troopOverviewAddUnitRow(troopOverviewEmptyUnits($ownRange[0],$ownRange[1]),$row),
 			);
 		}
@@ -314,6 +324,9 @@ function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
 				'end' => $natureRange[1],
 				'where' => $vid,
 				'from' => 0,
+				// Los animales enjaulados defienden la aldea pero no son tropas del jugador:
+				// no cuentan como "tropas propias" ni consumen cereal.
+				'owner' => 0,
 				'units' => $caged,
 			);
 		}
