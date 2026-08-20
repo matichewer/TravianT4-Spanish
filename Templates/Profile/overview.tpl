@@ -151,6 +151,7 @@ echo  "<img class='r2' src='img/x.gif' title='Barro'>";
 break;
 case 6:
 echo  "<img class='r2' src='img/x.gif' title='Barro'> <img class='r4' src='img/x.gif' title='Cereal'>";
+break;
 case 7:
 case 8:
 echo  "<img class='r3' src='img/x.gif' title='Hierro'>";

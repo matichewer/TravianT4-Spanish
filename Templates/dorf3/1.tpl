@@ -36,12 +36,42 @@
 			}
 
 		}
+		// Una pala por obra EN CURSO. Los dos foreach de acá abajo asignaban en vez de
+		// acumular, así que sólo sobrevivía la última vuelta: una aldea con dos o tres
+		// obras simultáneas —romano y Plus suman una cada uno sobre la básica, ver
+		// Building::__construct()— mostraba una sola pala, y una que entrenaba en cuartel,
+		// establo y taller a la vez mostraba un solo icono.
+		//
+		// `master = 1` es la cola del maestro de obras (Plus): está encolado pero todavía
+		// no se construye, así que no cuenta como obra en curso.
+		$buiIcons = array();
 		foreach($jobs as $b){
-			$bui = '<a href="build.php?newdid='.$vid.'&id='.$b['field'].'"><img class="bau" src="img/x.gif" title="'.$building->procResType($b['type']).'" alt="'.$building->procResType($b['type']).'"></a>';
+			if((int)$b['master'] === 1) {
+				continue;
+			}
+			$name = $building->procResType($b['type']).' nivel '.(int)$b['level'];
+			$name = htmlspecialchars($name,ENT_QUOTES,'UTF-8');
+			$buiIcons[] = '<a href="build.php?newdid='.$vid.'&id='.(int)$b['field'].'"><img class="bau" src="img/x.gif" title="'.$name.'" alt="'.$name.'"></a>';
+		}
+		if(!empty($buiIcons)) {
+			$bui = implode('',$buiIcons);
 		}
 
+		// Un icono por TIPO de unidad, no por tanda: una cola de cinco tandas de
+		// legionarios en el mismo cuartel es un solo tipo entrenándose, y cinco iconos
+		// iguales no dicen nada que uno no diga. Las cantidades se suman en el tooltip.
+		$troAmounts = array();
 		foreach($unit as $c){
-			$tro = '<a href="build.php?newdid='.$vid.'&gid=19"><img class="unit u'.$c['unit'].'" src="img/x.gif" title="'.$c['amt'].'x '.$technology->getUnitName($c['unit']).'" alt="'.$c['amt'].'x '.$technology->getUnitName($c['unit']).'"></a>';
+			$unitId = (int)$c['unit'];
+			$troAmounts[$unitId] = (isset($troAmounts[$unitId]) ? $troAmounts[$unitId] : 0) + max(0,(int)$c['amt']);
+		}
+		if(!empty($troAmounts)) {
+			$troIcons = array();
+			foreach($troAmounts as $unitId => $amount){
+				$name = htmlspecialchars($amount.'x '.$technology->getUnitName($unitId),ENT_QUOTES,'UTF-8');
+				$troIcons[] = '<a href="build.php?newdid='.$vid.'&gid=19"><img class="unit u'.$unitId.'" src="img/x.gif" title="'.$name.'" alt="'.$name.'"></a>';
+			}
+			$tro = implode('',$troIcons);
 		}
 
 		if($vdata['capital'] == 1) { $class = 'hl'; } else {$class = 'hover'; }
