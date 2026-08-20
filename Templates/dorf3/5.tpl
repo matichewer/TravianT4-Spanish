@@ -105,8 +105,9 @@ if($troopTab == 1) {
 		echo $troopCell($data['total']['hero']);
 		echo '</tr>';
 
-		// Fila chica con lo que está fuera de la aldea. Sólo aparece si hay algo fuera, y
-		// dice dónde: es la respuesta a "tengo tropas reforzando a un aliado, ¿dónde las veo?".
+		// Fila chica con lo que está fuera de la aldea. Sólo aparece si hay algo fuera. Los
+		// destinos van en el title y no en una fila aparte: una fila de texto a lo ancho de
+		// la tabla parte la cuadrícula en dos y no existe en el T4 oficial.
 		if(troopOverviewCount($data['away']) > 0) {
 			$where = array();
 			foreach($data['groups'] as $group) {
@@ -117,15 +118,15 @@ if($troopTab == 1) {
 				if($group['kind'] === 'moving' && !empty($group['back'])) {
 					$label = 'Volviendo de';
 				}
-				$where[] = $label.' '.troopOverviewPlaceLabel($group['where'],$places,$coords);
+				$where[] = $label.' '.troopOverviewPlaceName($group['where'],$places,$coords);
 			}
-			echo '<tr class="small '.$class.'"><th class="vil fc">de ellas, fuera de la aldea</th>';
+			$title = htmlspecialchars(implode("\n",$where),ENT_QUOTES,'UTF-8');
+			echo '<tr class="small '.$class.'"><th class="vil fc" title="'.$title.'">de ellas, fuera de la aldea</th>';
 			for($id = $ownStart; $id <= $ownEnd; $id++) {
 				echo $troopCell($data['away']['u'.$id]);
 			}
 			echo $troopCell($data['away']['hero']);
 			echo '</tr>';
-			echo '<tr class="small '.$class.'"><td class="vil fc" colspan="12">'.implode(' · ',$where).'</td></tr>';
 		}
 
 		$totals = troopOverviewSumUnits($totals,$data['total']);

@@ -4394,20 +4394,37 @@
         		$returningarray = $this->getMovement(4, $id, 1);
         		if(!empty($returningarray)) {
         			foreach($returningarray as $ret) {
-				if($ret['attack_type'] != 1) {
-					for($i = 1; $i <= 10; $i++) {
-						$key = 'u' . (($vtribe - 1) * 10 + $i);
-						$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
-							+ (int)$ret['t' . $i];
-					}
-					$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
-						+ (int)$ret['t11'];
+				// Los exploradores que vuelven también comen. El filtro `attack_type != 1` que
+				// había acá es de pantalla, no de manutención: en getMovement2() sirve para que
+				// el defensor no vea el espionaje entrante, y copiado en esta cuenta dejaba a la
+				// aldea sin pagar el cereal de sus propios espías durante todo el viaje de vuelta
+				// (la ida sí se cobraba, arriba, que es lo que delataba la asimetría).
+				for($i = 1; $i <= 10; $i++) {
+					$key = 'u' . (($vtribe - 1) * 10 + $i);
+					$movingunits[$key] = (int)(isset($movingunits[$key]) ? $movingunits[$key] : 0)
+						+ (int)$ret['t' . $i];
 				}
+				$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+					+ (int)$ret['t11'];
         			}
         		}
         		$settlerarray = $this->getMovement(5, $id, 0);
         		if(!empty($settlerarray)) {
-        			$movingunits['u' . ($vtribe * 10)] += 3 * count($settlerarray);
+        			$settlerKey = 'u' . ($vtribe * 10);
+        			$movingunits[$settlerKey] = (int)(isset($movingunits[$settlerKey]) ? $movingunits[$settlerKey] : 0)
+        				+ 3 * count($settlerarray);
+        		}
+        		// El héroe de aventura también come. Al partir sale de `units`
+        		// (Units::Adventures lo descuenta) y el movimiento sort_type 9 no tiene fila en
+        		// `attacks`, así que sin esta rama la aldea dejaba de pagar sus 6 de cereal
+        		// durante toda la aventura. La vuelta ya se cobraba: llega como un movimiento
+        		// sort_type 4 con t11 = 1. Se acota a uno porque el héroe es uno solo: si
+        		// alguna vez hubiera dos filas, eso es corrupción de datos y no una cuenta que
+        		// haya que cobrar dos veces.
+        		$adventurearray = $this->getMovement(9, $id, 0);
+        		if(!empty($adventurearray)) {
+        			$movingunits['hero'] = (int)(isset($movingunits['hero']) ? $movingunits['hero'] : 0)
+        				+ 1;
         		}
         		return $movingunits;
         	}

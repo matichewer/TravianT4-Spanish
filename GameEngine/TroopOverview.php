@@ -442,7 +442,29 @@ function troopOverviewResolveCoords($wrefs) {
 }
 
 /**
- * Etiqueta lista para imprimir de un lugar: nombre y coordenadas, con enlace al mapa.
+ * Nombre de un lugar con sus coordenadas, en texto plano.
+ *
+ * Las coordenadas no se agregan si el nombre ya termina en ellas: los nombres de las
+ * aldeas natar independientes las llevan pegadas para ser únicos (`natarSettlementName()`),
+ * y repetirlas daba "Atalaya natar (15|78) (15|78)".
+ */
+function troopOverviewPlaceName($wref, $places, $coords) {
+	$wref = (int)$wref;
+	$name = isset($places[$wref]) ? trim($places[$wref]['name']) : '';
+	if($name === '') {
+		$name = 'Lugar desconocido';
+	}
+	if(isset($coords[$wref])) {
+		$suffix = '('.$coords[$wref][0].'|'.$coords[$wref][1].')';
+		if(substr($name,-strlen($suffix)) !== $suffix) {
+			$name .= ' '.$suffix;
+		}
+	}
+	return $name;
+}
+
+/**
+ * Lo mismo, con enlace al mapa.
  *
  * `vdata.name` y `odata.name` se guardan ya escapados (`Profile.php` los pasa por
  * RemoveXSS), así que volver a escaparlos convertiría cada `&amp;` en `&amp;amp;`.
@@ -451,13 +473,7 @@ function troopOverviewResolveCoords($wrefs) {
 function troopOverviewPlaceLabel($wref, $places, $coords) {
 	global $generator;
 	$wref = (int)$wref;
-	$name = isset($places[$wref]) ? $places[$wref]['name'] : '';
-	if($name === '') {
-		$name = 'Lugar desconocido';
-	}
-	if(isset($coords[$wref])) {
-		$name .= ' ('.$coords[$wref][0].'|'.$coords[$wref][1].')';
-	}
+	$name = troopOverviewPlaceName($wref,$places,$coords);
 	if($wref > 0 && is_object($generator)) {
 		return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'">'.$name.'</a>';
 	}

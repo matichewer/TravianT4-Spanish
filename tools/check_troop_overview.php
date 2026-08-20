@@ -35,6 +35,23 @@ $_SESSION = array();
 include "config/connection.php";
 include "config/config.php";
 include "Database.php";
+// Hasta acá alcanza para la agregación de las pestañas. Technology hace falta para la
+// sección G, que comprueba el efecto real en el cereal y no sólo el conteo intermedio.
+include "Data/buidata.php";
+include "Data/cp.php";
+include "Data/cel.php";
+include "Data/resdata.php";
+include "Data/unitdata.php";
+include "Data/hero_full.php";
+include "Battle.php";
+include "GeneratorX.php";
+include "Multisort.php";
+include "Lang/".LANG.".php";
+include "Technology.php";
+// getUpkeep() mira $session->tribe para el descuento del Abrevadero (sólo romano) y
+// $building para su nivel; sin aldea activa el descuento simplemente no se aplica.
+$session = new stdClass();
+$session->tribe = 1;
 
 global $database;
 
@@ -255,6 +272,18 @@ check(troopOverviewTribeRange(0) === null && troopOverviewTribeRange(6) === null
 $row = array('u21' => 0, 'u23' => 7);
 check(troopOverviewDetectTribe($row) === 3, 'si el origen de un refuerzo ya no existe, la tribu se deduce de la fila');
 
+// Los nombres de las aldeas natar independientes ya llevan las coordenadas pegadas para
+// ser únicos, así que agregárselas otra vez daba "Atalaya natar (15|78) (15|78)".
+$places = array(700 => array('name' => 'Atalaya natar (15|78)', 'owner' => 2, 'oasis' => false),
+                701 => array('name' => 'Zeus', 'owner' => 6, 'oasis' => false));
+$coords = array(700 => array(15,78), 701 => array(8,26));
+check(troopOverviewPlaceName(700,$places,$coords) === 'Atalaya natar (15|78)',
+    'un nombre que ya termina en sus coordenadas no las repite');
+check(troopOverviewPlaceName(701,$places,$coords) === 'Zeus (8|26)',
+    'un nombre normal sí las lleva');
+check(troopOverviewPlaceName(999,$places,$coords) === 'Lugar desconocido',
+    'un destino que ya no existe no imprime un nombre vacío');
+
 $tpl = file_get_contents(dirname(__DIR__).'/Templates/dorf3/5.tpl');
 check(strpos($tpl,'dorf3.php?s=5&amp;su=2') !== false,
     '"Tropas en aldeas" es un enlace real y no un <span> muerto');
@@ -264,8 +293,12 @@ check(strpos($tpl,'$database->getUnit(') === false,
     'la plantilla ya no lee `units` por su cuenta (era lo que escondía las tropas fuera de casa)');
 check(strpos($tpl,'class="vil_troops"') !== false,
     'la segunda pestaña usa la tabla vil_troops que el gpack ya estila');
-check(preg_match('/tr class="small/',$tpl) === 1 || substr_count($tpl,'class="small') >= 1,
+check(substr_count($tpl,'class="small') >= 1,
     'la fila chica de "fuera de la aldea" usa la clase small del gpack');
+check(strpos($tpl,'<td class="vil fc" colspan="12">') === false,
+    'los destinos ya no se imprimen en una fila de texto a lo ancho: parten la cuadrícula en dos');
+check(strpos($tpl,'title="\'.$title.\'"') !== false,
+    'los destinos de lo que está fuera se ven en el title de la fila chica');
 
 $engine = file_get_contents(dirname(__DIR__).'/GameEngine/TroopOverview.php');
 check(strpos($engine,'a.vref IN ($in)') !== false,
@@ -276,6 +309,84 @@ check(strpos($engine,'m.sort_type IN (3,4)') !== false,
 $dorf3 = file_get_contents(dirname(__DIR__).'/dorf3.php');
 check(strpos($dorf3,"su=") !== false,
     'cambiar de aldea conserva la subpestaña');
+
+// ---------------------------------------------------------------------------
+section('G. La manutención cobra las tropas en camino en los dos sentidos');
+// ---------------------------------------------------------------------------
+
+// getVillageMovement() es la cuenta vieja, la que alimenta el cereal y la hambruna
+// (Technology::getAllUnits -> getUpkeep -> Automation::updateRes, que escribe recursos
+// reales). Se le cobraba la ida de los exploradores pero no la vuelta: el filtro
+// `attack_type != 1` es de pantalla —en getMovement2() oculta el espionaje entrante al
+// defensor— y acá dejaba a la aldea produciendo cereal de más durante todo el regreso.
+$SCOUTUSER = 990009;
+$SCOUTVIL = 990006;
+$SCRATCH[] = $SCOUTVIL;
+$database->query("DELETE FROM ".TB_PREFIX."users WHERE id = $SCOUTUSER");
+$database->query("INSERT INTO ".TB_PREFIX."users (id,username,tribe) VALUES ($SCOUTUSER,'checkTroopOverview',1)");
+$database->query("INSERT INTO ".TB_PREFIX."vdata (wref,owner,name) VALUES ($SCOUTVIL,$SCOUTUSER,'Aldea de prueba')");
+register_shutdown_function(function() use ($database,$SCOUTUSER) {
+    $database->query("DELETE FROM ".TB_PREFIX."users WHERE id = $SCOUTUSER");
+});
+
+/** Un movimiento con attack_type explícito, para distinguir espionaje de ataque. */
+function addTypedMove($sortType, $from, $to, $homeVillage, $slot, $amount, $attackType) {
+    global $database;
+    $t = array_fill(1,11,0);
+    $t[$slot] = (int)$amount;
+    $database->query("INSERT INTO ".TB_PREFIX."attacks (vref,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,attack_type,ctar1,ctar2,spy,sethome)"
+        ." VALUES (".(int)$homeVillage.",".implode(',',$t).",".(int)$attackType.",0,0,0,0)");
+    $ref = $database->query_return("SELECT LAST_INSERT_ID() AS id");
+    $ref = (int)$ref[0]['id'];
+    $database->query("INSERT INTO ".TB_PREFIX."movement (sort_type,`from`,`to`,ref,ref2,data,endtime,proc,send,wood,clay,iron,crop)"
+        ." VALUES (".(int)$sortType.",".(int)$from.",".(int)$to.",$ref,0,'',".(time()+3600).",0,1,0,0,0,0)");
+}
+
+// 100 Equites Legati (u4) de espionaje, de ida.
+addTypedMove(3, $SCOUTVIL, $FOREIGN, $SCOUTVIL, 4, 100, 1);
+$moving = $database->getVillageMovement($SCOUTVIL);
+check((int)$moving['u4'] === 100, 'los exploradores que van cuentan (dio '.(int)$moving['u4'].')');
+
+// 50 más volviendo del espionaje: son las que no se cobraban.
+addTypedMove(4, $FOREIGN, $SCOUTVIL, $SCOUTVIL, 4, 50, 1);
+$moving = $database->getVillageMovement($SCOUTVIL);
+check((int)$moving['u4'] === 150,
+    'los exploradores que vuelven también cuentan (esperado 150, dio '.(int)$moving['u4'].')');
+
+// Y un ataque normal volviendo sigue contando, que era lo único que contaba antes.
+addTypedMove(4, $FOREIGN, $SCOUTVIL, $SCOUTVIL, 1, 7, 3);
+$moving = $database->getVillageMovement($SCOUTVIL);
+check((int)$moving['u1'] === 7, 'un ataque normal que vuelve no se rompió');
+
+// El héroe de aventura: sale de `units` al partir y su movimiento (sort_type 9) no tiene
+// fila en `attacks`, así que la aldea dejaba de pagar sus 6 de cereal durante toda la
+// aventura. La vuelta ya se cobraba (llega como sort_type 4 con t11 = 1).
+$database->query("UPDATE ".TB_PREFIX."units SET hero = 1 WHERE vref = $SCOUTVIL");
+if(count($database->query_return("SELECT vref FROM ".TB_PREFIX."units WHERE vref = $SCOUTVIL")) === 0) {
+    $database->query("INSERT INTO ".TB_PREFIX."units (vref,hero) VALUES ($SCOUTVIL,1)");
+}
+$upkeepAtHome = (int)$technology->getUpkeep($technology->getAllUnits($SCOUTVIL),0,$SCOUTVIL);
+$database->query("UPDATE ".TB_PREFIX."units SET hero = 0 WHERE vref = $SCOUTVIL");
+addPlainMove(9, $SCOUTVIL, $FOREIGN);
+$moving = $database->getVillageMovement($SCOUTVIL);
+check((int)$moving['hero'] === 1, 'el héroe de aventura cuenta como tropa de su aldea (dio '.(int)$moving['hero'].')');
+
+$upkeepOnAdventure = (int)$technology->getUpkeep($technology->getAllUnits($SCOUTVIL),0,$SCOUTVIL);
+check($upkeepOnAdventure === $upkeepAtHome,
+    'la aldea paga lo mismo con el héroe en casa que de aventura (casa '.$upkeepAtHome.', aventura '.$upkeepOnAdventure.')');
+
+$database->query("DELETE FROM ".TB_PREFIX."movement WHERE sort_type = 9 AND `from` = $SCOUTVIL");
+$upkeepWithoutHero = (int)$technology->getUpkeep($technology->getAllUnits($SCOUTVIL),0,$SCOUTVIL);
+check($upkeepAtHome - $upkeepWithoutHero === 6,
+    'y esos 6 de cereal son exactamente los del héroe (diferencia '.($upkeepAtHome - $upkeepWithoutHero).')');
+
+$dbSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+check(strpos($dbSource,"if(\$ret['attack_type'] != 1)") === false,
+    'getVillageMovement() ya no filtra la vuelta por attack_type: ese filtro es de pantalla, no de manutención');
+check(strpos($dbSource,"\$movingunits['u' . (\$vtribe * 10)] += ") === false,
+    'el contador de colonos ya no hace += sobre una clave sin inicializar');
+check(strpos($dbSource,'$adventurearray = $this->getMovement(9, $id, 0);') !== false,
+    'getVillageMovement() mira también los movimientos de aventura (sort_type 9)');
 
 echo PHP_EOL;
 if(empty($failures)) {
