@@ -334,7 +334,10 @@ class Battle {
 		$_POST['mytribe'] = $attackerTribe;
 
 		$target = array();
-		for($tribe = 1; $tribe <= 4; $tribe++) {
+		// El defensor llega hasta la tribu 5: las aldeas natares son un objetivo
+		// real del mundo (capital, Maravillas y asentamientos vivientes), asi que
+		// tienen que poder simularse igual que una aldea de jugador.
+		for($tribe = 1; $tribe <= 5; $tribe++) {
 			if(isset($post['a2_v'.$tribe])) {
 				$target[] = $tribe;
 			}
@@ -363,7 +366,10 @@ class Battle {
 			$userHero = $database->getHeroData((int)$session->uid);
 			if(is_array($userHero)) {
 				$heroTribe = isset($session->tribe) ? (int)$session->tribe : $attackerTribe;
-				$defaultHeroPower = heroFightingStrength($userHero,$heroTribe);
+				// Mismo criterio que battleHeroStrength(): el cuerno del natariano
+				// solo suma cuando el rival es natar.
+				$defaultHeroPower = heroFightingStrength($userHero,$heroTribe)
+					* heroNatarStrengthFactor($database, (int)$session->uid, $defenderTribe);
 				$defaultHeroHealth = max(1, min(100, (int)$userHero['health']));
 				$defaultHeroOffBonus = heroArmyBonusPercent($userHero['offBonus']);
 			}
@@ -390,14 +396,16 @@ class Battle {
 		);
 		$attackerTotal += $values['a1_hero'];
 
-		for($unit = 1; $unit <= 40; $unit++) {
+		for($unit = 1; $unit <= 50; $unit++) {
 			$unitTribe = (int)floor(($unit - 1) / 10) + 1;
 			$unitPosition = (($unit - 1) % 10) + 1;
 			$isSelected = in_array($unitTribe, $target, true);
 			$values['a2_'.$unit] = $isSelected && !$configurationChanged
 				? $this->simulationNumber(isset($post['a2_'.$unit]) ? $post['a2_'.$unit] : 0, 0, 999999, true)
 				: 0;
-			$values['f2_'.$unit] = $isSelected && $unitTribe !== 4 && $unitPosition <= 8 && !$configurationChanged
+			// Solo las tribus jugables investigan en la herreria: ni la naturaleza
+			// ni los natares tienen tecnologia (natarProvisionVillage nunca la sube).
+			$values['f2_'.$unit] = $isSelected && $unitTribe <= 3 && $unitPosition <= 8 && !$configurationChanged
 				? $this->simulationNumber(isset($post['f2_'.$unit]) ? $post['f2_'.$unit] : 0, 0, 20, true)
 				: 0;
 		}
@@ -445,8 +453,10 @@ class Battle {
 		$values['palast'] = $defenderTribe === 4
 			? 0
 			: $this->simulationNumber(!$configurationChanged && isset($post['palast']) ? $post['palast'] : 0, 0, 20, true);
-		for($tribe = 1; $tribe <= 4; $tribe++) {
-			$values['wall'.$tribe] = $tribe === $defenderTribe && $defenderTribe !== 4
+		// Solo las tribus 1-3 levantan muralla: para la naturaleza y los natares
+		// battleWallDurability()/wallFactors ya valen 1 y el nivel no haria nada.
+		for($tribe = 1; $tribe <= 5; $tribe++) {
+			$values['wall'.$tribe] = $tribe === $defenderTribe && $defenderTribe <= 3
 				? $this->simulationNumber(!$configurationChanged && isset($post['wall'.$tribe]) ? $post['wall'.$tribe] : 0, 0, 20, true)
 				: 0;
 		}
@@ -484,7 +494,7 @@ class Battle {
 		$defenseCavalry = 0.0;
 		$defenseScout = 0.0;
 		$defenseByTribe = array();
-		for($tribe = 1; $tribe <= 4; $tribe++) {
+		for($tribe = 1; $tribe <= 5; $tribe++) {
 			$defenseByTribe[$tribe] = array('infantry' => 0.0, 'cavalry' => 0.0);
 		}
 		$involved = 0;
@@ -519,9 +529,9 @@ class Battle {
 			$attackInfantry += (int)$post['h_att_power'];
 		}
 
-		for($unit = 1; $unit <= 40; $unit++) {
-			$amount = (int)$post['a2_'.$unit];
-			$upgrade = (int)$post['f2_'.$unit];
+		for($unit = 1; $unit <= 50; $unit++) {
+			$amount = isset($post['a2_'.$unit]) ? (int)$post['a2_'.$unit] : 0;
+			$upgrade = isset($post['f2_'.$unit]) ? (int)$post['f2_'.$unit] : 0;
 			$unitData = $GLOBALS['u'.$unit];
 			$unitTribe = (int)floor(($unit - 1) / 10) + 1;
 			$involved += $amount;
@@ -534,7 +544,7 @@ class Battle {
 				$defenseScout += $amount * 20 * pow(1.03, $upgrade);
 			}
 		}
-		for($tribe = 1; $tribe <= 4; $tribe++) {
+		for($tribe = 1; $tribe <= 5; $tribe++) {
 			if($tribe <= 3 && (int)$post['a2_hero_'.$tribe] === 1) {
 				$heroPower = (int)$post['h_def_power_'.$tribe];
 				$defenseByTribe[$tribe]['infantry'] += $heroPower;

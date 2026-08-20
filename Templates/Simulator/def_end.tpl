@@ -1,6 +1,9 @@
 <?php
 $defenderTribe = (int)$target[0];
 $isNature = $defenderTribe === 4;
+// Los natares defienden una aldea de verdad (poblacion, cantero, residencia y
+// catapultables), pero no construyen muralla: Battle::wallFactors les da 1.
+$hasWall = $defenderTribe <= 3;
 $wallTitles = array(
 	1 => WARSIM_WALL1,
 	2 => WARSIM_WALL2,
@@ -49,6 +52,7 @@ $wallClasses = array(
 						</td>
 						<td class="research"></td>
 					</tr>
+<?php if($hasWall) { ?>
 					<tr>
 						<td class="ico">
 							<img src="img/x.gif" class="gebIcon <?php echo $wallClasses[$defenderTribe]; ?>" title="<?php echo $wallTitles[$defenderTribe]; ?>">
@@ -61,6 +65,7 @@ $wallClasses = array(
 						</td>
 						<td class="research"></td>
 					</tr>
+<?php } ?>
 					<tr>
 						<td class="ico">
 							<img src="img/x.gif" class="gebIcon g26Icon" title="<?php echo WARSIM_PALACE; ?>">
