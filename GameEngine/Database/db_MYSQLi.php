@@ -5291,7 +5291,7 @@ break;
                 // llena y con el reloj de repoblación arrancando ahora, para que los animales
                 // vuelvan recién a las 24 h y no de golpe en la primera pasada.
                 $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, loyalty = 100,"
-                    ." lastupdated2 = ".time().", name = 'Oasis sin ocupar' WHERE wref = $wref";
+                    ." lastupdated2 = ".time().", conquered_at = 0, name = 'Oasis sin ocupar' WHERE wref = $wref";
                 $result = mysqli_query($this->connection,$q);
                 mysqli_query($this->connection,"UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = $wref");
                 return $result;

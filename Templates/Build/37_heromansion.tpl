@@ -14,8 +14,7 @@ if(isset($_GET['gid'], $_GET['del']) && (int)$_GET['gid'] === 37) {
 			// Los refuerzos se van a casa antes de soltarlo: después el oasis ya no es
 			// de nadie y las tropas quedarían defendiéndolo sin dueño. Va primero porque
 			// necesita las coordenadas y la fila de odata todavía en pie.
-			$automation->returnOasisReinforcements($oasisToRelease);
-			$database->removeOases($oasisToRelease);
+			$automation->releaseOasisSafely($oasisToRelease, $village->wid);
 		}
 	}
 }
@@ -77,7 +76,7 @@ while($row = mysql_fetch_array($sql)){
     $wref = $row["wref"];
     $type = $row["type"];
     $conqured = $row["conqured"];
-    $lastupdated = $row["lastupdated"];
+	$conqueredAt = !empty($row["conquered_at"]) ? (int)$row["conquered_at"] : (int)$row["lastupdated2"];
     $loyalty = $row["loyalty"];
     $owner = $row["owner"];
 ?>
@@ -98,13 +97,13 @@ while($row = mysql_fetch_array($sql)){
 					<a href="karte.php?d=<?php echo $wref; ?>&c=<?php echo $generator->getMapCheck($wref); ?>"><?php echo $tname; ?></a>
 				</td>
 				<td class="zp"><?php echo $loyalty; ?>%</td>
-				<td class="owned"><?php echo date('y.m.d.',$lastupdated); ?> <?php echo date('H:i',$lastupdated); ?></td>
+				<td class="owned"><?php echo date('y.m.d.',$conqueredAt); ?> <?php echo date('H:i',$conqueredAt); ?></td>
 				<td class="coords">
                 <?php
 $coor = $database->getCoor($wref);
 $tt = oasisResourceBonus($type);
 ?>
-                <a class="" href="karte.php?x=<?php echo $coor['y']; ?>&amp;y=<?php echo $coor['x']; ?>">
+                <a class="" href="karte.php?x=<?php echo $coor['x']; ?>&amp;y=<?php echo $coor['y']; ?>">
                 <span class="coordinates coordinatesAligned">
                 <span class="coordinatesWrapper">
                 <span class="coordinateY">(<?php echo $coor['x']; ?></span>

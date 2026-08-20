@@ -141,4 +141,45 @@ oasisAssert(
     'un oasis fuera de alcance conserva su lealtad'
 );
 
+// Loyalty regeneration must not depend on how frequently automation runs.
+$regen = Automation::oasisLoyaltyRegenerationOutcome(50, 1000, 10, 1100, 1);
+oasisAssert($regen['loyalty'] === 50 && $regen['clock'] === 1000,
+    'conserva el reloj mientras todavía no completa un punto de lealtad');
+$regen = Automation::oasisLoyaltyRegenerationOutcome(50, $regen['clock'], 10, 1360, 1);
+oasisAssert($regen['loyalty'] === 51 && $regen['clock'] === 1360,
+    'acredita el punto exacto al acumular el tiempo suficiente');
+$regen = Automation::oasisLoyaltyRegenerationOutcome(99, 1000, 20, 2000, 5);
+oasisAssert($regen['loyalty'] === 100 && $regen['clock'] === 2000,
+    'al llegar a 100 cierra el reloj sin dejar tiempo retroactivo');
+$regen = Automation::oasisLoyaltyRegenerationOutcome(50, 1000, 0, 2000, 1);
+oasisAssert($regen['loyalty'] === 50 && $regen['clock'] === 2000,
+    'sin residencia ni palacio no acumula regeneración pendiente');
+
+$automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
+$mansionSource = file_get_contents(dirname(__DIR__).'/Templates/Build/37_heromansion.tpl');
+$profileSource = file_get_contents(dirname(__DIR__).'/Templates/Profile/profile.tpl');
+$overviewSource = file_get_contents(dirname(__DIR__).'/Templates/Profile/overview.tpl');
+oasisAssert(strpos($automationSource, 'releaseOasisSafely($oasisToRelease') === false,
+    'la automatización no queda acoplada a variables de plantilla');
+oasisAssert(strpos($mansionSource, 'releaseOasisSafely($oasisToRelease, $village->wid)') !== false,
+    'la Mansión libera un solo oasis mediante el flujo seguro');
+$releaseStart = strpos($automationSource, 'public function releaseOasisSafely(');
+$releaseEnd = strpos($automationSource, 'public function releaseVillageOasesSafely(', $releaseStart);
+$releaseSource = substr($automationSource, $releaseStart, $releaseEnd - $releaseStart);
+$accruePos = strpos($releaseSource, 'accrueProductionBeforeChange(');
+$returnPos = strpos($releaseSource, 'returnOasisReinforcements(');
+$removePos = strpos($releaseSource, 'removeOases(');
+oasisAssert($accruePos !== false && $returnPos > $accruePos && $removePos > $returnPos,
+    'la liberación acredita producción, devuelve tropas y recién después libera');
+oasisAssert(substr_count($automationSource, 'releaseVillageOasesSafely($village') >= 2,
+    'destrucción y borrado de cuenta usan la liberación segura');
+oasisAssert(strpos($mansionSource, "karte.php?x=<?php echo \$coor['x']; ?>&amp;y=<?php echo \$coor['y']; ?>") !== false,
+    'el enlace del oasis conserva el orden X/Y');
+oasisAssert(strpos($mansionSource, '$row["conquered_at"]') !== false,
+    'la fecha visible usa el historial de conquista');
+foreach(array('profile.tpl' => $profileSource, 'overview.tpl' => $overviewSource) as $name => $source) {
+    oasisAssert(preg_match('/case 6:\s*echo\s+"[^"]*r2[^"]*r4[^"]*";\s*break;\s*case 7:/s', $source) === 1,
+        $name.' separa barro+cereal del caso de hierro');
+}
+
 echo "Todas las comprobaciones de conquista de oasis pasaron.\n";

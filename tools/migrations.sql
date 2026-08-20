@@ -406,3 +406,12 @@ SET v.name = CONCAT('Aldea de la Maravilla (', w.x, '|', w.y, ')')
 WHERE u.username = 'Natars'
   AND v.natar = 1
   AND v.name IN ('Aldea de la Maravilla', 'WW Village');
+
+-- 2026-08-20 - Fecha real de conquista de los oasis
+-- Los otros timestamps son relojes activos de recursos, lealtad y animales.
+ALTER TABLE s1_odata
+  ADD COLUMN IF NOT EXISTS conquered_at int(11) unsigned NOT NULL DEFAULT 0 AFTER lastupdated2;
+
+UPDATE s1_odata
+SET conquered_at = lastupdated2
+WHERE conqured <> 0 AND conquered_at = 0;

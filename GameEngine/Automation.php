@@ -260,7 +260,7 @@ class Automation {
         }
         // La aldea arrasada suelta sus oasis: si no, quedan conquistados por una aldea
         // que ya no existe y nadie puede volver a tomarlos.
-        $database->releaseVillageOases($villageId);
+        $this->releaseVillageOasesSafely($villageId);
         $database->query("DELETE FROM ".TB_PREFIX."odata WHERE wref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."research WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."tdata WHERE vref = ".$villageId);
@@ -816,6 +816,40 @@ class Automation {
         return $sent;
     }
 
+    /** Libera un oasis respetando el tramo productivo y sus refuerzos. */
+    public function releaseOasisSafely($oasisWref, $villageId, $until = null) {
+        global $database;
+        $oasisWref = (int)$oasisWref;
+        $villageId = (int)$villageId;
+        if($oasisWref <= 0 || $villageId <= 0) {
+            return false;
+        }
+        $oasis = $database->getOasisInfo($oasisWref);
+        if(!is_array($oasis) || (int)$oasis['conqured'] !== $villageId) {
+            return false;
+        }
+        $this->accrueProductionBeforeChange($villageId, $until === null ? time() : (int)$until);
+        $this->returnOasisReinforcements($oasisWref);
+        return $database->removeOases($oasisWref);
+    }
+
+    /** Libera todos los oasis de una aldea respetando recursos y tropas. */
+    public function releaseVillageOasesSafely($villageId, $until = null) {
+        global $database;
+        $villageId = (int)$villageId;
+        if($villageId <= 0) {
+            return 0;
+        }
+        $oases = $database->getOasis($villageId);
+        $released = 0;
+        foreach($oases as $oasis) {
+            if($this->releaseOasisSafely((int)$oasis['wref'], $villageId, $until)) {
+                $released++;
+            }
+        }
+        return $released;
+    }
+
     /**
      * Decides what a successful hero raid does to the attacked oasis. Pure: the
      * caller reads the state and applies the resulting database changes.
@@ -900,6 +934,28 @@ class Automation {
         }
         $consumed = $stolen / $cap;
         return $now - (int)floor(self::OASIS_RAID_WINDOW * (1 - $consumed));
+    }
+
+    /** Regenera puntos enteros sin descartar el tiempo fraccionario pendiente. */
+    public static function oasisLoyaltyRegenerationOutcome($loyalty, $clock, $level, $now, $speed) {
+        $loyalty = max(0, min(100, (int)$loyalty));
+        $clock = (int)$clock;
+        $level = max(0, (int)$level);
+        $now = (int)$now;
+        $rate = $level * (float)$speed / 3600;
+        if($clock <= 0 || $clock > $now || $rate <= 0) {
+            return array('loyalty' => $loyalty, 'clock' => $now);
+        }
+        $gain = (int)floor(($now - $clock) * $rate);
+        if($gain < 1) {
+            return array('loyalty' => $loyalty, 'clock' => $clock);
+        }
+        $newLoyalty = min(100, $loyalty + $gain);
+        $awarded = $newLoyalty - $loyalty;
+        $newClock = $newLoyalty >= 100
+            ? $now
+            : min($now, $clock + (int)floor($awarded / $rate));
+        return array('loyalty' => $newLoyalty, 'clock' => $newClock);
     }
 
     public function getTypeLevel($tid, $vid) {
@@ -1015,8 +1071,16 @@ class Automation {
                 } else {
                     $value = 0;
                 }
-                $newloyalty = round(min(100, $loyalty['loyalty'] + $value * (time() - $loyalty['lastupdated2']) * SPEED / (60 * 60)));
-                $q = "UPDATE ".TB_PREFIX."odata SET loyalty = $newloyalty, lastupdated2 = ".time()." WHERE wref = '".$loyalty['wref']."'";
+                $now = time();
+                $outcome = self::oasisLoyaltyRegenerationOutcome(
+                    $loyalty['loyalty'], $loyalty['lastupdated2'], $value, $now, SPEED
+                );
+                $oldLoyalty = (int)$loyalty['loyalty'];
+                $oldClock = (int)$loyalty['lastupdated2'];
+                $q = "UPDATE ".TB_PREFIX."odata SET loyalty = ".(int)$outcome['loyalty']
+                    .", lastupdated2 = ".(int)$outcome['clock']
+                    ." WHERE wref = '".(int)$loyalty['wref']."'"
+                    ." AND loyalty = $oldLoyalty AND lastupdated2 = $oldClock";
                 $database->query($q);
             }
         }
@@ -1061,7 +1125,7 @@ class Automation {
                     // La aldea desaparece: sus oasis vuelven a estar libres. El DELETE de
                     // abajo nunca borró nada (un wref de aldea jamás está en odata) y dejaba
                     // el oasis marcado como conquistado por una aldea inexistente.
-                    $database->releaseVillageOases($village);
+                    $this->releaseVillageOasesSafely($village);
                     $q = "DELETE FROM ".TB_PREFIX."odata where wref = ".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."research where vref = ".$village;
@@ -3487,7 +3551,7 @@ class Automation {
                                     if($o_conqured != 0) {
                                         $this->accrueProductionBeforeChange($o_conqured, $conquestTime);
                                     }
-                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".$conquestTime."', `lastupdated2`='".$conquestTime."' WHERE `wref`='".$data['to']."' ");
+                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".$conquestTime."', `lastupdated2`='".$conquestTime."', `conquered_at`='".$conquestTime."' WHERE `wref`='".$data['to']."' ");
                                     mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
                                     $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
                                     break;
