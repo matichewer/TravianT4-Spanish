@@ -4,6 +4,8 @@
  *
  *   ?s=5        "Tropas propias"  — matriz aldea x unidad con las tropas del jugador que
  *                                   están en cada aldea, más un total por tipo.
+ *
+ * Las aldeas van en orden de fundación en las dos pestañas, igual que el cartel lateral.
  *   ?s=5&su=2   "Tropas en aldeas" — lo que hay DENTRO de cada aldea propia, incluidos los
  *                                   refuerzos de otros jugadores y la guarnición de los
  *                                   oasis anexados, con el consumo de cereal.
@@ -18,13 +20,13 @@ include('menu.tpl');
 
 $troopTab = (isset($_GET['su']) && (int)$_GET['su'] === 2) ? 2 : 1;
 $varray = $database->getProfileVillages($session->uid);
-$villageIds = array();
 $villageRows = array();
 foreach($varray as $vil) {
-	$wref = (int)$vil['wref'];
-	$villageIds[] = $wref;
-	$villageRows[$wref] = $vil;
+	$villageRows[(int)$vil['wref']] = $vil;
 }
+// En orden de fundación, igual que el cartel lateral de aldeas. getProfileVillages() las
+// trae por población descendente y las dos listas quedaban en órdenes distintos.
+$villageIds = troopOverviewFoundationOrder($villageRows,$database->getVillagesIDByFoundation($session->uid));
 $tribe = (int)$session->tribe;
 $ownRange = troopOverviewTribeRange($tribe);
 if($ownRange === null) {

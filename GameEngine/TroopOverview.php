@@ -237,6 +237,36 @@ function troopOverviewPlaceLabel($wref, $places, $coords) {
 }
 
 /**
+ * Orden en que se listan las aldeas: el de fundación, el mismo que el cartel lateral.
+ *
+ * `getProfileVillages()` las devuelve por población descendente, así que el resumen y el
+ * cartel mostraban la misma lista en dos órdenes distintos. Acá se reordena sólo para esta
+ * pantalla: `getProfileVillages()` la usan una treintena de lugares más (panel de Admin,
+ * perfiles públicos, alianza) y cambiarla sería un efecto colateral que nadie pidió.
+ *
+ * Pura a propósito, para que el checker pueda probar lo único que importa de verdad acá:
+ * **ninguna aldea se pierde**. Una que no esté en la lista de fundación —una consulta que
+ * falla y devuelve vacío, una fila con `created` raro— se agrega al final en el orden que
+ * traía, en vez de desaparecer de la pantalla.
+ */
+function troopOverviewFoundationOrder(array $villageRows, $foundationOrder) {
+	$ordered = array();
+	foreach((array)$foundationOrder as $wref) {
+		$wref = (int)$wref;
+		if(isset($villageRows[$wref]) && !isset($ordered[$wref])) {
+			$ordered[$wref] = $wref;
+		}
+	}
+	foreach($villageRows as $wref => $row) {
+		$wref = (int)$wref;
+		if(!isset($ordered[$wref])) {
+			$ordered[$wref] = $wref;
+		}
+	}
+	return array_values($ordered);
+}
+
+/**
  * Pestaña "Tropas propias": las tropas del jugador que están en cada una de sus aldeas.
  *
  * Se deriva de troopOverviewVillageGarrisons() quedándose con los grupos cuyo dueño es el
