@@ -2,39 +2,35 @@
 /**
  * Fuente única de las dos pestañas de tropas del resumen de aldeas (dorf3.php?s=5).
  *
- * Las dos pestañas responden preguntas distintas y ninguna es un subconjunto de la otra:
+ * Las dos agrupan por UBICACIÓN, como en el T4 oficial:
  *
- *   - **Tropas propias** agrupa por ALDEA NATAL: todo lo que entrenó cada aldea, esté
- *     donde esté. Es el ejército del jugador, y su total es el total real.
- *   - **Tropas en aldeas** agrupa por UBICACIÓN: lo que hay dentro de cada aldea propia,
- *     incluidos los refuerzos de otros jugadores, con su consumo de cereal.
+ *   - **Tropas propias**: matriz aldea x unidad con las tropas del jugador que están EN
+ *     cada aldea, más un total por tipo. Compacta y comparable entre aldeas.
+ *   - **Tropas en aldeas**: una tabla por aldea con todo lo que hay dentro, incluidos los
+ *     refuerzos de otros jugadores y la guarnición de los oasis anexados, con el consumo
+ *     de cereal.
  *
- * La versión anterior de la pestaña leía sólo la tabla `units`, que guarda únicamente lo
- * que está EN la aldea. Un ejército de refuerzo en casa de un aliado — o en otra aldea de
- * la misma cuenta — desaparecía de las dos pestañas a la vez: de `units` ya salió, y en la
- * aldea que lo hospeda figura en `enforcement`, que la pestaña no miraba. Lo mismo con
- * cualquier cosa en camino.
+ * **Lo que está fuera de la aldea no se muestra acá, y es a propósito.** Un ejército que
+ * refuerza otra aldea sale de `units` y pasa a `enforcement`; uno en camino vive en
+ * `movement`+`attacks`. En el T4 oficial esos se ven en la plaza de reuniones (bloque
+ * "Refuerzos" de Templates/Build/16.tpl, que lista a qué aldea fue cada grupo), no en el
+ * resumen. Una versión de esta pantalla los sumaba a la fila de su aldea natal: es más
+ * informativo, pero no es lo que hace el juego original. Si aparece un reporte de que
+ * "faltan tropas" en esta pantalla, esa es la respuesta, no un bug.
  *
- * Dónde vive cada tropa. Los cinco lugares son excluyentes, así que sumarlos nunca cuenta
- * dos veces (una tropa sale de `units` en el mismo request en que entra al siguiente):
+ * Dónde vive cada tropa, que sí hay que tener presente para no contar dos veces:
  *
- *   units       en su aldea                      vref = aldea
- *   enforcement reforzando otra aldea o un oasis  `from` = aldea natal, vref = destino
- *   movement    en camino (ida y vuelta)          attacks.vref = aldea natal
- *   movement    colonos (sort_type 5) / héroe de aventura (sort_type 9), sin fila attacks
- *   prisoners   atrapadas en las trampas de otro  `from` = aldea natal
+ *   units       en su aldea                       vref = aldea
+ *   enforcement reforzando otra aldea o un oasis   `from` = aldea natal, vref = destino
+ *   movement    en camino, colonos, aventura       (ver mysqli_DB::getVillageMovement)
+ *   prisoners   atrapadas en las trampas de otro   `from` = aldea natal
  *
- * **Lo en camino se agrupa por `attacks.vref`, no por `movement.from`.** `attacks.vref` es
- * la aldea natal en los dos sentidos del viaje: el regreso reutiliza la misma fila de
- * `attacks` que la ida (`Automation::sendunitsComplete`), y la ida queda con `proc = 1`
- * antes de que se cree el regreso. Mirar `movement.from` se equivoca en un caso real:
- * cuando el jugador devuelve un refuerzo ajeno que tenía en casa, el movimiento sale DE su
- * aldea pero las tropas son de otro jugador (`attacks.vref` ajeno) — es el error que
- * arrastra `mysqli_DB::getVillageMovement()`, que además las mapea a la tribu equivocada.
+ * Son excluyentes: una tropa sale de `units` en el mismo request en que entra al
+ * siguiente. Esta pantalla sólo lee `units` y `enforcement`; el cereal, que sí tiene que
+ * cobrarlas todas, las junta en `Technology::getAllUnits()`.
  *
  * Ojo con los ids de unidad: son absolutos (u1..u50, diez por tribu) en `units` y en
- * `enforcement`, pero relativos a la tribu (t1..t10, y t11 = héroe) en `attacks` y en
- * `prisoners`. Convertir de uno a otro es lo único que hacen las funciones de slots.
+ * `enforcement`, y relativos a la tribu (t1..t10, t11 = héroe) en `attacks` y `prisoners`.
  */
 
 /**
@@ -63,7 +59,7 @@ function troopOverviewEmptyUnits($start, $end) {
 	return $units;
 }
 
-/** Suma una fila con ids absolutos (`units`, `enforcement`). */
+/** Suma una fila de `units` o `enforcement` (ids absolutos u1..u50 + hero). */
 function troopOverviewAddUnitRow(array $units, $row) {
 	if(!is_array($row)) {
 		return $units;
@@ -72,24 +68,6 @@ function troopOverviewAddUnitRow(array $units, $row) {
 		if(isset($row[$key])) {
 			$units[$key] = $amount + max(0,(int)$row[$key]);
 		}
-	}
-	return $units;
-}
-
-/** Suma una fila con slots relativos a la tribu (`attacks`, `prisoners`): t1..t10 y t11 = héroe. */
-function troopOverviewAddSlotRow(array $units, $row, $start) {
-	if(!is_array($row)) {
-		return $units;
-	}
-	for($slot = 1; $slot <= 10; $slot++) {
-		$key = 'u'.((int)$start + $slot - 1);
-		if(!isset($units[$key])) {
-			continue;
-		}
-		$units[$key] += max(0,(int)(isset($row['t'.$slot]) ? $row['t'.$slot] : 0));
-	}
-	if(isset($units['hero'])) {
-		$units['hero'] += max(0,(int)(isset($row['t11']) ? $row['t11'] : 0));
 	}
 	return $units;
 }
@@ -146,8 +124,8 @@ function troopOverviewIdList($ids) {
 
 /**
  * Nombre y dueño de cada wref, sea aldea u oasis. Dos consultas para toda la página: las
- * etiquetas de los grupos son lo único que necesita salir de vdata/odata y resolverlas de
- * a una multiplicaba las consultas por el número de refuerzos.
+ * etiquetas de los refuerzos son lo único que necesita salir de vdata/odata y resolverlas
+ * de a una multiplicaba las consultas por el número de refuerzos.
  */
 function troopOverviewResolvePlaces($wrefs) {
 	global $database;
@@ -196,14 +174,69 @@ function troopOverviewResolveUsers($uids) {
 	return $users;
 }
 
+/** Coordenadas de varios wref de una sola vez, para etiquetar oasis y aldeas ajenas. */
+function troopOverviewResolveCoords($wrefs) {
+	global $database;
+	$ids = troopOverviewIdList($wrefs);
+	$coords = array();
+	if(empty($ids)) {
+		return $coords;
+	}
+	$in = implode(',',$ids);
+	foreach($database->query_return("SELECT id,x,y FROM ".TB_PREFIX."wdata WHERE id IN ($in)") as $row) {
+		$coords[(int)$row['id']] = array((int)$row['x'],(int)$row['y']);
+	}
+	return $coords;
+}
+
 /**
- * Pestaña "Tropas propias": todo lo que tiene cada aldea, esté donde esté.
+ * Nombre de un lugar con sus coordenadas, en texto plano.
  *
- * Devuelve, por wref: `home` (en la aldea), `away` (fuera, sumado), `total` = home + away,
- * y `groups`, la lista de grupos que están fuera con su destino, para el detalle.
+ * Las coordenadas no se agregan si el nombre ya termina en ellas: los nombres de las
+ * aldeas natar independientes las llevan pegadas para ser únicos (`natarSettlementName()`),
+ * y repetirlas daba "Atalaya natar (15|78) (15|78)".
+ */
+function troopOverviewPlaceName($wref, $places, $coords) {
+	$wref = (int)$wref;
+	$name = isset($places[$wref]) ? trim($places[$wref]['name']) : '';
+	if($name === '') {
+		$name = 'Lugar desconocido';
+	}
+	if(isset($coords[$wref])) {
+		$suffix = '('.$coords[$wref][0].'|'.$coords[$wref][1].')';
+		if(substr($name,-strlen($suffix)) !== $suffix) {
+			$name .= ' '.$suffix;
+		}
+	}
+	return $name;
+}
+
+/**
+ * Lo mismo, con enlace al mapa.
  *
- * Ocho consultas para toda la página, no ocho por aldea: un jugador con veinte aldeas
- * abre esta pestaña igual que uno con dos.
+ * `vdata.name` y `odata.name` se guardan ya escapados (`Profile.php` los pasa por
+ * RemoveXSS), así que volver a escaparlos convertiría cada `&amp;` en `&amp;amp;`.
+ * `users.username`, en cambio, se guarda crudo: ese sí lo escapa quien lo imprime.
+ */
+function troopOverviewPlaceLabel($wref, $places, $coords) {
+	global $generator;
+	$wref = (int)$wref;
+	$name = troopOverviewPlaceName($wref,$places,$coords);
+	if($wref > 0 && is_object($generator)) {
+		return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'">'.$name.'</a>';
+	}
+	return $name;
+}
+
+/**
+ * Pestaña "Tropas propias": lo que el jugador tiene EN cada una de sus aldeas.
+ *
+ * Devuelve wref => acumulador de la tribu del jugador. No incluye lo que está fuera (ver
+ * la cabecera del archivo) ni los refuerzos ajenos, que son de otro dueño y van en la otra
+ * pestaña.
+ *
+ * Una sola consulta para toda la página: un jugador con veinte aldeas abre esta pestaña
+ * igual que uno con dos.
  */
 function troopOverviewOwnTroops($villageIds, $tribe) {
 	global $database;
@@ -216,98 +249,14 @@ function troopOverviewOwnTroops($villageIds, $tribe) {
 	list($start,$end) = $range;
 	$empty = troopOverviewEmptyUnits($start,$end);
 	foreach($ids as $id) {
-		$out[$id] = array('home' => $empty, 'away' => $empty, 'total' => $empty, 'groups' => array());
+		$out[$id] = $empty;
 	}
 	$in = implode(',',$ids);
-
-	// En la aldea.
 	foreach($database->query_return("SELECT * FROM ".TB_PREFIX."units WHERE vref IN ($in)") as $row) {
 		$vid = (int)$row['vref'];
 		if(isset($out[$vid])) {
-			$out[$vid]['home'] = troopOverviewAddUnitRow($out[$vid]['home'],$row);
+			$out[$vid] = troopOverviewAddUnitRow($out[$vid],$row);
 		}
-	}
-
-	// De refuerzo en otra aldea (propia, de un aliado o de cualquiera) o en un oasis.
-	foreach($database->query_return("SELECT * FROM ".TB_PREFIX."enforcement WHERE `from` IN ($in)") as $row) {
-		$vid = (int)$row['from'];
-		if(!isset($out[$vid])) {
-			continue;
-		}
-		$units = troopOverviewAddUnitRow($empty,$row);
-		if(troopOverviewCount($units) > 0) {
-			$out[$vid]['groups'][] = array('kind' => 'support', 'where' => (int)$row['vref'], 'units' => $units);
-		}
-	}
-
-	// En camino, ida y vuelta. El join se filtra por attacks.vref (la aldea natal), no por
-	// movement.from/to: ver la cabecera del archivo.
-	$q = "SELECT a.*, m.sort_type, m.`to` AS mto, m.`from` AS mfrom"
-		." FROM ".TB_PREFIX."movement m"
-		." INNER JOIN ".TB_PREFIX."attacks a ON a.id = m.ref"
-		." WHERE m.proc = 0 AND m.sort_type IN (3,4) AND a.vref IN ($in)";
-	foreach($database->query_return($q) as $row) {
-		$vid = (int)$row['vref'];
-		if(!isset($out[$vid])) {
-			continue;
-		}
-		$units = troopOverviewAddSlotRow($empty,$row,$start);
-		if(troopOverviewCount($units) > 0) {
-			$out[$vid]['groups'][] = array(
-				'kind' => 'moving',
-				'where' => (int)((int)$row['sort_type'] === 4 ? $row['mfrom'] : $row['mto']),
-				'back' => (int)$row['sort_type'] === 4,
-				'units' => $units,
-			);
-		}
-	}
-
-	// Colonos en camino: tres de la última unidad de la tribu por movimiento, y sin fila
-	// en `attacks` (Units::procSettlers los descuenta de `units` y guarda sólo el destino).
-	$settlerUnit = 'u'.$end;
-	$q = "SELECT `from`, `to` FROM ".TB_PREFIX."movement WHERE proc = 0 AND sort_type = 5 AND `from` IN ($in)";
-	foreach($database->query_return($q) as $row) {
-		$vid = (int)$row['from'];
-		if(!isset($out[$vid])) {
-			continue;
-		}
-		$units = $empty;
-		$units[$settlerUnit] = 3;
-		$out[$vid]['groups'][] = array('kind' => 'settlers', 'where' => (int)$row['to'], 'units' => $units);
-	}
-
-	// Héroe de aventura: tampoco tiene fila en `attacks` (Units::Adventures guarda ref = 0).
-	$q = "SELECT `from`, `to` FROM ".TB_PREFIX."movement WHERE proc = 0 AND sort_type = 9 AND `from` IN ($in)";
-	foreach($database->query_return($q) as $row) {
-		$vid = (int)$row['from'];
-		if(!isset($out[$vid])) {
-			continue;
-		}
-		$units = $empty;
-		$units['hero'] = 1;
-		$out[$vid]['groups'][] = array('kind' => 'adventure', 'where' => (int)$row['to'], 'units' => $units);
-	}
-
-	// Atrapadas en las trampas de otro. Siguen siendo del jugador y le siguen costando
-	// cereal (Technology::getAllUnits ya las cobra), así que no pueden faltar en su ejército.
-	foreach($database->query_return("SELECT * FROM ".TB_PREFIX."prisoners WHERE `from` IN ($in)") as $row) {
-		$vid = (int)$row['from'];
-		if(!isset($out[$vid])) {
-			continue;
-		}
-		$units = troopOverviewAddSlotRow($empty,$row,$start);
-		if(troopOverviewCount($units) > 0) {
-			$out[$vid]['groups'][] = array('kind' => 'captive', 'where' => (int)$row['wref'], 'units' => $units);
-		}
-	}
-
-	foreach($out as $vid => $data) {
-		$away = $empty;
-		foreach($data['groups'] as $group) {
-			$away = troopOverviewSumUnits($away,$group['units']);
-		}
-		$out[$vid]['away'] = $away;
-		$out[$vid]['total'] = troopOverviewSumUnits($data['home'],$away);
 	}
 	return $out;
 }
@@ -343,7 +292,6 @@ function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
 			continue;
 		}
 		if($ownRange !== null) {
-			$units = troopOverviewAddUnitRow(troopOverviewEmptyUnits($ownRange[0],$ownRange[1]),$row);
 			$out[$vid][] = array(
 				'kind' => 'own',
 				'tribe' => (int)$ownerTribe,
@@ -351,7 +299,7 @@ function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
 				'end' => $ownRange[1],
 				'where' => $vid,
 				'from' => $vid,
-				'units' => $units,
+				'units' => troopOverviewAddUnitRow(troopOverviewEmptyUnits($ownRange[0],$ownRange[1]),$row),
 			);
 		}
 		$caged = troopOverviewAddUnitRow(troopOverviewEmptyUnits($natureRange[0],$natureRange[1]),$row);
@@ -424,58 +372,4 @@ function troopOverviewVillageGarrisons($villageIds, $ownerTribe) {
 		);
 	}
 	return $out;
-}
-
-/** Coordenadas de varios wref de una sola vez, para etiquetar oasis y aldeas ajenas. */
-function troopOverviewResolveCoords($wrefs) {
-	global $database;
-	$ids = troopOverviewIdList($wrefs);
-	$coords = array();
-	if(empty($ids)) {
-		return $coords;
-	}
-	$in = implode(',',$ids);
-	foreach($database->query_return("SELECT id,x,y FROM ".TB_PREFIX."wdata WHERE id IN ($in)") as $row) {
-		$coords[(int)$row['id']] = array((int)$row['x'],(int)$row['y']);
-	}
-	return $coords;
-}
-
-/**
- * Nombre de un lugar con sus coordenadas, en texto plano.
- *
- * Las coordenadas no se agregan si el nombre ya termina en ellas: los nombres de las
- * aldeas natar independientes las llevan pegadas para ser únicos (`natarSettlementName()`),
- * y repetirlas daba "Atalaya natar (15|78) (15|78)".
- */
-function troopOverviewPlaceName($wref, $places, $coords) {
-	$wref = (int)$wref;
-	$name = isset($places[$wref]) ? trim($places[$wref]['name']) : '';
-	if($name === '') {
-		$name = 'Lugar desconocido';
-	}
-	if(isset($coords[$wref])) {
-		$suffix = '('.$coords[$wref][0].'|'.$coords[$wref][1].')';
-		if(substr($name,-strlen($suffix)) !== $suffix) {
-			$name .= ' '.$suffix;
-		}
-	}
-	return $name;
-}
-
-/**
- * Lo mismo, con enlace al mapa.
- *
- * `vdata.name` y `odata.name` se guardan ya escapados (`Profile.php` los pasa por
- * RemoveXSS), así que volver a escaparlos convertiría cada `&amp;` en `&amp;amp;`.
- * `users.username`, en cambio, se guarda crudo: ese sí lo escapa quien lo imprime.
- */
-function troopOverviewPlaceLabel($wref, $places, $coords) {
-	global $generator;
-	$wref = (int)$wref;
-	$name = troopOverviewPlaceName($wref,$places,$coords);
-	if($wref > 0 && is_object($generator)) {
-		return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'">'.$name.'</a>';
-	}
-	return $name;
 }

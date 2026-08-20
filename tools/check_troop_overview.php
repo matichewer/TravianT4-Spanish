@@ -3,18 +3,16 @@
  * Las dos pestañas de tropas del resumen de aldeas (dorf3.php?s=5).
  *
  * Cubre:
- *   A. "Tropas propias" cuenta el ejército entero de cada aldea, no sólo lo que está en
- *      casa: refuerzos en otra aldea (propia o ajena), en camino, colonos, el héroe de
- *      aventura y las tropas atrapadas. Leer sólo `units` las hacía desaparecer de las
- *      dos pestañas a la vez.
- *   B. Nada se cuenta dos veces: un refuerzo entre dos aldeas de la misma cuenta suma una
- *      sola vez, en la aldea que lo entrenó.
- *   C. Lo en camino se agrupa por `attacks.vref` (aldea natal) y no por `movement.from`:
- *      devolver un refuerzo ajeno sale de la aldea propia pero las tropas son de otro.
- *   D. Un movimiento ya procesado (proc = 1) no cuenta.
+ *   A. "Tropas propias" muestra lo que hay EN cada aldea, como en el T4 oficial: un
+ *      refuerzo enviado a otra aldea NO aparece en la fila de la aldea que lo entrenó.
+ *      Esto es a propósito y por eso está fijado acá — se ve en la plaza de reuniones.
+ *   B. Un refuerzo alojado en una aldea propia tampoco se suma a las tropas propias de la
+ *      aldea que lo hospeda: son de otro dueño y van en la otra pestaña.
  *   E. "Tropas en aldeas" lista los grupos por ubicación, con las columnas de la tribu de
  *      cada grupo, e incluye naturaleza, oasis anexados y animales enjaulados.
  *   F. La plantilla no reimplementa nada de esto y las dos pestañas son enlaces reales.
+ *   G. La manutención (que sí tiene que cobrar todo, esté donde esté) cuenta las tropas en
+ *      camino en los dos sentidos y al héroe de aventura.
  *
  * Ejecutar: docker compose exec -T web php /var/www/html/tools/check_troop_overview.php
  */
@@ -137,69 +135,42 @@ function addPlainMove($sortType, $from, $to) {
 }
 
 // ---------------------------------------------------------------------------
-section('A. La aldea natal ve todo su ejército, esté donde esté');
+section('A. "Tropas propias" muestra lo que está EN la aldea, como el T4 oficial');
 // ---------------------------------------------------------------------------
 
-// A: 100 legionarios en casa, 50 de refuerzo en la aldea del aliado, 20 de refuerzo en la
-// otra aldea de la misma cuenta, 10 en camino, 5 volviendo, 3 colonos, el héroe de
-// aventura y 7 atrapadas en las trampas de otro.
-addUnits($A, array('u1' => 100, 'u2' => 8, 'hero' => 0));
+// A entrena 100 legionarios y manda 50 de refuerzo a la aldea de un aliado, 20 a otra
+// aldea propia, 10 de ataque, y tiene 3 colonos y 7 prisioneras fuera.
+addUnits($A, array('u1' => 100, 'u2' => 8, 'hero' => 1));
 addEnforce($A, $ALLY, array('u1' => 50));
 addEnforce($A, $B,    array('u1' => 20));
 addMove(3, $A, $FOREIGN, $A, array(1 => 10));
-addMove(4, $FOREIGN, $A, $A, array(1 => 5));
 addPlainMove(5, $A, $FOREIGN);
-addPlainMove(9, $A, $FOREIGN);
 $database->query("INSERT INTO ".TB_PREFIX."prisoners (wref,`from`,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) VALUES ($FOREIGN,$A,7,0,0,0,0,0,0,0,0,0,0)");
 
 $own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
 
-check($own[$A]['home']['u1'] === 100, 'en casa cuenta lo que está en `units` (100 legionarios)');
-check($own[$A]['away']['u1'] === 50 + 20 + 10 + 5 + 7,
-    'fuera suma refuerzo al aliado, refuerzo a aldea propia, ida, vuelta y prisioneras (esperado 92, dio '.$own[$A]['away']['u1'].')');
-check($own[$A]['total']['u1'] === 192, 'el total de la aldea es casa + fuera (192)');
-check($own[$A]['total']['u10'] === 3, 'los 3 colonos en camino cuentan como la última unidad de la tribu');
-check($own[$A]['total']['hero'] === 1, 'el héroe de aventura sigue perteneciendo a su aldea');
-check($own[$A]['home']['hero'] === 0, 'el héroe de aventura no está en casa');
+check($own[$A]['u1'] === 100,
+    'la fila de la aldea son los 100 que están en ella, no los 187 que tiene en total (dio '.$own[$A]['u1'].')');
+check($own[$A]['u2'] === 8, 'las demás unidades de la aldea se muestran igual');
+check($own[$A]['hero'] === 1, 'el héroe se muestra en la aldea donde está');
 
-$kinds = array();
-foreach($own[$A]['groups'] as $group) {
-    $kinds[$group['kind']] = true;
-}
-foreach(array('support','moving','settlers','adventure','captive') as $kind) {
-    check(isset($kinds[$kind]), 'el detalle de lo que está fuera distingue el caso "'.$kind.'"');
-}
+// Cada uno de esos caminos por separado, para que quede claro cuál es la regla y no
+// parezca que sólo se probó el refuerzo.
+$away = troopOverviewOwnTroops(array($A), $ROMAN);
+check($away[$A]['u1'] === 100,
+    'ni el refuerzo al aliado, ni el refuerzo intra-cuenta, ni lo en camino, ni las prisioneras se suman acá');
+check($away[$A]['u10'] === 0, 'los colonos en camino tampoco');
 
 // ---------------------------------------------------------------------------
-section('B. Un refuerzo entre aldeas propias se cuenta una sola vez');
+section('B. Un refuerzo alojado no se cuela en las tropas propias de quien lo hospeda');
 // ---------------------------------------------------------------------------
 
 addUnits($B, array('u1' => 40));
 $own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$B]['total']['u1'] === 40,
-    'los 20 legionarios de A que están en B no se suman a B (esperado 40, dio '.$own[$B]['total']['u1'].')');
-check($own[$A]['total']['u1'] + $own[$B]['total']['u1'] === 232,
-    'el total de la cuenta no cuenta dos veces el refuerzo intra-cuenta (esperado 232)');
-
-// ---------------------------------------------------------------------------
-section('C. Lo en camino se agrupa por la aldea natal, no por el origen del movimiento');
-// ---------------------------------------------------------------------------
-
-// El jugador devuelve un refuerzo ajeno que tenía en A: el movimiento sale DE A, pero las
-// tropas son de FOREIGN. Es el caso que getVillageMovement() cuenta mal.
-addMove(3, $A, $FOREIGN, $FOREIGN, array(1 => 500));
-$own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$A]['total']['u1'] === 192,
-    'devolver un refuerzo ajeno no infla el ejército propio (esperado 192, dio '.$own[$A]['total']['u1'].')');
-
-// ---------------------------------------------------------------------------
-section('D. Un movimiento ya procesado no cuenta');
-// ---------------------------------------------------------------------------
-
-addMove(3, $A, $FOREIGN, $A, array(1 => 999), 1);
-$own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$A]['total']['u1'] === 192,
-    'proc = 1 queda fuera (esperado 192, dio '.$own[$A]['total']['u1'].')');
+check($own[$B]['u1'] === 40,
+    'los 20 legionarios de A que están en B no son tropas propias de B (esperado 40, dio '.$own[$B]['u1'].')');
+check($own[$A]['u1'] + $own[$B]['u1'] === 140,
+    'el total de la pestaña es lo que hay en las aldeas, sin duplicar el refuerzo (esperado 140)');
 
 // ---------------------------------------------------------------------------
 section('E. "Tropas en aldeas" agrupa por ubicación');
@@ -242,22 +213,21 @@ check(isset($byKind['oasis']) && $byKind['oasis'][0]['units']['u1'] === 12
 
 check(count($garrisons[$B]) >= 1, 'una aldea sin refuerzos igual aparece con su grupo propio');
 
-// El refuerzo que B tiene en el oasis de A sale de B en la pestaña 1 y aparece en la
-// pestaña 2 bajo A: es la misma tropa vista desde los dos lados, nunca dos veces en la misma.
+// El refuerzo que B tiene en el oasis de A se ve UNA vez y en un solo lado: en la pestaña
+// 2, bajo la aldea A, que es donde está y quien le paga el cereal. En la fila de B de la
+// pestaña 1 no aparece, porque no está en B.
 // (Los 20 legionarios que hay en B son de A, no de B: en `enforcement` `from` es la aldea
 // natal y `vref` el destino, y confundirlos es justo el error que esta pestaña arrastraba.)
 $own = troopOverviewOwnTroops(array($A,$B), $ROMAN);
-check($own[$B]['away']['u1'] === 12,
-    'B ve fuera los 12 que tiene en el oasis de A (dio '.$own[$B]['away']['u1'].')');
-check($own[$B]['home']['u1'] === 40,
-    'los 20 legionarios de A alojados en B no se cuelan en el grupo propio de B');
-check($own[$B]['total']['u1'] === 52,
-    'el ejército de B es 40 en casa + 12 en el oasis (dio '.$own[$B]['total']['u1'].')');
+check($own[$B]['u1'] === 40,
+    'los 12 que B tiene en el oasis de A no cuentan como tropas propias de B (dio '.$own[$B]['u1'].')');
+
 $oasisGroup = null;
-foreach($own[$B]['groups'] as $group) {
-    if($group['kind'] === 'support' && (int)$group['where'] === $OASIS) { $oasisGroup = $group; }
+foreach($garrisons[$A] as $group) {
+    if($group['kind'] === 'oasis' && (int)$group['from'] === $B) { $oasisGroup = $group; }
 }
-check($oasisGroup !== null, 'el detalle de B nombra el oasis donde están esos 12');
+check($oasisGroup !== null && $oasisGroup['units']['u1'] === 12,
+    'y sí se ven, una sola vez, en la pestaña 2 bajo la aldea que anexó el oasis');
 
 // ---------------------------------------------------------------------------
 section('F. Rangos de tribu y plantilla');
@@ -290,21 +260,22 @@ check(strpos($tpl,'dorf3.php?s=5&amp;su=2') !== false,
 check(strpos($tpl,'troopOverviewOwnTroops(') !== false && strpos($tpl,'troopOverviewVillageGarrisons(') !== false,
     'la plantilla usa la agregación compartida');
 check(strpos($tpl,'$database->getUnit(') === false,
-    'la plantilla ya no lee `units` por su cuenta (era lo que escondía las tropas fuera de casa)');
+    'la plantilla no lee `units` por su cuenta: la agregación es una sola');
 check(strpos($tpl,'class="vil_troops"') !== false,
     'la segunda pestaña usa la tabla vil_troops que el gpack ya estila');
-check(substr_count($tpl,'class="small') >= 1,
-    'la fila chica de "fuera de la aldea" usa la clase small del gpack');
+check(strpos($tpl,'<tr class="small') === false,
+    'la pestaña no agrega filas propias por aldea: una fila por aldea más el Total, como el T4 oficial');
 check(strpos($tpl,'<td class="vil fc" colspan="12">') === false,
     'los destinos ya no se imprimen en una fila de texto a lo ancho: parten la cuadrícula en dos');
-check(strpos($tpl,'title="\'.$title.\'"') !== false,
-    'los destinos de lo que está fuera se ven en el title de la fila chica');
 
+
+// La pantalla lee `units` y `enforcement` y nada más: lo que está en camino o atrapado no
+// se muestra acá a propósito. Si alguien vuelve a sumarlo, estas dos aserciones lo avisan.
 $engine = file_get_contents(dirname(__DIR__).'/GameEngine/TroopOverview.php');
-check(strpos($engine,'a.vref IN ($in)') !== false,
-    'el join de movimientos filtra por attacks.vref (la aldea natal)');
-check(strpos($engine,'m.sort_type IN (3,4)') !== false,
-    'cuenta la ida y la vuelta, que comparten la misma fila de attacks');
+check(strpos($engine,TB_PREFIX."movement") === false && strpos($engine,'."movement') === false,
+    'la agregación del resumen no mira los movimientos: lo que está en camino se ve en la plaza de reuniones');
+check(strpos($engine,'."prisoners') === false,
+    'ni las tropas atrapadas en trampas ajenas');
 
 $dorf3 = file_get_contents(dirname(__DIR__).'/dorf3.php');
 check(strpos($dorf3,"su=") !== false,
