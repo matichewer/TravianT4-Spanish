@@ -3,6 +3,14 @@
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
 $reportFilter = 0;
+$reportPageSizes = array(10, 20, 50, 100);
+if(isset($_GET['per_page']) && in_array((int)$_GET['per_page'], $reportPageSizes, true)) {
+	$_SESSION['reports_per_page'] = (int)$_GET['per_page'];
+}
+$reportsPerPage = isset($_SESSION['reports_per_page'])
+	&& in_array((int)$_SESSION['reports_per_page'], $reportPageSizes, true)
+	? (int)$_SESSION['reports_per_page']
+	: 10;
 if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6'), true)) {
 	$reportFilter = (int)$_GET['t'];
 } elseif(isset($_GET['t'])) {
@@ -23,6 +31,8 @@ include "Templates/html.tpl";
 	<style type="text/css">
 		/* Temporary production trial: hide the decorative illustration in report details. */
 		#content.reports .reportImage { display: none; }
+		#content.reports .reportsPerPage { float: right; margin: -3px 12px 0 10px; }
+		#content.reports .reportsPerPage label { margin-right: 4px; }
 	</style>
 	<div id="wrapper"> 
 		<img id="staticElements" src="img/x.gif" alt="" /> 

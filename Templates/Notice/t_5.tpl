@@ -21,7 +21,7 @@ if (isset($_GET['page'])) {
     $page = 1;
 } 
 
-$itemsPerPage = 10;
+$itemsPerPage = $reportsPerPage;
 $lastPage = ceil($query / $itemsPerPage);
 
 if ($page < 1) {
@@ -215,6 +215,7 @@ while($row = mysql_fetch_array($sql2)){
 		</div>
 <?php } ?>
 
+	  <?php include __DIR__."/per_page.tpl"; ?>
 	  <div class="paginator">
 	  <?php echo $paginationDisplay; ?>
       </div>

@@ -18,7 +18,7 @@ if (isset($_GET['page'])) { // Obtener el número de página
     $page = 1;
 }
 
-$itemsPerPage = 10; //Número de elementos mostrados por página
+$itemsPerPage = $reportsPerPage; // Número de elementos mostrados por página
 $lastPage = ceil($query / $itemsPerPage); // Obtener el número de la última página
 
 if ($page < 1) {
@@ -264,6 +264,7 @@ else if (is_numeric($btype))
 		</div>
 <?php } ?>
 
+	  <?php include __DIR__."/per_page.tpl"; ?>
 	  <div class="paginator">
 	  <?php echo $paginationDisplay; ?>
       </div>

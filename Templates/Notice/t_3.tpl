@@ -12,7 +12,7 @@ if (isset($_GET['page'])) {
     $page = 1;
 } 
 
-$itemsPerPage = 10;
+$itemsPerPage = $reportsPerPage;
 $lastPage = ceil($query / $itemsPerPage);
 
 if ($page < 1) {
@@ -256,6 +256,7 @@ else if (is_numeric($btype))
 		</div>
 <?php } ?>
 
+	  <?php include __DIR__."/per_page.tpl"; ?>
 	  <div class="paginator">
 	  <?php echo $paginationDisplay; ?>
       </div>
