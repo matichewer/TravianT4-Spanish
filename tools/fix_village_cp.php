@@ -34,6 +34,7 @@ $apply = in_array('--aplicar', $argv, true);
 
 require dirname(__DIR__).'/config/connection.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
+require dirname(__DIR__).'/GameEngine/Data/cp.php';
 require dirname(__DIR__).'/GameEngine/Accounts.php';
 require dirname(__DIR__).'/GameEngine/Production.php';
 
@@ -43,17 +44,6 @@ if($mysqli->connect_errno) {
     exit(2);
 }
 $mysqli->set_charset('utf8mb4');
-
-/** PC/día de un edificio al nivel dado. Igual que Automation::buildingCP. */
-function culturePointsForBuilding($type, $level) {
-    $dataarray = isset($GLOBALS['bid'.(int)$type]) ? $GLOBALS['bid'.(int)$type] : null;
-    if(!is_array($dataarray)) {
-        return 0;
-    }
-    $level = (int)$level;
-
-    return isset($dataarray[$level]['cp']) ? (int)$dataarray[$level]['cp'] : 0;
-}
 
 $villageTable = TB_PREFIX.'vdata';
 $fieldTable = TB_PREFIX.'fdata';
@@ -88,7 +78,7 @@ while($row = $result->fetch_assoc()) {
         }
         $type = (int)$row['f'.$i.'t'];
         if($type) {
-            $correct += culturePointsForBuilding($type, (int)$row['f'.$i]);
+            $correct += buildingCulturePointsAtLevel($type, (int)$row['f'.$i]);
         }
     }
 

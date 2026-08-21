@@ -79,7 +79,10 @@ if($buildnum == 0 && $resnum == 0) {
 				}
 				if($database->query($q) && ($enought_res == 1 or $jobs['master'] == 0)) {
 					$database->modifyPop($jobs['wid'],$resource['pop'],0);
-					$database->addCP($jobs['wid'],$resource['cp']);
+					// El incremento del nivel, no el total: `cp` de buidata es la producción
+					// del edificio a ese nivel. Sumar el total acá inflaba vdata.cp cada vez
+					// que alguien terminaba una obra con oro.
+					$database->addCP($jobs['wid'],buildingCulturePointsDelta($jobs['type'],$jobs['level']));
 					$q = "DELETE FROM ".TB_PREFIX."bdata where id = ".$jobs['id'];
 					$database->query($q);
 					if($jobs['type'] == 18) {

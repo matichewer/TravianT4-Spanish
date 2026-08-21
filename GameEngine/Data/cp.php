@@ -427,6 +427,40 @@ if(!function_exists('cultureWorldSpeed')){
 	}
 }
 
+if(!function_exists('buildingCulturePointsAtLevel')){
+	/**
+	 * Puntos de cultura por día que rinde un edificio al nivel dado.
+	 *
+	 * **No se acumula**, aunque el campo hermano `pop` de Data/buidata.php sí sea un
+	 * incremento. El campo `cp` es el total por día del edificio a ese nivel: embajada
+	 * 20 = 153, academia 20 = 153, residencia 20 = 77, campo de recursos 10 = 6, los
+	 * mismos números que publica el T4 oficial.
+	 *
+	 * Vive acá y no en Automation porque son cuatro los caminos que tienen que dar el
+	 * mismo número: el recuento (`recountCP`), el fin de obra normal (`getPop` ->
+	 * `addCP`), el "terminar ahora" con oro del Plus y `tools/fix_village_cp.php`. El
+	 * bug histórico fue justamente que dos de ellos se equivocaban igual y por eso
+	 * ninguno delataba al otro.
+	 */
+	function buildingCulturePointsAtLevel($type, $level){
+		$dataarray = isset($GLOBALS['bid'.(int)$type]) ? $GLOBALS['bid'.(int)$type] : null;
+		$level = (int)$level;
+		if(!is_array($dataarray) || !isset($dataarray[$level]['cp'])){
+			return 0;
+		}
+
+		return (int)$dataarray[$level]['cp'];
+	}
+
+	/** Lo que suma a la producción terminar el nivel $level, contra el anterior. */
+	function buildingCulturePointsDelta($type, $level){
+		$level = (int)$level;
+
+		return buildingCulturePointsAtLevel($type, $level)
+			- ($level >= 1 ? buildingCulturePointsAtLevel($type, $level - 1) : 0);
+	}
+}
+
 if(!function_exists('travianCultureThresholds')) {
 	/**
 	 * Modo 1 = la columna x1 del T4 oficial ($cp1) y modo 0 = la columna x3 ($cp0).

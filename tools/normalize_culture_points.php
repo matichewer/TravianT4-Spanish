@@ -10,18 +10,21 @@
 // sistema/administración al seleccionar únicamente cuentas con acceso USER y aldeas.
 
 require_once dirname(__DIR__).'/GameEngine/Database.php';
+require_once dirname(__DIR__).'/GameEngine/Accounts.php';
 require_once dirname(__DIR__).'/GameEngine/Data/cp.php';
 
 $apply = in_array('--apply', $argv, true);
 $userTable = TB_PREFIX.'users';
 $villageTable = TB_PREFIX.'vdata';
-$slowCultureMode = 1;
+// La tabla que usa el mundo, no una fija: con `CP` derivado de SPEED, clavar el modo 1
+// acá recortaría contra los umbrales de un mundo x1 en un mundo de velocidad.
+$slowCultureMode = CP;
 
 $rows = $database->query_return(
 	"SELECT u.id, u.username, u.cp, COUNT(v.wref) AS villages "
 	."FROM $userTable u "
 	."INNER JOIN $villageTable v ON v.owner = u.id "
-	."WHERE u.access = ".(int)USER." "
+	."WHERE u.access = ".(int)USER." AND ".playerAccountSql('u`.`id')." "
 	."GROUP BY u.id, u.username, u.cp "
 	."ORDER BY u.id"
 );

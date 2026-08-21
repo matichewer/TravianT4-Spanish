@@ -115,8 +115,30 @@ cultureBalanceAssert(
 	'buildingCP() volvió a acumular los niveles 0..N en vez de leer el total del nivel.'
 );
 cultureBalanceAssert(
-	$automation->buildingCP(18, 0) === 0 && $automation->buildingCP(18, 99) === 0,
-	'buildingCP() no tolera un nivel fuera de la tabla.'
+	$automation->buildingCP(18, 0) === 0 && $automation->buildingCP(18, 99) === 0
+		&& buildingCulturePointsAtLevel(999, 5) === 0,
+	'El cálculo de PC por edificio no tolera un nivel o un tipo fuera de la tabla.'
+);
+// Los cuatro caminos que escriben cultura tienen que salir de la misma definición: el
+// recuento, el fin de obra, el "terminar ahora" con oro y la herramienta de recuento.
+$culturePointSources = array(
+	'GameEngine/Automation.php' => 'buildingCulturePointsAtLevel(',
+	'Templates/Plus/3.tpl' => 'buildingCulturePointsDelta($jobs[',
+	'tools/fix_village_cp.php' => 'buildingCulturePointsAtLevel('
+);
+foreach($culturePointSources as $sourceFile => $needle){
+	cultureBalanceAssert(
+		strpos(file_get_contents(dirname(__DIR__).'/'.$sourceFile), $needle) !== false,
+		$sourceFile.' dejó de usar la definición compartida de PC por edificio.'
+	);
+}
+cultureBalanceAssert(
+	strpos(file_get_contents(dirname(__DIR__).'/Templates/Plus/3.tpl'), "addCP(\$jobs['wid'],\$resource['cp'])") === false,
+	'El "terminar ahora" con oro del Plus volvió a sumar el total del nivel en vez del incremento.'
+);
+cultureBalanceAssert(
+	strpos(file_get_contents(dirname(__DIR__).'/tools/normalize_culture_points.php'), '$slowCultureMode = CP;') !== false,
+	'La normalización volvió a clavar la tabla de cultura en vez de leer la del mundo.'
 );
 
 // getPop() alimenta el addCP incremental del fin de obra: tiene que dar el delta.

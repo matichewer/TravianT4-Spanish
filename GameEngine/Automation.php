@@ -522,12 +522,7 @@ class Automation {
      * a medias.
      */
     function buildingCP($f, $lvl) {
-        $name = "bid".$f;
-        global $$name;
-        $dataarray = $$name;
-        $lvl = (int)$lvl;
-
-        return isset($dataarray[$lvl]['cp']) ? (int)$dataarray[$lvl]['cp'] : 0;
+        return buildingCulturePointsAtLevel($f, $lvl);
     }
 
     public function hasOrdinaryTroopReturnInEvasionWindow($database, $villageId, $attackArrivalTime, $windowSeconds = 10) {
@@ -1801,9 +1796,7 @@ class Automation {
         $dataarray = $$name;
         $level = (int)$level;
         $pop = isset($dataarray[($level + 1)]['pop']) ? (int)$dataarray[($level + 1)]['pop'] : 0;
-        $cpNew = isset($dataarray[($level + 1)]['cp']) ? (int)$dataarray[($level + 1)]['cp'] : 0;
-        $cpOld = ($level >= 1 && isset($dataarray[$level]['cp'])) ? (int)$dataarray[$level]['cp'] : 0;
-        return array($pop, $cpNew - $cpOld);
+        return array($pop, buildingCulturePointsDelta($tid, $level + 1));
     }
 
     /**
