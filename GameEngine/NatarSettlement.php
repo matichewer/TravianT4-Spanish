@@ -57,14 +57,14 @@ if(!defined('NATAR_SETTLEMENT_START_FIELD_LEVEL')) {
     define('NATAR_SETTLEMENT_START_FIELD_LEVEL', 2);
 }
 if(!defined('NATAR_SETTLEMENT_GROWTH_INTERVAL')) {
-    // Un nivel de campo cada 3 días.
-    define('NATAR_SETTLEMENT_GROWTH_INTERVAL', 259200);
+    // Un nivel de campo cada 36 horas.
+    define('NATAR_SETTLEMENT_GROWTH_INTERVAL', 129600);
 }
 if(!defined('NATAR_SETTLEMENT_REPAIR_INTERVAL')) {
     // Cada cuánto una aldea repone UN nivel de cada campo o edificio que le hayan
-    // destruido. Un poco más rápido que el crecimiento (3 días) a propósito: le da algo
+    // destruido. Un poco más rápido que el crecimiento (36 h) a propósito: le da algo
     // de dinamismo sin que catapultearla deje de valer la pena.
-    define('NATAR_SETTLEMENT_REPAIR_INTERVAL', 172800);
+    define('NATAR_SETTLEMENT_REPAIR_INTERVAL', 86400);
 }
 if(!defined('NATAR_SETTLEMENT_MAX_FIELD_LEVEL')) {
     // El mismo tope que trae una Aldea de la Maravilla en el T4 oficial.
