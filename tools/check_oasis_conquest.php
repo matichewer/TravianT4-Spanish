@@ -182,4 +182,30 @@ foreach(array('profile.tpl' => $profileSource, 'overview.tpl' => $overviewSource
         $name.' separa barro+cereal del caso de hierro');
 }
 
+
+// Un write que falla no puede anunciarse como conquista. La columna `conquered_at` faltaba
+// en la base de produccion, el UPDATE devolvia false —mysql_query() no chequea nada— y el
+// informe igual decia "tu heroe conquisto este oasis" mientras el oasis seguia libre.
+$conquestStart = strpos($automationSource, "case 'conquered':");
+$conquestEnd = strpos($automationSource, "case 'already_owned':", $conquestStart);
+$conquestSource = substr($automationSource, $conquestStart, $conquestEnd - $conquestStart);
+oasisAssert(strpos($conquestSource, '$conquestWritten = mysql_query("UPDATE ".TB_PREFIX."odata') !== false,
+    'la conquista guarda el resultado del UPDATE de odata');
+$writtenPos = strpos($conquestSource, 'if($conquestWritten)');
+$occupiedPos = strpos($conquestSource, 'wdata SET `occupied`');
+$announcePos = strpos($conquestSource, 'tu héroe conquistó este oasis');
+oasisAssert($writtenPos !== false && $occupiedPos > $writtenPos && $announcePos > $writtenPos,
+    'marcar la casilla ocupada y anunciar la conquista dependen de que el UPDATE haya andado');
+oasisAssert(strpos($conquestSource, 'if(mysql_query("UPDATE ".TB_PREFIX."odata SET `loyalty`') !== false,
+    'la bajada de lealtad tampoco se anuncia sin confirmar el UPDATE');
+
+// La capa de base deja rastro de cualquier write fallido: sin esto el fallo es invisible.
+$dbSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+oasisAssert(strpos($dbSource, 'function travian_log_failed_query(') !== false,
+    'la capa de base tiene un registro de queries fallidas');
+oasisAssert(preg_match('/function mysql_query\(\$sql\) \{.*?travian_log_failed_query/s', $dbSource) === 1,
+    'el shim mysql_query() loguea los writes que fallan');
+oasisAssert(preg_match('/function removeOases\(.*?travian_log_failed_query.*?return false;.*?wdata SET occupied = 0/s', $dbSource) === 1,
+    'soltar un oasis no limpia la casilla si el UPDATE de odata fallo');
+
 echo "Todas las comprobaciones de conquista de oasis pasaron.\n";

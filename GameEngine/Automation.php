@@ -3551,13 +3551,27 @@ class Automation {
                                     if($o_conqured != 0) {
                                         $this->accrueProductionBeforeChange($o_conqured, $conquestTime);
                                     }
-                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".$conquestTime."', `lastupdated2`='".$conquestTime."', `conquered_at`='".$conquestTime."' WHERE `wref`='".$data['to']."' ");
-                                    mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
-                                    $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
+                                    // El informe no puede anunciar una conquista que la base rechazó.
+                                    // La columna `conquered_at` faltaba en producción, este UPDATE
+                                    // falló en silencio y el jugador leyó "tu héroe conquistó este
+                                    // oasis" mientras el oasis seguía libre; encima el UPDATE de
+                                    // `wdata` de abajo sí corría y dejaba la casilla marcada como
+                                    // ocupada, que es lo que la desincroniza (deja de repoblar
+                                    // animales y el mapa la dibuja ocupada).
+                                    $conquestWritten = mysql_query("UPDATE ".TB_PREFIX."odata SET `conqured`='".$data['from']."', `owner`='".$a_uid."', `name`='Oasis conquistado', `loyalty`='100', `lastupdated`='".$conquestTime."', `lastupdated2`='".$conquestTime."', `conquered_at`='".$conquestTime."' WHERE `wref`='".$data['to']."' ");
+                                    if($conquestWritten) {
+                                        mysql_query("UPDATE ".TB_PREFIX."wdata SET `occupied`='1' WHERE `id`='".$data['to']."' ");
+                                        $info_chief = "".$hero_pic.", tu héroe conquistó este oasis.";
+                                    } else {
+                                        $info_chief = "".$hero_pic.", tu héroe venció a los animales, pero el oasis no pudo anexarse por un error del servidor.";
+                                    }
                                     break;
                                 case 'loyalty_reduced':
-                                    mysql_query("UPDATE ".TB_PREFIX."odata SET `loyalty`='".$annexation['loyalty']."', `lastupdated2`='".time()."' WHERE `wref`='".$data['to']."' ");
-                                    $info_chief = "".$hero_pic.", la lealtad del oasis bajó de ".round($o_loyalty)."% a ".$annexation['loyalty']."%.";
+                                    if(mysql_query("UPDATE ".TB_PREFIX."odata SET `loyalty`='".$annexation['loyalty']."', `lastupdated2`='".time()."' WHERE `wref`='".$data['to']."' ")) {
+                                        $info_chief = "".$hero_pic.", la lealtad del oasis bajó de ".round($o_loyalty)."% a ".$annexation['loyalty']."%.";
+                                    } else {
+                                        $info_chief = "".$hero_pic.", tu héroe venció a los animales, pero la lealtad del oasis no pudo actualizarse por un error del servidor.";
+                                    }
                                     break;
                                 case 'already_owned':
                                     $info_chief = "".$hero_pic.", tu héroe ya había conquistado este oasis.";

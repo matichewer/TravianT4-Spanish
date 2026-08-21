@@ -9,6 +9,18 @@
         // porque hay checkers que cargan el driver solo, sin pasar por él.
         require_once __DIR__."/../Accounts.php";
 
+        /**
+         * Un write que falla devuelve false y el codigo legacy sigue de largo sin mirarlo,
+         * asi que el error se pierde y la partida queda inconsistente sin que nadie se
+         * entere. Paso con `odata.conquered_at`: la columna faltaba en produccion, el
+         * UPDATE de la conquista fallo, y el informe igual anuncio que el heroe habia
+         * conquistado el oasis. Dejar el fallo en el log de errores de Apache no cambia el
+         * comportamiento, pero convierte un bug invisible en una linea que se puede buscar.
+         */
+        function travian_log_failed_query($sql, $error) {
+            error_log('[SQL FALLIDO] '.$error.' | '.preg_replace('/\s+/', ' ', substr((string)$sql, 0, 500)));
+        }
+
         class mysqli_DB {
         	var $connection;
         	var $worldRadiusCache = null;
@@ -4612,7 +4624,11 @@
         	References: Query
         	***************************/
         	function query($query) {
-        		return mysqli_query($this->connection,$query);
+        		$result = mysqli_query($this->connection,$query);
+        		if($result === false) {
+        			travian_log_failed_query($query, mysqli_error($this->connection));
+        		}
+        		return $result;
         	}
 
         	function RemoveXSS($val) {
@@ -5293,6 +5309,13 @@ break;
                 $q = "UPDATE ".TB_PREFIX."odata SET conqured = 0, owner = 3, loyalty = 100,"
                     ." lastupdated2 = ".time().", conquered_at = 0, name = 'Oasis sin ocupar' WHERE wref = $wref";
                 $result = mysqli_query($this->connection,$q);
+                if($result === false) {
+                    // La casilla se marca libre solo si el oasis quedo libre de verdad: si
+                    // el UPDATE de arriba falla y este corre igual, el mapa muestra un oasis
+                    // sin duenio que en `odata` sigue conquistado.
+                    travian_log_failed_query($q, mysqli_error($this->connection));
+                    return false;
+                }
                 mysqli_query($this->connection,"UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = $wref");
                 return $result;
             }
@@ -6999,7 +7022,11 @@ break;
 
 function mysql_query($sql) {
 	global $database;
-	return mysqli_query($database->connection, $sql);
+	$result = mysqli_query($database->connection, $sql);
+	if($result === false) {
+		travian_log_failed_query($sql, mysqli_error($database->connection));
+	}
+	return $result;
 }
 
 function mysql_fetch_assoc($var) {
