@@ -61,7 +61,9 @@ if($bindicate == 1) {
     }
      else if($bindicator == 7) {
     	$neededtime = $building->calculateAvaliable($id,$bid);
-    	echo "<span class=\"none\">Recursos suficientes a las ".$neededtime[1]."</span>";
+    	echo "<span class=\"none\">".($neededtime === false
+    		? "No alcanza, y con esta producción no va a alcanzar nunca."
+    		: "Recursos suficientes a las ".$neededtime[1])."</span>";
      }
      else if($bindicator == 8) {
      	echo "<button type=\"button\" value=\"Upgrade level\" class=\"build\" onclick=\"window.location.href = 'dorf2.php?a=$bid&id=$id&c=".$session->checker."'; return false;\">

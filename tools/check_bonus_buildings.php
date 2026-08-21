@@ -192,7 +192,9 @@ $buildArrayProperty->setAccessible(true);
 
 function bonusBuildingProbe($fields, $jobs = array(), $capital = 0) {
 	global $buildingProbe, $buildArrayProperty, $village, $session;
-	$village = (object)array('capital'=>$capital,'resarray'=>bonusFields($fields),'wid'=>1);
+	$village = new BonusProbeVillage();
+	$village->capital = $capital;
+	$village->resarray = bonusFields($fields);
 	$session = (object)array('tribe'=>1);
 	$buildArrayProperty->setValue($buildingProbe,$jobs);
 	return $buildingProbe;
@@ -264,6 +266,27 @@ class BonusMasterDatabaseStub {
 		return $out;
 	}
 	public function getResourceLevel($wid) { return $this->fields; }
+	public function getJobs($wid) { return $this->jobs; }
+}
+
+/**
+ * Aldea del sondeo. Tiene que saber su cereal libre porque el maestro constructor
+ * pasa por el candado de alimentos igual que la construccion normal.
+ */
+class BonusProbeVillage {
+	public $capital = 0;
+	public $wid = 1;
+	public $pop = 0;
+	public $resarray = array();
+	public $ocounter = array(0,0,0,0);
+	public function getOasisCounter() { return $this->ocounter; }
+	public function getBaseCropProduction() {
+		return villageBaseCropProduction($this->resarray,$this->ocounter,SPEED);
+	}
+	public function getFreeCrop() {
+		return villageFreeCrop($this->resarray,$this->ocounter,$this->pop,SPEED);
+	}
+	public function getProd($type) { return 1000; }
 }
 
 $masterRequest = $reflection->getMethod('masterBuildingRequest');
@@ -271,7 +294,9 @@ $masterRequest->setAccessible(true);
 
 function bonusMasterProbe($fields, $jobs = array(), $capital = 0) {
 	global $buildingProbe, $buildArrayProperty, $village, $session, $database;
-	$village = (object)array('capital'=>$capital,'resarray'=>bonusFields($fields),'wid'=>1);
+	$village = new BonusProbeVillage();
+	$village->capital = $capital;
+	$village->resarray = bonusFields($fields);
 	$session = (object)array('tribe'=>1);
 	$database = new BonusMasterDatabaseStub();
 	$database->fields = $village->resarray;

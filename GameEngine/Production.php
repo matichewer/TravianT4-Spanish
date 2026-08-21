@@ -17,6 +17,13 @@
  *          -> + 25% por cada oasis del recurso, sobre lo anterior
  *          -> + 25% del bono de oro, sobre lo anterior
  *          -> * SPEED
+ *
+ * Con el cereal hay DOS números y no son intercambiables:
+ *   - el balance, Village::getProd('crop'): bruta + héroe - población - tropas.
+ *     Es lo que muestra dorf1 y lo que decide la hambruna.
+ *   - el cereal libre, villageFreeCrop(): bruta sin oro ni héroe - población.
+ *     Es lo único que decide si se puede construir, igual que en el T4 oficial.
+ * Ver el comentario de villageFreeCrop() para por qué el oficial los separa.
  */
 
 /**
@@ -141,6 +148,52 @@ function villageGrossProduction($resarray, $ocounter, $bonusFlags, $speed) {
 }
 
 /**
+ * Producción de cereal "base" tal como la define el T4 oficial: la de las
+ * plantaciones con los bonos de molino, panadería y oasis, SIN el bono de oro y
+ * SIN la producción del héroe.
+ *
+ * No es la producción que ve el jugador en la barra de recursos —esa lleva el oro
+ * y el héroe, y además le resta población y tropas—. Es el número con el que el
+ * oficial decide si te deja construir, y deja los dos bonos afuera a propósito:
+ * son temporales, así que dejarlos entrar permitiría construir edificios que la
+ * aldea no puede sostener cuando el bono se vence.
+ */
+function villageBaseCropProduction($resarray, $ocounter, $speed) {
+	$gross = villageGrossProduction($resarray,$ocounter,array(false,false,false,false),$speed);
+	return (float)$gross['production']['crop'];
+}
+
+/**
+ * "Cereal libre" del T4 oficial: producción base menos los HABITANTES de la aldea.
+ *
+ * Las tropas no entran. Esto sorprende, y es la regla del juego original: el
+ * candado existe para que no te construyas un déficit *sólo con edificios*, no
+ * para limitar el ejército. Un martillo con -5.000 de cereal sigue pudiendo
+ * construir; lo que le pasa es que se le mueren las tropas de hambre, que es un
+ * castigo aparte (Automation::starvation).
+ *
+ * El balance real —el que decide la hambruna y el que muestra dorf1— es otra
+ * cuenta distinta: Village::getProd('crop'), que sí resta tropas y sí suma héroe
+ * y oro. Los dos números conviven a propósito; no unificarlos.
+ */
+function villageFreeCrop($resarray, $ocounter, $population, $speed) {
+	return villageBaseCropProduction($resarray,$ocounter,$speed) - max(0,(int)$population);
+}
+
+/**
+ * Umbral del escape antibloqueo del oficial: con la producción base de cereal por
+ * encima de este número, el edificio principal, el almacén y el granero se pueden
+ * subir hasta nivel 10 aunque el cereal libre esté en rojo.
+ *
+ * El oficial dice 276/h y sus mundos corren a velocidad 1, así que acá se escala
+ * por SPEED: pedir 276 pelados en un mundo x3 haría que el escape se abriera con
+ * plantaciones a la mitad de nivel que en el original.
+ */
+function freeCropUnlockThreshold($speed) {
+	return 276 * (float)$speed;
+}
+
+/**
  * Bonos de producción de oro (b1..b4) de un jugador, en el orden madera, barro,
  * hierro y cereal.
  */
@@ -165,7 +218,7 @@ function villageOasisCounter($oasisowned) {
 	$wood = $clay = $iron = $crop = 0;
 	if(is_array($oasisowned)) {
 		foreach($oasisowned as $oasis) {
-			switch((int)$oasis['type']) {
+			switch(isset($oasis['type']) ? (int)$oasis['type'] : 0) {
 				case 1: $wood += 1; break;
 				case 2: $wood += 2; break;
 				case 3: $wood += 1; $crop += 1; break;

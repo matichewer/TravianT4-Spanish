@@ -19,6 +19,7 @@ class Village {
 	private $production = array();
 	private $productionBreakdown = array();
 	private $oasisowned = array(), $ocounter = array();
+	private $freeCrop = null, $baseCropProduction = null;
 	
 	function __construct() {
 		global $session;
@@ -41,6 +42,38 @@ class Village {
 	public function getProductionBreakdown($type) {
 		return isset($this->productionBreakdown[$type]) ? $this->productionBreakdown[$type] : array();
 	}
+
+	/**
+	 * Cereal libre del T4 oficial: producción base menos habitantes, sin tropas.
+	 * Es lo único que mira el candado de construcción; el balance que ve el
+	 * jugador (getProd('crop')) es otra cuenta. Ver GameEngine/Production.php.
+	 */
+	public function getFreeCrop() {
+		if($this->freeCrop === null) {
+			$this->freeCrop = villageFreeCrop($this->resarray,$this->ocounter,$this->pop,SPEED);
+		}
+		return $this->freeCrop;
+	}
+
+	/**
+	 * Oasis anexados repartidos por recurso, en el formato que espera
+	 * villageGrossProduction(). Lo necesita quien tenga que simular la producción
+	 * con un campo en otro nivel (el candado del molino, por ejemplo).
+	 */
+	public function getOasisCounter() {
+		return $this->ocounter;
+	}
+
+	/**
+	 * Producción base de cereal (campos + molino/panadería + oasis, sin oro ni
+	 * héroe), que es contra la que se mide el escape antibloqueo del oficial.
+	 */
+	public function getBaseCropProduction() {
+		if($this->baseCropProduction === null) {
+			$this->baseCropProduction = villageBaseCropProduction($this->resarray,$this->ocounter,SPEED);
+		}
+		return $this->baseCropProduction;
+	}
 	
 	public function getAllUnits($vid) {
 		global $database,$technology;
@@ -49,6 +82,11 @@ class Village {
 		
 	private function LoadTown() {
 		global $database,$session,$logging,$technology;
+		// LoadTown corre dos veces por petición (constructor y processProduction):
+		// el cereal libre depende de los campos y de la población, así que la copia
+		// cacheada se tira acá para no responder con la de antes de acreditar.
+		$this->freeCrop = null;
+		$this->baseCropProduction = null;
 		$this->infoarray = $database->getVillage($this->wid);
 		if($this->infoarray['owner'] != $session->uid && !$session->isAdmin) {
 			unset($_SESSION['wid']);

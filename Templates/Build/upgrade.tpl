@@ -119,7 +119,12 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
     }
     else if($bindicate == 7) {
     	$neededtime = $building->calculateAvaliable($id,$village->resarray['f'.$id.'t'],($loopsame > 0 ? 2:1));
-    	echo "<span class=\"none\">Recursos suficientes: ".$neededtime[0]." a las ".$neededtime[1]."</span>";
+    	if($neededtime === false) {
+    		echo "<span class=\"none\">No alcanza, y con esta producción no va a alcanzar nunca.</span>";
+    	}
+    	else {
+    		echo "<span class=\"none\">Recursos suficientes: ".$neededtime[0]." a las ".$neededtime[1]."</span>";
+    	}
 	if($session->goldclub == 1){
 ?>	</br>
 <?php

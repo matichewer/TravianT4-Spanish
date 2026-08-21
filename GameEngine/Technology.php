@@ -158,6 +158,19 @@ class Technology {
 		return $listArray;
 	}
 	
+	/**
+	 * Cuántas unidades de este tipo se pueden pedir de una: sólo lo que alcanzan los
+	 * recursos del almacén.
+	 *
+	 * El balance de cereal NO entra. En el T4 oficial se entrena todo lo que se
+	 * pueda pagar y el castigo por pasarse es la hambruna, no un tope: así es como
+	 * funciona un martillo, que vive en rojo y se alimenta con saqueo y transportes.
+	 * Acá el min() incluía floor(produccion_cereal / consumo_unidad), así que con el
+	 * balance en cero o negativo el máximo era 0 y no entraba ninguna orden — y
+	 * encima el tope era por orden, no acumulado (las tropas en cola no comen hasta
+	 * que salen), así que se saltaba repitiendo el pedido. Era una regla propia que
+	 * no frenaba nada y bloqueaba a quien la respetaba.
+	 */
 	public function maxUnit($unit,$great=false) {
 		$unit = "u".$unit;
 		global $village,$$unit;
@@ -168,20 +181,18 @@ class Technology {
 		if ($res['clay'] > $res['maxstore']){$res['clay'] = $res['maxstore'];}
 		if ($res['iron'] > $res['maxstore']){$res['iron'] = $res['maxstore'];}
 		if ($res['crop'] > $res['maxcrop']){$res['crop'] = $res['maxcrop'];}
-		$woodcalc = floor($res['wood'] / ($unitarray['wood'] * ($great?3:1)));
-		$claycalc = floor($res['clay'] / ($unitarray['clay'] * ($great?3:1)));
-		$ironcalc = floor($res['iron'] / ($unitarray['iron'] * ($great?3:1)));
-		if($res['crop']>0){
-		$cropcalc = floor($res['crop'] / ($unitarray['crop'] * ($great?3:1)));
-		}else{
-		$cropcalc = 0;
+		$multiplier = $great ? 3 : 1;
+		$maximum = null;
+		foreach(array('wood','clay','iron','crop') as $resource) {
+			$cost = (int)$unitarray[$resource] * $multiplier;
+			if($cost <= 0) {
+				continue;
+			}
+			$available = (float)$res[$resource];
+			$affordable = $available > 0 ? floor($available / $cost) : 0;
+			$maximum = $maximum === null ? $affordable : min($maximum,$affordable);
 		}
-		if($unit != "u99"){
-		$popcalc = floor($village->getProd("crop")/$unitarray['pop']);
-		}else{
-		$popcalc = $village->getProd("crop");
-		}
-		return max(0,min($woodcalc,$claycalc,$ironcalc,$cropcalc,$popcalc));
+		return max(0,(int)($maximum === null ? 0 : $maximum));
 	}
 	
     public function maxUnitPlus($unit,$great=false) {

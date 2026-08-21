@@ -75,25 +75,8 @@ class Building {
 					$buildarray = isset($GLOBALS["bid".$tid]) ? $GLOBALS["bid".$tid] : array();
 					$resRequiredPop = isset($buildarray[1]['pop']) ? $buildarray[1]['pop'] : 0;
 				}
-				// Consumo que van a sumar las construcciones ya encoladas. Antes tomaba
-				// siempre el nivel actual + 1, así que con dos mejoras encoladas en el
-				// mismo campo contaba dos veces la primera y nunca la segunda; el nivel
-				// al que apunta cada trabajo ya está guardado en la cola.
-				$soonPop = 0;
-				$jobs = $database->getJobs($village->wid);
-				if(is_array($jobs)) {
-					foreach ($jobs as $j) {
-						$buildarray = isset($GLOBALS["bid".$j['type']]) ? $GLOBALS["bid".$j['type']] : array();
-						$jobLevel = (int)$j['level'];
-						if(isset($buildarray[$jobLevel]['pop'])) {
-							$soonPop += $buildarray[$jobLevel]['pop'];
-						}
-					}
-				}
-				// No se encola nada que deje la aldea produciendo cereal en negativo:
-				// con la hambruna activa eso se paga con tropas. Mejorar una plantación
-				// de cereal siempre se permite, porque es justamente la salida.
-				if(($village->getProd("crop") - $soonPop - $resRequiredPop) < 0 && $village->resarray['f'.$id.'t'] <> 4) {
+				// El candado de alimentos del T4 oficial, con sus excepciones.
+				if(!$this->passesFoodGuard($id,$tid,$queuedHere,$resRequiredPop)) {
 					return 4;
 				}
 				else {
@@ -167,6 +150,121 @@ class Building {
 				return 2;
 			}
 		}
+	}
+
+	/**
+	 * Candado de alimentos del T4 oficial.
+	 *
+	 * La regla: no se encola nada que deje el CEREAL LIBRE por debajo de 1. Cereal
+	 * libre = producción base (campos + molino/panadería + oasis, sin oro ni héroe)
+	 * menos habitantes; las tropas NO cuentan (ver villageFreeCrop). Antes acá se
+	 * usaba el balance con tropas, así que un ejército grande bloqueaba toda la
+	 * construcción de la aldea; el original no hace eso, allí el castigo por tener
+	 * más tropas de las que se pueden alimentar es la hambruna y nada más.
+	 *
+	 * Las excepciones no son adorno: sin ellas una aldea puede quedar sin ninguna
+	 * jugada legal. Son las cinco del oficial:
+	 *   - plantación de cereal: siempre, es la salida del problema;
+	 *   - molino y panadería: si la mejora SUBE el cereal libre;
+	 *   - edificio principal nivel 1: siempre (sin él no se puede ni demoler);
+	 *   - edificio principal, almacén y granero hasta nivel 10, si la producción
+	 *     base llega a freeCropUnlockThreshold();
+	 *   - maravilla del mundo: siempre.
+	 */
+	public function passesFoodGuard($field,$type,$queuedHere = 0,$newPop = 0) {
+		global $village;
+		$field = (int)$field;
+		$type = (int)$type;
+		$queuedHere = max(0,(int)$queuedHere);
+		$currentLevel = isset($village->resarray['f'.$field]) ? (int)$village->resarray['f'.$field] : 0;
+		$targetLevel = $currentLevel + 1 + $queuedHere;
+
+		if($type === 4 || $type === 40) {
+			return true;
+		}
+		if($type === 15 && $targetLevel === 1) {
+			return true;
+		}
+		if(($type === 8 || $type === 9)
+			&& $this->raisesFreeCrop($field,$type,$currentLevel + $queuedHere,$targetLevel)) {
+			return true;
+		}
+		if(in_array($type,array(10,11,15),true) && $targetLevel <= 10
+			&& $village->getBaseCropProduction() >= freeCropUnlockThreshold(SPEED)) {
+			return true;
+		}
+		return ($village->getFreeCrop() - $this->queuedPop() - (int)$newPop) >= 1;
+	}
+
+	/**
+	 * El oficial tampoco deja demoler un molino o una panadería si eso dejaría el
+	 * cereal libre por debajo de 1: sería saltarse el candado por el otro lado y
+	 * quedar sin salida. Cualquier otro edificio se puede demoler siempre, porque
+	 * bajar habitantes es justamente cómo se sale de un bloqueo.
+	 */
+	public function demolitionAllowed($field) {
+		global $village;
+		$field = (int)$field;
+		$type = isset($village->resarray['f'.$field.'t']) ? (int)$village->resarray['f'.$field.'t'] : 0;
+		if($type !== 8 && $type !== 9) {
+			return true;
+		}
+		$level = isset($village->resarray['f'.$field]) ? (int)$village->resarray['f'.$field] : 0;
+		$dataarray = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : array();
+		$popBack = isset($dataarray[$level]['pop']) ? (int)$dataarray[$level]['pop'] : 0;
+		$population = max(0,(int)$village->pop - $popBack);
+		return ($this->baseCropWithField($field,$type,$level - 1) - $population) >= 1;
+	}
+
+	/**
+	 * Consumo que van a sumar los trabajos ya encolados. Cuenta el nivel al que
+	 * apunta cada trabajo: con dos mejoras encoladas en el mismo campo, tomar
+	 * siempre "nivel actual + 1" contaba dos veces la primera y nunca la segunda.
+	 */
+	private function queuedPop() {
+		global $database,$village;
+		$soonPop = 0;
+		$jobs = $database->getJobs($village->wid);
+		if(is_array($jobs)) {
+			foreach($jobs as $job) {
+				$dataarray = isset($GLOBALS['bid'.$job['type']]) ? $GLOBALS['bid'.$job['type']] : array();
+				$jobLevel = (int)$job['level'];
+				if(isset($dataarray[$jobLevel]['pop'])) {
+					$soonPop += $dataarray[$jobLevel]['pop'];
+				}
+			}
+		}
+		return $soonPop;
+	}
+
+	/**
+	 * Devuelve true si subir el molino o la panadería deja MÁS cereal libre del que
+	 * hay. Suben la producción y cuestan habitantes, así que hay niveles en los que
+	 * la cuenta da negativa; el oficial sólo deja pasar los que dan positiva.
+	 */
+	private function raisesFreeCrop($field,$type,$fromLevel,$toLevel) {
+		$dataarray = isset($GLOBALS['bid'.(int)$type]) ? $GLOBALS['bid'.(int)$type] : array();
+		if(!isset($dataarray[(int)$toLevel])) {
+			return false;
+		}
+		$popCost = isset($dataarray[(int)$toLevel]['pop']) ? (int)$dataarray[(int)$toLevel]['pop'] : 0;
+		$before = $this->baseCropWithField($field,$type,$fromLevel);
+		$after = $this->baseCropWithField($field,$type,$toLevel);
+		return ($after - $before - $popCost) > 0;
+	}
+
+	/**
+	 * Producción base de cereal de la aldea suponiendo que un campo tuviera otro
+	 * nivel. Se copia el mapa de campos y se pasa por la fórmula única del juego,
+	 * para no tener acá una segunda cuenta del bono del molino que se desfase.
+	 */
+	private function baseCropWithField($field,$type,$level) {
+		global $village;
+		$level = (int)$level;
+		$resarray = $village->resarray;
+		$resarray['f'.(int)$field] = max(0,$level);
+		$resarray['f'.(int)$field.'t'] = $level > 0 ? (int)$type : 0;
+		return villageBaseCropProduction($resarray,$village->getOasisCounter(),SPEED);
 	}
 
 	public function walling() {
@@ -1062,6 +1160,13 @@ class Building {
 			return false;
 		}
 		$uprequire = $this->resourceRequired($field,$type,1 + $queued);
+		// El constructor maestro no era una puerta de atrás al candado de alimentos:
+		// dorf1/dorf2 encolaban el pedido sin pasar por canBuild(), así que con oro se
+		// podía encolar cualquier edificio en una aldea bloqueada y MasterBuilder() lo
+		// activaba después mirando sólo los recursos.
+		if(!$this->passesFoodGuard($field,$type,$queued,isset($uprequire['pop']) ? (int)$uprequire['pop'] : 0)) {
+			return false;
+		}
 		return array('level'=>$level,'time'=>max(1,(int)$uprequire['time']));
 	}
 
@@ -1086,20 +1191,36 @@ class Building {
 		}
 	}
 	
+	/**
+	 * Cuándo va a haber recursos para esta mejora, o false si no va a haberlos nunca.
+	 *
+	 * Un recurso que falta y no se produce (o se produce en negativo, que es lo
+	 * normal con el cereal) no tiene fecha. Antes esto dividía por la producción sin
+	 * mirar: con producción de cereal exactamente 0 la división daba INF y la página
+	 * mostraba una fecha inventada, y con producción negativa el tiempo salía
+	 * negativo y lo tapaba el max(), así que anunciaba una fecha que no iba a llegar.
+	 */
 	public function calculateAvaliable($id,$tid,$plus=1) {
 		global $village,$generator;
 		$uprequire = $this->resourceRequired($id,$tid,$plus);
-		$rwood = $uprequire['wood']-$village->awood;
-		$rclay = $uprequire['clay']-$village->aclay;
-		$rcrop = $uprequire['crop']-$village->acrop;
-		$riron = $uprequire['iron']-$village->airon;
-		$rwtime = $rwood / $village->getProd("wood") * 3600;
-		$rcltime = $rclay / $village->getProd("clay")* 3600;
-		$rctime = $rcrop / $village->getProd("crop")* 3600;
-		$ritime = $riron / $village->getProd("iron")* 3600;
-		$reqtime = max($rwtime,$rctime,$rcltime,$ritime);
-		$reqtime += time();
-		return $generator->procMtime($reqtime);
+		$missing = array(
+			'wood' => $uprequire['wood']-$village->awood,
+			'clay' => $uprequire['clay']-$village->aclay,
+			'iron' => $uprequire['iron']-$village->airon,
+			'crop' => $uprequire['crop']-$village->acrop
+		);
+		$reqtime = 0;
+		foreach($missing as $resource => $amount) {
+			if($amount <= 0) {
+				continue;
+			}
+			$production = $village->getProd($resource);
+			if($production <= 0) {
+				return false;
+			}
+			$reqtime = max($reqtime,$amount / $production * 3600);
+		}
+		return $generator->procMtime($reqtime + time());
 	}
 };
 

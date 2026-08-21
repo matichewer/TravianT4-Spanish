@@ -11,8 +11,14 @@ if(isset($_POST['cancel'],$_POST['c']) && is_scalar($_POST['c']) && $_POST['canc
 
 if(isset($_POST['demolish'],$_POST['c']) && is_scalar($_POST['c']) && $_POST['demolish'] === '1'
 	&& hash_equals((string)$session->mchecker,(string)$_POST['c'])) {
+	// El campo llega en 'type' aunque sea un número de campo, no un tipo de edificio.
 	if(isset($_POST['type']) && is_scalar($_POST['type']) && ctype_digit((string)$_POST['type'])) {
-		$database->addDemolition($village->wid,(int)$_POST['type']);
+		if($building->demolitionAllowed((int)$_POST['type'])) {
+			$database->addDemolition($village->wid,(int)$_POST['type']);
+		}
+		else {
+			$_SESSION['demolitionError'] = 'No podés demoler el molino ni la panadería si eso deja el cereal libre por debajo de 1.';
+		}
 		$session->changeChecker();
 		header('Location: build.php?gid=15');
 		exit;
@@ -21,6 +27,10 @@ if(isset($_POST['demolish'],$_POST['c']) && is_scalar($_POST['c']) && $_POST['de
 
 if($village->resarray['f'.$id] >= DEMOLISH_LEVEL_REQ) {
 	echo '<h4>Demoler edificio:</h4><p>Tus arquitectos pueden demoler los edificios que ya no necesites:</p>';
+	if(!empty($_SESSION['demolitionError'])) {
+		echo '<p class="none">'.htmlspecialchars($_SESSION['demolitionError'],ENT_QUOTES,'UTF-8').'</p>';
+		unset($_SESSION['demolitionError']);
+	}
 	$VillageResourceLevels = $database->getResourceLevel($village->wid);
 	$DemolitionProgress = $database->getDemolition($village->wid);
 	if(!empty($DemolitionProgress)) {

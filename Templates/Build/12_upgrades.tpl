@@ -56,11 +56,15 @@ echo "<div class=\"clear\"></div>
 					echo "<div class=\"contractLink\"><span class=\"none\">Mejora el granero</span></div>";
 				}
 				else if (${'ab'.$i}[$abdata['b'.$j]+1]['wood'] > $village->awood || ${'ab'.$i}[$abdata['b'.$j]+1]['clay'] > $village->aclay || ${'ab'.$i}[$abdata['b'.$j]+1]['iron'] > $village->airon || ${'ab'.$i}[$abdata['b'.$j]+1]['crop'] > $village->acrop) {
-					if($village->getProd("crop")>0){
+					// Sólo es "nunca" si lo que falta es justamente el cereal y encima no se
+					// produce. Un balance negativo por manutención de tropas es lo normal
+					// en cuanto hay ejército, y no impide juntar madera, barro ni hierro.
+					$cropMissing = ${'ab'.$i}[$abdata['b'.$j]+1]['crop'] > $village->acrop;
+					if(!$cropMissing || $village->getProd("crop") > 0){
 						$time = $technology->calculateAvaliable(12,${'ab'.$i}[$abdata['b'.$j]+1]);
 			            echo "<div class=\"contractLink\"><span class=\"none\">Recursos suficientes: ".$time[0]." ".$time[1]."</span></div>";
 					} else {
-						echo "<div class=\"contractLink\"><span class=\"none\">La producción de cereal es negativa, nunca habrá recursos suficientes</span></div>";
+						echo "<div class=\"contractLink\"><span class=\"none\">Falta cereal y la producción no da: no va a alcanzar solo</span></div>";
 					}
 		            //echo "<div class=\"contractLink\"><span class=\"none\">few resources</span></div>";
 				}

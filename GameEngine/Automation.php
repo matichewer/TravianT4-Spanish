@@ -5596,19 +5596,42 @@ class Automation {
     }
 
     /**
-     * Hambruna.
+     * Hambruna, con las reglas del T4 oficial.
      *
-     * Estaba apagada: los tres puntos que marcaban una aldea como hambrienta
-     * (fin de construcción, fin de entrenamiento y llegada de un ataque) estaban
-     * comentados, y `getStarvation()` sólo miraba la marca, así que ninguna tropa
-     * moría nunca aunque el granero quedara en rojo. Ahora la condición se lee
-     * directamente del estado de la aldea —cereal agotado y balance negativo— y no
-     * depende de que alguien se acuerde de marcarla.
+     * Arranca cuando el granero se queda sin cereal y la aldea produce menos del que
+     * comen su población y sus tropas. Estuvo apagada mucho tiempo: los tres puntos
+     * que marcaban una aldea como hambrienta estaban comentados y getStarvation()
+     * sólo miraba la marca, así que no moría nadie por más rojo que estuviera el
+     * granero. La condición se lee ahora del estado de la aldea y no depende de que
+     * alguien se acuerde de marcarla.
      *
-     * Mientras quede cereal en el granero sólo se anota el déficit. Cuando el
-     * granero llega a cero mueren tropas del contingente más numeroso, las justas
-     * para que el balance vuelva a cero, igual que en Travian. El héroe no se toca:
-     * no vive en la tabla de unidades.
+     * Tres decisiones que la acercan al original y que conviene no "simplificar":
+     *
+     * 1. El ritmo lo pone la DEUDA, no el balance. El granero en negativo es
+     *    exactamente el cereal que faltó desde la pasada anterior, así que se mata
+     *    sólo lo necesario para cubrir esa deuda. Antes se mataba de una todo lo que
+     *    hiciera falta para dejar el balance en cero, con lo cual estar un minuto en
+     *    rojo costaba lo mismo que estar diez horas. Como la aldea sólo acredita
+     *    recursos cuando alguien la carga, atarlo a la deuda además reparte las bajas
+     *    en proporción al tiempo real que estuvo sin comer.
+     *
+     * 2. Cada muerto DEVUELVE al granero su costo de entrenamiento en cereal
+     *    (legionario 30, trabuquete 90). Es lo que en el original le da de comer al
+     *    resto un rato y hace que las bajas se espacien solas.
+     *
+     * 3. Se corta en cuanto el balance vuelve a cero, aunque la deuda quede sin
+     *    pagar. Sin ese corte, una aldea con un déficit chico que estuvo un mes sin
+     *    que la visitaran perdería el ejército entero para saldar una deuda que en el
+     *    original nunca se habría acumulado; el resto de la deuda se perdona porque
+     *    el granero del oficial no baja de cero.
+     *
+     * El orden de las bajas es el del oficial, por grupos: primero los refuerzos de
+     * otros jugadores, después tus tropas venidas de otra aldea tuya, y al final la
+     * guarnición de casa. Dentro de cada grupo muere primero el ejército más
+     * numeroso y dentro del ejército el tipo de unidad más numeroso. Las tropas de un
+     * oasis anexado cuentan como si estuvieran en la aldea, tal cual lo dice el
+     * oficial. Las que están en tránsito o atrapadas en trampas ajenas pagan cereal
+     * pero no mueren acá, y el héroe tampoco: no vive en la tabla de unidades.
      */
     private function starvation() {
         if(file_exists("GameEngine/Prevention/starvation.txt")) {
@@ -5624,15 +5647,15 @@ class Automation {
             if($wref <= 0) {
                 continue;
             }
-            // Las guarniciones estáticas (Maravillas y capital natar) no pasan hambre.
+            // Las guarniciones estaticas (Maravillas y capital natar) no pasan hambre.
             // Son escenario: no se entrenan ni se reponen, igual que en Travian, y la de
             // la capital consume unos 5.000.000 de cereal/h, que ninguna aldea puede
             // producir. Dejarlas entrar acá vaciaba las Aldeas de la Maravilla solas a
-            // los diez minutos del primer ataque que recibían. Se les corta el rojo para
+            // los diez minutos del primer ataque que recibian. Se les corta el rojo para
             // que la deuda no se arrastre.
             //
-            // Las aldeas NPC vivas SÍ pasan hambre: son aldeas de verdad sin jugador
-            // detrás, y el cereal es justamente lo que les acota la guarnición.
+            // Las aldeas NPC vivas SI pasan hambre: son aldeas de verdad sin jugador
+            // detras, y el cereal es justamente lo que les acota la guarnición.
             if(isStaticNpcVillage($starv)) {
                 $this->clearStarvation($wref, -1);
                 continue;
@@ -5649,36 +5672,24 @@ class Automation {
                 continue;
             }
             if($crop > 0) {
-                // Todavía come de la reserva: se anota el déficit por hora y se espera.
+                // Todavia come de la reserva: se anota el déficit por hora y se espera.
                 $database->setVillageField($wref, 'starv', round(-$net));
                 $database->setVillageField($wref, 'starvupdate', $time);
                 continue;
             }
-            $victim = $this->selectStarvationVictim($wref);
-            if($victim === null) {
-                // No queda nada que matar: se corta el rojo para no arrastrar deuda.
-                $this->clearStarvation($wref, 0);
-                continue;
-            }
-            $upkeepPerUnit = max(1, $this->unitUpkeep($victim['type']));
-            $kill = (int)min($victim['count'], ceil(-$net / $upkeepPerUnit));
-            if($kill < 1) {
-                $kill = 1;
-            }
-            if($victim['enforcement'] !== null) {
-                if($kill >= $victim['count']) {
-                    $database->deleteReinf($victim['enforcement']);
-                } else {
-                    $database->modifyEnforce($victim['enforcement'], $victim['type'], $kill, 0);
-                }
-            } else {
-                $database->modifyUnit($wref, $victim['type'], $kill, 0);
-            }
+            $debt = max(0, -$crop);
+            $outcome = $this->starveTroops($wref, $debt, $net);
             $wasStarving = (float)$starv['starv'] > 0;
-            $database->setVillageField($wref, 'crop', 0);
-            $database->setVillageField($wref, 'starv', round(-$net));
+            // La deuda no se arrastra nunca, muera alguien o no: el granero se queda en
+            // cero y lo que devolvieron los muertos es lo unico que puede dejarlo por
+            // encima. Sin esto, una aldea sin tropas y con producción negativa —una a la
+            // que le catapultaron las plantaciones, por ejemplo— acumulaba un rojo que
+            // no se pagaba nunca, y con el granero en -47.000 el jugador no podía
+            // entrenar, ni construir, ni mandar cereal, sin ver por que.
+            $database->setVillageField($wref, 'crop', max(0, $outcome['refund'] - $debt));
+            $database->setVillageField($wref, 'starv', max(0, (int)round(-$outcome['net'])));
             $database->setVillageField($wref, 'starvupdate', $time);
-            if(!$wasStarving) {
+            if($outcome['killed'] > 0 && !$wasStarving) {
                 $this->notifyStarvation($wref);
             }
         }
@@ -5686,6 +5697,162 @@ class Automation {
         if(file_exists("GameEngine/Prevention/starvation.txt")) {
             @unlink("GameEngine/Prevention/starvation.txt");
         }
+    }
+
+    /**
+     * Mata tropas en el orden del oficial hasta cubrir la deuda de cereal o hasta que
+     * el balance vuelva a cero, lo que pase primero.
+     *
+     * Devuelve el cereal que devolvieron los muertos, cuantos fueron y el balance que
+     * queda después de las bajas.
+     */
+    private function starveTroops($wref, $debt, $net) {
+        global $database;
+        $refund = 0;
+        $killed = 0;
+        $touched = array();
+        foreach($this->starvationArmies($wref) as $army) {
+            foreach($army['units'] as $type => $available) {
+                if($net >= 0 || $refund >= $debt) {
+                    break 2;
+                }
+                $upkeep = max(1, $this->unitUpkeep($type));
+                $cropBack = $this->unitCropCost($type);
+                // Las justas para cerrar el balance, o las justas para pagar lo que
+                // falta de la deuda: alcanza con la menor de las dos.
+                $forBalance = (int)ceil(-$net / $upkeep);
+                $forDebt = $cropBack > 0 ? (int)ceil(($debt - $refund) / $cropBack) : PHP_INT_MAX;
+                $kill = (int)min($available, max(1, min($forBalance, $forDebt)));
+                if($kill < 1) {
+                    continue;
+                }
+                if($army['enforcement'] !== null) {
+                    $database->modifyEnforce($army['enforcement'], $type, $kill, 0);
+                    $touched[$army['enforcement']] = true;
+                }
+                else {
+                    $database->modifyUnit($wref, $type, $kill, 0);
+                }
+                $killed += $kill;
+                $refund += $kill * $cropBack;
+                $net += $kill * $upkeep;
+            }
+        }
+        foreach(array_keys($touched) as $id) {
+            $this->dropEmptyReinforcement($id);
+        }
+        return array('refund'=>$refund, 'killed'=>$killed, 'net'=>$net);
+    }
+
+    /**
+     * Los ejércitos de la aldea en el orden en que el oficial se los come.
+     *
+     * Un "ejército" es una fila: la guarnición propia o cada refuerzo por separado.
+     * Grupo 1 los refuerzos de otros jugadores, grupo 2 los tuyos venidos de otra
+     * aldea tuya, grupo 3 lo que salió de está misma aldea. Dentro del grupo va
+     * primero el más numeroso, y a igualdad de tamaño el de id más bajo (el oficial
+     * los alterna de a una unidad; alternar por fila deja el mismo resultado en
+     * cuanto una de las dos se vacía, y no hace falta ir de a una).
+     */
+    private function starvationArmies($wref) {
+        global $database;
+        $owner = (int)$database->getVillageField($wref, 'owner');
+        $armies = array();
+
+        $home = $this->starvationUnitRow($database->getUnit($wref));
+        if(!empty($home)) {
+            $armies[] = array('group'=>3, 'enforcement'=>null, 'order'=>0,
+                              'units'=>$home, 'total'=>array_sum($home));
+        }
+
+        $rows = $database->getEnforceVillage($wref, 0);
+        if(!is_array($rows)) {
+            $rows = array();
+        }
+        // Un oasis no tiene granero: a sus tropas las alimenta la aldea que lo anexo,
+        // así que también son suyas a la hora de pasar hambre.
+        foreach($database->getOasis($wref) as $oasis) {
+            $garrison = $database->getEnforceVillage((int)$oasis['wref'], 0);
+            if(is_array($garrison)) {
+                foreach($garrison as $row) {
+                    $rows[] = $row;
+                }
+            }
+        }
+        foreach($rows as $row) {
+            $units = $this->starvationUnitRow($row);
+            if(empty($units)) {
+                continue;
+            }
+            $from = (int)$row['from'];
+            $fromOwner = (int)$database->getVillageField($from, 'owner');
+            if($fromOwner !== $owner) {
+                $group = 1;
+            }
+            elseif($from !== $wref) {
+                $group = 2;
+            }
+            else {
+                $group = 3;
+            }
+            $armies[] = array('group'=>$group, 'enforcement'=>(int)$row['id'], 'order'=>(int)$row['id'],
+                              'units'=>$units, 'total'=>array_sum($units));
+        }
+
+        usort($armies, function($a, $b) {
+            if($a['group'] !== $b['group']) { return $a['group'] - $b['group']; }
+            if($a['total'] !== $b['total']) { return $b['total'] - $a['total']; }
+            return $a['order'] - $b['order'];
+        });
+        return $armies;
+    }
+
+    /**
+     * Las unidades de una fila que pueden morir de hambre, de la más numerosa a la
+     * menos. A igualdad de cantidad gana el id más bajo, que es el orden de izquierda
+     * a derecha del oficial. Sólo entran las que comen: los animales enjaulados
+     * (31-40) defienden pero no consumen cereal, así que matarlos no arreglaria nada.
+     */
+    private function starvationUnitRow($row) {
+        $units = array();
+        if(!is_array($row)) {
+            return $units;
+        }
+        for($type = 1; $type <= 50; $type++) {
+            $count = isset($row['u'.$type]) ? (int)$row['u'.$type] : 0;
+            if($count > 0 && $this->unitUpkeep($type) > 0) {
+                $units[$type] = $count;
+            }
+        }
+        uksort($units, function($a, $b) use ($units) {
+            if($units[$a] !== $units[$b]) { return $units[$b] - $units[$a]; }
+            return $a - $b;
+        });
+        return $units;
+    }
+
+    /**
+     * Borra la fila de refuerzo si la hambruna se comió a su último soldado. Un
+     * refuerzo que sólo trae al héroe sigue siendo un refuerzo y no se toca.
+     */
+    private function dropEmptyReinforcement($id) {
+        global $database;
+        if(!method_exists($database, 'getEnforceArray')) {
+            return;
+        }
+        $row = $database->getEnforceArray($id, 0);
+        if(!is_array($row)) {
+            return;
+        }
+        for($type = 1; $type <= 50; $type++) {
+            if(!empty($row['u'.$type])) {
+                return;
+            }
+        }
+        if(!empty($row['hero'])) {
+            return;
+        }
+        $database->deleteReinf($id);
     }
 
     /**
@@ -5704,48 +5871,32 @@ class Automation {
     }
 
     /**
-     * Contingente más numeroso de la aldea, sean tropas propias o un refuerzo.
-     * Devuelve null si no hay ninguna unidad a la que pasarle la cuenta.
-     */
-    private function selectStarvationVictim($wref) {
-        global $database;
-        $best = null;
-        $own = $database->getUnit($wref);
-        if(is_array($own)) {
-            for($unit = 1; $unit <= 50; $unit++) {
-                $count = isset($own['u'.$unit]) ? (int)$own['u'.$unit] : 0;
-                if($count > 0 && ($best === null || $count > $best['count'])) {
-                    $best = array('count'=>$count, 'type'=>$unit, 'enforcement'=>null);
-                }
-            }
-        }
-        $reinforcements = $database->getEnforceVillage($wref, 0);
-        if(is_array($reinforcements)) {
-            foreach($reinforcements as $reinforcement) {
-                for($unit = 1; $unit <= 50; $unit++) {
-                    $count = isset($reinforcement['u'.$unit]) ? (int)$reinforcement['u'.$unit] : 0;
-                    if($count > 0 && ($best === null || $count > $best['count'])) {
-                        $best = array('count'=>$count, 'type'=>$unit, 'enforcement'=>(int)$reinforcement['id']);
-                    }
-                }
-            }
-        }
-        return $best;
-    }
-
-    /**
      * Consumo de cereal por hora de una unidad, de la tabla de unidades del juego.
+     * Cero para los animales de oasis enjaulados (31-40), que es lo que hace
+     * Technology::getUpkeep: defienden gratis.
      */
     private function unitUpkeep($type) {
         $type = (int)$type;
+        if($type >= 31 && $type <= 40) {
+            return 0;
+        }
         $unit = isset($GLOBALS['u'.$type]) ? $GLOBALS['u'.$type] : null;
         if(is_array($unit) && isset($unit['pop'])) {
             // A propósito sin el descuento del abrevadero romano: quedarse corto en el
-            // consumo por unidad haría matar de más, y pasarse sólo mata de menos, que
+            // consumo por unidad haria matar de más, y pasarse sólo mata de menos, que
             // la pasada siguiente corrige.
-            return max(1, (int)$unit['pop']);
+            return max(0, (int)$unit['pop']);
         }
-        return 1;
+        return 0;
+    }
+
+    /**
+     * Cereal que devuelve al granero una unidad que muere de hambre: el mismo que
+     * costo entrenarla.
+     */
+    private function unitCropCost($type) {
+        $unit = isset($GLOBALS['u'.(int)$type]) ? $GLOBALS['u'.(int)$type] : null;
+        return is_array($unit) && isset($unit['crop']) ? max(0, (int)$unit['crop']) : 0;
     }
 
     private function clearStarvation($wref, $crop) {
