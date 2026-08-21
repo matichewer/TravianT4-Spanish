@@ -507,18 +507,27 @@ class Automation {
         return $popT;
     }
 
+    /**
+     * Puntos de cultura por dia que rinde un edificio al nivel $lvl.
+     *
+     * **No se acumula, aunque `buildingPOP()` justo arriba sea identico salvo por
+     * eso.** En `Data/buidata.php` el campo `pop` es el incremento de habitantes de
+     * ese nivel, pero el campo `cp` es el total por dia del edificio a ese nivel:
+     * embajada 20 = 153, academia 20 = 153, residencia 20 = 77, campo de recursos
+     * 10 = 6, los mismos numeros que publica el T4 oficial.
+     *
+     * Sumar 0..N era el bug historico: inflaba la produccion pasiva entre 1,5x con
+     * edificios de nivel 3 y 4,4x con todo a 20, y como crecia con el nivel el mundo
+     * arrancaba equilibrado y se descontrolaba solo. Un `0.25` en Hero.php lo tapaba
+     * a medias.
+     */
     function buildingCP($f, $lvl) {
         $name = "bid".$f;
         global $$name;
-        $popT = 0;
         $dataarray = $$name;
+        $lvl = (int)$lvl;
 
-        for ($i = 0; $i <= $lvl; $i++) {
-            if(isset($dataarray[$i]['cp'])) {
-                $popT += $dataarray[$i]['cp'];
-            }
-        }
-        return $popT;
+        return isset($dataarray[$lvl]['cp']) ? (int)$dataarray[$lvl]['cp'] : 0;
     }
 
     public function hasOrdinaryTroopReturnInEvasionWindow($database, $villageId, $attackArrivalTime, $windowSeconds = 10) {
@@ -1425,20 +1434,41 @@ class Automation {
         global $database;
         $ourFileHandle = @fopen("GameEngine/Prevention/culturepoints.txt", 'w');
         @fclose($ourFileHandle);
-        // The village value is labelled and calculated as culture points per day,
-        // so it must be credited once every 24 hours.
-        $time = time() - 86400;
+        // `vdata.cp` es produccion por dia, asi que se acredita cada 24 horas.
+        //
+        // Se paga por dias enteros transcurridos y el reloj avanza exactamente esos
+        // dias, no hasta ahora: poniendo `lastupdate = time()` se perdian las horas
+        // sobrantes en cada vuelta (unas pocas por dia, porque esto corre cuando
+        // alguien carga una pagina, no en punto) y se perdian enteros los dias de un
+        // mundo sin visitas. El alcance de la puesta al dia esta acotado igual que en
+        // NatarSettlement: una cuenta con `lastupdate` en 0 -- las viejas se
+        // registraban asi -- reclamaria medio siglo de cultura de una sola vez.
+        $now = time();
+        $time = $now - 86400;
+        $catchupCap = 7;
         $array = array();
         $q = "SELECT id, lastupdate FROM ".TB_PREFIX."users where lastupdate < $time";
         $array = $database->query_return($q);
 
         foreach ($array as $indi) {
-            if($indi['lastupdate'] < $time) {
-                $cp = accountCulturePointsPerDay($database, $indi['id']);
-                $newupdate = time();
-                $q = "UPDATE ".TB_PREFIX."users set cp = cp + $cp, lastupdate = $newupdate where id = '".$indi['id']."'";
-                $database->query($q);
+            $uid = (int)$indi['id'];
+            $lastUpdate = (int)$indi['lastupdate'];
+            if($uid <= 0) {
+                continue;
             }
+            if($lastUpdate <= 0) {
+                $database->query("UPDATE ".TB_PREFIX."users set lastupdate = $now where id = $uid");
+                continue;
+            }
+            $elapsedDays = intdiv($now - $lastUpdate, 86400);
+            if($elapsedDays < 1) {
+                continue;
+            }
+            $creditedDays = min($catchupCap, $elapsedDays);
+            $cp = $creditedDays * accountCulturePointsPerDay($database, $uid);
+            $newupdate = $lastUpdate + $elapsedDays * 86400;
+            $q = "UPDATE ".TB_PREFIX."users set cp = cp + $cp, lastupdate = $newupdate where id = $uid";
+            $database->query($q);
         }
         if(file_exists("GameEngine/Prevention/culturepoints.txt")) {
             @unlink("GameEngine/Prevention/culturepoints.txt");
@@ -1756,13 +1786,24 @@ class Automation {
         }
     }
 
+    /**
+     * Lo que cambia al terminar el nivel $level+1: habitantes y puntos de cultura.
+     *
+     * Los dos campos de buidata no significan lo mismo (ver buildingCP): `pop` ya es
+     * el incremento del nivel, `cp` es el total del edificio a ese nivel, asi que el
+     * delta de cultura hay que restarlo contra el nivel anterior. Devolver el total
+     * hacia `addCP()` era la otra mitad del bug de PC inflados, y coincidia con la
+     * suma acumulada de buildingCP(), por eso ningun recuento lo delataba.
+     */
     private function getPop($tid, $level) {
         $name = "bid".$tid;
         global $$name, $village;
         $dataarray = $$name;
-        $pop = $dataarray[($level + 1)]['pop'];
-        $cp = $dataarray[($level + 1)]['cp'];
-        return array($pop, $cp);
+        $level = (int)$level;
+        $pop = isset($dataarray[($level + 1)]['pop']) ? (int)$dataarray[($level + 1)]['pop'] : 0;
+        $cpNew = isset($dataarray[($level + 1)]['cp']) ? (int)$dataarray[($level + 1)]['cp'] : 0;
+        $cpOld = ($level >= 1 && isset($dataarray[$level]['cp'])) ? (int)$dataarray[$level]['cp'] : 0;
+        return array($pop, $cpNew - $cpOld);
     }
 
     /**
@@ -5189,7 +5230,7 @@ class Automation {
         $ourFileHandle = fopen("GameEngine/Prevention/celebration.txt", 'w');
         fclose($ourFileHandle);
         $varray = $database->getCel();
-        $rewards = array(1 => 500, 2 => 2000);
+        $rewards = array(1 => celebrationCulturePoints(1), 2 => celebrationCulturePoints(2));
         foreach ($varray as $vil) {
             $id = (int)$vil['wref'];
             $type = (int)$vil['type'];

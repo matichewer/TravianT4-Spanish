@@ -87,9 +87,11 @@ define("CRANNY_CAPACITY","%CRANNYCAP%");
 define("TRAPPER_CAPACITY","%TRAPPERCAP%");
 
 // ***** Village Expand
-// Permanently balanced: slow village expansion curve.
-// This is intentionally not configurable by the installer.
-define("CP", 1);
+// Official culture-point requirement table, picked from the world speed.
+// In official T4 passive culture production does not scale with world speed; the
+// per-village requirement scales down instead. Not configurable by the installer.
+// 1 = official x1 column ($cp1), 0 = official x3 column ($cp0).
+define("CP", SPEED >= 3 ? 0 : 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

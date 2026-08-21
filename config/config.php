@@ -92,10 +92,15 @@ define("CRANNY_CAPACITY","1");
 define("TRAPPER_CAPACITY","1");
 
 // ***** Village Expand
-// 2 = normal village expanding
-// 1 = slow village expanding - more Cultural Points needed for every new village
-// 0 = fast village expanding - less Cultural Points needed for every new village
-define("CP", 1);
+// Tabla de puntos de cultura por aldea. En el T4 oficial la produccion pasiva no
+// escala con la velocidad del mundo: lo que baja es el requisito. Por eso el modo
+// sale de SPEED y no de una preferencia.
+// 1 = columna oficial x1  ($cp1: 2.000 / 8.000 / 20.000 ...)
+// 0 = columna oficial x3  ($cp0:   500 / 2.600 /  6.700 ...)
+// 2 = curva inventada por este repositorio, no oficial. No usar.
+// El original solo tuvo mundos normales y "de velocidad" (x3), asi que cualquier
+// mundo de 3x o mas usa la columna rapida.
+define("CP", SPEED >= 3 ? 0 : 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

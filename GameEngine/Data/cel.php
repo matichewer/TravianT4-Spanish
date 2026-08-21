@@ -47,6 +47,24 @@ $gc= array(
 19 => 111645,
 20 => 107626);
 
+require_once dirname(__FILE__).'/cp.php';
+
+if(!function_exists('celebrationCulturePoints')){
+	// Puntos de cultura que paga una celebración al terminar. En el T4 oficial son 500
+	// y 2000 en un mundo x1, y la mitad (250 y 1000) en uno de velocidad, que además
+	// dura la mitad -- o sea que el rendimiento por día es el mismo que en x1 y lo que
+	// cambia es que los requisitos de aldea son un tercio.
+	//
+	// Es la única definición: la usan Automation::celebrationComplete() (que acredita)
+	// y Templates/Build/24_celebrations.tpl (que lo anuncia), para que no se separen.
+	function celebrationCulturePoints($type){
+		$base = array(1 => 500, 2 => 2000);
+		$type = (int)$type;
+
+		return isset($base[$type]) ? intdiv($base[$type], cultureFixedAmountDivisor()) : 0;
+	}
+}
+
 if(!function_exists('celebrationDuration')){
 	// Duración de una celebración en segundos, según el nivel del Ayuntamiento. Es la
 	// única definición: la usan celebration.php y Templates/Build/24_celebrations.tpl, para
@@ -64,7 +82,9 @@ if(!function_exists('celebrationDuration')){
 			return 0;
 		}
 
-		return max(1, (int)round($table[$level] / SPEED));
+		// La mitad en un mundo de velocidad, como el oficial. Antes dividía por SPEED,
+		// que en x3 hacía la fiesta un 50% más rentable de lo que corresponde.
+		return max(1, (int)round($table[$level] / cultureFixedAmountDivisor()));
 	}
 }
 

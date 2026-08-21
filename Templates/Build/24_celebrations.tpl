@@ -12,8 +12,8 @@
 $level = (int)$village->resarray['f'.$id];
 $celebrationBusy = (int)$database->getVillageField($village->wid, 'celebration') > 0;
 $celebrations = array(
-	1 => array('name' => 'Pequeña celebración', 'points' => 500),
-	2 => array('name' => 'Gran celebración', 'points' => 2000)
+	1 => array('name' => 'Pequeña celebración', 'points' => celebrationCulturePoints(1)),
+	2 => array('name' => 'Gran celebración', 'points' => celebrationCulturePoints(2))
 );
 
 foreach($celebrations as $i => $celebration) {

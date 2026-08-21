@@ -118,8 +118,10 @@ $wonderPop = 0;
 $wonderCp = 0;
 for($level = 0; $level <= $wonderLevel; $level++) {
     if(isset($GLOBALS['bid40'][$level]['pop'])) { $wonderPop += (int)$GLOBALS['bid40'][$level]['pop']; }
-    if(isset($GLOBALS['bid40'][$level]['cp'])) { $wonderCp += (int)$GLOBALS['bid40'][$level]['cp']; }
 }
+// `pop` se acumula nivel a nivel, `cp` no: en buidata es el total por día del
+// edificio al nivel que tiene. Ver Automation::buildingCP().
+$wonderCp = isset($GLOBALS['bid40'][$wonderLevel]['cp']) ? (int)$GLOBALS['bid40'][$wonderLevel]['cp'] : 0;
 check($wonderPop > 0, 'una Maravilla de nivel '.$wonderLevel.' aporta habitantes ('.$wonderPop.'), si no el test no probaría nada');
 
 // Misma aldea, con y sin Maravilla: la diferencia tiene que ser exactamente la suya.

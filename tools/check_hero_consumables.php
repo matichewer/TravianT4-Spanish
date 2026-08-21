@@ -189,25 +189,28 @@ consumableAssert($r['revivido'] === true, 'el balde no puso al héroe en la alde
 $r = useItem(12, 1, 1);
 consumableAssert($r['proc'] === 0, 'el balde se gastó con el héroe vivo');
 
-// --- Obra de arte: el tope de 5000 que promete el objeto --------------------------
+// --- Obra de arte -----------------------------------------------------------------
+// El objeto promete "tantos PC como producen todas tus aldeas en un día, hasta 2000"
+// (1000 en un mundo de velocidad). Acá SPEED no está definido, así que corre como x1.
 
-consumableAssert(artworkCulturePointsCap() === 5000, 'el tope de la obra de arte dejó de ser 5000');
+consumableAssert(artworkCulturePointsCap() === 2000, 'el tope de la obra de arte en x1 dejó de ser 2000');
+consumableAssert(artworkCulturePointsCap(3) === 1000, 'el tope de la obra de arte en un mundo de velocidad dejó de ser 1000');
 
 // Solo una obra por petición: intentar usar varias no concede PC ni consume el stack.
 $r = useItem(15, 2, 10, function($db){ $db->dailyProduction = 100; });
 consumableAssert($r['cp'] === 1000 && $r['stack']===10, 'se pudieron usar varias obras en una petición');
 
-// La obra concede la producción balanceada: 25% de la producción base de aldeas.
-$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 9000; });
-consumableAssert($r['cp'] === 3250, 'una obra con 9000 base/día no dio 2250 PC: '.$r['cp']);
+// Por debajo del tope concede la producción diaria entera, sin ningún factor.
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 1500; });
+consumableAssert($r['cp'] === 2500, 'una obra con 1500 PC/día no concedió 1500: '.($r['cp']-1000));
 
-// La producción balanceada por encima de 5000 conserva el tope existente.
-$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 30000; });
-consumableAssert($r['cp'] === 6000, 'una obra con 7500 balanceados no se recortó a 5000: '.$r['cp']);
+// Por encima del tope se recorta.
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 9000; });
+consumableAssert($r['cp'] === 3000, 'una obra con 9000 PC/día no se recortó a 2000: '.($r['cp']-1000));
 
 // Justo en el tope no se recorta nada.
-$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 20000; });
-consumableAssert($r['cp'] === 6000, 'una obra con exactamente 5000/día no dio 5000');
+$r = useItem(15, 1, 10, function($db){ $db->dailyProduction = 2000; });
+consumableAssert($r['cp'] === 3000, 'una obra con exactamente 2000/día no dio 2000');
 
 // Un uso dentro de las 24 horas se rechaza sin efecto ni consumo.
 $r = useItem(15, 1, 10, function($db){ $db->dailyProduction=4000; $db->artworkLastUsed=time()-3600; });
@@ -215,7 +218,7 @@ consumableAssert($r['cp']===1000 && $r['stack']===10 && $r['proc']===0, 'el cool
 
 // Al cumplirse exactamente las 24 horas vuelve a estar disponible.
 $r = useItem(15, 1, 10, function($db){ $db->dailyProduction=4000; $db->artworkLastUsed=time()-86400; });
-consumableAssert($r['cp']===2000 && $r['stack']===9, 'la obra siguió bloqueada después de 24 horas');
+consumableAssert($r['cp']===3000 && $r['stack']===9, 'la obra siguió bloqueada después de 24 horas');
 
 // El diálogo del inventario tiene que anunciar el valor ya recortado.
 $dialog = file_get_contents(dirname(__DIR__).'/hero_inventory.php');

@@ -400,7 +400,44 @@ $cp2 = array(
  * Keep every culture-point check on the same rule. This file is included more
  * than once by some legacy templates, so the functions must be guarded.
  */
+if(!function_exists('cultureWorldSpeed')){
+	function cultureWorldSpeed($speed = null){
+		if($speed===null){
+			$speed = defined('SPEED') ? SPEED : 1;
+		}
+
+		return max(1,(float)$speed);
+	}
+
+	// El T4 oficial solo conoce dos clases de mundo para la cultura: el normal (x1) y
+	// el "de velocidad" (x3). En el rapido **no** se multiplica la produccion pasiva:
+	// lo que baja es el requisito de cada aldea ($cp0 en este mismo archivo, un tercio
+	// de la de x1). Lo unico que cambia de magnitud son los importes fijos -- fiestas,
+	// cascos y obras de arte --, que valen la mitad, y la duracion de las fiestas, que
+	// tambien es la mitad. Ese "la mitad" es literal del oficial y no un /SPEED: el
+	// juego original nunca tuvo x2 ni x5, asi que cualquier mundo de 3x o mas cae del
+	// lado rapido.
+	function cultureFastWorld($speed = null){
+		return cultureWorldSpeed($speed) >= 3;
+	}
+
+	// Divisor de todo importe fijo de cultura: 1 en x1, 2 en un mundo de velocidad.
+	function cultureFixedAmountDivisor($speed = null){
+		return cultureFastWorld($speed) ? 2 : 1;
+	}
+}
+
 if(!function_exists('travianCultureThresholds')) {
+	/**
+	 * Modo 1 = la columna x1 del T4 oficial ($cp1) y modo 0 = la columna x3 ($cp0).
+	 * Las dos son las tablas oficiales verificadas dígito por dígito (aldea 2: 2.000
+	 * y 500; aldea 10: 251.000 y 83.500; aldea 50: 12.347.000 y 4.115.800). El modo 2
+	 * ($cp2) es un invento de este repositorio, no una tabla del juego.
+	 *
+	 * Qué modo usa el mundo lo decide `CP` en config/config.php, derivado de SPEED:
+	 * en el oficial la producción pasiva no escala con la velocidad, escala el
+	 * requisito hacia abajo.
+	 */
 	function travianCultureThresholds($mode) {
 		global $cp0, $cp1, $cp2;
 
@@ -441,6 +478,62 @@ if(!function_exists('travianCultureThresholds')) {
 			'cap' => $cap,
 			'newPoints' => $cap === null ? $culturePoints : min($culturePoints, $cap),
 			'changed' => $cap !== null && $culturePoints > $cap
+		);
+	}
+
+	/**
+	 * Traslada un saldo de puntos de cultura de una tabla de requisitos a otra
+	 * conservando el avance exacto del jugador.
+	 *
+	 * Hace falta porque las tablas oficiales x1 y x3 no son la misma dividida por 3
+	 * (aldea 2: 2.000 y 500, o sea /4; aldea 3: 8.000 y 2.600). Un factor fijo movería
+	 * a alguien de tramo. Lo que se conserva es la posición: si tenías el 70% del
+	 * camino recorrido entre la aldea 4 y la 5, seguís teniendo el 70% del camino entre
+	 * la aldea 4 y la 5 de la tabla nueva. Nadie gana ni pierde un cupo de aldea, y la
+	 * barra de progreso queda donde estaba.
+	 *
+	 * Un saldo por encima de la última fila de la tabla origen se traslada con la razón
+	 * de esa última fila, que es lo único definido ahí.
+	 */
+	function travianCultureRescale($culturePoints, $fromMode, $toMode) {
+		$culturePoints = max(0, (int)$culturePoints);
+		$from = travianCultureThresholds($fromMode);
+		$to = travianCultureThresholds($toMode);
+		if(empty($from) || empty($to)) {
+			return array('culturePoints' => $culturePoints, 'newPoints' => $culturePoints, 'villageCount' => 0, 'changed' => false);
+		}
+
+		$villageCount = 1;
+		foreach($from as $count => $required) {
+			if($culturePoints >= (int)$required && isset($to[$count])) {
+				$villageCount = max($villageCount, (int)$count);
+			}
+		}
+
+		$fromCurrent = isset($from[$villageCount]) ? (int)$from[$villageCount] : 0;
+		$toCurrent = isset($to[$villageCount]) ? (int)$to[$villageCount] : 0;
+		$next = $villageCount + 1;
+
+		// Se trunca en vez de redondear a propósito: con 1.999 PC en la tabla x1 el
+		// avance es del 99,95% hacia la segunda aldea y redondeando cae justo en los
+		// 500 de la tabla x3, o sea que el traslado regalaría el cupo que al jugador
+		// todavía le falta. Truncar nunca cruza un umbral que no estuviera cruzado.
+		if(isset($from[$next]) && isset($to[$next]) && (int)$from[$next] > $fromCurrent) {
+			$fraction = ($culturePoints - $fromCurrent) / ((int)$from[$next] - $fromCurrent);
+			$newPoints = (int)floor($toCurrent + $fraction * ((int)$to[$next] - $toCurrent));
+		} elseif($fromCurrent > 0) {
+			$newPoints = (int)floor($culturePoints * ($toCurrent / $fromCurrent));
+		} else {
+			$newPoints = $culturePoints;
+		}
+
+		$newPoints = max(0, $newPoints);
+
+		return array(
+			'culturePoints' => $culturePoints,
+			'newPoints' => $newPoints,
+			'villageCount' => $villageCount,
+			'changed' => $newPoints !== $culturePoints
 		);
 	}
 

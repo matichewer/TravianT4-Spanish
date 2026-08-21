@@ -106,8 +106,8 @@ celebrationAssert(
 $automation = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 celebrationAssert($automation !== false, 'No se pudo leer Automation.php');
 celebrationAssert(
-	preg_match('/\$rewards = array\(1 => 500, 2 => 2000\)/', $automation) === 1,
-	'celebrationComplete() volvió a decidir los puntos de cultura con ifs sueltos'
+	preg_match('/\$rewards = array\(1 => celebrationCulturePoints\(1\), 2 => celebrationCulturePoints\(2\)\)/', $automation) === 1,
+	'celebrationComplete() volvió a decidir los puntos de cultura por su cuenta en vez de leer celebrationCulturePoints()'
 );
 celebrationAssert(
 	preg_match('/if\(!\$database->clearCel\(\$id\)\)\s*\{\s*continue;/', $automation) === 1,

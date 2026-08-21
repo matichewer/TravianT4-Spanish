@@ -34,12 +34,12 @@ $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 $cultureDailyProduction = accountCulturePointsPerDay($database, $cultureOwnerId);
 $cultureHelmetProduction = heroHelmetCulturePoints($database, $cultureOwnerId);
 $cultureSpeed = cultureWorldSpeed();
-$cultureEffectivePercent = villageCultureProductionFactor()*$cultureSpeed*100;
 $cultureHelmetValues = array(
-	(int)round(25*$cultureSpeed),
-	(int)round(100*$cultureSpeed),
-	(int)round(200*$cultureSpeed)
+	intdiv(getHeroHelmetBonuses(7)['culture'], cultureFixedAmountDivisor()),
+	intdiv(getHeroHelmetBonuses(8)['culture'], cultureFixedAmountDivisor()),
+	intdiv(getHeroHelmetBonuses(9)['culture'], cultureFixedAmountDivisor())
 );
+$cultureArtworkCap = artworkCulturePointsCap();
 ?>
 <?php /* Tres piezas como el cartel de la lista de aldeas: el rollo de arriba, el
 cuerpo con el pergamino repetido y el rollo de abajo. Tienen que ser elementos
@@ -53,10 +53,10 @@ transparente por fuera del cartel y dejaria ver el pergamino por detras. */ ?>
 			<span class="cultureProgressTitle" aria-describedby="cultureProgressTooltip">Puntos de Cultura</span>
 			<span id="cultureProgressTooltip" class="cultureProgressTooltip" role="tooltip">
 				<strong>Cómo funcionan los puntos de cultura</strong>
-				<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel completado aumenta la producción base. Se acredita el 25% × velocidad x<?php echo number_format($cultureSpeed,0,',','.'); ?> (<?php echo number_format($cultureEffectivePercent,0,',','.'); ?>% efectivo) de la suma de todas tus aldeas cada 24 horas.</span>
-				<span class="cultureProgressTooltipLine"><b>Ayuntamiento:</b> una celebración pequeña entrega 500 PC y una grande 2000 PC cuando finaliza.</span>
-				<span class="cultureProgressTooltipLine"><b>Casco del héroe:</b> con la velocidad actual, Gladiador, Tribuno y Cónsul suman <?php echo number_format($cultureHelmetValues[0],0,',','.'); ?>, <?php echo number_format($cultureHelmetValues[1],0,',','.'); ?> y <?php echo number_format($cultureHelmetValues[2],0,',','.'); ?> PC/día mientras el héroe esté vivo.</span>
-				<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden la producción diaria total ya adaptada a la velocidad, con un máximo de 5.000 PC. Solo puedes usar una cada 24 horas.</span>
+				<span class="cultureProgressTooltipLine"><b>Campos y edificios:</b> cada nivel aporta los PC/día que indica su ficha. La suma de todas tus aldeas se acredita entera cada 24 horas.</span>
+				<span class="cultureProgressTooltipLine"><b>Ayuntamiento:</b> una celebración pequeña entrega <?php echo number_format(celebrationCulturePoints(1),0,',','.'); ?> PC y una grande <?php echo number_format(celebrationCulturePoints(2),0,',','.'); ?> PC cuando finaliza.</span>
+				<span class="cultureProgressTooltipLine"><b>Casco del héroe:</b> en este mundo, Gladiador, Tribuno y Cónsul suman <?php echo number_format($cultureHelmetValues[0],0,',','.'); ?>, <?php echo number_format($cultureHelmetValues[1],0,',','.'); ?> y <?php echo number_format($cultureHelmetValues[2],0,',','.'); ?> PC/día mientras el héroe esté vivo.</span>
+				<span class="cultureProgressTooltipLine"><b>Obras de arte:</b> conceden tu producción diaria total, con un máximo de <?php echo number_format($cultureArtworkCap,0,',','.'); ?> PC. Solo puedes usar una cada 24 horas.</span>
 				<span class="cultureProgressTooltipFoot">Los PC pertenecen a toda la cuenta y permiten fundar o conquistar más aldeas. Con Plus, el desglose por aldea está en Resumen de aldeas → Puntos de cultura.</span>
 			</span>
 		</span>

@@ -38,7 +38,7 @@
 				$time = $stime;
 				}
 				$timep = $time + PROTECTION;
-        		$q = "INSERT INTO " . TB_PREFIX . "users (username,password,access,email,timestamp,tribe,location,act,protect,fquest,cp) VALUES ('$username', '$password', " . USER . ", '$email', $time, $tribe, $locate, '$act', $timep, '0,0,0,0,0,0,0,0,0,0,0', 1)";
+        		$q = "INSERT INTO " . TB_PREFIX . "users (username,password,access,email,timestamp,tribe,location,act,protect,fquest,cp,lastupdate) VALUES ('$username', '$password', " . USER . ", '$email', $time, $tribe, $locate, '$act', $timep, '0,0,0,0,0,0,0,0,0,0,0', 1, $time)";
         		if(mysqli_query($this->connection,$q)) {
         			return mysqli_insert_id($this->connection);
         		} else {
@@ -855,9 +855,12 @@
 				$vname = "Aldea de " . $username;
 			}
 
+        		// pop 2 y cp 2 son exactamente el edificio principal de nivel 1 que planta
+        		// addResourceFields(): los mismos números a los que llega recountPop() /
+        		// recountCP() leyendo fdata, así que el primer recuento no mueve la aldea.
         		$time = time();
         		$q = "INSERT IGNORE into " . TB_PREFIX . "vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values
-        ('$wid', '$uid', '$vname', '$capital', 2, 1, 0, 780, 780, 780, 800, 780, 800, '$time', '$time')";
+        ('$wid', '$uid', '$vname', '$capital', 2, 2, 0, 780, 780, 780, 800, 780, 800, '$time', '$time')";
 			$result = mysqli_query($this->connection,$q);
 			if($result) {
 				$this->syncClimberPopulation((int)$uid);

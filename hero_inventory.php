@@ -306,7 +306,7 @@ for($i=$inv;$i<=12;$i++){
 // Los diálogos de confirmación tienen que anunciar lo mismo que después acredita
 // Inventory.php. Los dos consumibles dependen del casco puesto: el rollo, del bono de
 // experiencia, y la obra de arte, de la producción diaria (que incluye el casco de
-// cultura) recortada por el tope de 5000 que promete el objeto.
+// cultura) recortada por el tope que promete el objeto (artworkCulturePointsCap()).
 $currentCulturePoints = (int)$database->getUserField($session->uid, 'cp', 0);
 $cultureDailyProduction = artworkCulturePoints($database, (int)$session->uid);
 $artworkLastUsed = (int)$database->getUserField($session->uid,'artwork_last_used',0);

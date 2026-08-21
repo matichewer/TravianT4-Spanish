@@ -1,5 +1,11 @@
 <?php
 
+// Las reglas de velocidad de la cultura (cultureWorldSpeed / cultureFastWorld /
+// cultureFixedAmountDivisor) viven en Data/cp.php, junto a las tablas de requisitos.
+// Session.php ya lo incluye antes que esto; el require_once es para los checkers que
+// cargan el héroe suelto.
+require_once dirname(__FILE__).'/Data/cp.php';
+
 if(!function_exists('heroBaseRegeneration')){
 	// Puntos de vida por día que regenera un héroe sin ningún objeto puesto. Es el valor
 	// con el que `addHero` crea la columna `autoregen`, así que todo lo que exceda esto
@@ -388,7 +394,9 @@ if(!function_exists('getHeroHelmetBonuses')){
 	function getHeroHelmetBonuses($type){
 		$experience = array(1 => 15, 2 => 20, 3 => 25);
 		$autoRegen = array(4 => 10, 5 => 15, 6 => 20);
-		$culture = array(7 => 25, 8 => 100, 9 => 200);
+		// Gladiador / Tribuno / Consul del T4 oficial, en su valor de mundo x1. En un
+		// mundo de velocidad valen la mitad; lo divide heroHelmetCulturePoints().
+		$culture = array(7 => 100, 8 => 400, 9 => 800);
 		$stable = array(10 => 10, 11 => 15, 12 => 20);
 		$barracks = array(13 => 10, 14 => 15, 15 => 20);
 		$type = (int)$type;
@@ -443,16 +451,6 @@ if(!function_exists('heroTrainingTimeFactor')){
 	}
 }
 
-if(!function_exists('cultureWorldSpeed')){
-	function cultureWorldSpeed($speed = null){
-		if($speed===null){
-			$speed = defined('SPEED') ? SPEED : 1;
-		}
-
-		return max(1,(float)$speed);
-	}
-}
-
 if(!function_exists('heroHelmetCulturePoints')){
 	// Puntos de cultura por día que aporta el casco puesto. A diferencia de la
 	// regeneración, no se guarda en ninguna columna: se lee del objeto equipado cada
@@ -476,17 +474,23 @@ if(!function_exists('heroHelmetCulturePoints')){
 		}
 		$bonuses = getHeroHelmetBonuses((int)$helmet['type']);
 
-		return (int)round($bonuses['culture']*cultureWorldSpeed($speed));
+		return intdiv((int)$bonuses['culture'], cultureFixedAmountDivisor($speed));
 	}
 }
 
 if(!function_exists('accountCulturePointsPerDay')){
-	function villageCultureProductionFactor(){
-		return 0.25;
-	}
-
+	// `vdata.cp` ya es la produccion diaria de la aldea en puntos oficiales: la suma de
+	// lo que rinde cada edificio al nivel que tiene (Data/buidata.php guarda el total
+	// por nivel, no un incremento -- embajada 20 = 153 PC/dia, residencia 20 = 77,
+	// campo 10 = 6). No hay ningun factor: en el oficial la pasiva no escala con la
+	// velocidad del mundo, escalan los requisitos hacia abajo.
+	//
+	// Existio aca un `villageCultureProductionFactor()` de 0.25 y una multiplicacion
+	// por SPEED. Eran un parche a ciegas contra `Automation::buildingCP()`, que sumaba
+	// los niveles 0..N e inflaba la produccion entre 1,5x (edificios nivel 3) y 4,4x
+	// (nivel 20). Arreglado el origen, el parche sobra.
 	function villageCulturePointsPerDay($rawCulturePoints, $speed = null){
-		return max(0,(int)$rawCulturePoints)*villageCultureProductionFactor()*cultureWorldSpeed($speed);
+		return max(0,(int)$rawCulturePoints);
 	}
 
 	function accountVillageCulturePointsPerDay($database,$uid,$speed = null){
@@ -522,11 +526,11 @@ if(!function_exists('artworkCooldownSeconds')){
 }
 
 if(!function_exists('artworkCulturePointsCap')){
-	// Tope que promete la obra de arte: "tantos PC como la producción diaria, hasta un
-	// máximo de 5000". El código no lo aplicaba, así que en cuentas grandes daba más de
-	// lo que decía el objeto.
-	function artworkCulturePointsCap(){
-		return 5000;
+	// "Tantos PC como producen todas tus aldeas en un dia, hasta un maximo de 2000"
+	// (1000 en un mundo de velocidad). Son los valores del T4 oficial; antes aca decia
+	// 5000 fijo, que no es de ninguna version.
+	function artworkCulturePointsCap($speed = null){
+		return intdiv(2000, cultureFixedAmountDivisor($speed));
 	}
 }
 
@@ -534,7 +538,7 @@ if(!function_exists('artworkCulturePoints')){
 	// Puntos de cultura que otorga **una** obra de arte. Una sola definición para que el
 	// diálogo del inventario anuncie lo mismo que después se acredita.
 	function artworkCulturePoints($database, $uid, $speed = null){
-		return min(artworkCulturePointsCap(), accountCulturePointsPerDay($database,$uid,$speed));
+		return min(artworkCulturePointsCap($speed), accountCulturePointsPerDay($database,$uid,$speed));
 	}
 }
 
