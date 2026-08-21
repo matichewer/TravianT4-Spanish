@@ -1810,6 +1810,33 @@ class Automation {
      * de rango (editado desde el panel de administracion) dejaba la capacidad en 0 y con
      * eso el Mercado entero sin poder enviar nada.
      */
+    /**
+     * Cuánta lealtad baja **un** administrador, según la tribu del atacante.
+     *
+     * Son los rangos del T4 oficial: senador romano 20-30, jefe germano y cacique galo
+     * 20-25. Acá había un rand(15,25) para todos, que le quitaba al romano justamente
+     * lo que lo hace bueno chifeando y le regalaba tiradas por debajo de 20 a las tres
+     * tribus. Cualquier tribu desconocida cae en el rango común.
+     */
+    public static function administratorLoyaltyRange($tribe) {
+        $ranges = array(1 => array(20, 30), 2 => array(20, 25), 3 => array(20, 25));
+        $tribe = (int)$tribe;
+
+        return isset($ranges[$tribe]) ? $ranges[$tribe] : array(20, 25);
+    }
+
+    /**
+     * Puntos de lealtad que suma o resta la Gran celebración a **cada** administrador.
+     *
+     * Oficial: si la aldea que manda los jefes está de gran fiesta, cada administrador
+     * baja 5 puntos más; si la que está de fiesta es la aldea atacada, cada uno baja 5
+     * puntos menos; con fiesta en las dos, se anulan. Son puntos absolutos sobre la
+     * tirada, no un porcentaje de ella.
+     */
+    public static function administratorLoyaltyCelebrationBonus($attackerGreatCelebration, $defenderGreatCelebration) {
+        return ($attackerGreatCelebration ? 5 : 0) - ($defenderGreatCelebration ? 5 : 0);
+    }
+
     public static function merchantCarryCapacity($tribe, $tradeOfficeLevel) {
         global $bid28;
         $tribe = (int)$tribe;
@@ -3471,10 +3498,24 @@ class Automation {
                             }
 
                             if($conquestStatus === 'eligible') {
+                                // Rango por tribu del atacante, más el ajuste de la Gran
+                                // celebración: la de la aldea que manda los jefes suma 5
+                                // puntos por administrador y la de la aldea atacada resta
+                                // otros 5, así que con fiesta en las dos se anulan. Un
+                                // administrador nunca deja de persuadir del todo.
+                                $attackerTribe = (int)$database->getUserField($attackerOwner, 'tribe', 0);
+                                $loyaltyRange = self::administratorLoyaltyRange($attackerTribe);
+                                $celebrationBonus = self::administratorLoyaltyCelebrationBonus(
+                                    $database->hasActiveGreatCelebration($data['from']),
+                                    $database->hasActiveGreatCelebration($data['to'])
+                                );
                                 $loyaltyDamage = 0;
                                 for($i = 0; $i < $survivingChiefs; $i++) {
-                                    $loyaltyDamage += rand(15, 25);
+                                    $loyaltyDamage += max(1, rand($loyaltyRange[0], $loyaltyRange[1]) + $celebrationBonus);
                                 }
+                                // La cerveza germana le baja a la mitad el poder de
+                                // persuasión a los jefes, y es del atacante: la fábrica
+                                // vale para toda la cuenta.
                                 if($breweryActive) {
                                     $loyaltyDamage = max(1, (int)floor($loyaltyDamage / 2));
                                 }

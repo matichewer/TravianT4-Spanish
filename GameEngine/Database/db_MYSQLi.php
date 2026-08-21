@@ -2290,6 +2290,22 @@
         		$result = mysqli_query($this->connection,$q);
         		return $result && mysqli_affected_rows($this->connection) === 1;
         	}
+        	/**
+        	 * ¿La aldea está celebrando una Gran celebración ahora mismo?
+        	 *
+        	 * `celebration` guarda el instante en que termina y `type` cuál es (1 pequeña,
+        	 * 2 grande). Lo lee la conquista: la grande mueve la lealtad 5 puntos por
+        	 * administrador, a favor del atacante o del defensor según quién festeje.
+        	 */
+        	function hasActiveGreatCelebration($ref) {
+        		$ref = (int)$ref;
+        		$time = time();
+        		$q = "SELECT 1 FROM " . TB_PREFIX . "vdata WHERE wref = $ref AND type = 2 AND celebration > $time LIMIT 1";
+        		$result = mysqli_query($this->connection, $q);
+
+        		return $result && mysqli_num_rows($result) === 1;
+        	}
+
         	function setCelCp($user, $cp) {
         		$user = (int)$user;
         		$cp = (int)$cp;
