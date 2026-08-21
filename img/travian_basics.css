@@ -1001,11 +1001,13 @@ div.village2 div.buildingList div.buildingNotifications {
 
 /* Titulo del campo de horarios + boton de agregar en la misma fila, siempre en el
    mismo lugar: antes el boton vivia dentro de la lista de pildoras y se corria cada
-   vez que se agregaba una, lo que hacia molesto clickear varias veces seguidas. */
+   vez que se agregaba una, lo que hacia molesto clickear varias veces seguidas.
+   Pegado al titulo (no al otro extremo de la fila): es una accion sobre "Horarios
+   de salida", conviene leerse junto a el en vez de quedar aislado a la derecha. */
 .routeFormSchedulesHeader {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 10px;
 }
 
@@ -1122,12 +1124,20 @@ div.village2 div.buildingList div.buildingNotifications {
 .routeFormSchedule {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 	width: fit-content;
-	padding: 4px 6px;
+	padding: 3px 4px;
 	border: 1px solid #d7d7d7;
 	border-radius: 4px;
 	background: #fff;
+}
+
+/* Angostos a proposito (el ancho por defecto del navegador sobra para 2 digitos):
+   con el ancho de panel real, esto es lo que hace falta para que entren 4 fichas
+   por fila en vez de 3. */
+.routeFormSchedule select {
+	width: 40px;
+	padding: 3px 2px;
 }
 
 .routeFormScheduleSep {
@@ -1143,14 +1153,14 @@ div.village2 div.buildingList div.buildingNotifications {
    (se veia como si "se achicara"). */
 button.routeFormScheduleRemove {
 	box-sizing: border-box;
-	width: 18px;
-	height: 18px;
-	margin-left: 2px;
+	width: 16px;
+	height: 16px;
+	margin-left: 0;
 	border: 1px solid #d7d7d7;
 	border-radius: 50%;
 	background: #fff;
 	color: #a11818;
-	font-size: 11px;
+	font-size: 10px;
 	line-height: 1;
 	cursor: pointer;
 }
