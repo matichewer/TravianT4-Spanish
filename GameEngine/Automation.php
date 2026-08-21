@@ -5230,7 +5230,6 @@ class Automation {
         $ourFileHandle = fopen("GameEngine/Prevention/celebration.txt", 'w');
         fclose($ourFileHandle);
         $varray = $database->getCel();
-        $rewards = array(1 => celebrationCulturePoints(1), 2 => celebrationCulturePoints(2));
         foreach ($varray as $vil) {
             $id = (int)$vil['wref'];
             $type = (int)$vil['type'];
@@ -5245,10 +5244,15 @@ class Automation {
             // Una fila con un `type` fuera de 1/2 se cierra igual pero no paga nada:
             // antes $cp no se reiniciaba en cada vuelta y esa aldea acreditaba los
             // puntos de la anterior del bucle (o rompía la consulta en la primera).
-            if(!isset($rewards[$type]) || $user <= 0) {
+            if(($type !== 1 && $type !== 2) || $user <= 0) {
                 continue;
             }
-            $database->setCelCp($user, $rewards[$type]);
+            // La fiesta paga producción, no una cifra fija: la pequeña la de esta
+            // aldea, la grande la de toda la cuenta. Ver celebrationCulturePoints().
+            $production = $type === 1
+                ? (int)$vil['cp']
+                : accountCulturePointsPerDay($database, $user);
+            $database->setCelCp($user, celebrationCulturePoints($type, $production));
         }
         if(file_exists("GameEngine/Prevention/celebration.txt")) {
             @unlink("GameEngine/Prevention/celebration.txt");

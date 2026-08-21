@@ -18,12 +18,13 @@ include("25_menu.tpl"); ?>
 <table cellpadding="1" cellspacing="1" id="build_value">
 <tr>
         <th>Esta aldea produce</th>
-        <td><b><?php echo rtrim(rtrim(number_format(villageCulturePointsPerDay($database->getVillageField($village->wid,'cp')),2,',','.'),'0'),','); ?></b> puntos de cultura</td>
+        <td colspan="3"><b><?php echo rtrim(rtrim(number_format(villageCulturePointsPerDay($database->getVillageField($village->wid,'cp')),2,',','.'),'0'),','); ?></b> puntos de cultura</td>
 </tr>
 <tr>
         <th>Todas las aldeas producen </th>
-        <td><b><?php echo number_format(accountVillageCulturePointsPerDay($database,$session->uid),0,',','.'); ?></b> puntos de cultura</td>
+        <td colspan="3"><b><?php echo number_format(accountVillageCulturePointsPerDay($database,$session->uid),0,',','.'); ?></b> puntos de cultura</td>
 </tr>
+<?php include("culture_expansion.tpl"); ?>
 </table><?php
 $totalVillages = count($session->villages);
 $pendingSettlements = $database->getPendingSettlementCountByOwner($session->uid);

@@ -11,9 +11,24 @@
 // así que la plantilla no puede ofrecer una fiesta que el servidor vaya a rechazar.
 $level = (int)$village->resarray['f'.$id];
 $celebrationBusy = (int)$database->getVillageField($village->wid, 'celebration') > 0;
+// La fiesta paga producción recortada por su tope, no una cifra fija: la pequeña la
+// de esta aldea, la grande la de toda la cuenta. Se anuncia lo mismo que después
+// acredita celebrationComplete(), por eso sale de la misma función.
+$celebrationVillageProduction = villageCulturePointsPerDay($database->getVillageField($village->wid, 'cp'));
+$celebrationAccountProduction = accountCulturePointsPerDay($database, $session->uid);
 $celebrations = array(
-	1 => array('name' => 'Pequeña celebración', 'points' => celebrationCulturePoints(1)),
-	2 => array('name' => 'Gran celebración', 'points' => celebrationCulturePoints(2))
+	1 => array(
+		'name' => 'Pequeña celebración',
+		'points' => celebrationCulturePoints(1, $celebrationVillageProduction),
+		'cap' => celebrationCulturePointsCap(1),
+		'source' => 'la producción diaria de esta aldea'
+	),
+	2 => array(
+		'name' => 'Gran celebración',
+		'points' => celebrationCulturePoints(2, $celebrationAccountProduction),
+		'cap' => celebrationCulturePointsCap(2),
+		'source' => 'la producción diaria de toda tu cuenta'
+	)
 );
 
 foreach($celebrations as $i => $celebration) {
@@ -47,7 +62,7 @@ foreach($celebrations as $i => $celebration) {
 				<img class="celebration celebrationSmall" src="img/x.gif" alt="<?php echo $celebration['name']; ?>">
 				</a>
 				<a href="#" onclick="return Travian.Game.iPopup(24,4);"><?php echo $celebration['name']; ?></a>
-				<span class="points">(<?php echo $celebration['points']; ?> puntos de cultura)</span>
+				<span class="points" title="Otorga <?php echo $celebration['source']; ?>, hasta un máximo de <?php echo number_format($celebration['cap'],0,',','.'); ?> puntos de cultura.">(<?php echo number_format($celebration['points'],0,',','.'); ?> puntos de cultura<?php echo $celebration['points'] >= $celebration['cap'] ? ', al máximo' : ''; ?>)</span>
 			</div>
 			<div class="costs">
 				<div class="showCosts">

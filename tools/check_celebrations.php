@@ -106,7 +106,7 @@ celebrationAssert(
 $automation = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 celebrationAssert($automation !== false, 'No se pudo leer Automation.php');
 celebrationAssert(
-	preg_match('/\$rewards = array\(1 => celebrationCulturePoints\(1\), 2 => celebrationCulturePoints\(2\)\)/', $automation) === 1,
+	strpos($automation, 'celebrationCulturePoints($type, $production)') !== false,
 	'celebrationComplete() volvió a decidir los puntos de cultura por su cuenta en vez de leer celebrationCulturePoints()'
 );
 celebrationAssert(
@@ -114,7 +114,7 @@ celebrationAssert(
 	'celebrationComplete() acredita los puntos sin haber ganado el cierre de la fila'
 );
 celebrationAssert(
-	preg_match('/if\(!isset\(\$rewards\[\$type\]\)/', $automation) === 1,
+	preg_match('/if\(\(\$type !== 1 && \$type !== 2\) \|\| \$user <= 0\) \{\s*continue;/', $automation) === 1,
 	'celebrationComplete() volvió a arrastrar $cp de la aldea anterior del bucle'
 );
 

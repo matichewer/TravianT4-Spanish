@@ -170,24 +170,41 @@ cultureBalanceAssert(
 	'El divisor de los importes fijos dejó de ser 1 en x1 y 2 en un mundo de velocidad.'
 );
 cultureBalanceAssert(
-	celebrationCulturePoints(1) === 500 && celebrationCulturePoints(2) === 2000,
-	'Las fiestas dejaron de pagar 500 y 2000 PC en un mundo x1.'
+	celebrationCulturePointsCap(1) === 500 && celebrationCulturePointsCap(2) === 2000,
+	'El tope de las fiestas dejó de ser 500 y 2000 PC en un mundo x1.'
 );
-cultureBalanceAssert(celebrationCulturePoints(3) === 0, 'Un tipo de fiesta inexistente pagó PC.');
+// La fiesta paga producción recortada por el tope, no una cifra fija: la pequeña la de
+// su aldea, la grande la de la cuenta. Una aldea que produce 30 PC/día saca 30.
+cultureBalanceAssert(
+	celebrationCulturePoints(1, 30) === 30 && celebrationCulturePoints(2, 30) === 30,
+	'Una fiesta en una aldea floja volvió a pagar el tope en vez de la producción.'
+);
+cultureBalanceAssert(
+	celebrationCulturePoints(1, 9000) === 500 && celebrationCulturePoints(2, 9000) === 2000,
+	'Una fiesta con producción de sobra no se recortó al tope.'
+);
+cultureBalanceAssert(
+	celebrationCulturePoints(1, -50) === 0 && celebrationCulturePoints(3, 9000) === 0,
+	'Una producción negativa o un tipo de fiesta inexistente pagó PC.'
+);
 $celebrationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 $celebrationDataSource = file_get_contents(dirname(__DIR__).'/GameEngine/Data/cel.php');
 cultureBalanceAssert(
-	strpos($celebrationSource, '$rewards = array(1 => celebrationCulturePoints(1), 2 => celebrationCulturePoints(2));') !== false,
-	'celebrationComplete() dejó de leer los PC de celebrationCulturePoints().'
+	strpos($celebrationSource, '$database->setCelCp($user, celebrationCulturePoints($type, $production));') !== false
+		&& strpos($celebrationSource, "? (int)\$vil['cp']") !== false
+		&& strpos($celebrationSource, ': accountCulturePointsPerDay($database, $user);') !== false,
+	'celebrationComplete() dejó de pagar la producción (de la aldea la pequeña, de la cuenta la grande) a través de celebrationCulturePoints().'
 );
 cultureBalanceAssert(
 	strpos($celebrationDataSource, '$table[$level] / cultureFixedAmountDivisor()') !== false
 		&& strpos($celebrationDataSource, '$table[$level] / SPEED') === false,
 	'La duración de las fiestas volvió a dividirse por SPEED en vez de por la mitad de un mundo de velocidad.'
 );
+$townHallTemplate = file_get_contents(dirname(__DIR__).'/Templates/Build/24_celebrations.tpl');
 cultureBalanceAssert(
-	strpos(file_get_contents(dirname(__DIR__).'/Templates/Build/24_celebrations.tpl'), 'celebrationCulturePoints(1)') !== false,
-	'El Ayuntamiento volvió a anunciar los PC de la fiesta por su cuenta.'
+	strpos($townHallTemplate, 'celebrationCulturePoints(1, $celebrationVillageProduction)') !== false
+		&& strpos($townHallTemplate, 'celebrationCulturePoints(2, $celebrationAccountProduction)') !== false,
+	'El Ayuntamiento volvió a anunciar un número distinto del que después acredita.'
 );
 
 cultureBalanceAssert(

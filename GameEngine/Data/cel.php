@@ -50,18 +50,34 @@ $gc= array(
 require_once dirname(__FILE__).'/cp.php';
 
 if(!function_exists('celebrationCulturePoints')){
-	// Puntos de cultura que paga una celebración al terminar. En el T4 oficial son 500
-	// y 2000 en un mundo x1, y la mitad (250 y 1000) en uno de velocidad, que además
-	// dura la mitad -- o sea que el rendimiento por día es el mismo que en x1 y lo que
-	// cambia es que los requisitos de aldea son un tercio.
-	//
-	// Es la única definición: la usan Automation::celebrationComplete() (que acredita)
-	// y Templates/Build/24_celebrations.tpl (que lo anuncia), para que no se separen.
-	function celebrationCulturePoints($type){
+	/**
+	 * Tope de puntos de cultura de una celebración: 500 la pequeña y 2000 la grande en
+	 * un mundo x1, la mitad en uno de velocidad (que además dura la mitad).
+	 *
+	 * Es un **tope**, no un importe fijo. En el T4 oficial la fiesta paga producción,
+	 * no una cifra suelta: la pequeña otorga lo que produce en un día la aldea donde se
+	 * celebra y la grande lo que producen todas las aldeas de la cuenta, cada una
+	 * recortada por su tope. Es la misma forma que la obra de arte. Una aldea que
+	 * produce 30 PC/día saca 30 de una fiesta pequeña, no 250: la fiesta premia a la
+	 * aldea desarrollada, no es un atajo para la que no lo está.
+	 */
+	function celebrationCulturePointsCap($type){
 		$base = array(1 => 500, 2 => 2000);
 		$type = (int)$type;
 
 		return isset($base[$type]) ? intdiv($base[$type], cultureFixedAmountDivisor()) : 0;
+	}
+
+	/**
+	 * Lo que realmente paga una celebración, dada la producción diaria que le
+	 * corresponde (la de la aldea para la pequeña, la de la cuenta para la grande).
+	 *
+	 * Única definición: la usan Automation::celebrationComplete() (que acredita) y
+	 * Templates/Build/24_celebrations.tpl (que lo anuncia antes de cobrar), para que no
+	 * puedan separarse.
+	 */
+	function celebrationCulturePoints($type, $dailyProduction){
+		return min(celebrationCulturePointsCap($type), max(0, (int)$dailyProduction));
 	}
 }
 

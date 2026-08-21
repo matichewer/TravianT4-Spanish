@@ -61,8 +61,8 @@ if ($buildingHelpType === 'rally-point') {
 } elseif ($buildingHelpType === 'town-hall') {
 	$buildingHelpTitle = 'Ventajas del Ayuntamiento';
 	$buildingHelpItems = array(
-		1 => 'Permite celebrar una fiesta pequeña, que concede '.number_format(celebrationCulturePoints(1), 0, ',', '.').' puntos de cultura.',
-		10 => 'Desbloquea la celebración grande, que concede '.number_format(celebrationCulturePoints(2), 0, ',', '.').' puntos de cultura.'
+		1 => 'Permite celebrar una fiesta pequeña, que concede la producción diaria de esta aldea hasta un máximo de '.number_format(celebrationCulturePointsCap(1), 0, ',', '.').' puntos de cultura.',
+		10 => 'Desbloquea la celebración grande, que concede la producción diaria de toda la cuenta hasta un máximo de '.number_format(celebrationCulturePointsCap(2), 0, ',', '.').' puntos de cultura.'
 	);
 	$buildingHelpNote = 'Todos los niveles reducen la duración de las celebraciones y aumentan la producción diaria de puntos de cultura del edificio.';
 	if (isset($bid24[$buildingHelpLevel]['attri'])) {
