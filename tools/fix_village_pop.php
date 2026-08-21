@@ -23,13 +23,19 @@
  * La población también decide el cereal libre, así que una aldea con este problema
  * queda además bloqueada para construir.
  *
- * Las aldeas de las cuentas del sistema quedan afuera: su población la escribe
- * natarProvisionVillage() desde su propio plan, así que corregirlas acá sólo daría
- * lugar a que la próxima provisión las volviera a mover. Se informan aparte. En este
- * mundo las diez Aldeas de la Maravilla están 10 habitantes por encima, que es
- * exactamente lo que suma un Palacio de la Maravilla de nivel 10: `vdata.pop` lo
- * cuenta y `fdata.f40` está vacío. Es un desfase propio de esas aldeas y se arregla
- * en NatarVillage.php, no acá.
+ * Las aldeas de las cuentas del sistema se corrigen igual, y se informan aparte para
+ * que se vean. Su población la escribe natarVillagePopulation() —desde
+ * natarProvisionVillage() para la capital y las Maravillas, desde el barrido de
+ * NatarSettlement.php para las independientes— y esa función cuenta exactamente lo
+ * mismo que este recuento, así que no hay pelea posible: las dos convergen al mismo
+ * número. Las Aldeas de la Maravilla de este mundo arrastran 10 habitantes de más de
+ * una provisión vieja (los niveles 16 a 20 del edificio principal, que hoy se planta
+ * en 15); es cosmético —10 de cereal contra 13.500 de producción— pero deja el
+ * recuento mintiendo, y una aldea así conquistada se lleva el error puesto.
+ *
+ * El Palacio de la Maravilla vive en `fdata.f99`, fuera del rango 1..40: por eso el
+ * recuento usa villagePopulationSlots() y no un rango a mano. Ver el comentario de esa
+ * función en GameEngine/Production.php.
  */
 
 error_reporting(E_ALL);
@@ -40,6 +46,7 @@ $apply = in_array('--aplicar', $argv, true);
 require dirname(__DIR__).'/config/connection.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
 require dirname(__DIR__).'/GameEngine/Accounts.php';
+require dirname(__DIR__).'/GameEngine/Production.php';
 
 $mysqli = @new mysqli(SQL_SERVER, SQL_USER, SQL_PASS, SQL_DB);
 if($mysqli->connect_errno) {
@@ -80,7 +87,7 @@ $system = array();
 while($row = $rows->fetch_assoc()) {
     $checked++;
     $expected = 0;
-    for($field = 1; $field <= 40; $field++) {
+    foreach(villagePopulationSlots() as $field) {
         $type = isset($row['f'.$field.'t']) ? (int)$row['f'.$field.'t'] : 0;
         $level = isset($row['f'.$field]) ? (int)$row['f'.$field] : 0;
         if($type > 0 && $level > 0) {
@@ -105,29 +112,35 @@ while($row = $rows->fetch_assoc()) {
         $wrong[] = $village;
     }
 }
+$all = array_merge($wrong, $system);
 
-printf("%d aldeas revisadas, %d de jugador con la poblacion desincronizada.\n", $checked, count($wrong));
-if($system) {
-    printf("(%d aldeas de cuentas del sistema tambien difieren; las maneja natarProvisionVillage y no se tocan)\n", count($system));
-}
-echo "\n";
-if(empty($wrong)) {
+printf("%d aldeas revisadas, %d con la poblacion desincronizada (%d de jugador, %d del sistema).\n\n",
+    $checked, count($all), count($wrong), count($system));
+if(empty($all)) {
     exit(0);
 }
 
-printf("%-8s %-26s %-14s %10s %10s %9s\n", 'wref', 'aldea', 'dueno', 'guardada', 'real', 'delta');
-echo str_repeat('-', 82)."\n";
-foreach($wrong as $village) {
-    printf("%-8d %-26s %-14s %10d %10d %+9d\n",
-        $village['wref'],
-        mb_substr($village['name'], 0, 26),
-        mb_substr($village['owner'], 0, 14),
-        $village['stored'],
-        $village['expected'],
-        $village['expected'] - $village['stored']
-    );
+function printVillageTable($title, $villages) {
+    if(empty($villages)) {
+        return;
+    }
+    echo $title."\n";
+    printf("%-8s %-26s %-14s %10s %10s %9s\n", 'wref', 'aldea', 'dueno', 'guardada', 'real', 'delta');
+    echo str_repeat('-', 82)."\n";
+    foreach($villages as $village) {
+        printf("%-8d %-26s %-14s %10d %10d %+9d\n",
+            $village['wref'],
+            mb_substr($village['name'], 0, 26),
+            mb_substr($village['owner'], 0, 14),
+            $village['stored'],
+            $village['expected'],
+            $village['expected'] - $village['stored']
+        );
+    }
+    echo "\n";
 }
-echo "\n";
+printVillageTable('Aldeas de jugador:', $wrong);
+printVillageTable('Aldeas de cuentas del sistema (natar, nature, support, multihunter):', $system);
 
 if(!$apply) {
     echo "Nada escrito. Volve a correrlo con --aplicar para corregirlas.\n";
@@ -135,7 +148,7 @@ if(!$apply) {
 }
 
 $updated = 0;
-foreach($wrong as $village) {
+foreach($all as $village) {
     $q = "UPDATE ".TB_PREFIX."vdata SET pop = ".(int)$village['expected']." WHERE wref = ".(int)$village['wref'];
     if($mysqli->query($q)) {
         $updated++;
@@ -150,4 +163,4 @@ foreach($wrong as $village) {
 $mysqli->query("UPDATE ".TB_PREFIX."vdata SET crop = 0, starv = 0, starvupdate = 0 WHERE crop < 0");
 
 printf("%d aldeas corregidas.\n", $updated);
-exit($updated === count($wrong) ? 0 : 2);
+exit($updated === count($all) ? 0 : 2);

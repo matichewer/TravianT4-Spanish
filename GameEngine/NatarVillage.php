@@ -151,7 +151,9 @@ function natarVillagePopulation($fields) {
         return 0;
     }
     $pop = 0;
-    for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_BUILDING_SLOT + 2; $slot++) {
+    // villagePopulationSlots() y no un rango: incluye el campo 99, donde vive el
+    // Palacio de la Maravilla. Ver el comentario de esa funcion en Production.php.
+    foreach(villagePopulationSlots() as $slot) {
         if(!isset($fields['f'.$slot.'t'])) {
             continue;
         }

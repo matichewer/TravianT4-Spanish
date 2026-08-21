@@ -148,6 +148,30 @@ function villageGrossProduction($resarray, $ocounter, $bonusFlags, $speed) {
 }
 
 /**
+ * Los campos de una aldea que aportan habitantes y puntos de cultura.
+ *
+ * No es `range(1,40)`: el **Palacio de la Maravilla vive en el campo 99**, fuera del
+ * rango de todos los demás. El fin de obra normal sí le suma los habitantes
+ * (`Automation::buildComplete` llama a `modifyPop` con el campo que traiga el
+ * trabajo, 99 incluido), así que los recuentos que barrían hasta el 40 no dejaban de
+ * contarlo: se lo **borraban**. Cualquier recuento sobre una Aldea de la Maravilla
+ * —una demolición, un catapultazo, una reparación de población— le restaba de una
+ * toda la población de la Maravilla, y con ella su consumo de cereal y sus puntos.
+ *
+ * Los tres recuentos autoritativos pasan por acá: `Automation::recountPop()`,
+ * `Automation::recountCP()` y `natarVillagePopulation()`. Los bucles de producción
+ * de este mismo archivo siguen yendo de 1 a 40 a propósito: la Maravilla no produce
+ * recursos, así que ahí no tiene nada que hacer.
+ */
+function villagePopulationSlots() {
+	static $slots = null;
+	if($slots === null) {
+		$slots = array_merge(range(1,40), array(99));
+	}
+	return $slots;
+}
+
+/**
  * Producción de cereal "base" tal como la define el T4 oficial: la de las
  * plantaciones con los bonos de molino, panadería y oasis, SIN el bono de oro y
  * SIN la producción del héroe.

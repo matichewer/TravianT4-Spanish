@@ -434,12 +434,25 @@ class Automation {
         );
     }
 
+    /**
+     * Recuento autoritativo de habitantes desde los campos de la aldea.
+     *
+     * Recorre `villagePopulationSlots()` y no 1..40: el Palacio de la Maravilla vive
+     * en el campo 99, fuera del rango de los demas. El fin de obra normal si le suma
+     * los habitantes (buildComplete llama a modifyPop con field = 99), asi que barrer
+     * solo hasta el 40 no dejaba de contarlo: lo BORRABA. Cualquier recuento en una
+     * Aldea de la Maravilla —una demolicion, un catapultazo— le restaba de golpe toda
+     * la poblacion de la Maravilla, y con ella su consumo de cereal y sus puntos.
+     */
     function recountPop($vid) {
         global $database;
         $fdata = $database->getResourceLevel($vid);
         $popTot = 0;
 
-        for ($i = 1; $i <= 40; $i++) {
+        foreach (villagePopulationSlots() as $i) {
+            if(!isset($fdata["f".$i])) {
+                continue;
+            }
             $lvl = $fdata["f".$i];
             $building = $fdata["f".$i."t"];
             if($building) {
@@ -456,12 +469,16 @@ class Automation {
 
     }
 
+    /** Igual que recountPop, con los puntos de cultura y el mismo campo 99. */
     function recountCP($vid) {
         global $database;
         $fdata = $database->getResourceLevel($vid);
         $popTot = 0;
 
-        for ($i = 1; $i <= 40; $i++) {
+        foreach (villagePopulationSlots() as $i) {
+            if(!isset($fdata["f".$i])) {
+                continue;
+            }
             $lvl = $fdata["f".$i];
             $building = $fdata["f".$i."t"];
             if($building) {
