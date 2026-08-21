@@ -208,8 +208,14 @@ while($row = mysql_fetch_array($sql)){
     <div class="clear"></div>
 </div>
 <style type="text/css">
-    #content.alliance .allianceEventPagination { margin-top: 10px; }
-    #content.alliance .allianceEventPagination .paginator { float: right; }
-    #content.alliance .allianceEventsPerPage { float: right; margin: -3px 12px 0 10px; }
+    #content.alliance .allianceEventPagination {
+        align-items: center;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    #content.alliance .allianceEventPagination .paginator { float: none; order: 2; }
+    #content.alliance .allianceEventsPerPage { float: none; margin-right: 12px; order: 1; }
     #content.alliance .allianceEventsPerPage label { margin-right: 4px; }
+    #content.alliance .allianceEventPagination > .clear { display: none; }
 </style>
