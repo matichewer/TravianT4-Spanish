@@ -1608,6 +1608,82 @@ class Automation {
         }
     }
 
+    /**
+     * Termina ahora todas las construcciones en curso de una aldea. Es lo que compra
+     * el "Completar" del Plus por 2 de oro.
+     *
+     * Adelanta el reloj de los trabajos y deja que `buildComplete()` haga el resto.
+     * Templates/Plus/3.tpl tenía su **propia copia** del fin de obra —un UPDATE a
+     * fdata, modifyPop y addCP a mano— y esa copia se había quedado atrás en tres
+     * cosas que la ruta normal sí hace, todas silenciosas:
+     *
+     *   - `accrueProductionBeforeChange()`: terminar un campo de recursos con oro
+     *     aplicaba el nivel nuevo a **todas** las horas que el jugador había estado
+     *     desconectado, o sea que regalaba producción hacia atrás.
+     *   - `applyStorageCapacityDelta()`: un almacén o un granero terminado con oro no
+     *     movía `maxstore` / `maxcrop`, así que el nivel nuevo no guardaba más.
+     *   - el incremento de puntos de cultura, que sumaba el total del nivel y no el
+     *     delta (el mismo bug que infló `vdata.cp` en todo el mundo).
+     *
+     * Sólo toca trabajos reales (`master = 0`). Una fila con `master = 1` es un pedido
+     * al constructor maestro que todavía **no se pagó**: `MasterBuilder()` recién le
+     * cobra los recursos al activarlo. La copia vieja las terminaba igual comprobando
+     * que los recursos alcanzaran, pero sin descontarlos nunca — edificios gratis por
+     * 2 de oro.
+     *
+     * Las Aldeas de la Maravilla quedan afuera enteras, y la Residencia, el Palacio y
+     * la propia Maravilla no se pueden apurar con oro.
+     */
+    public function finishVillageConstructionsNow($villageId) {
+        global $database;
+
+        $villageId = (int)$villageId;
+        $result = array('finished' => 0, 'skipped_from' => 0, 'wonder_village' => false);
+        if($villageId <= 0) {
+            return $result;
+        }
+
+        $fields = $database->getResourceLevel($villageId);
+        if(is_array($fields) && (int)$fields['f99t'] === 40) {
+            // Una Aldea de la Maravilla no puede apurar nada con oro, y quien lo
+            // intenta tampoco lo paga: el oro se cobra en la plantilla sólo si esto
+            // devuelve false.
+            $result['wonder_village'] = true;
+            return $result;
+        }
+
+        $blocked = array(25, 26, 40);
+        $jobs = $database->query_return(
+            "SELECT id, type, timestamp FROM ".TB_PREFIX."bdata WHERE wid = ".$villageId." AND master = 0"
+        );
+        if(!is_array($jobs)) {
+            return $result;
+        }
+
+        $now = time();
+        $ids = array();
+        foreach($jobs as $job) {
+            if(in_array((int)$job['type'], $blocked, true)) {
+                continue;
+            }
+            $ids[] = (int)$job['id'];
+            // El trabajo más lejano es el que marca cuánto tiempo se salteó: con eso
+            // se adelanta después la obra que quedaba encolada detrás.
+            $result['skipped_from'] = max($result['skipped_from'], (int)$job['timestamp']);
+        }
+        if(empty($ids)) {
+            return $result;
+        }
+
+        $database->query(
+            "UPDATE ".TB_PREFIX."bdata SET timestamp = ".$now." WHERE master = 0 AND id IN (".implode(',', $ids).")"
+        );
+        $this->buildComplete($now);
+        $result['finished'] = count($ids);
+
+        return $result;
+    }
+
     // by SlimShady95 aka Manuel Mannhardt < manuel_mannhardt@web.de >
     private function startNatarAttack($level, $vid) {
         global $database;

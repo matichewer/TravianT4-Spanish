@@ -123,7 +123,6 @@ cultureBalanceAssert(
 // recuento, el fin de obra, el "terminar ahora" con oro y la herramienta de recuento.
 $culturePointSources = array(
 	'GameEngine/Automation.php' => 'buildingCulturePointsAtLevel(',
-	'Templates/Plus/3.tpl' => 'buildingCulturePointsDelta($jobs[',
 	'tools/fix_village_cp.php' => 'buildingCulturePointsAtLevel('
 );
 foreach($culturePointSources as $sourceFile => $needle){
@@ -132,9 +131,12 @@ foreach($culturePointSources as $sourceFile => $needle){
 		$sourceFile.' dejó de usar la definición compartida de PC por edificio.'
 	);
 }
+// El "Completar" con oro del Plus no calcula cultura: pasa por el fin de obra del
+// motor, que ya suma el incremento correcto. Que no vuelva a tener la suya está
+// cubierto en detalle por tools/check_gold_finish.php.
 cultureBalanceAssert(
-	strpos(file_get_contents(dirname(__DIR__).'/Templates/Plus/3.tpl'), "addCP(\$jobs['wid'],\$resource['cp'])") === false,
-	'El "terminar ahora" con oro del Plus volvió a sumar el total del nivel en vez del incremento.'
+	strpos(file_get_contents(dirname(__DIR__).'/Templates/Plus/3.tpl'), 'addCP(') === false,
+	'El "Completar" con oro del Plus volvió a escribir puntos de cultura por su cuenta.'
 );
 cultureBalanceAssert(
 	strpos(file_get_contents(dirname(__DIR__).'/tools/normalize_culture_points.php'), '$slowCultureMode = CP;') !== false,
