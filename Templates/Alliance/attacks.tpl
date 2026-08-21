@@ -67,7 +67,14 @@ $allianceEventUrl = function($view, $page = 1) {
 };
 // Paginacion. Antes la lista cortaba en un LIMIT 20 fijo y no habia forma de
 // llegar a nada mas viejo que la fila 20.
-$allianceEventsPerPage = 20;
+$allianceEventPageSizes = array(10, 20, 50, 100);
+if(isset($_GET['per_page']) && in_array((int)$_GET['per_page'], $allianceEventPageSizes, true)) {
+    $_SESSION['alliance_events_per_page'] = (int)$_GET['per_page'];
+}
+$allianceEventsPerPage = isset($_SESSION['alliance_events_per_page'])
+    && in_array((int)$_SESSION['alliance_events_per_page'], $allianceEventPageSizes, true)
+    ? (int)$_SESSION['alliance_events_per_page']
+    : 20;
 $allianceEventsPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if($allianceEventsPage < 1) { $allianceEventsPage = 1; }
 $ntypeFilter = "ntype IN (".implode(',', $allianceEventViews[$allianceEventView]['types']).")";
@@ -107,7 +114,7 @@ $allianceEventPaginator = function() use ($lastPage, $allianceEventsPage, $allia
     }
     $out .= $arrow($page < $lastPage ? $page + 1 : 0, 'next', 'Siguiente');
     $out .= $arrow($page < $lastPage ? $lastPage : 0, 'last', 'Ultima');
-    $out .= '</div><div class="clear"></div>';
+    $out .= '</div>';
     return $out;
 };
 echo "<h1>".$allianceinfo['tag']." - ".$allianceinfo['name']."</h1>";
@@ -188,4 +195,21 @@ while($row = mysql_fetch_array($sql)){
 <?php echo $outputList; ?>
 </tbody>
 </table>
-<?php echo $allianceEventPaginator(); ?>
+<div class="allianceEventPagination">
+    <?php echo $allianceEventPaginator(); ?>
+    <div class="allianceEventsPerPage">
+        <label for="allianceEventsPerPage">Eventos por página:</label>
+        <select id="allianceEventsPerPage" onchange="window.location.href=this.value;">
+            <?php foreach($allianceEventPageSizes as $allianceEventPageSize) { ?>
+            <option value="<?php echo htmlspecialchars($allianceEventUrl($allianceEventView).'&per_page='.$allianceEventPageSize, ENT_QUOTES, 'UTF-8'); ?>"<?php if($allianceEventPageSize === $allianceEventsPerPage) { ?> selected="selected"<?php } ?>><?php echo $allianceEventPageSize; ?></option>
+            <?php } ?>
+        </select>
+    </div>
+    <div class="clear"></div>
+</div>
+<style type="text/css">
+    #content.alliance .allianceEventPagination { margin-top: 10px; }
+    #content.alliance .allianceEventPagination .paginator { float: right; }
+    #content.alliance .allianceEventsPerPage { float: right; margin: -3px 12px 0 10px; }
+    #content.alliance .allianceEventsPerPage label { margin-right: 4px; }
+</style>
