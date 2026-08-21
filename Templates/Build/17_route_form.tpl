@@ -125,6 +125,21 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
     var tpl = document.getElementById('routeFormScheduleTemplate');
     if(!list || !addBtn || !tpl) { return; }
     var MAX_SCHEDULES = <?php echo (int)Market::MAX_ROUTE_SCHEDULES; ?>;
+    var panel = document.querySelector('.routeFormPanel');
+    var panelMaxHeight = 0;
+
+    // El panel gris crece a medida que se agregan horarios (envuelven a otra fila),
+    // pero no se achica al borrar uno: volver a un alto menor cada vez que se quita
+    // un horario hace que el resto del formulario "salte" hacia arriba, que es mas
+    // molesto que dejar aire de mas. Solo vuelve a su alto natural en una carga de
+    // pagina nueva (guardar y volver a editar, por ejemplo).
+    function ratchetPanelHeight(){
+        if(!panel){ return; }
+        panel.style.minHeight = '';
+        var naturalHeight = panel.getBoundingClientRect().height;
+        panelMaxHeight = Math.max(panelMaxHeight, naturalHeight);
+        panel.style.minHeight = panelMaxHeight + 'px';
+    }
 
     function refresh(){
         var rows = list.querySelectorAll('.routeFormSchedule');
@@ -133,6 +148,7 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
             removeBtn.style.display = rows.length > 1 ? '' : 'none';
         });
         addBtn.style.display = rows.length >= MAX_SCHEDULES ? 'none' : '';
+        ratchetPanelHeight();
     }
 
     list.addEventListener('click', function(event){

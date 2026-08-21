@@ -1118,26 +1118,26 @@ div.village2 div.buildingList div.buildingNotifications {
 	display: flex;
 	flex-flow: row wrap;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
 }
 
 .routeFormSchedule {
 	display: inline-flex;
 	align-items: center;
-	gap: 3px;
+	gap: 2px;
 	width: fit-content;
-	padding: 3px 4px;
+	padding: 2px 2px;
 	border: 1px solid #d7d7d7;
 	border-radius: 4px;
 	background: #fff;
 }
 
 /* Angostos a proposito (el ancho por defecto del navegador sobra para 2 digitos):
-   con el ancho de panel real, esto es lo que hace falta para que entren 4 fichas
+   con el ancho de panel real, esto es lo que hace falta para que entren 5 fichas
    por fila en vez de 3. */
 .routeFormSchedule select {
-	width: 40px;
-	padding: 3px 2px;
+	width: 33px;
+	padding: 2px 1px;
 }
 
 .routeFormScheduleSep {
@@ -1153,14 +1153,14 @@ div.village2 div.buildingList div.buildingNotifications {
    (se veia como si "se achicara"). */
 button.routeFormScheduleRemove {
 	box-sizing: border-box;
-	width: 16px;
-	height: 16px;
+	width: 14px;
+	height: 14px;
 	margin-left: 0;
 	border: 1px solid #d7d7d7;
 	border-radius: 50%;
 	background: #fff;
 	color: #a11818;
-	font-size: 10px;
+	font-size: 9px;
 	line-height: 1;
 	cursor: pointer;
 }

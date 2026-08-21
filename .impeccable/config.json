@@ -50,6 +50,12 @@
         "value": "#eef6d8",
         "createdAt": "2026-08-14T20:34:39.006Z",
         "reason": "Same .buildingStatsIndex a:hover reuse as above, hover background"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "createdAt": "2026-08-21T14:55:20.181Z",
+        "reason": "Simbolo decorativo (glifo x del boton circular de 14px para quitar un horario), no texto de lectura; encogido junto con el boton para que entren 5 fichas por fila. El 'micro' del sistema (10px) ya era el escalon mas chico para texto real."
       }
     ]
   }
