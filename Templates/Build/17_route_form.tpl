@@ -141,12 +141,46 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
         refresh();
     });
 
+    // Horario "inteligente" para el proximo agregado: extiende el espacio entre los
+    // dos ultimos horarios ya cargados (00, 02 -> siguiente 04; 01, 05 -> siguiente
+    // 09), no siempre 00:00. Con un solo horario cargado no hay espacio que medir,
+    // asi que se asume 1 hora. Lee los selects al momento del click, asi que si el
+    // jugador edito un horario antes de agregar el siguiente, usa ese valor.
+    function nextScheduleDefault(){
+        var times = [];
+        list.querySelectorAll('.routeFormSchedule').forEach(function(row){
+            var hourSel = row.querySelector('select[name="schedule_hour[]"]');
+            var minSel = row.querySelector('select[name="schedule_minute[]"]');
+            if(hourSel && minSel){
+                times.push(parseInt(hourSel.value, 10) * 60 + parseInt(minSel.value, 10));
+            }
+        });
+        if(times.length === 0){ return {hour: 0, minute: 0}; }
+        var last = times[times.length - 1];
+        var gap = 60;
+        if(times.length >= 2){
+            gap = ((last - times[times.length - 2]) % 1440 + 1440) % 1440;
+            if(gap === 0){ gap = 60; }
+        }
+        var next = (last + gap) % 1440;
+        var hour = Math.floor(next / 60);
+        var minute = Math.round((next % 60) / 5) * 5;
+        if(minute === 60){ minute = 0; hour = (hour + 1) % 24; }
+        return {hour: hour, minute: minute};
+    }
+
     addBtn.addEventListener('click', function(){
         if(list.querySelectorAll('.routeFormSchedule').length >= MAX_SCHEDULES) { return; }
+        var next = nextScheduleDefault();
+        var clone = tpl.content.cloneNode(true);
+        var hourSel = clone.querySelector('select[name="schedule_hour[]"]');
+        var minSel = clone.querySelector('select[name="schedule_minute[]"]');
+        if(hourSel){ hourSel.value = String(next.hour); }
+        if(minSel){ minSel.value = String(next.minute); }
         // El boton de agregar vive dentro de la misma fila que las pildoras (es el
         // ultimo elemento), asi que el horario nuevo se inserta antes de el, no al
         // final de la lista.
-        list.insertBefore(tpl.content.cloneNode(true), addBtn);
+        list.insertBefore(clone, addBtn);
         refresh();
     });
 
