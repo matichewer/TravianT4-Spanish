@@ -993,10 +993,20 @@ div.village2 div.buildingList div.buildingNotifications {
 	gap: 5px;
 }
 
-.routeFormField > label {
+.routeFormField label {
 	color: #3c2a14;
 	font-size: 11px;
 	font-weight: bold;
+}
+
+/* Titulo del campo de horarios + boton de agregar en la misma fila, siempre en el
+   mismo lugar: antes el boton vivia dentro de la lista de pildoras y se corria cada
+   vez que se agregaba una, lo que hacia molesto clickear varias veces seguidas. */
+.routeFormSchedulesHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
 }
 
 .routeForm select,
@@ -1151,10 +1161,11 @@ button.routeFormScheduleRemove:focus {
 	background: #fff3d5;
 }
 
-/* Ficha punteada al final de la fila de horarios, del mismo alto que las fichas
-   ya guardadas: se lee como "el proximo casillero", no como un boton aparte.
-   Ver el comentario de arriba sobre el prefijo "button": mismo motivo (especificidad
-   del reset global del juego en :hover). */
+/* Ficha punteada junto al titulo "Horarios de salida" (no dentro de la lista de
+   horarios): asi queda en un lugar fijo para poder clickearla varias veces seguidas
+   sin que se corra a medida que se agregan pildoras. Ver el comentario de arriba
+   sobre el prefijo "button": mismo motivo (especificidad del reset global del juego
+   en :hover). */
 button.routeFormAddSchedule {
 	display: inline-flex;
 	align-items: center;

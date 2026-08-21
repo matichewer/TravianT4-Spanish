@@ -10,10 +10,12 @@
 ################################################################################# 
 class Market {
 
-    // Tope de horarios que se pueden declarar en un solo guardado de ruta comercial.
-    // La reserva de mercaderes ya lo limita en la practica (cada horario extra suma
-    // otro reqMerc completo), esto es solo un techo duro contra un payload absurdo.
-    const MAX_ROUTE_SCHEDULES = 12;
+    // Tope de horarios que se pueden declarar en un solo guardado de ruta comercial:
+    // 24, uno por cada hora del dia (el maximo con sentido en un reloj de 24hs). La
+    // reserva de mercaderes ya lo limita en la practica (cada horario extra suma otro
+    // reqMerc completo, salvo que el solapamiento real lo permita compartir), esto es
+    // solo un techo duro contra un payload absurdo.
+    const MAX_ROUTE_SCHEDULES = 24;
 
     // Una sola asignacion al final solo inicializa la ultima propiedad: el resto
     // quedaba en null y disparaba warnings de count() al abrir el mercado por una

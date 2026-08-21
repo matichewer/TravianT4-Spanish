@@ -82,7 +82,10 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
         </div>
 
         <div class="routeFormField">
-            <label id="routeFormSchedulesLabel">Horarios de salida</label>
+            <div class="routeFormSchedulesHeader">
+                <label id="routeFormSchedulesLabel">Horarios de salida</label>
+                <button type="button" id="routeFormAddSchedule" class="routeFormAddSchedule">+ agregar horario</button>
+            </div>
             <div class="routeFormSchedules" id="routeFormSchedules" aria-labelledby="routeFormSchedulesLabel">
                 <?php foreach($routeFormSchedules as $schedule) { ?>
                 <div class="routeFormSchedule">
@@ -96,7 +99,6 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
                     <button type="button" class="routeFormScheduleRemove" title="Quitar este horario" aria-label="Quitar este horario">&times;</button>
                 </div>
                 <?php } ?>
-                <button type="button" id="routeFormAddSchedule" class="routeFormAddSchedule">+ agregar horario</button>
             </div>
         </div>
 
@@ -177,10 +179,10 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
         var minSel = clone.querySelector('select[name="schedule_minute[]"]');
         if(hourSel){ hourSel.value = String(next.hour); }
         if(minSel){ minSel.value = String(next.minute); }
-        // El boton de agregar vive dentro de la misma fila que las pildoras (es el
-        // ultimo elemento), asi que el horario nuevo se inserta antes de el, no al
-        // final de la lista.
-        list.insertBefore(clone, addBtn);
+        // El boton vive fuera de la lista de horarios (al lado del titulo, en un lugar
+        // fijo) para poder clickearlo varias veces seguidas sin que se corra de lugar
+        // a medida que se van agregando pildoras.
+        list.appendChild(clone);
         refresh();
     });
 
