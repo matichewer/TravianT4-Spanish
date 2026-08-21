@@ -2873,8 +2873,14 @@
 				return mysqli_query($this->connection,$q);
 			}
 
-			function getTradeRoute($uid) {
-				$q = "SELECT * FROM " . TB_PREFIX . "route where uid = $uid ORDER BY timestamp ASC";
+			// El listado de rutas de una aldea solo muestra las que salen de ESA aldea (las
+			// de otras aldeas propias se gestionan desde su propio Mercado, con el enlace
+			// "gestionar desde esa aldea" de la vista de resumen); de ahi el filtro por
+			// `from`, no solo por uid.
+			function getTradeRoute($uid,$fromVid) {
+				$uid = (int) $uid;
+				$fromVid = (int) $fromVid;
+				$q = "SELECT * FROM " . TB_PREFIX . "route where uid = $uid AND `from` = $fromVid ORDER BY timestamp ASC";
 				$result = mysqli_query($this->connection,$q);
 				return $this->mysqli_fetch_all($result);
 			}

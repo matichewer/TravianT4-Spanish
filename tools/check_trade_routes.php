@@ -173,28 +173,36 @@ check(strpos($marketSource,'private function merchantRoundTripSeconds(') === fal
 	'Market ya no tiene su propia copia del cálculo de viaje');
 
 // ---------------------------------------------------------------------------
-section('E. Vista 17_4.tpl: no ofrecer borrar/editar la ruta de otra aldea');
+section('E. Vista 17_4.tpl: el listado solo muestra rutas de ESTA aldea');
 // ---------------------------------------------------------------------------
+// Antes el listado traia TODAS las rutas del jugador (de cualquiera de sus aldeas) y
+// cada fila decidia si mostrar Editar/Eliminar o "gestionar desde esa aldea" segun de
+// donde salia. Ahora el filtro es mas simple y mas fuerte: se trae solo lo que sale de
+// esta aldea, asi que cada fila es siempre propia y editable/borrable sin condicionales.
 $tplSource = file_get_contents(dirname(__DIR__).'/Templates/Build/17_4.tpl');
-check(strpos($tplSource,"\$isOwnVillage = (int)\$firstRoute['from'] === (int)\$village->wid;") !== false,
-	'la vista calcula si el grupo listado pertenece a la aldea actual');
-check(preg_match('/<\?php if\(\$isOwnVillage\)\{ \?>\s*<a href="build\.php\?id=<\?php echo \$id; \?>&amp;t=4&amp;action=editRoute<\?php echo \$groupIdsQuery; \?>">/',$tplSource) === 1,
-	'el enlace de editar solo aparece si el grupo es de esta aldea');
+check(strpos($tplSource,'$routes = $database->getTradeRoute($session->uid,$village->wid);') !== false,
+	'la vista pide solo las rutas que salen de la aldea actual, no todas las del jugador');
+check(strpos($tplSource,'$isOwnVillage') === false && strpos($tplSource,'gestionar desde esa aldea') === false,
+	'ya no hace falta distinguir "propia vs ajena" por fila: el filtro de la consulta ya lo garantiza');
+check(preg_match('/<a href="build\.php\?id=<\?php echo \$id; \?>&amp;t=4&amp;action=editRoute<\?php echo \$groupIdsQuery; \?>">Editar<\/a>/',$tplSource) === 1,
+	'el enlace de editar aparece siempre (sin condicional), porque toda fila listada es de esta aldea');
 check(strpos($tplSource,'action=delRoute<?php echo $groupIdsQuery; ?>') !== false,
 	'el enlace de eliminar borra TODOS los horarios del grupo, no solo uno');
-check(strpos($tplSource,'gestionar desde esa aldea') !== false,
-	'las rutas de otra aldea muestran cómo gestionarlas en vez de un enlace que siempre falla');
 check(strpos($tplSource,"onclick=\"return confirm('¿Eliminar esta ruta comercial") !== false,
 	'borrar un grupo con varios horarios pide confirmación (antes borraba un solo horario, ahora puede borrar varios)');
+check(strpos($dbSource,'function getTradeRoute($uid,$fromVid) {') !== false
+	&& strpos($dbSource,'where uid = $uid AND `from` = $fromVid') !== false,
+	'getTradeRoute() filtra por aldea de origen a nivel de consulta, no solo en la vista');
 
 // ---------------------------------------------------------------------------
 section('E2. Agrupar varios horarios en una sola fila del listado');
 // ---------------------------------------------------------------------------
 // Antes, una ruta con N horarios (N filas en la base) aparecia como N filas identicas
-// en el listado. Ahora se agrupan por origen+destino+recursos+envios, que es lo que
-// procTradeRoutes() usa para decidir que filas pertenecen al mismo "grupo" al guardar.
-check(strpos($tplSource,"\$groupKey = \$route['from'].'|'.\$route['wid'].'|'.\$route['wood'].'|'.\$route['clay'].'|'.\$route['iron'].'|'.\$route['crop'].'|'.\$route['deliveries'];") !== false,
-	'el agrupado usa la misma firma (origen+destino+recursos+envios) que define un grupo al guardar');
+// en el listado. Ahora se agrupan por destino+recursos+envios (el origen ya no hace
+// falta en la firma: la consulta solo trae rutas de esta aldea, asi que siempre es el
+// mismo), que es lo que procTradeRoutes() usa para decidir que filas van al mismo grupo.
+check(strpos($tplSource,"\$groupKey = \$route['wid'].'|'.\$route['wood'].'|'.\$route['clay'].'|'.\$route['iron'].'|'.\$route['crop'].'|'.\$route['deliveries'];") !== false,
+	'el agrupado usa la misma firma (destino+recursos+envios) que define un grupo al guardar');
 check(strpos($tplSource,"echo implode('<br>',\$scheduleTimes);") !== false,
 	'todos los horarios de un grupo se listan juntos, uno debajo del otro, en una sola fila de la tabla');
 check(strpos($tplSource,'function($a,$b){') !== false && substr_count($tplSource,'<=>') >= 2,
@@ -456,20 +464,6 @@ check(preg_match('/private function sendResource2\(.*?\)\s*\{\s*global[^;]*;\s*(
 	'sendResource2() acredita la produccion real de la aldea de origen ANTES de leer cuanto hay disponible, no despues');
 check(strpos($automationSource,'protected function accrueProductionBeforeChange(') !== false,
 	'reutiliza la misma funcion de acreditar produccion que ya usan los cambios de nivel/oasis, no una copia nueva');
-
-// ---------------------------------------------------------------------------
-section('N. "Gestionar desde esa aldea" lleva a esa aldea, al Mercado, a Rutas comerciales');
-// ---------------------------------------------------------------------------
-// Antes era texto suelto sin enlace: para gestionar una ruta que sale de otra aldea
-// propia, el jugador tenia que cambiar de aldea a mano y volver a navegar hasta la
-// pestaña. newdid ya cambia de aldea en un click, pero el redirect de build.php
-// descartaba cualquier parametro que no fuera id/gid (perdia la pestaña "t").
-$buildSource = file_get_contents(dirname(__DIR__).'/build.php');
-check(strpos($buildSource,"if(isset(\$_GET['t']) && is_scalar(\$_GET['t']) && ctype_digit((string)\$_GET['t'])) {") !== false
-	&& strpos($buildSource,"\$newdidLocation .= (strpos(\$newdidLocation,'?') !== false ? '&' : '?').'t='.(int)\$_GET['t'];") !== false,
-	'el redirect de newdid preserva la pestaña (t=N) cuando el enlace la pide, ademas del edificio');
-check(strpos($tplSource,"<a href=\"build.php?newdid=<?php echo (int)\$firstRoute['from']; ?>&amp;gid=17&amp;t=4\">gestionar desde esa aldea</a>") !== false,
-	'el enlace cambia a la aldea de origen de la ruta y aterriza directo en Mercado > Rutas comerciales');
 
 // ---------------------------------------------------------------------------
 echo "\n";

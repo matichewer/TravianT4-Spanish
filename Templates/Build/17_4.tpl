@@ -98,17 +98,21 @@ if($validGroup){
 <th>Acción</th>
 </tr></thead><tbody>
 <?php
-$routes = $database->getTradeRoute($session->uid);
+// Solo las rutas que salen de ESTA aldea: las que salen de otras aldeas propias se
+// gestionan entrando a esa otra aldea y abriendo su propio Mercado, asi que no hace
+// falta repetirlas aca ni distinguir "propia vs ajena" en cada fila: todo lo que
+// aparece en esta tabla es siempre propio.
+$routes = $database->getTradeRoute($session->uid,$village->wid);
     if(count($routes) == 0) {
     echo "<tr><td colspan=\"6\" class=\"none\">No hay rutas comerciales activas.</td></tr>";
     }else{
 // Una ruta con varios horarios es, por dentro, una fila por horario: se agrupan las
-// que comparten origen+destino+recursos+envios para mostrar un solo renglon con todos
-// sus horarios juntos, en vez de repetir la descripcion una vez por horario.
+// que comparten destino+recursos+envios para mostrar un solo renglon con todos sus
+// horarios juntos, en vez de repetir la descripcion una vez por horario.
 $routeGroups = array();
 $routeGroupOrder = array();
 foreach($routes as $route){
-	$groupKey = $route['from'].'|'.$route['wid'].'|'.$route['wood'].'|'.$route['clay'].'|'.$route['iron'].'|'.$route['crop'].'|'.$route['deliveries'];
+	$groupKey = $route['wid'].'|'.$route['wood'].'|'.$route['clay'].'|'.$route['iron'].'|'.$route['crop'].'|'.$route['deliveries'];
 	if(!isset($routeGroups[$groupKey])){
 		$routeGroups[$groupKey] = array();
 		$routeGroupOrder[] = $groupKey;
@@ -121,7 +125,6 @@ foreach($routeGroupOrder as $groupKey){
 		return ((int)$a['start']*3600 + (int)$a['start_minute']*60) <=> ((int)$b['start']*3600 + (int)$b['start_minute']*60);
 	});
 	$firstRoute = $groupRoutes[0];
-	$isOwnVillage = (int)$firstRoute['from'] === (int)$village->wid;
 	$groupIdsQuery = '';
 	foreach($groupRoutes as $groupRoute){
 		$groupIdsQuery .= '&amp;routeid%5B%5D='.(int)$groupRoute['id'];
@@ -143,10 +146,6 @@ echo implode('<br>',$routeResourceLines);
 <?php
 $routeVillageName = htmlspecialchars((string)$database->getVillageField($firstRoute['wid'],"name"),ENT_QUOTES,'UTF-8');
 echo "<a href=karte.php?d=".(int)$firstRoute['wid']."&amp;c=".$generator->getMapCheck($firstRoute['wid']).">".$routeVillageName."</a>";
-if(!$isOwnVillage){
-$originVillageName = htmlspecialchars((string)$database->getVillageField($firstRoute['from'],"name"),ENT_QUOTES,'UTF-8');
-echo "<br><small>Origen: <a href=\"dorf2.php?newdid=".(int)$firstRoute['from']."\">".$originVillageName."</a></small>";
-}
 ?>
 </td>
 <td>
@@ -177,12 +176,8 @@ echo '<span title="Cada vez que sale esta ruta, esos mercaderes hacen '.$routeDe
 ?>
 </td>
 <td>
-<?php if($isOwnVillage){ ?>
 <a href="build.php?id=<?php echo $id; ?>&amp;t=4&amp;action=editRoute<?php echo $groupIdsQuery; ?>">Editar</a><br>
 <a href="build.php?gid=17&amp;t=4&amp;action=delRoute<?php echo $groupIdsQuery; ?>&amp;a=<?php echo urlencode($session->mchecker); ?>" onclick="return confirm('¿Eliminar esta ruta comercial<?php echo count($groupRoutes) > 1 ? ' y sus '.count($groupRoutes).' horarios' : ''; ?>?');">Eliminar</a>
-<?php }else{ ?>
-<small><a href="build.php?newdid=<?php echo (int)$firstRoute['from']; ?>&amp;gid=17&amp;t=4">gestionar desde esa aldea</a></small>
-<?php } ?>
 </td>
 </tr>
 <?php }} ?>
