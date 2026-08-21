@@ -177,9 +177,44 @@ oasisAssert(strpos($mansionSource, "karte.php?x=<?php echo \$coor['x']; ?>&amp;y
     'el enlace del oasis conserva el orden X/Y');
 oasisAssert(strpos($mansionSource, '$row["conquered_at"]') !== false,
     'la fecha visible usa el historial de conquista');
+// El tipo de oasis se describe en un solo lugar, oasisTypeBonuses(), derivado del mismo
+// reparto que cobra la producción: el mapa, la Mansión y el perfil tenían cada uno su
+// copia del switch de los 12 tipos y nada las obligaba a coincidir con el bono real.
+foreach(range(1, 12) as $oasisType) {
+    list($wood, $clay, $iron, $crop) = villageOasisCounter(array(array('type' => $oasisType)));
+    $shown = array(1 => 0, 2 => 0, 3 => 0, 4 => 0);
+    foreach(oasisTypeBonuses($oasisType) as $bonus) {
+        $shown[$bonus['res']] = $bonus['percent'];
+    }
+    $expected = array(1 => $wood * 25, 2 => $clay * 25, 3 => $iron * 25, 4 => $crop * 25);
+    oasisAssert($shown === $expected,
+        'el bono que se muestra del oasis tipo '.$oasisType.' es el que cobra la producción');
+}
+oasisAssert(strpos(oasisBonusIcons(5), "title='Barro +50%'") !== false,
+    'el tooltip distingue el oasis del 50% del que da 25%');
+oasisAssert(strpos(oasisBonusIcons(6), "title='Barro +25%'") !== false
+    && strpos(oasisBonusIcons(6), "title='Cereal +25%'") !== false,
+    'el oasis mixto muestra sus dos recursos con el porcentaje de cada uno');
 foreach(array('profile.tpl' => $profileSource, 'overview.tpl' => $overviewSource) as $name => $source) {
-    oasisAssert(preg_match('/case 6:\s*echo\s+"[^"]*r2[^"]*r4[^"]*";\s*break;\s*case 7:/s', $source) === 1,
-        $name.' separa barro+cereal del caso de hierro');
+    oasisAssert(strpos($source, 'echo oasisBonusIcons(') !== false,
+        $name.' describe el oasis con la definición única');
+    oasisAssert(strpos($source, "title='Barro'") === false,
+        $name.' ya no conserva su copia del switch de tipos');
+}
+oasisAssert(strpos($mansionSource, 'function oasisResourceBonus') === false,
+    'la Mansión del Héroe tampoco redefine la descripción del oasis');
+foreach(range(1, 12) as $oasisType) {
+    $tooltip = oasisBonusTooltip($oasisType);
+    $rows = oasisBonusDistributionRows($oasisType);
+    $expected = oasisTypeBonuses($oasisType);
+    $ok = true;
+    foreach($expected as $bonus) {
+        if(strpos($tooltip, $bonus['percent'].'%') === false || strpos($rows, $bonus['percent'].'%') === false) {
+            $ok = false;
+        }
+    }
+    oasisAssert($ok && substr_count($tooltip, '<img') === count($expected),
+        'el tooltip del mapa del oasis tipo '.$oasisType.' muestra un bono por recurso, con su porcentaje');
 }
 
 

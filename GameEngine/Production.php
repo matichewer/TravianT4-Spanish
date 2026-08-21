@@ -183,3 +183,116 @@ function villageOasisCounter($oasisowned) {
 	}
 	return array($wood,$clay,$iron,$crop);
 }
+
+/**
+ * Qué recursos mejora un oasis y en cuánto, DERIVADO de villageOasisCounter(): cada
+ * unidad del reparto vale 25%. Se calcula así, y no con una tabla propia, para que la
+ * etiqueta que lee el jugador no pueda desfasarse del bono que la aldea cobra de
+ * verdad — el mapa, la Mansión del Héroe y el perfil tenían cada uno su copia del
+ * switch de los 12 tipos, y ninguna estaba obligada a coincidir con la producción.
+ *
+ * Devuelve array de array('res' => 1..4, 'percent' => 25|50), en orden madera, barro,
+ * hierro, cereal.
+ */
+function oasisTypeBonuses($type) {
+	list($wood, $clay, $iron, $crop) = villageOasisCounter(array(array('type' => (int)$type)));
+	$bonuses = array();
+	foreach(array(1 => $wood, 2 => $clay, 3 => $iron, 4 => $crop) as $res => $units) {
+		if($units > 0) {
+			$bonuses[] = array('res' => (int)$res, 'percent' => (int)$units * 25);
+		}
+	}
+	return $bonuses;
+}
+
+/**
+ * Nombre del recurso 1..4. Usa las constantes del idioma activo cuando ya están
+ * cargadas (Lang se incluye después que esta capa, así que sólo existen en tiempo de
+ * llamada, no de include).
+ */
+function oasisResourceLabel($res) {
+	switch((int)$res) {
+		case 1: return defined('WOOD') ? WOOD : "Madera";
+		case 2: return defined('CLAY') ? CLAY : "Barro";
+		case 3: return defined('IRON') ? IRON : "Hierro";
+		case 4: return defined('CROP') ? CROP : "Cereal";
+	}
+	return "";
+}
+
+/**
+ * Recurso principal de un oasis, para las listas que muestran un solo nombre.
+ * Un oasis mixto (madera+cereal) se llama por el recurso que no es el cereal.
+ */
+function oasisResourceName($type) {
+	$bonuses = oasisTypeBonuses($type);
+	if(empty($bonuses)) {
+		return "Desconocido";
+	}
+	return oasisResourceLabel($bonuses[0]['res']);
+}
+
+/**
+ * Los iconos del oasis con el bono en el title, para las tablas que sólo tienen lugar
+ * para el icono: el perfil mostraba "Madera" a secas y no dejaba distinguir un oasis
+ * del 25% de uno del 50%, que es el dato por el que se elige cuál conquistar.
+ */
+function oasisBonusIcons($type) {
+	$icons = array();
+	foreach(oasisTypeBonuses($type) as $bonus) {
+		$icons[] = "<img class='r".$bonus['res']."' src='img/x.gif' title='"
+			.oasisResourceLabel($bonus['res'])." +".$bonus['percent']."%'>";
+	}
+	return implode(" ", $icons);
+}
+
+/**
+ * El bono como tooltip del mapa: un renglón por recurso, icono y porcentaje.
+ * Lo usan karte.php y el mapa grande, que antes tenían cada uno su copia del switch.
+ */
+function oasisBonusTooltip($type) {
+	$lines = array();
+	foreach(oasisTypeBonuses($type) as $bonus) {
+		$lines[] = "<img class='r".$bonus['res']."' src='img/x.gif' /> "
+			.oasisResourceLabel($bonus['res'])." ".$bonus['percent']."%";
+	}
+	return implode("<br>", $lines);
+}
+
+/**
+ * El bono como filas de la tabla "Distribución de terreno" del detalle de casilla.
+ * Un oasis de un solo recurso devuelve las celdas sueltas y el `<tr>` lo pone la tabla;
+ * uno mixto trae sus dos filas completas. Se conserva tal cual estaba, incluidos los
+ * saltos de línea, para no tocar el HTML que ya renderiza el navegador.
+ */
+function oasisBonusDistributionRows($type) {
+	$cells = array();
+	foreach(oasisTypeBonuses($type) as $bonus) {
+		$label = oasisResourceLabel($bonus['res']);
+		$cells[] = "<td class=\"ico\"><img class=\"r".$bonus['res']."\" src=\"img/x.gif\" title=\"".$label."\"></td>\n"
+			."<td class=\"val\">".$bonus['percent']."%</td><td class=\"desc\">".$label."</td>";
+	}
+	if(empty($cells)) {
+		return "";
+	}
+	if(count($cells) === 1) {
+		return "\n".$cells[0];
+	}
+	foreach($cells as $index => $cell) {
+		$cells[$index] = "<tr>".$cell."</tr>";
+	}
+	return "\n".implode("\n", $cells);
+}
+
+/**
+ * El bono en texto, con icono y porcentaje visibles. Lo usa la Mansión del Héroe, que
+ * sí tiene una columna entera para mostrarlo.
+ */
+function oasisResourceBonus($type) {
+	$parts = array();
+	foreach(oasisTypeBonuses($type) as $bonus) {
+		$parts[] = "<span><img class='r".$bonus['res']."' src='img/x.gif' title='"
+			.oasisResourceLabel($bonus['res'])."'> ".$bonus['percent']."%</span>";
+	}
+	return implode("", $parts);
+}

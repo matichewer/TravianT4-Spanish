@@ -258,70 +258,9 @@ $tt =  "
 <td><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"> 6</td>";
 break;
 case 0:
-switch($basearray['oasistype']) {
-case 1:
-$tt =  "
-<td class=\"ico\"><img class=\"r1\" src=\"img/x.gif\" title=\"".WOOD."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".WOOD."</td>";
-break;
-case 2:
-$tt =  "
-<td class=\"ico\"><img class=\"r1\" src=\"img/x.gif\" title=\"".WOOD."\"></td>
-<td class=\"val\">50%</td><td class=\"desc\">".WOOD."</td>";
-break;
-case 3:
-$tt =  "
-<tr><td class=\"ico\"><img class=\"r1\" src=\"img/x.gif\" title=\"".WOOD."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".WOOD."</td></tr>
-<tr><td class=\"ico\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CROP."</td></tr>";
-break;
-case 4:
-$tt =  "
-<td class=\"ico\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CLAY."</td>";
-break;
-case 5:
-$tt =  "
-<td class=\"ico\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\"></td>
-<td class=\"val\">50%</td><td class=\"desc\">".CLAY."</td>";
-break;
-case 6:
-$tt =  "
-<tr><td class=\"ico\"><img class=\"r2\" src=\"img/x.gif\" title=\"".CLAY."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CLAY."</td></tr>
-<tr><td class=\"ico\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CROP."</td></tr>";
-break;
-case 7:
-$tt =  "
-<td class=\"ico\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".IRON."</td>";
-break;
-case 8:
-$tt =  "
-<td class=\"ico\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\"></td>
-<td class=\"val\">50%</td><td class=\"desc\">".IRON."</td>";
-break;
-case 9:
-$tt =  "
-<tr><td class=\"ico\"><img class=\"r3\" src=\"img/x.gif\" title=\"".IRON."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".IRON."</td></tr>
-<tr><td class=\"ico\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CROP."</td></tr>";
-break;
-case 10:
-case 11:
-$tt =  "
-<td class=\"ico\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"></td>
-<td class=\"val\">25%</td><td class=\"desc\">".CROP."</td>";
-break;
-case 12:
-$tt =  "
-<td class=\"ico\"><img class=\"r4\" src=\"img/x.gif\" title=\"".CROP."\"></td>
-<td class=\"val\">50%</td><td class=\"desc\">".CROP."</td>";
-break;
-}
+// El tipo de oasis se describe en un solo lugar, oasisTypeBonuses() en
+// Production.php, derivado del mismo reparto que cobra la producción.
+$tt = oasisBonusDistributionRows($basearray['oasistype']);
 break;
 }
 echo $tt;

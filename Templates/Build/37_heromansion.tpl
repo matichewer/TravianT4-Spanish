@@ -19,44 +19,10 @@ if(isset($_GET['gid'], $_GET['del']) && (int)$_GET['gid'] === 37) {
 	}
 }
 
-// Las dos tablas describían el tipo de oasis con el mismo par de switch copiados, y
-// ninguno tenía `default`: un tipo inesperado dejaba en pie el nombre y el bonus de
-// la fila anterior. Una sola definición, que además coincide con el reparto real de
-// villageOasisCounter() en Production.php (cada unidad = 25%).
-if(!function_exists('oasisResourceName')) {
-	function oasisResourceName($type) {
-		switch((int)$type) {
-			case 1: case 2: case 3: return "Madera";
-			case 4: case 5: case 6: return "Barro";
-			case 7: case 8: case 9: return "Hierro";
-			case 10: case 11: case 12: return "Cereal";
-		}
-		return "Desconocido";
-	}
-}
-
-if(!function_exists('oasisResourceBonus')) {
-	function oasisResourceBonus($type) {
-		$wood = "<span><img class='r1' src='img/x.gif' title='Madera'> ";
-		$clay = "<span><img class='r2' src='img/x.gif' title='Barro'> ";
-		$iron = "<span><img class='r3' src='img/x.gif' title='Hierro'> ";
-		$crop = "<span><img class='r4' src='img/x.gif' title='Cereal'> ";
-		switch((int)$type) {
-			case 1: return $wood."25%</span>";
-			case 2: return $wood."50%</span>";
-			case 3: return $wood."25%</span>".$crop."25%</span>";
-			case 4: return $clay."25%</span>";
-			case 5: return $clay."50%</span>";
-			case 6: return $clay."25%</span>".$crop."25%</span>";
-			case 7: return $iron."25%</span>";
-			case 8: return $iron."50%</span>";
-			case 9: return $iron."25%</span>".$crop."25%</span>";
-			case 10: case 11: return $crop."25%</span>";
-			case 12: return $crop."50%</span>";
-		}
-		return "";
-	}
-}
+// El tipo de oasis se describe en un solo lugar, oasisTypeBonuses() en
+// Production.php, derivado del mismo reparto que cobra la producción. Acá vivían dos
+// copias del switch de los 12 tipos; el perfil y el mapa tenían las suyas, y nada
+// obligaba a que las tres coincidieran con el bono real.
 
 ?>
 <div class="clear"></div>

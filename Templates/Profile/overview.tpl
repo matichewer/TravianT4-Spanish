@@ -136,35 +136,9 @@ $prefix = "".TB_PREFIX."odata";
 $uid = $_GET['uid']; $wref = $vil['wref'];
 $sql2 = mysql_query("SELECT * FROM $prefix WHERE owner = $uid AND conqured = $wref");
 while($row = mysql_fetch_array($sql2)){
-$type = $row["type"];
-switch($type) {
-case 1:
-case 2:
-echo  "<img class='r1' src='img/x.gif' title='Madera'>";
-break;
-case 3:
-echo  "<img class='r1' src='img/x.gif' title='Madera'> <img class='r4' src='img/x.gif' title='Cereal'>";
-break;
-case 4:
-case 5:
-echo  "<img class='r2' src='img/x.gif' title='Barro'>";
-break;
-case 6:
-echo  "<img class='r2' src='img/x.gif' title='Barro'> <img class='r4' src='img/x.gif' title='Cereal'>";
-break;
-case 7:
-case 8:
-echo  "<img class='r3' src='img/x.gif' title='Hierro'>";
-break;
-case 9:
-echo  "<img class='r3' src='img/x.gif' title='Hierro'> <img class='r4' src='img/x.gif' title='Cereal'>";
-break;
-case 10:
-case 11:
-case 12:
-echo  "<img class='r4' src='img/x.gif' title='Cereal'>";
-break;
-}
+// El title lleva el porcentaje: el icono solo no distingue un oasis del 25% de
+// uno del 50%, que es justo el dato por el que se elige cuál conquistar.
+echo oasisBonusIcons($row["type"]);
 }
         echo "</td>";
         echo "<td class=\"inhabitants\">".$vil['pop']."</td><td class=\"coords\">";

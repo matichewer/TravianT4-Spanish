@@ -144,42 +144,11 @@ case 12:
 $tt =  "5-4-3-6";
 break;
 case 0:
-switch($maparray[$index]['oasistype']) {
-case 1:
-$tt =  "<img class='r1' src='img/x.gif' /> Madera 25%";
-break;
-case 2:
-$tt =  "<img class='r1' src='img/x.gif' /> Madera 50%";
-break;
-case 3:
-$tt =  "<img class='r1' src='img/x.gif' /> Madera 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
-break;
-case 4:
-$tt =  "<img class='r2' src='img/x.gif' /> Barro 25%";
-break;
-case 5:
-$tt =  "<img class='r2' src='img/x.gif' /> Barro 50%";
-break;
-case 6:
-$tt =  "<img class='r2' src='img/x.gif' /> Barro 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
-break;
-case 7:
-$tt =  "<img class='r3' src='img/x.gif' /> Hierro 25%";
-break;
-case 8:
-$tt =  "<img class='r3' src='img/x.gif' /> Hierro 50%";
-break;
-case 9:
-$tt =  "<img class='r3' src='img/x.gif' /> Hierro 25%<br><img class='r4' src='img/x.gif' /> Cereal 25%";
-break;
-case 10:
-case 11:
-$tt =  "<img class='r4' src='img/x.gif' /> Cereal 25%";
-break;
-case 12:
-$tt =  "<img class='r4' src='img/x.gif' /> Cereal 50%";
-break;
-}
+// El tipo de oasis se describe en un solo lugar, oasisTypeBonuses() en
+// Production.php, derivado del mismo reparto que cobra la producción. Un tipo
+// inesperado ahora da vacío: $tt no se reinicia en cada casilla, y el switch sin
+// default dejaba en pie el tooltip de la casilla anterior.
+$tt = oasisBonusTooltip($maparray[$index]['oasistype']);
 break;
 }
 
