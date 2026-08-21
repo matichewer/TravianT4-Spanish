@@ -196,8 +196,12 @@ function natarSettlementFieldLevel($village, $now = null) {
 }
 
 /**
- * Nivel de los edificios que acompañan a los campos. Crecen más lento: una aldea joven
- * tiene que ser saqueable, y el almacén es justamente lo que le pone techo al botín.
+ * Nivel de los edificios que acompañan a los campos. El almacén y el granero acompañan
+ * a los campos a la misma velocidad (a diferencia del resto, que va más lento): son el
+ * techo de lo que puede juntar la aldea, y por lo tanto del botín, y ese techo tiene que
+ * despegarse del escondite desde el arranque, no recién a los meses. No suma población
+ * extra por subirlos más rápido: el almacén y el granero cuestan 1 habitante fijo en
+ * cualquier nivel.
  */
 function natarSettlementBuildingLevels($village, $now = null) {
     $fieldLevel = natarSettlementFieldLevel($village, $now);
@@ -207,8 +211,8 @@ function natarSettlementBuildingLevels($village, $now = null) {
         19 => $half,
         20 => (int)max(1, floor($fieldLevel / 3)),
         // Almacén y granero: el techo de lo que puede juntar, y por lo tanto del botín.
-        10 => $half,
-        11 => $half,
+        10 => $fieldLevel,
+        11 => $fieldLevel,
         // Escondite: modesto, para que una aldea joven siga dando algo.
         23 => (int)max(1, floor($fieldLevel / 4)),
         // Edificio principal, sólo cosmético para la población.
