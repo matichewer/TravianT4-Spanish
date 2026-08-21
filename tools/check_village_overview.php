@@ -13,6 +13,9 @@
  *      paralelo y se veía uno solo; y varias tandas del mismo tipo son un tipo, no varias.
  *   C. Las suposiciones que la plantilla hace sobre getJobs()/getTraining() siguen siendo
  *      ciertas: si alguien cambia el orden o el filtrado, esto lo avisa.
+ *   D. Las CINCO pestañas listan las aldeas en el mismo orden, el de fundación, que es el
+ *      del cartel lateral. Cada una llamaba a getProfileVillages() por su cuenta (población
+ *      descendente) y la misma lista salía distinta según dónde se mirara.
  *
  * Ejecutar: docker compose exec -T web php /var/www/html/tools/check_village_overview.php
  */
@@ -131,6 +134,37 @@ check(substr_count($tpl,"ENT_QUOTES,'UTF-8'") >= 2,
 // &amp;amp;. Ver la nota en GameEngine/TroopOverview.php.
 check(strpos($tpl,"htmlspecialchars(\$vdata['name']") === false,
     'el nombre de la aldea no se re-escapa: ya viene escapado de la base');
+
+// ---------------------------------------------------------------------------
+section('D. Las cinco pestañas comparten el orden de fundación');
+// ---------------------------------------------------------------------------
+
+foreach(array('1' => 'Resumen', '2' => 'Recursos', '3' => 'Almacén', '4' => 'Puntos de cultura',
+              '5' => 'Tropas', 'noplus' => 'Resumen sin Plus') as $file => $name) {
+    $source = file_get_contents($root.'/Templates/dorf3/'.$file.'.tpl');
+    check(strpos($source,'villageOverviewVillages($session->uid)') !== false
+        && strpos($source,'$database->getProfileVillages($session->uid)') === false,
+        'la pestaña '.$name.' toma las aldeas del helper compartido, ya en orden de fundación');
+}
+
+check(strpos(file_get_contents($root.'/GameEngine/Database/db_MYSQLi.php'),
+    'where owner = $uid order by pop desc') !== false,
+    'getProfileVillages() sigue ordenando por población: la usan una treintena de lugares donde ese orden es el que corresponde');
+check(strpos(file_get_contents($root.'/Templates/multivillage.tpl'),'getVillagesIDByFoundation(') !== false,
+    'el cartel lateral sigue usando el orden de fundación, que es con el que se comparan');
+
+// Lo único que importa de verdad del reordenamiento: ninguna aldea se pierde por el camino.
+$rows = array(50 => 'grande', 10 => 'chica', 30 => 'mediana');
+check(villageOverviewFoundationOrder($rows, array(10,30,50)) === array(10,30,50),
+    'salen en el orden de fundación, no en el de población');
+check(villageOverviewFoundationOrder($rows, array(30)) === array(30,50,10),
+    'una aldea que falta en la lista de fundación se agrega al final, no desaparece');
+check(villageOverviewFoundationOrder($rows, array()) === array(50,10,30),
+    'si la consulta de fundación viene vacía se conserva el orden original');
+check(villageOverviewFoundationOrder($rows, array(10,10,30,999)) === array(10,30,50),
+    'ids repetidos o inexistentes no duplican ni inventan filas');
+check(count(villageOverviewFoundationOrder($rows, array(10,30,50))) === count($rows),
+    'el orden nunca cambia la cantidad de aldeas');
 
 echo PHP_EOL;
 if(empty($failures)) {

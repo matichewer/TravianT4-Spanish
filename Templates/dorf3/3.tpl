@@ -12,7 +12,8 @@ include('menu.tpl');
 <td><img class="clock" src="img/x.gif" title="Tiempo" alt="Tiempo"></td>
 </tr></thead><tbody>
 <?php
-$varray = $database->getProfileVillages($session->uid);
+// En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
+$varray = villageOverviewVillages($session->uid);
 $timer = 1;
 foreach($varray as $vil){
 	$vid = $vil['wref'];

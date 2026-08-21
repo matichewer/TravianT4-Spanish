@@ -7,7 +7,8 @@
 </thead>
 <tbody>
 <?php
-	$varray = $database->getProfileVillages($session->uid);
+	// En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
+	$varray = villageOverviewVillages($session->uid);
 	foreach($varray as $vil){
 		$vid = $vil['wref'];
 		$vdata = $database->getVillage($vid);

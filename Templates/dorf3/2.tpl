@@ -7,7 +7,8 @@ include('menu.tpl');
 <td> Aldea </td><td><img class="r1" src="img/x.gif" title="" alt=""></td><td><img class="r2" src="img/x.gif" title="" alt=""></td><td><img class="r3" src="img/x.gif" title="" alt=""></td><td><img class="r4" src="img/x.gif" title="" alt=""></td><td> Mercaderes </td>
 </tr></thead><tbody>
 <?php
-$varray = $database->getProfileVillages($session->uid);  
+// En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
+$varray = villageOverviewVillages($session->uid);
 foreach($varray as $vil){  
 	$vid = $vil['wref'];
 	$vdata = $database->getVillage($vid);   

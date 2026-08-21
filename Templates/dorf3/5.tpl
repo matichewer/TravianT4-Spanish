@@ -19,14 +19,14 @@
 include('menu.tpl');
 
 $troopTab = (isset($_GET['su']) && (int)$_GET['su'] === 2) ? 2 : 1;
-$varray = $database->getProfileVillages($session->uid);
+// En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
+$villageIds = array();
 $villageRows = array();
-foreach($varray as $vil) {
-	$villageRows[(int)$vil['wref']] = $vil;
+foreach(villageOverviewVillages($session->uid) as $vil) {
+	$wref = (int)$vil['wref'];
+	$villageIds[] = $wref;
+	$villageRows[$wref] = $vil;
 }
-// En orden de fundación, igual que el cartel lateral de aldeas. getProfileVillages() las
-// trae por población descendente y las dos listas quedaban en órdenes distintos.
-$villageIds = troopOverviewFoundationOrder($villageRows,$database->getVillagesIDByFoundation($session->uid));
 $tribe = (int)$session->tribe;
 $ownRange = troopOverviewTribeRange($tribe);
 if($ownRange === null) {

@@ -18,7 +18,8 @@ $gesSiedler = 0;
 $gesSenator = 0;
 
 $timer = 0;
-$varray = $database->getProfileVillages($session->uid); 
+// En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
+$varray = villageOverviewVillages($session->uid);
 foreach($varray as $vil){
 	$vid = $vil['wref'];
 	$rawCp = (int)$database->getVillageField($vid,'cp');

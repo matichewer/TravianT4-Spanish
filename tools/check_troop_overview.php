@@ -259,28 +259,12 @@ check(troopOverviewTribeRange(0) === null && troopOverviewTribeRange(6) === null
 $row = array('u21' => 0, 'u23' => 7);
 check(troopOverviewDetectTribe($row) === 3, 'si el origen de un refuerzo ya no existe, la tribu se deduce de la fila');
 
-// Orden de fundación, el mismo que el cartel lateral. Lo que se prueba de verdad acá es
-// que ninguna aldea se pierda por el camino: la pantalla no puede esconder una aldea
-// porque su wref falte en la lista de fundación.
-$rows = array(50 => 'grande', 10 => 'chica', 30 => 'mediana');
-check(troopOverviewFoundationOrder($rows, array(10,30,50)) === array(10,30,50),
-    'las aldeas salen en el orden de fundación, no en el de población');
-check(troopOverviewFoundationOrder($rows, array(30)) === array(30,50,10),
-    'una aldea que falta en la lista de fundación se agrega al final, no desaparece');
-check(troopOverviewFoundationOrder($rows, array()) === array(50,10,30),
-    'si la consulta de fundación viene vacía se conserva el orden original');
-check(troopOverviewFoundationOrder($rows, array(10,10,30,999)) === array(10,30,50),
-    'ids repetidos o inexistentes en la lista de fundación no duplican ni inventan filas');
-check(count(troopOverviewFoundationOrder($rows, array(10,30,50))) === count($rows),
-    'el orden nunca cambia la cantidad de aldeas');
-
-$tplOrder = file_get_contents(dirname(__DIR__).'/Templates/dorf3/5.tpl');
-check(strpos($tplOrder,'troopOverviewFoundationOrder(') !== false
-    && strpos($tplOrder,'getVillagesIDByFoundation(') !== false,
-    'la pantalla de tropas ordena por fundación, como el cartel lateral');
-check(strpos(file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php'),
-    'function getProfileVillages($uid) {'."\n".'        		$q = "SELECT * from " . TB_PREFIX . "vdata where owner = $uid order by pop desc";') !== false,
-    'getProfileVillages() sigue ordenando por población: la usan una treintena de lugares más');
+// El orden de las aldeas es de toda la pantalla de resumen, no sólo de tropas: vive en
+// GameEngine/VillageOverview.php y lo cubre tools/check_village_overview.php.
+check(strpos(file_get_contents(dirname(__DIR__).'/Templates/dorf3/5.tpl'),'villageOverviewVillages($session->uid)') !== false,
+    'la pantalla de tropas toma las aldeas del helper compartido, ya ordenadas');
+check(strpos(file_get_contents(dirname(__DIR__).'/GameEngine/TroopOverview.php'),'FoundationOrder') === false,
+    'y el ordenamiento ya no está duplicado en TroopOverview.php');
 
 // Los nombres de las aldeas natar independientes ya llevan las coordenadas pegadas para
 // ser únicos, así que agregárselas otra vez daba "Atalaya natar (15|78) (15|78)".

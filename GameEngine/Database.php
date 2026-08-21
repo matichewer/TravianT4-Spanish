@@ -11,6 +11,9 @@ require_once(dirname(__FILE__).'/Accounts.php');
 // Production.php: es una agregación sobre varias tablas que tiene que dar el mismo
 // número desde la plantilla y desde los checkers.
 require_once(dirname(__FILE__).'/TroopOverview.php');
+// La lista de aldeas del resumen, que sus cinco pestañas tienen que compartir para
+// listarlas todas en el mismo orden.
+require_once(dirname(__FILE__).'/VillageOverview.php');
 
 // Sólo queda el driver MySQLi. El de `mysql_*` (DB_TYPE 0) no podía correr en PHP 7
 // —la extensión no existe desde PHP 7.0— y sobrevivía como una copia paralela del
