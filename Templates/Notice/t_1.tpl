@@ -237,10 +237,10 @@ if($dataarray[1]){
 		</div>
 <?php } ?>
 
-	  <?php include __DIR__."/per_page.tpl"; ?>
 	  <div class="paginator">
 	  <?php echo $paginationDisplay; ?>
       </div>
+	  <?php include __DIR__."/per_page.tpl"; ?>
 
     <div class="clear"></div>
 </div>

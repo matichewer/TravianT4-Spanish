@@ -5,7 +5,14 @@ include("GameEngine/Units.php");
 
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
-	header("Location: ".$_SERVER['PHP_SELF'].(isset($_GET['id'])?'?id='.$_GET['id']:(isset($_GET['gid'])?'?gid='.$_GET['gid']:'')));
+	$newdidLocation = $_SERVER['PHP_SELF'].(isset($_GET['id'])?'?id='.$_GET['id']:(isset($_GET['gid'])?'?gid='.$_GET['gid']:''));
+	// Preserva la pestaña (t=N) cuando el enlace la pide, ademas del edificio: sin esto,
+	// cambiar de aldea desde una pestaña con gid= (ej. Rutas comerciales del Mercado,
+	// que cambia de slot de aldea en aldea) volvia siempre a la pestaña por defecto.
+	if(isset($_GET['t']) && is_scalar($_GET['t']) && ctype_digit((string)$_GET['t'])) {
+		$newdidLocation .= (strpos($newdidLocation,'?') !== false ? '&' : '?').'t='.(int)$_GET['t'];
+	}
+	header("Location: ".$newdidLocation);
 	exit;
 }
 if(isset($_GET['id']) && is_scalar($_GET['id']) && (string)$_GET['id'] === '99' && $village->natar == 0){

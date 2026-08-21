@@ -39,6 +39,13 @@
     }
     if($buildingGid > 0){
     	$vill = "&gid=".$buildingGid;
+    	// El slot cambia de aldea en aldea (por eso se manda gid, no id), pero la
+    	// pestaña (t=, ej. Rutas comerciales del Mercado) es la misma edificio a
+    	// edificio: sin esto, cambiar de aldea desde esa pestaña siempre volvia a
+    	// la pestaña por defecto.
+    	if(isset($_GET['t']) && is_scalar($_GET['t']) && ctype_digit((string)$_GET['t'])) {
+    		$vill .= "&t=".$_GET['t'];
+    	}
     }else if(isset($_GET['id'])){
     	$vill = "&id=".$_GET['id'];
     }else if(isset($_GET['gid'])){
