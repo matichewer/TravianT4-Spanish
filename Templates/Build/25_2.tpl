@@ -24,6 +24,10 @@ include("25_menu.tpl"); ?>
         <th>Todas las aldeas producen </th>
         <td><b><?php echo number_format(accountVillageCulturePointsPerDay($database,$session->uid),0,',','.'); ?></b> puntos de cultura</td>
 </tr>
+<tr>
+        <th>Próximo pago</th>
+        <td title="La producción diaria se acredita entera de una vez, cada 24 horas, a tu propia hora. Faltan <?php echo cultureNextCreditCountdown(cultureNextCreditIn((int)$database->getUserField($session->uid, 'lastupdate', 0))); ?>"><b><?php echo cultureNextCreditLabel((int)$database->getUserField($session->uid, 'lastupdate', 0)); ?></b></td>
+</tr>
 </table>
 <?php include("culture_expansion.tpl"); ?>
 <?php

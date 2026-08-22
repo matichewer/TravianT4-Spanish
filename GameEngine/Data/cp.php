@@ -427,6 +427,71 @@ if(!function_exists('cultureWorldSpeed')){
 	}
 }
 
+if(!function_exists('cultureNextCreditAt')){
+	/**
+	 * Cuándo cobra la cuenta su próxima producción diaria de cultura.
+	 *
+	 * La pasiva no gotea: `Automation::culturePoints()` paga la suma diaria entera de
+	 * una sola vez cada 24 horas, y el reloj de cada jugador es su `users.lastupdate`,
+	 * que avanza exactamente 86.400 segundos por pago (no "hasta ahora", así no se va
+	 * corriendo unos minutos por día). O sea que cada cuenta cobra siempre a la misma
+	 * hora, la suya, y no a medianoche.
+	 *
+	 * Con `lastupdate` en 0 —así se registraban las cuentas viejas— el barrido lo
+	 * ancla en la próxima carga de página sin pagar nada, así que el próximo cobro
+	 * cae 24 horas después de ahora.
+	 */
+	function cultureNextCreditAt($lastUpdate, $now = null){
+		$now = $now === null ? time() : (int)$now;
+		$lastUpdate = (int)$lastUpdate;
+		if($lastUpdate <= 0){
+			return $now + 86400;
+		}
+		$next = $lastUpdate + 86400;
+
+		// Ya vencido: el barrido corre en cada carga de página, así que cae ya mismo.
+		return $next > $now ? $next : $now;
+	}
+
+	/** Segundos que faltan, para el "faltan 7 h 12 min" del cartel. */
+	function cultureNextCreditIn($lastUpdate, $now = null){
+		$now = $now === null ? time() : (int)$now;
+
+		return max(0, cultureNextCreditAt($lastUpdate, $now) - $now);
+	}
+
+	/**
+	 * "hoy a las 21:48" / "mañana a las 03:12". Una sola definición: lo muestran el
+	 * cartel de dorf1 y la ficha de la Residencia y del Palacio, y tienen que decir lo
+	 * mismo. Nunca pasa de mañana, porque el próximo pago está siempre dentro de 24 h.
+	 */
+	function cultureNextCreditLabel($lastUpdate, $now = null){
+		$now = $now === null ? time() : (int)$now;
+		$next = cultureNextCreditAt($lastUpdate, $now);
+		if($next <= $now){
+			return 'en cuanto recargues';
+		}
+		$day = date('Y-m-d', $next) === date('Y-m-d', $now) ? 'hoy' : 'mañana';
+
+		return $day.' a las '.date('H:i', $next);
+	}
+
+	/** "7 h 12 min" / "48 min" / "1 min". */
+	function cultureNextCreditCountdown($seconds){
+		$seconds = max(0, (int)$seconds);
+		if($seconds <= 0){
+			return 'ya';
+		}
+		$hours = intdiv($seconds, 3600);
+		$minutes = intdiv($seconds % 3600, 60);
+		if($hours > 0){
+			return $hours.' h '.$minutes.' min';
+		}
+
+		return max(1, $minutes).' min';
+	}
+}
+
 if(!function_exists('buildingCulturePointsAtLevel')){
 	/**
 	 * Puntos de cultura por día que rinde un edificio al nivel dado.

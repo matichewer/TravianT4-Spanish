@@ -265,6 +265,44 @@ $productionDatabase->rawCulture = 5575;
 cultureBalanceAssert(artworkCooldownSeconds() === 86400, 'El cooldown de obra de arte dejó de ser 24 horas.');
 cultureBalanceAssert(artworkCooldownRemaining(100000,186400) === 0, 'La obra no se habilitó exactamente a las 24 horas.');
 
+// --- E bis. Cuándo cae el pago diario ---------------------------------------------
+// La pasiva no gotea: se paga entera una vez cada 24 h, a la hora propia de cada
+// cuenta. Que el jugador pueda verlo es la única forma de que el "+X PC/día" no
+// parezca que aparece porque sí.
+
+$creditNow = mktime(14, 30, 0, 8, 22, 2026);
+cultureBalanceAssert(
+	cultureNextCreditAt($creditNow - 3600 * 7, $creditNow) === $creditNow + 3600 * 17,
+	'El próximo pago dejó de caer 24 horas después del último.'
+);
+cultureBalanceAssert(
+	cultureNextCreditAt(0, $creditNow) === $creditNow + 86400,
+	'Una cuenta sin reloj (lastupdate 0) no anuncia su pago a 24 horas vista.'
+);
+cultureBalanceAssert(
+	cultureNextCreditAt($creditNow - 86400 * 3, $creditNow) === $creditNow
+		&& cultureNextCreditIn($creditNow - 86400 * 3, $creditNow) === 0,
+	'Un pago ya vencido debería caer en la próxima carga de página, no en el futuro.'
+);
+cultureBalanceAssert(
+	cultureNextCreditLabel($creditNow - 3600 * 20, $creditNow) === 'hoy a las 18:30'
+		&& cultureNextCreditLabel($creditNow - 3600 * 7, $creditNow) === 'mañana a las 07:30'
+		&& cultureNextCreditLabel($creditNow - 86400 * 3, $creditNow) === 'en cuanto recargues',
+	'La etiqueta del próximo pago dejó de decir hoy/mañana con la hora exacta.'
+);
+cultureBalanceAssert(
+	cultureNextCreditCountdown(3600 * 7 + 720) === '7 h 12 min'
+		&& cultureNextCreditCountdown(2880) === '48 min'
+		&& cultureNextCreditCountdown(0) === 'ya',
+	'La cuenta regresiva del próximo pago cambió de formato.'
+);
+foreach(array('Templates/culture_progress.tpl', 'Templates/Build/25_2.tpl', 'Templates/Build/26_2.tpl') as $creditView){
+	cultureBalanceAssert(
+		strpos(file_get_contents(dirname(__DIR__).'/'.$creditView), 'cultureNextCreditLabel(') !== false,
+		$creditView.' dejó de mostrar cuándo cae el pago diario de cultura.'
+	);
+}
+
 // --- F. El traslado entre tablas conserva el avance -------------------------------
 // Es lo que hace seguro cambiar de columna en un mundo en juego: nadie gana ni pierde
 // un cupo de aldea, y la barra de progreso queda donde estaba.
