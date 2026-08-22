@@ -87,11 +87,15 @@ define("CRANNY_CAPACITY","%CRANNYCAP%");
 define("TRAPPER_CAPACITY","%TRAPPERCAP%");
 
 // ***** Village Expand
-// Official culture-point requirement table, picked from the world speed.
-// In official T4 passive culture production does not scale with world speed; the
-// per-village requirement scales down instead. Not configurable by the installer.
-// 1 = official x1 column ($cp1), 0 = official x3 column ($cp0).
-define("CP", SPEED >= 3 ? 0 : 1);
+// Culture-point requirement table. 1 = official x1 column ($cp1), 0 = official x3
+// column ($cp0), 2 = a curve this repo invented (not official, do not use).
+// Not configurable by the installer.
+//
+// Deliberately the x1 column even on a speed world: passive production stays official
+// and unscaled, so this makes expansion three times slower than an official x3 world
+// (~15 days per village instead of ~5). Official pacing is calibrated for gameworlds
+// with thousands of players; this one has a handful. See config/config.php.
+define("CP", 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

@@ -80,12 +80,22 @@ cultureBalanceAssert(
 
 $installerConfigTemplate = file_get_contents(dirname(__DIR__).'/install/data/constant_format_mysqli.tpl');
 $worldConfig = file_get_contents(dirname(__DIR__).'/config/config.php');
+// El único desvío deliberado del oficial: la columna x1 de umbrales sobre una economía
+// x3, o sea expansión 3 veces más lenta. La producción pasiva sigue siendo la oficial
+// sin tocar, que es lo que el resto de este archivo verifica.
 foreach(array('el instalador' => $installerConfigTemplate, 'config/config.php' => $worldConfig) as $where => $source){
 	cultureBalanceAssert(
-		strpos($source, 'define("CP", SPEED >= 3 ? 0 : 1);') !== false,
-		"En $where la tabla de cultura dejó de derivarse de SPEED."
+		strpos($source, 'define("CP", 1);') !== false,
+		"En $where la tabla de cultura dejó de ser la columna x1."
 	);
 }
+// Cambiar la tabla en un mundo en juego sin trasladar los saldos regala (o quita) tres
+// aldeas de golpe a cada cuenta. Que la herramienta exista y sepa ir en los dos
+// sentidos es parte del contrato de este knob.
+cultureBalanceAssert(
+	travianCultureRescale(travianCultureRescale(33368, 1, 0)['newPoints'], 0, 1)['newPoints'] === 33367,
+	'El traslado de saldos dejó de poder deshacerse: cambiar de tabla sería irreversible.'
+);
 cultureBalanceAssert(
 	strpos($installerConfigTemplate, '%VILLAGE_EXPAND%') === false
 		&& strpos(file_get_contents(dirname(__DIR__).'/install/process.php'), 'VILLAGE_EXPAND') === false,

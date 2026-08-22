@@ -92,15 +92,24 @@ define("CRANNY_CAPACITY","1");
 define("TRAPPER_CAPACITY","1");
 
 // ***** Village Expand
-// Tabla de puntos de cultura por aldea. En el T4 oficial la produccion pasiva no
-// escala con la velocidad del mundo: lo que baja es el requisito. Por eso el modo
-// sale de SPEED y no de una preferencia.
+// Tabla de puntos de cultura por aldea.
 // 1 = columna oficial x1  ($cp1: 2.000 / 8.000 / 20.000 ...)
 // 0 = columna oficial x3  ($cp0:   500 / 2.600 /  6.700 ...)
 // 2 = curva inventada por este repositorio, no oficial. No usar.
-// El original solo tuvo mundos normales y "de velocidad" (x3), asi que cualquier
-// mundo de 3x o mas usa la columna rapida.
-define("CP", SPEED >= 3 ? 0 : 1);
+//
+// **Desvio deliberado del oficial, y el unico que tiene este mundo en cultura.** Un
+// mundo x3 oficial usaria la columna x3, y con ella la expansion queda clavada en una
+// aldea cada 5 dias para siempre, porque la curva sube casi al mismo ritmo que la
+// produccion. Eso esta calibrado para mundos de miles de jugadores donde el mapa se
+// llena; este tiene cuatro. Con la columna x1 la misma economia x3 expande 3 veces mas
+// lento (~15 dias por aldea) y el Ayuntamiento pasa a ser una decision real en vez de
+// un lujo.
+//
+// La produccion pasiva NO se toca para compensar: sigue siendo la oficial, sin factores
+// ni multiplicadores por velocidad. El unico knob es esta tabla, y es reversible con
+// tools/rescale_culture_points.php --desde=1 --hasta=0, que traslada los saldos ya
+// acumulados sin que nadie gane ni pierda un cupo de aldea.
+define("CP", 1);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to
