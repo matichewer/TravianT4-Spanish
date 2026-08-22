@@ -591,7 +591,7 @@
 		$item = "109";
 	}elseif($btype==15){
 		$name = "Obra de arte";
-		$title = "Otorga al instante tantos puntos de cultura como la producción diaria adaptada a la velocidad del mundo, hasta un máximo de 5000. Solo se puede usar una cada 24 horas.";
+		$title = "Otorga al instante tantos puntos de cultura como produce tu cuenta en un día, hasta un máximo de ".number_format(artworkCulturePointsCap(),0,',','.').". Solo se puede usar una cada 24 horas.";
         $item = "111";
 	}
 

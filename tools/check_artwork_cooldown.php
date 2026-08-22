@@ -60,6 +60,27 @@ artworkAssert(strpos($inventoryPage,'Una obra de arte cada 24 horas')!==false,'E
 $auctionText=file_get_contents(dirname(__DIR__).'/Templates/Auction/alt.tpl');
 artworkAssert(strpos($auctionText,'Solo se puede usar una cada 24 horas')!==false,'La descripción de subasta no explica el cooldown.');
 
+// La obra concede un día de producción, y la pasiva no escala con la velocidad del
+// mundo: lo único que la velocidad toca es el tope, que ya se lee de
+// artworkCulturePointsCap(). Anunciar un "x3" o un 5000 fijo prometía hasta cinco veces
+// lo que después acredita Inventory.php.
+$btype = 15;
+$type = 0;
+$name = '';
+$title = '';
+$item = '';
+include dirname(__DIR__).'/Templates/Auction/alt.tpl';
+artworkAssert(strpos($title,'velocidad')===false,'La descripción de subasta sigue atando la obra a la velocidad del mundo.');
+artworkAssert(
+	strpos($title,number_format(artworkCulturePointsCap(),0,',','.'))!==false,
+	'La descripción de subasta no anuncia el tope real de la obra.'
+);
+$inventoryDialog = file_get_contents(dirname(__DIR__).'/hero_inventory.php');
+artworkAssert(
+	strpos($inventoryDialog,"PC obtenidos (producción diaria de la cuenta, máximo <?php echo number_format(artworkCulturePointsCap(),0,',','.'); ?>)")!==false,
+	'El diálogo del inventario no anuncia la producción diaria y el tope real.'
+);
+
 if($failures){
 	fwrite(STDERR,"Artwork cooldown regression: FAILED\n - ".implode("\n - ",$failures)."\n");
 	exit(1);

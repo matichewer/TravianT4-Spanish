@@ -429,7 +429,9 @@ if(!function_exists('heroTrainingTimeFactor')){
 	// El bono se cobra en la aldea natal, no en la que tenga al héroe parado. `wref` se
 	// mueve solo cada vez que sale de aventura o refuerza, y eso cambiaría los tiempos
 	// de una cola ya empezada; `home` solo cambia si el jugador lo pide, igual que el
-	// bono de recursos. (En Travian oficial es donde está el héroe.)
+	// bono de recursos. Es lo mismo que hace el T4 oficial: el héroe tiene una aldea
+	// natal designada y produce ahí "regardless of where he currently is", y la única
+	// forma de moverla es mandarlo de refuerzo a otra aldea propia tildando la casilla.
 	function heroTrainingTimeFactor($database, $uid, $villageId, $buildingType){
 		$uid = (int)$uid;
 		$villageId = (int)$villageId;
