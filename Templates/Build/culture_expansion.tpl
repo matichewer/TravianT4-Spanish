@@ -31,6 +31,7 @@ if(!empty($expansionRows)) {
 <style>
 #cultureExpansion{margin:18px 0 4px;border-collapse:collapse;width:auto;min-width:340px;line-height:19px;background:transparent;}
 #cultureExpansion caption{caption-side:top;text-align:left;font-weight:bold;padding:0 0 6px;color:#5c4426;}
+#cultureExpansion caption .ceNote{display:block;max-width:340px;font-weight:normal;font-size:10px;line-height:14px;color:#8a7a5e;padding-top:2px;}
 #cultureExpansion th,#cultureExpansion td{padding:2px 0;white-space:nowrap;border:0;background:transparent;font-weight:normal;}
 #cultureExpansion thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#8a7a5e;border-bottom:1px solid rgba(92,68,38,.28);padding-bottom:3px;}
 #cultureExpansion .ceName{text-align:left;padding-right:26px;}
@@ -45,7 +46,7 @@ if(!empty($expansionRows)) {
 #cultureExpansion tbody tr.ceNext .ceNum:last-of-type{padding-right:0;}
 </style>
 <table id="cultureExpansion" cellpadding="0" cellspacing="0">
-	<caption>Puntos de cultura por aldea</caption>
+	<caption>Puntos de cultura por aldea<span class="ceNote">Calculado con tu producción de hoy. En la práctica llegarás antes: sube con cada nivel que construyes, con cada aldea nueva y con las celebraciones del Ayuntamiento.</span></caption>
 	<thead>
 		<tr>
 			<th class="ceName" scope="col">Aldea</th>
