@@ -296,12 +296,19 @@ cultureBalanceAssert(
 		&& cultureNextCreditCountdown(0) === 'ya',
 	'La cuenta regresiva del próximo pago cambió de formato.'
 );
-foreach(array('Templates/culture_progress.tpl', 'Templates/Build/25_2.tpl', 'Templates/Build/26_2.tpl') as $creditView){
+// Va sólo en la ficha de la Residencia y del Palacio. El cartel de la barra lateral
+// se dejó como estaba a propósito: es angosto, frágil (ver AGENTS.md) y lo que ahí
+// importa es el ritmo, no el reloj.
+foreach(array('Templates/Build/25_2.tpl', 'Templates/Build/26_2.tpl') as $creditView){
 	cultureBalanceAssert(
 		strpos(file_get_contents(dirname(__DIR__).'/'.$creditView), 'cultureNextCreditLabel(') !== false,
 		$creditView.' dejó de mostrar cuándo cae el pago diario de cultura.'
 	);
 }
+cultureBalanceAssert(
+	strpos(file_get_contents(dirname(__DIR__).'/Templates/culture_progress.tpl'), 'cultureNextCredit') === false,
+	'El cartel de la barra lateral volvió a mostrar el próximo pago.'
+);
 
 // --- F. El traslado entre tablas conserva el avance -------------------------------
 // Es lo que hace seguro cambiar de columna en un mundo en juego: nadie gana ni pierde

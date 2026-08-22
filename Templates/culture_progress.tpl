@@ -40,11 +40,6 @@ $cultureHelmetValues = array(
 	intdiv(getHeroHelmetBonuses(9)['culture'], cultureFixedAmountDivisor())
 );
 $cultureArtworkCap = artworkCulturePointsCap();
-// La pasiva no gotea: se paga entera una vez cada 24 h, a la hora propia de cada
-// cuenta. Sin esto el jugador ve el "+X PC/día" y no tiene forma de saber cuándo cae.
-$cultureLastUpdate = (int)$database->getUserField($cultureOwnerId, 'lastupdate', 0);
-$cultureNextCredit = cultureNextCreditLabel($cultureLastUpdate);
-$cultureNextCreditIn = cultureNextCreditCountdown(cultureNextCreditIn($cultureLastUpdate));
 ?>
 <?php /* Tres piezas como el cartel de la lista de aldeas: el rollo de arriba, el
 cuerpo con el pergamino repetido y el rollo de abajo. Tienen que ser elementos
@@ -85,8 +80,7 @@ transparente por fuera del cartel y dejaria ver el pergamino por detras. */ ?>
 		<div class="cultureProgressBarFill" style="width:<?php echo number_format($cultureStatus['progressPercent'], 2, '.', ''); ?>%;"></div>
 	</div>
 <?php } ?>
-	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta<?php if($cultureHelmetProduction > 0) { echo ', incluidos '.number_format($cultureHelmetProduction, 0, ',', '.').' PC del casco del héroe'; } ?>">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día<span class="cultureProgressNext" title="La producción diaria se acredita entera de una vez, cada 24 horas, a tu propia hora<?php if($cultureNextCreditIn !== 'ya') { echo '. Faltan '.$cultureNextCreditIn; } ?>">próximo pago <?php echo $cultureNextCredit; ?></span></div>
-	<style>#cultureProgress .cultureProgressNext{display:block;font-size:10px;line-height:13px;font-weight:normal;color:#6b6152;padding-top:1px;white-space:nowrap;}</style>
+	<div class="cultureProgressRate" title="Producción diaria de puntos de cultura de toda la cuenta<?php if($cultureHelmetProduction > 0) { echo ', incluidos '.number_format($cultureHelmetProduction, 0, ',', '.').' PC del casco del héroe'; } ?>">+<?php echo number_format($cultureDailyProduction, 0, ',', '.'); ?> PC/día</div>
 	</div>
 	<div class="cultureProgressSignFoot"></div>
 </div>
