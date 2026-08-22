@@ -247,6 +247,33 @@ cultureBalanceAssert(
 		&& getHeroHelmetBonuses(9)['culture'] === 800,
 	'Los cascos de cultura dejaron de aportar los 100/400/800 PC oficiales de un mundo x1.'
 );
+cultureBalanceAssert(
+	heroHelmetCulturePointsForType(7,1) === 100 && heroHelmetCulturePointsForType(7,3) === 50
+		&& heroHelmetCulturePointsForType(8,3) === 200 && heroHelmetCulturePointsForType(9,3) === 400,
+	'El casco de cultura dejó de valer la mitad en un mundo de velocidad.'
+);
+
+// El tooltip del objeto tiene que anunciar lo que después acredita el motor. Anunciaba
+// una base inventada (25/100/200) multiplicada por la velocidad del mundo: prometía 75
+// PC/día con el Gladiador donde la cuenta recibe 50, y encima ataba a la velocidad una
+// producción que en el oficial no escala con ella.
+foreach(array(7,8,9) as $helmetType){
+	$btype = 1;
+	$type = $helmetType;
+	$name = '';
+	$title = '';
+	$item = '';
+	$effect = '';
+	include dirname(__DIR__).'/Templates/Auction/alt.tpl';
+	cultureBalanceAssert(
+		$title === '+'.number_format(heroHelmetCulturePointsForType($helmetType),0,',','.').' puntos de cultura/día',
+		'El tooltip del casco de cultura '.$helmetType.' no anuncia los PC/día que acredita el motor.'
+	);
+	cultureBalanceAssert(
+		strpos($title,'velocidad') === false,
+		'El tooltip del casco de cultura '.$helmetType.' volvió a atar la pasiva a la velocidad del mundo.'
+	);
+}
 
 cultureBalanceAssert(
 	artworkCulturePointsCap(1) === 2000 && artworkCulturePointsCap(3) === 1000,

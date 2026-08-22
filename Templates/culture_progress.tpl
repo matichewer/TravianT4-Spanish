@@ -33,11 +33,10 @@ $cultureQuestClass = $cultureQuestVisible ? '' : ' cultureProgressWithoutQuest';
 // every 24 hours.
 $cultureDailyProduction = accountCulturePointsPerDay($database, $cultureOwnerId);
 $cultureHelmetProduction = heroHelmetCulturePoints($database, $cultureOwnerId);
-$cultureSpeed = cultureWorldSpeed();
 $cultureHelmetValues = array(
-	intdiv(getHeroHelmetBonuses(7)['culture'], cultureFixedAmountDivisor()),
-	intdiv(getHeroHelmetBonuses(8)['culture'], cultureFixedAmountDivisor()),
-	intdiv(getHeroHelmetBonuses(9)['culture'], cultureFixedAmountDivisor())
+	heroHelmetCulturePointsForType(7),
+	heroHelmetCulturePointsForType(8),
+	heroHelmetCulturePointsForType(9)
 );
 $cultureArtworkCap = artworkCulturePointsCap();
 ?>

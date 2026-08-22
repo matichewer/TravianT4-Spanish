@@ -33,21 +33,17 @@
             $item = "6";
             $effect = "20";
         }
-        if($type==7){
-        	$name = "Casco del Gladiador";
-			$title = "+".number_format(25*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (25 × velocidad del mundo)";
-            $item = "7";
-			$effect = (string)round(25*cultureWorldSpeed());
-		}elseif($type==8){
-        	$name = "Casco del Tribuno";
-			$title = "+".number_format(100*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (100 × velocidad del mundo)";
-            $item = "8";
-			$effect = (string)round(100*cultureWorldSpeed());
-		}elseif($type==9){
-        	$name = "Casco del Cónsul";
-			$title = "+".number_format(200*cultureWorldSpeed(),0,',','.')." puntos de cultura/día (200 × velocidad del mundo)";
-            $item = "9";
-			$effect = (string)round(200*cultureWorldSpeed());
+        if($type==7 || $type==8 || $type==9){
+			// Gladiador / Tribuno / Cónsul: los PC/día salen de la misma función que
+			// después los acredita (heroHelmetCulturePointsForType), no de una base
+			// multiplicada por la velocidad del mundo — la pasiva de cultura no escala
+			// con la velocidad, sólo el tope de los importes fijos se parte al medio.
+			$helmetNames = array(7 => "Casco del Gladiador", 8 => "Casco del Tribuno", 9 => "Casco del Cónsul");
+			$helmetCulture = heroHelmetCulturePointsForType($type);
+			$name = $helmetNames[$type];
+			$title = "+".number_format($helmetCulture,0,',','.')." puntos de cultura/día";
+			$item = (string)$type;
+			$effect = (string)$helmetCulture;
 		}
         if($type==10){
         	$name = "Casco del Jinete";

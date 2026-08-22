@@ -453,6 +453,19 @@ if(!function_exists('heroTrainingTimeFactor')){
 	}
 }
 
+if(!function_exists('heroHelmetCulturePointsForType')){
+	// PC/día de un casco de cultura por su tipo, sin héroe de por medio: es lo que
+	// anuncian los tooltips del objeto (subasta, bolsa, panel de cultura). Existe para
+	// que lo prometido y lo acreditado salgan del mismo lugar — el tooltip de la subasta
+	// llegó a multiplicar una base inventada por la velocidad del mundo y ofrecía 75
+	// PC/día donde el motor acredita 50.
+	function heroHelmetCulturePointsForType($type, $speed = null){
+		$bonuses = getHeroHelmetBonuses((int)$type);
+
+		return intdiv((int)$bonuses['culture'], cultureFixedAmountDivisor($speed));
+	}
+}
+
 if(!function_exists('heroHelmetCulturePoints')){
 	// Puntos de cultura por día que aporta el casco puesto. A diferencia de la
 	// regeneración, no se guarda en ninguna columna: se lee del objeto equipado cada
@@ -474,9 +487,7 @@ if(!function_exists('heroHelmetCulturePoints')){
 		if(!is_array($helmet)){
 			return 0;
 		}
-		$bonuses = getHeroHelmetBonuses((int)$helmet['type']);
-
-		return intdiv((int)$bonuses['culture'], cultureFixedAmountDivisor($speed));
+		return heroHelmetCulturePointsForType((int)$helmet['type'], $speed);
 	}
 }
 
