@@ -55,9 +55,10 @@ stonemasonAssert(
 	'la lista de edificios oculta el Taller de cantería fuera de la capital'
 );
 
+// El nombre de los edificios ya no está copiado en Building.php ni en Automation.php:
+// las dos delegan en buildingDisplayName(), que es la única lista.
 $nameFiles = array(
-	dirname(__DIR__).'/GameEngine/Building.php',
-	dirname(__DIR__).'/GameEngine/Automation.php',
+	dirname(__DIR__).'/GameEngine/Catapult.php',
 	dirname(__DIR__).'/GameEngine/Lang/es.php',
 	dirname(__DIR__).'/Templates/Build/34.tpl',
 	dirname(__DIR__).'/Templates/Simulator/def_end.tpl'

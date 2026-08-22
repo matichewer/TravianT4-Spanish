@@ -25,6 +25,7 @@
  */
 
 require_once __DIR__.'/Accounts.php';
+require_once __DIR__.'/Catapult.php';
 require_once __DIR__.'/NatarVillage.php';
 
 // --- Perillas ------------------------------------------------------------------------
@@ -77,6 +78,19 @@ if(!defined('NATAR_SETTLEMENT_CATCHUP_CAP')) {
     // meses no puede materializar meses de entrenamiento de golpe. El techo del cereal ya
     // acota el total, pero esto acota además la velocidad a la que se llega.
     define('NATAR_SETTLEMENT_CATCHUP_CAP', 24);
+}
+if(!defined('NATAR_SETTLEMENT_WALL_TYPE')) {
+    // Qué muro levanta una aldea viva. El T4.0 no tiene un muro natar —los gids 31/32/33
+    // son la Muralla romana, el Muro de tierra germano y la Empalizada gala, y no hay un
+    // cuarto—, así que el fortín levanta una Muralla y pelea con los números de la
+    // Muralla (Battle::wallFactors la reconoce para la tribu 5). Es lo que le da sentido
+    // al ariete contra estas aldeas: antes el informe decía "No hay muralla que destruir"
+    // y los arietes viajaban al pedo.
+    //
+    // Cuesta habitantes como cualquier edificio (bid31: 5 en nivel 10), así que la aldea
+    // los paga en cereal y su guarnición sostenible baja un poco. Es la cuenta correcta y
+    // sale sola: natarVillagePopulation() recorre el campo 40 igual que los demás.
+    define('NATAR_SETTLEMENT_WALL_TYPE', 31);
 }
 if(!defined('NATAR_SETTLEMENT_TRAINING_INTERVAL')) {
     // Duración de un intervalo de entrenamiento (segundos). 1 h.
@@ -216,8 +230,30 @@ function natarSettlementBuildingLevels($village, $now = null) {
         // Escondite: modesto, para que una aldea joven siga dando algo.
         23 => (int)max(1, floor($fieldLevel / 4)),
         // Edificio principal, sólo cosmético para la población.
-        15 => $half
+        15 => $half,
+        // La muralla acompaña a los campos, como el almacén: es lo único que el atacante
+        // tira con arietes en vez de catapultas, y un fortín viejo tiene que sentirse
+        // fortificado.
+        NATAR_SETTLEMENT_WALL_TYPE => $fieldLevel
     );
+}
+
+/**
+ * Dónde va cada edificio del plan. Igual que natarFindBuildingSlot(), salvo el muro: vive
+ * en el campo 40 y no en la franja 19-38, que es la única que aquella función recorre.
+ */
+function natarSettlementBuildingSlot($fields, $type) {
+    return buildingIsWall($type) ? NATAR_WALL_SLOT : natarFindBuildingSlot($fields, $type);
+}
+
+/**
+ * Las casillas que el plan de una aldea viva puede tocar: los campos, los edificios y el
+ * muro. El muro va aparte porque vive en el campo 40 y la franja de edificios corta en 38.
+ */
+function natarSettlementPlannedSlots() {
+    $slots = range(NATAR_FIRST_RESOURCE_FIELD, NATAR_LAST_BUILDING_SLOT);
+    $slots[] = NATAR_WALL_SLOT;
+    return $slots;
 }
 
 /**
@@ -235,7 +271,7 @@ function natarSettlementPlan($fields, $village, $now = null) {
         $plan['f'.$slot] = $fieldLevel;
     }
     foreach(natarSettlementBuildingLevels($village, $now) as $type => $level) {
-        $slot = natarFindBuildingSlot($plan, $type);
+        $slot = natarSettlementBuildingSlot($plan, $type);
         if($slot > 0 && $level > 0) {
             $plan['f'.$slot.'t'] = $type;
             $plan['f'.$slot] = $level;
@@ -405,7 +441,7 @@ function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accr
     $plan = natarSettlementPlan($fields, $village, $now);
 
     $updates = array();
-    for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_BUILDING_SLOT; $slot++) {
+    foreach(natarSettlementPlannedSlots() as $slot) {
         if(!isset($plan['f'.$slot])) {
             continue;
         }
@@ -417,7 +453,8 @@ function natarSettlementApplyGrowth($wref, $fields, $village, $now = null, $accr
         // el ideal en cada barrido: un campo volado volvía a su nivel en 60 segundos y
         // catapultear una aldea natar no servía para nada.
         $target = $steps === null ? $ideal : (int)min($ideal, $current + max(0, (int)$steps));
-        if($target === $current && (int)$plan['f'.$slot.'t'] === (int)$fields['f'.$slot.'t']) {
+        $currentType = isset($fields['f'.$slot.'t']) ? (int)$fields['f'.$slot.'t'] : 0;
+        if($target === $current && (int)$plan['f'.$slot.'t'] === $currentType) {
             continue;
         }
         $updates[] = '`f'.$slot.'` = '.$target;

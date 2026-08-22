@@ -263,6 +263,116 @@ catapultAssert(
     'el doble impacto conserva el formato del reporte'
 );
 
+// --- Redacción del informe ------------------------------------------------------------
+// El adjetivo concuerda con el nombre. Estaba escrito en masculino a mano, así que la
+// mitad de los edificios del juego —los femeninos— salían con "destruido"/"dañado".
+catapultAssert(
+    buildingDamageSentence(2, 5, 0) === 'Barrera destruida.',
+    'un edificio femenino se destruye en femenino'
+);
+catapultAssert(
+    buildingDamageSentence(10, 5, 0) === 'Almacén destruido.',
+    'y uno masculino en masculino'
+);
+catapultAssert(
+    buildingDamageSentence(22, 5, 3) === 'Academia dañada del nivel <b>5</b> al nivel <b>3</b>.',
+    'el daño parcial también concuerda'
+);
+catapultAssert(
+    buildingDamageSentence(15, 5, 5) === 'El Edificio principal no sufrió daños.',
+    'y el artículo del mensaje sin daño'
+);
+$genderMismatch = array();
+foreach(array_keys(catapultTargetCatalog()) as $targetType) {
+    $sentence = buildingDamageSentence($targetType, 5, 0);
+    $name = buildingDisplayName($targetType);
+    if($sentence !== $name.(buildingNameIsFeminine($targetType) ? ' destruida.' : ' destruido.')) {
+        $genderMismatch[] = $name;
+    }
+}
+catapultAssert(!$genderMismatch, 'todos los objetivos tienen género declarado');
+
+// Un nombre por edificio: el desplegable de objetivos y el informe salían de listas
+// distintas, así que se elegía "Excavación de barro" y el informe hablaba de la Barrera.
+$catalog = catapultTargetCatalog();
+catapultAssert(
+    $catalog[2]['name'] === 'Barrera' && $catalog[4]['name'] === 'Granja',
+    'el desplegable usa los mismos nombres que el resto del juego'
+);
+$building = new ReflectionClass('Automation');
+$nameMethod = new ReflectionMethod('Automation', 'procResType');
+$mismatchedNames = array();
+foreach($catalog as $targetType => $meta) {
+    if($nameMethod->invoke($persistenceAutomation, $targetType) !== $meta['name']) {
+        $mismatchedNames[] = $targetType;
+    }
+}
+catapultAssert(!$mismatchedNames, 'y los mismos que el informe (procResType)');
+
+// Cada línea trae su ícono: con dos objetivos el informe mostraba sólo el del primero.
+$database->fields['f1'] = 10;
+$database->fields['f1t'] = 1;
+$database->fields['f20'] = 5;
+$database->fields['f20t'] = 15;
+$twoTargets = $resolveMethod->invoke(
+    $persistenceAutomation,
+    array('to' => 900, 'ctar1' => 1, 'ctar2' => 15),
+    array(4 => 10000, 5 => 1, 6 => 0),
+    0,
+    $targetVillage,
+    0
+);
+catapultAssert(
+    substr_count($twoTargets['report'], '<img') === 2,
+    'el informe de dos objetivos trae un ícono por línea'
+);
+catapultAssert(
+    strpos($twoTargets['report'], 'g1Icon') !== false && strpos($twoTargets['report'], 'g15Icon') !== false,
+    'y cada ícono es el del edificio que le tocó'
+);
+
+// El ícono existe para todo lo que se puede destruir. El gpack numera con los gids del
+// T4 oficial: la Herrería (12 acá) usa el arte del 13, y el Gran taller no tiene ícono
+// propio en ningún gpack, así que cae en el genérico en vez de dejar un hueco.
+// compact.css es el que carga html.tpl y hace @import de compact1.css: las reglas de los
+// íconos están repartidas entre los dos, así que se miran juntos.
+$iconCss = '';
+foreach(array('compact.css', 'compact1.css') as $styleSheet) {
+    $iconCss .= file_get_contents(dirname(__DIR__).'/gpack/travian_Travian_4.0_41/lang/ir/'.$styleSheet);
+}
+$missingIcons = array();
+foreach(array_keys($catalog) as $targetType) {
+    if(strpos($iconCss, 'img.'.buildingIconClass($targetType).'{') === false) {
+        $missingIcons[] = buildingDisplayName($targetType);
+    }
+}
+catapultAssert(!$missingIcons, 'todo objetivo tiene una clase de ícono definida en el gpack activo');
+catapultAssert(buildingIconClass(12) === 'g13Icon', 'la Herrería usa el ícono del gid 13 del arte');
+catapultAssert(buildingIconClass(42) === 'gebIcon', 'el Gran taller cae en el ícono genérico');
+
+// Los informes viejos guardaron el texto sin ícono: hay que seguir dibujándoselo.
+catapultAssert(
+    strpos(catapultReportInfoHtml(15, 'Edificio principal destruido.'), 'g15Icon') !== false,
+    'un informe viejo sigue mostrando su ícono'
+);
+catapultAssert(
+    substr_count(catapultReportInfoHtml(1, buildingIconHtml(1).' Leñador destruido.'), '<img') === 1,
+    'y uno nuevo no lo duplica'
+);
+
+$noticeTemplates = glob(dirname(__DIR__).'/Templates/Notice/*.tpl');
+$staleIconTemplates = array();
+foreach($noticeTemplates as $noticeTemplate) {
+    $noticeSource = file_get_contents($noticeTemplate);
+    if(strpos($noticeSource, 'unarray[$dataarray[153]]') !== false) {
+        $staleIconTemplates[] = basename($noticeTemplate);
+    }
+}
+catapultAssert(
+    !$staleIconTemplates,
+    'ninguna plantilla dibuja el ícono del edificio con el nombre de una unidad'
+);
+
 $automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 catapultAssert(
     strpos($automationSource,'ORDER BY endtime ASC, moveid ASC') !== false,

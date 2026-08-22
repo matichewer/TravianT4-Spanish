@@ -41,56 +41,14 @@ class Automation {
         }
     }
 
-// @formatter:off
+    /**
+     * Nombre de un edificio. La lista vive en Catapult.php: acá y en Building había dos
+     * copias idénticas y el catálogo de objetivos de la catapulta una tercera que ya se
+     * había desincronizado.
+     */
     public function procResType($ref) {
-        global $session;
-        switch($ref) {
-            case 1: $build = "Leñador"; break;
-            case 2: $build = "Barrera"; break;
-            case 3: $build = "Mina de hierro"; break;
-            case 4: $build = "Granja"; break;
-            case 5: $build = "Aserradero"; break;
-            case 6: $build = "Fábrica de ladrillos"; break;
-            case 7: $build = "Fundición de hierro"; break;
-            case 8: $build = "Molino"; break;
-            case 9: $build = "Panadería"; break;
-            case 10: $build = "Almacén"; break;
-            case 11: $build = "Granero"; break;
-            case 12: $build = "Herrería"; break;
-            case 14: $build = "Plaza de torneos"; break;
-            case 15: $build = "Edificio principal"; break;
-            case 16: $build = "Plaza de reuniones"; break;
-            case 17: $build = "Mercado"; break;
-            case 18: $build = "Embajada"; break;
-            case 19: $build = "Cuartel"; break;
-            case 20: $build = "Establo"; break;
-            case 21: $build = "Taller"; break;
-            case 22: $build = "Academia"; break;
-            case 23: $build = "Escondite"; break;
-            case 24: $build = "Ayuntamiento"; break;
-            case 25: $build = "Residencia"; break;
-            case 26: $build = "Palacio"; break;
-            case 27: $build = "Tesorería"; break;
-            case 28: $build = "Oficina de comercio"; break;
-            case 29: $build = "Gran cuartel"; break;
-            case 30: $build = "Gran establo"; break;
-            case 31: $build = "Muralla"; break;
-            case 32: $build = "Muro de tierra"; break;
-            case 33: $build = "Empalizada"; break;
-            case 34: $build = "Taller de cantería"; break;
-            case 35: $build = "Cervecería"; break;
-            case 36: $build = "Trampero"; break;
-            case 37: $build = "Mansión del héroe"; break;
-            case 38: $build = "Gran almacén"; break;
-            case 39: $build = "Gran granero"; break;
-            case 40: $build = "Maravilla del mundo"; break;
-            case 41: $build = "Abrevadero"; break;
-            case 42: $build = "Gran taller"; break;
-            default: $build = "Nothing had"; break;
-        }
-        return addslashes($build);
+        return addslashes(buildingDisplayName($ref, "Nothing had"));
     }
-// @formatter:on
 
     private function isAllowedCatapultTargetType($target, $allowRandomSentinel = false) {
 		return catapultIsKnownTarget($target, $allowRandomSentinel);
@@ -316,7 +274,6 @@ class Automation {
             $durability
         );
         $newLevel = max(0, (int)$outcome['level_after']);
-        $name = $this->procResType($buildingType);
         $destroyedVillage = false;
 
         if($newLevel < $oldLevel) {
@@ -345,17 +302,12 @@ class Automation {
             }
         }
 
-        if($newLevel === 0 && $oldLevel > 0) {
-            $message = $name.' destruido.';
-        } elseif($newLevel < $oldLevel) {
-            $message = $name.' dañado del nivel <b>'.$oldLevel.'</b> al nivel <b>'.$newLevel.'</b>.';
-        } else {
-            $message = $name.' no sufrió daños.';
-        }
-
+        // Cada línea trae su propio ícono: con dos objetivos el informe mostraba uno solo
+        // —el del primer edificio— y el segundo salía pelado. Y el adjetivo concuerda con
+        // el nombre, que es lo que hacía que la Barrera saliera "destruido".
         return array(
             'building_type' => $buildingType,
-            'message' => $message,
+            'message' => catapultImpactLine($buildingType, $oldLevel, $newLevel),
             'village_destroyed' => $destroyedVillage
         );
     }
@@ -2397,6 +2349,10 @@ class Automation {
             $battleReinforcementReportOwners = array();
             $eee = 0;
             $walllevel = $stonemason = $tblevel = 0;
+            // Tipo y casilla del muro del defensor. Se reinician con lo demás: el foreach
+            // comparte el scope, así que sin esto el muro de la aldea anterior nombraba
+            // el de la siguiente.
+            $wallgid = $wallid = 0;
             $breweryActive = false;
             $herosend_att = (int)$data['t11'];
             $cage = array('id' => 0, 'type' => 0);
@@ -3503,24 +3459,28 @@ class Automation {
                 // do anything there (and $wallid only exists on the village path).
                 if($type == '3' && !$isoasis) {
                     if($rams != '0') {
+                        // El muro se nombra por lo que es. El mensaje decía "Muralla"
+                        // siempre, así que al germano le rompían un "Muro de tierra" y el
+                        // informe le hablaba de otro edificio.
+                        $wallType = $wallgid > 0 ? $wallgid : 31;
                         if(isset($empty)) {
                             $info_ram = "".$ram_pic.", No hay muralla que destruir.";
                         } else
 
                             if(isset($battlepart['wall_level_after']) && (int)$battlepart['wall_level_after'] === 0) {
-                                $info_ram = "".$ram_pic.", Muralla destruida.";
+                                $info_ram = "".$ram_pic.", ".buildingDamageSentence($wallType, $walllevel, 0);
                                 $database->setVillageLevel($data['to'], "f".$wallid."", '0');
                                 $database->setVillageLevel($data['to'], "f".$wallid."t", '0');
                                 $pop = $this->recountPop($data['to']);
 
                             } elseif($battlepart[8] == 0) {
 
-                                $info_ram = "".$ram_pic.", La muralla no sufrió daños.";
+                                $info_ram = "".$ram_pic.", ".buildingDamageSentence($wallType, $walllevel, $walllevel);
                             } else {
                                 $totallvl = isset($battlepart['wall_level_after'])
                                     ? max(0, (int)$battlepart['wall_level_after'])
                                     : $walllevel;
-                                $info_ram = "".$ram_pic.", Muralla dañada del nivel <b>".$walllevel."</b> al nivel <b>".$totallvl."</b>.";
+                                $info_ram = "".$ram_pic.", ".buildingDamageSentence($wallType, $walllevel, $totallvl);
                                 $database->setVillageLevel($data['to'], "f".$wallid."", $totallvl);
 
                             }
@@ -3806,8 +3766,10 @@ class Automation {
                             }
                             // The wall always sits on field 40, its gid depends on the tribe
                             // (31 city wall, 32 earth wall, 33 palisade).
-                            if(in_array((int)$resarray['f40t'], array(31, 32, 33), true)) {
+                            $spyWallType = 0;
+                            if(buildingIsWall($resarray['f40t'])) {
                                 $walllevel = (int)$resarray['f40'];
+                                $spyWallType = (int)$resarray['f40t'];
                             }
                             for ($j = 19; $j <= 40; $j++) {
                                 if($resarray['f'.$j.'t'] == 23) {
@@ -3820,23 +3782,14 @@ class Automation {
                             $walllevel = 0;
                             $rplevel = 0;
                             $tribe = 0;
+                            $spyWallType = 0;
                         }
-                        if($tribe == 1) {
-                            $walltitle = 'Muralla';
-                            $iconClass = 'gebIcon g3'.$tribe.'Icon';
-                        } elseif($tribe == 2) {
-                            $walltitle = 'Muro de tierra';
-                            $iconClass = 'gebIcon g3'.$tribe.'Icon';
-                        } elseif($tribe == 3) {
-                            $walltitle = 'Empalizada';
-                            $iconClass = 'gebIcon g3'.$tribe.'Icon';
-                        } else {
-                            /**
-                             * @todo Not sure what Natar Wall should be called, also using City Wall for the icon for now
-                             */
-                            $walltitle = "Muralla natar";
-                            $iconClass = 'gebIcon g31Icon';
-                        }
+                        // El muro se nombra por lo que hay construido, no por la tribu del
+                        // defensor: es el mismo edificio que va a nombrar el informe del
+                        // ariete si alguien lo ataca, y una aldea sin muro no tiene por qué
+                        // inventarle un nombre distinto a cada tribu.
+                        $walltitle = buildingDisplayName($spyWallType > 0 ? $spyWallType : 31);
+                        $iconClass = 'gebIcon '.buildingIconClass($spyWallType > 0 ? $spyWallType : 31);
 
                         $info_spy = "".$spy_pic.",
 <tbody><tr><td class=\"empty\" colspan=\"12\"></td></tr></tbody>

@@ -90,8 +90,14 @@ class Battle {
 		$involved,
 		$type
 	) {
-		$wallFactors = array(1 => 1.030, 2 => 1.020, 3 => 1.025, 4 => 1.000, 5 => 1.000);
-		$wallBaseDefense = array(1 => 10, 2 => 6, 3 => 8, 4 => 0, 5 => 0);
+		// Por tribu del defensor, no por gid del muro: la conquista pone f40/f40t en 0
+		// (ver applyConquestLoyalty), asi que una aldea nunca defiende con el muro de
+		// otra tribu. La naturaleza (4) no tiene muro; los natares (5) levantan una
+		// Muralla en sus aldeas vivas —el T4.0 no trae un muro natar propio— y pelean
+		// con los numeros de la Muralla. Las Maravillas y la capital natar siguen sin
+		// muro: ahi f40 vale 0 y el factor queda en 1.
+		$wallFactors = array(1 => 1.030, 2 => 1.020, 3 => 1.025, 4 => 1.000, 5 => 1.030);
+		$wallBaseDefense = array(1 => 10, 2 => 6, 3 => 8, 4 => 0, 5 => 10);
 		$wallLevel = max(0, min(20, (int)$wallLevel));
 		$wallFactor = pow(
 			isset($wallFactors[(int)$defenderTribe]) ? $wallFactors[(int)$defenderTribe] : 1,
@@ -445,7 +451,8 @@ class Battle {
 
 		$defenses = $this->getReportDefenceLevels($notice['data']);
 		$input['palast'] = $defenses['residence'];
-		if($villageTribe >= 1 && $villageTribe <= 3) {
+		// La naturaleza no tiene muro; los natares si, en sus aldeas vivas.
+		if($villageTribe >= 1 && $villageTribe <= 5 && $villageTribe !== 4) {
 			$input['wall'.$villageTribe] = $defenses['wall'];
 		}
 
@@ -615,10 +622,10 @@ class Battle {
 		$values['palast'] = $defenderTribe === 4
 			? 0
 			: $this->simulationNumber(!$configurationChanged && isset($post['palast']) ? $post['palast'] : 0, 0, 20, true);
-		// Solo las tribus 1-3 levantan muralla: para la naturaleza y los natares
-		// battleWallDurability()/wallFactors ya valen 1 y el nivel no haria nada.
+		// La naturaleza (4) no levanta muro y wallFactors le da 1, asi que el nivel no
+		// haria nada. Los natares si: sus aldeas vivas tienen Muralla.
 		for($tribe = 1; $tribe <= 5; $tribe++) {
-			$values['wall'.$tribe] = $tribe === $defenderTribe && $defenderTribe <= 3
+			$values['wall'.$tribe] = $tribe === $defenderTribe && $defenderTribe !== 4
 				? $this->simulationNumber(!$configurationChanged && isset($post['wall'.$tribe]) ? $post['wall'.$tribe] : 0, 0, 20, true)
 				: 0;
 		}
@@ -880,7 +887,9 @@ class Battle {
 	}
 
 	private function battleWallDurability($tribe) {
-		$durability = array(1 => 1.0, 2 => 5.0, 3 => 2.0);
+		// La Muralla natar (tribu 5) es la misma que la romana, incluida su fragilidad
+		// frente a los arietes.
+		$durability = array(1 => 1.0, 2 => 5.0, 3 => 2.0, 5 => 1.0);
 		return isset($durability[(int)$tribe]) ? $durability[(int)$tribe] : 1.0;
 	}
 

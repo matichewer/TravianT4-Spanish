@@ -145,8 +145,7 @@ if ($dataarray[153]!='' and $dataarray[154]!=''){ //cata
 ?>
 	<tbody><tr><td class="empty" colspan="12"></td></tr></tbody>
     <tbody class="goods"><tr><th><?php echo REPORT_INFORMATION; ?></th><td style="text-align:left" colspan="11">
-	<img class="unit g<?php echo $dataarray[153]; ?>Icon" src="img/x.gif" alt="<?php echo $technology->unarray[$dataarray[153]]; ?>" title="<?php echo $technology->unarray[$dataarray[153]]; ?>" />
-	<?php echo $dataarray[154]; ?>
+	<?php echo catapultReportInfoHtml($dataarray[153], $dataarray[154]); ?>
     </td></tr></tbody>
 <?php }
 if ($dataarray[155]!='' and $dataarray[156]!=''){ //chief

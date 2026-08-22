@@ -111,7 +111,9 @@ $base = array(
 	'kata' => 10,
 	'stonemason' => 4,
 	'palast' => 0,
-	'wall5' => 20
+	// Sin muro: las cuentas de defensa de más abajo son sobre las tropas. El muro natar
+	// tiene su propio bloque.
+	'wall5' => 0
 );
 for($unit = 41; $unit <= 50; $unit++) {
 	$base['a2_'.$unit] = 0;
@@ -124,7 +126,6 @@ warsimNatarAssert($_POST['target'] === array(5), 'acepta un objetivo natar puro'
 warsimNatarAssert($form->valuearray['a2_43'] === 1000, 'conserva las tropas natares cargadas');
 warsimNatarAssert($form->valuearray['a2_50'] === 0, 'llega hasta la última unidad natar (u50)');
 warsimNatarAssert($form->valuearray['f2_43'] === 0, 'ignora la herrería del defensor natar');
-warsimNatarAssert($form->valuearray['wall5'] === 0, 'no le da muralla a la aldea natar');
 warsimNatarAssert($form->valuearray['ew2'] === 350, 'respeta la población de la aldea natar');
 warsimNatarAssert(
 	$form->valuearray['kata'] === 10 && $form->valuearray['stonemason'] === 4,
@@ -147,6 +148,17 @@ warsimNatarAssert(
 	'la defensa natar se calcula con los valores de unitdata'
 );
 warsimNatarAssert($withDefenders['Winner'] === 'defender', 'una guarnición natar suficiente rechaza el ataque');
+
+// Las aldeas natar vivas levantan Muralla (NATAR_SETTLEMENT_WALL_TYPE), que es lo que
+// hace que el ariete sirva contra ellas, y pelean con los números de la Muralla romana.
+$natarWall = $base;
+$natarWall['wall5'] = 20;
+$natarWallResult = warsimNatarSimulate($natarWall);
+warsimNatarAssert($form->valuearray['wall5'] === 20, 'la aldea natar puede tener Muralla');
+warsimNatarAssert(
+	abs($natarWallResult['Defend_points'] - (1000 * 90 * pow(1.030, 20) + 20 * 10 + 10)) < 0.001,
+	'la Muralla natar defiende con los números de la Muralla'
+);
 
 $residence = $base;
 $residence['palast'] = 15;
@@ -269,7 +281,8 @@ warsimNatarAssert(strpos($defenderResult, '<td>1000</td>') !== false, 'res_d5.tp
 warsimNatarAssert(strpos($defenderResult, '<td>250</td>') !== false, 'res_d5.tpl reparte las bajas natares');
 
 $others = warsimNatarRender('def_end.tpl', array('target' => array(5), 'form' => $form));
-warsimNatarAssert(strpos($others, 'name="wall5"') === false, 'def_end.tpl no pide muralla para los natares');
+warsimNatarAssert(strpos($others, 'name="wall5"') !== false, 'def_end.tpl pide la muralla natar');
+warsimNatarAssert(strpos($others, 'g31Icon') !== false, 'la dibuja con el ícono de la Muralla');
 warsimNatarAssert(strpos($others, 'name="stonemason"') !== false && strpos($others, 'name="palast"') !== false, 'def_end.tpl mantiene cantería y residencia');
 warsimNatarAssert(strpos($others, 'readonly') === false, 'def_end.tpl deja editar la población natar');
 

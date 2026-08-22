@@ -5,18 +5,21 @@ $defenderTribe = isset($_POST['village_tribe']) && in_array((int)$_POST['village
 	? (int)$_POST['village_tribe']
 	: (int)$target[0];
 $isNature = $defenderTribe === 4;
-// Los natares defienden una aldea de verdad (poblacion, cantero, residencia y
-// catapultables), pero no construyen muralla: Battle::wallFactors les da 1.
-$hasWall = $defenderTribe <= 3;
+// La naturaleza es lo unico que no tiene muro. Los natares levantan Muralla en sus
+// aldeas vivas (ver NATAR_SETTLEMENT_WALL_TYPE), asi que el simulador la ofrece con el
+// mismo nombre y los mismos numeros que la romana.
+$hasWall = $defenderTribe !== 4;
 $wallTitles = array(
 	1 => WARSIM_WALL1,
 	2 => WARSIM_WALL2,
-	3 => WARSIM_WALL3
+	3 => WARSIM_WALL3,
+	5 => WARSIM_WALL1
 );
 $wallClasses = array(
 	1 => 'g31Icon',
 	2 => 'g32Icon',
-	3 => 'g33Icon'
+	3 => 'g33Icon',
+	5 => 'g31Icon'
 );
 ?>
 <div class="border">

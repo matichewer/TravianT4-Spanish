@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/Catapult.php';
+
 class Building {	
 
 	public $NewBuilding = false;
@@ -286,58 +288,9 @@ class Building {
 		return false;
 	}
 	
+	/** Nombre de un edificio. Lista única en Catapult.php (ver buildingDisplayName). */
 	public function procResType($ref) {
-		global $session;
-		switch($ref) {
-			case 1: $build = "Leñador"; break;
-			case 2: $build = "Barrera"; break;
-			case 3: $build = "Mina de hierro"; break;
-			case 4: $build = "Granja"; break;
-			case 5: $build = "Aserradero"; break;
-			case 6: $build = "Fábrica de ladrillos"; break;
-			case 7: $build = "Fundición de hierro"; break;
-			case 8: $build = "Molino"; break;
-			case 9: $build = "Panadería"; break;
-			case 10: $build = "Almacén"; break;
-			case 11: $build = "Granero"; break;
-			case 12: $build = "Herrería"; break;
-			case 14: $build = "Plaza de torneos"; break;
-			case 15: $build = "Edificio principal"; break;
-			case 16: $build = "Plaza de reuniones"; break;
-			case 17: $build = "Mercado"; break;
-			case 18: $build = "Embajada"; break;
-			case 19: $build = "Cuartel"; break;
-			case 20: $build = "Establo"; break;
-			case 21: $build = "Taller"; break;
-			case 22: $build = "Academia"; break;
-			case 23: $build = "Escondite"; break;
-			case 24: $build = "Ayuntamiento"; break;
-			case 25: $build = "Residencia"; break;
-			case 26: $build = "Palacio"; break;
-			case 27: $build = "Tesorería"; break;
-			case 28: $build = "Oficina de comercio"; break;
-			case 29: $build = "Gran cuartel"; break;
-			case 30: $build = "Gran establo"; break;
-			case 31: $build = "Muralla"; break;
-			case 32: $build = "Muro de tierra"; break;
-			case 33: $build = "Empalizada"; break;
-			case 34: $build = "Taller de cantería"; break;
-			case 35: $build = "Cervecería"; break;
-			case 36: $build = "Trampero"; break;
-			case 37: $build = "Mansión del héroe"; break;
-			case 38: $build = "Gran almacén"; break;
-			case 39: $build = "Gran granero"; break;
-			case 40: $build = "Maravilla del mundo"; break;
-			case 41: $build = "Abrevadero"; break;
-			case 42: $build = "Gran taller"; break;
-			default: $build = "Error"; break;
-		}
-        /*
-         * Don't think we need to add slashes here?
-         * addslashes line left in but commented out for easy reversion if it breaks anything
-         */
-		//return addslashes($build);
-        return $build;
+		return buildingDisplayName($ref);
 	}
 	
 	private function loadBuilding() {

@@ -35,6 +35,9 @@ define('NATAR_FIRST_RESOURCE_FIELD', 1);
 define('NATAR_LAST_RESOURCE_FIELD', 18);
 define('NATAR_FIRST_BUILDING_SLOT', 19);
 define('NATAR_LAST_BUILDING_SLOT', 38);
+// La muralla vive en el campo 40, fuera de la franja de edificios: natarFindBuildingSlot()
+// no la encuentra ni la puede colocar, así que quien la planifique la ubica acá a mano.
+define('NATAR_WALL_SLOT', 40);
 
 // Los 18 campos, cereal incluido, en nivel 10: es lo que trae una Aldea de la Maravilla
 // en el T4 oficial cuando aparece como aldea natar.

@@ -1,28 +1,158 @@
 <?php
 
-/** Shared server/UI policy for explicitly selectable catapult targets. */
-function catapultTargetCatalog() {
-    return array(
-        1=>array('name'=>'Leñador','level'=>5), 2=>array('name'=>'Excavación de barro','level'=>5),
-        3=>array('name'=>'Mina de hierro','level'=>5), 4=>array('name'=>'Campo de cereal','level'=>5),
-        5=>array('name'=>'Aserradero','level'=>5), 6=>array('name'=>'Fábrica de ladrillos','level'=>5),
-        7=>array('name'=>'Fundición de hierro','level'=>5), 8=>array('name'=>'Molino','level'=>5),
-        9=>array('name'=>'Panadería','level'=>5), 10=>array('name'=>'Almacén','level'=>3),
-        11=>array('name'=>'Granero','level'=>3), 12=>array('name'=>'Herrería','level'=>10),
-        14=>array('name'=>'Plaza de torneos','level'=>10), 15=>array('name'=>'Edificio principal','level'=>10),
-        16=>array('name'=>'Plaza de reuniones','level'=>10), 17=>array('name'=>'Mercado','level'=>10),
-        18=>array('name'=>'Embajada','level'=>10), 19=>array('name'=>'Cuartel','level'=>10),
-        20=>array('name'=>'Establo','level'=>10), 21=>array('name'=>'Taller','level'=>10),
-        22=>array('name'=>'Academia','level'=>10), 23=>array('name'=>'Escondite','level'=>PHP_INT_MAX),
-        24=>array('name'=>'Ayuntamiento','level'=>10), 25=>array('name'=>'Residencia','level'=>10),
-        26=>array('name'=>'Palacio','level'=>10), 27=>array('name'=>'Tesorería','level'=>10),
-        28=>array('name'=>'Oficina de comercio','level'=>10), 29=>array('name'=>'Gran cuartel','level'=>10),
-        30=>array('name'=>'Gran establo','level'=>10), 34=>array('name'=>'Taller de cantería','level'=>PHP_INT_MAX),
-        35=>array('name'=>'Cervecería','level'=>10), 36=>array('name'=>'Trampero','level'=>PHP_INT_MAX),
-        37=>array('name'=>'Mansión del héroe','level'=>10), 38=>array('name'=>'Gran almacén','level'=>3),
-        39=>array('name'=>'Gran granero','level'=>3), 40=>array('name'=>'Maravilla del mundo','level'=>10),
-        41=>array('name'=>'Abrevadero','level'=>10), 42=>array('name'=>'Gran taller','level'=>10)
+/**
+ * Política compartida servidor/UI de los edificios: cómo se llaman, qué ícono los
+ * representa, cuáles se pueden elegir como objetivo de una catapulta y cómo se redacta
+ * el daño en el informe.
+ *
+ * El nombre vive acá y en un solo lugar. Antes había tres listas: la de
+ * `Automation::procResType()`, la copia idéntica de `Building::procResType()` y la del
+ * catálogo de objetivos, que se había desincronizado —el desplegable de la catapulta
+ * ofrecía "Excavación de barro" y el informe después decía "Barrera", que es el nombre
+ * que usa el resto del juego.
+ */
+function buildingDisplayName($type, $fallback = 'Error') {
+    $names = array(
+        1 => 'Leñador', 2 => 'Barrera', 3 => 'Mina de hierro', 4 => 'Granja',
+        5 => 'Aserradero', 6 => 'Fábrica de ladrillos', 7 => 'Fundición de hierro',
+        8 => 'Molino', 9 => 'Panadería', 10 => 'Almacén', 11 => 'Granero',
+        12 => 'Herrería', 14 => 'Plaza de torneos', 15 => 'Edificio principal',
+        16 => 'Plaza de reuniones', 17 => 'Mercado', 18 => 'Embajada', 19 => 'Cuartel',
+        20 => 'Establo', 21 => 'Taller', 22 => 'Academia', 23 => 'Escondite',
+        24 => 'Ayuntamiento', 25 => 'Residencia', 26 => 'Palacio', 27 => 'Tesorería',
+        28 => 'Oficina de comercio', 29 => 'Gran cuartel', 30 => 'Gran establo',
+        31 => 'Muralla', 32 => 'Muro de tierra', 33 => 'Empalizada',
+        34 => 'Taller de cantería', 35 => 'Cervecería', 36 => 'Trampero',
+        37 => 'Mansión del héroe', 38 => 'Gran almacén', 39 => 'Gran granero',
+        40 => 'Maravilla del mundo', 41 => 'Abrevadero', 42 => 'Gran taller'
     );
+    return isset($names[(int)$type]) ? $names[(int)$type] : $fallback;
+}
+
+/**
+ * Edificios cuyo nombre es femenino.
+ *
+ * Los mensajes del informe se arman pegándole un adjetivo al nombre ("Barrera
+ * destruida"), y el adjetivo estaba escrito en masculino a mano. Casi la mitad de los
+ * edificios del juego son femeninos, así que la mitad de los informes de catapulta salía
+ * mal escrita ("Barrera destruido", "Academia dañado del nivel 5 al nivel 3").
+ */
+function buildingNameIsFeminine($type) {
+    return in_array((int)$type, array(
+        2,  // Barrera
+        3,  // Mina de hierro
+        4,  // Granja
+        6,  // Fábrica de ladrillos
+        7,  // Fundición de hierro
+        9,  // Panadería
+        12, // Herrería
+        14, // Plaza de torneos
+        16, // Plaza de reuniones
+        18, // Embajada
+        22, // Academia
+        25, // Residencia
+        27, // Tesorería
+        28, // Oficina de comercio
+        31, // Muralla
+        33, // Empalizada
+        35, // Cervecería
+        37, // Mansión del héroe
+        40  // Maravilla del mundo
+    ), true);
+}
+
+/**
+ * Los tres muros del juego. El T4.0 no tiene un cuarto: la Muralla romana, el Muro de
+ * tierra germano y la Empalizada gala son todo lo que puede ocupar el campo 40.
+ */
+function buildingIsWall($type) {
+    return in_array((int)$type, array(31, 32, 33), true);
+}
+
+/**
+ * Clase CSS del ícono de 16x16 de un edificio.
+ *
+ * El gpack activo trae `img/g/icon/gNIcon.gif` para casi todos, pero con la numeración
+ * del T4 oficial, que no es exactamente la de este repo:
+ *
+ * - la Herrería es el gid 12 acá y el 13 en el arte (el T4 fusionó la Herrería y la
+ *   Armería del T3 en un solo edificio), así que su ícono es `g13Icon`;
+ * - el Gran taller (42) no tiene ícono en ningún gpack, así que cae en el genérico de
+ *   edificios `gebIcon` en lugar de dejar un hueco de 16x16.
+ *
+ * El tamaño lo pone la clase `unit` (16x16), que es con la que se dibujan los íconos
+ * dentro del informe.
+ */
+function buildingIconClass($type) {
+    $type = (int)$type;
+    if($type === 12) {
+        return 'g13Icon';
+    }
+    return $type >= 1 && $type <= 41 && $type !== 13 ? 'g'.$type.'Icon' : 'gebIcon';
+}
+
+/** El `<img>` del ícono de un edificio, con el nombre como título. */
+function buildingIconHtml($type) {
+    $name = buildingDisplayName($type, '');
+    $label = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+    return '<img class="unit '.buildingIconClass($type).'" src="img/x.gif" alt="'.$label.'" title="'.$label.'" />';
+}
+
+/**
+ * Cómo se cuenta en el informe lo que le pasó a un edificio (o a la muralla, que se
+ * redacta igual). Sin ícono: la fila de la catapulta se lo agrega con
+ * catapultReportInfoHtml(), y la del ariete ya muestra el ícono del ariete.
+ */
+function buildingDamageSentence($type, $oldLevel, $newLevel) {
+    $name = buildingDisplayName($type);
+    $feminine = buildingNameIsFeminine($type);
+    $oldLevel = (int)$oldLevel;
+    $newLevel = (int)$newLevel;
+    if($newLevel <= 0 && $oldLevel > 0) {
+        return $name.($feminine ? ' destruida.' : ' destruido.');
+    }
+    if($newLevel < $oldLevel) {
+        return $name.($feminine ? ' dañada' : ' dañado')
+            .' del nivel <b>'.$oldLevel.'</b> al nivel <b>'.$newLevel.'</b>.';
+    }
+    return ($feminine ? 'La ' : 'El ').$name.' no sufrió daños.';
+}
+
+/** Una línea de la fila "información" de la catapulta: el ícono del edificio y el texto. */
+function catapultImpactLine($type, $oldLevel, $newLevel) {
+    return buildingIconHtml($type).' '.buildingDamageSentence($type, $oldLevel, $newLevel);
+}
+
+/**
+ * La fila "información" de las catapultas dentro del informe.
+ *
+ * Cada línea trae su propio ícono, porque con dos objetivos el informe mostraba uno solo
+ * —el del primero— y el segundo edificio salía sin ícono. Los informes viejos guardaron
+ * el texto pelado, así que para ésos se antepone el ícono del tipo que viaja aparte en el
+ * dato del informe; ese ícono además se dibujaba con el nombre de una UNIDAD como título
+ * (`Technology::unarray` está indexado por unidad, no por edificio).
+ */
+function catapultReportInfoHtml($iconType, $text) {
+    if(strpos((string)$text, '<img') !== false) {
+        return $text;
+    }
+    return buildingIconHtml($iconType).' '.$text;
+}
+
+/** Objetivos que se pueden elegir a mano, con el nivel de Plaza de reuniones que piden. */
+function catapultTargetCatalog() {
+    $levels = array(
+        1=>5, 2=>5, 3=>5, 4=>5, 5=>5, 6=>5, 7=>5, 8=>5, 9=>5, 10=>3, 11=>3, 12=>10,
+        14=>10, 15=>10, 16=>10, 17=>10, 18=>10, 19=>10, 20=>10, 21=>10, 22=>10,
+        23=>PHP_INT_MAX, 24=>10, 25=>10, 26=>10, 27=>10, 28=>10, 29=>10, 30=>10,
+        34=>PHP_INT_MAX, 35=>10, 36=>PHP_INT_MAX, 37=>10, 38=>3, 39=>3, 40=>10,
+        41=>10, 42=>10
+    );
+    $catalog = array();
+    foreach($levels as $type => $level) {
+        $catalog[$type] = array('name' => buildingDisplayName($type), 'level' => $level);
+    }
+    return $catalog;
 }
 
 function catapultNormalizeTarget($value, $rallyPointLevel, $allowSecondRandom = false) {

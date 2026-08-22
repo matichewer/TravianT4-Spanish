@@ -274,6 +274,46 @@ check(NATAR_SETTLEMENT_REPAIR_INTERVAL < NATAR_SETTLEMENT_GROWTH_INTERVAL,
     'repara un poco más rápido de lo que crece ('.(NATAR_SETTLEMENT_REPAIR_INTERVAL/3600).' h contra '
     .(NATAR_SETTLEMENT_GROWTH_INTERVAL/3600).' h)');
 
+// --- J. La muralla ------------------------------------------------------------------------
+// El fortín levanta muralla (NATAR_SETTLEMENT_WALL_TYPE) y vive en el campo 40, fuera de la
+// franja 19-38 que recorre natarFindBuildingSlot(). Sin ella el ariete no tenía nada que
+// hacer contra estas aldeas y el informe decía "No hay muralla que destruir".
+$database->query("UPDATE ".TB_PREFIX."vdata SET created = ".(int)($now - 12 * 86400)
+    .", npcupdate = ".(int)($now - 12 * 86400)." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now, $accrue);
+$walled = $database->getResourceLevel($wref);
+check((int)$walled['f40t'] === NATAR_SETTLEMENT_WALL_TYPE,
+    'la aldea viva levanta muralla en el campo 40 (tipo '.(int)$walled['f40t'].')');
+check((int)$walled['f40'] > 0 && (int)$walled['f40'] <= NATAR_SETTLEMENT_MAX_FIELD_LEVEL,
+    'y con un nivel dentro del cronograma de los campos (n'.(int)$walled['f40'].')');
+
+// La muralla cuesta habitantes como cualquier edificio, y los paga en cereal. Lo que se
+// fija acá es que la cuenta salga de buidata y no de una tabla aparte: el campo 40 entra
+// en villagePopulationSlots() igual que los otros 40.
+$noWall = $walled;
+$noWall['f40'] = 0;
+$noWall['f40t'] = 0;
+$wallPop = 0;
+for($level = 1; $level <= (int)$walled['f40']; $level++) {
+    $wallPop += (int)$GLOBALS['bid'.NATAR_SETTLEMENT_WALL_TYPE][$level]['pop'];
+}
+check(natarVillagePopulation($walled) - natarVillagePopulation($noWall) === $wallPop,
+    'la muralla suma exactamente los habitantes que dice buidata ('.$wallPop.')');
+
+// El ariete deja f40 y f40t en cero (ver Automation, rama del ariete). El daño tiene que
+// durar y repararse de a un nivel, igual que un campo.
+$database->query("UPDATE ".TB_PREFIX."fdata SET f40 = 0, f40t = 0 WHERE vref = $wref");
+$database->query("UPDATE ".TB_PREFIX."vdata SET npcupdate = ".(int)$now." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now + 60, $accrue);
+check((int)$database->getResourceLevel($wref)['f40'] === 0,
+    'una muralla derribada sigue derribada un minuto después');
+
+$database->query("UPDATE ".TB_PREFIX."vdata SET npcupdate = ".(int)$now." WHERE wref = $wref");
+natarSettlementBringUpToDate($wref, $now + NATAR_SETTLEMENT_REPAIR_INTERVAL + 60, $accrue);
+$rebuilt = $database->getResourceLevel($wref);
+check((int)$rebuilt['f40'] === 1 && (int)$rebuilt['f40t'] === NATAR_SETTLEMENT_WALL_TYPE,
+    'y se repone de a un nivel, con su tipo (n'.(int)$rebuilt['f40'].')');
+
 // --- I. El nombre se cura solo ------------------------------------------------------------
 $database->query("UPDATE ".TB_PREFIX."vdata SET name = 'Aldea natar' WHERE wref = $wref");
 natarSettlementBringUpToDate($wref, $now + 1, $accrue);
