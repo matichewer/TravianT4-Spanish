@@ -134,6 +134,31 @@ if($tileDetailsPopup) {
           ?>
           </div>
           <?php } ?>
+
+<?php
+$farmListEligibleVillage = $basearray['occupied'] && $basearray['fieldtype'] && (int)$basearray['wref'] !== (int)$_SESSION['wid'];
+$farmListEligibleOasis = $basearray['oasistype'] && (!$basearray['occupied'] || (int)$basearray['owner'] !== (int)$session->uid);
+if($farmListEligibleVillage || $farmListEligibleOasis) {
+	$farmListTargetX = (int)$basearray['x'];
+	$farmListTargetY = (int)$basearray['y'];
+?>
+	<div class="option">
+	<?php if(!$session->goldclub) { ?>
+		<span class="a arrow disabled" title="Requiere Club de Oro">Agregar a lista de granjas</span>
+	<?php } elseif(!$village->resarray['f39']) { ?>
+		<span class="a arrow disabled" title="Construye una Plaza de Reuniones">Agregar a lista de granjas</span>
+	<?php } else {
+		$firstFarmListId = $database->getFirstOwnedFarmListId($session->uid);
+		if($firstFarmListId > 0) {
+			$farmListUrl = 'build.php?gid=16&amp;t=99&amp;action=showSlot&amp;lid='.$firstFarmListId.'&amp;x='.$farmListTargetX.'&amp;y='.$farmListTargetY.'&amp;from_map=1';
+		} else {
+			$farmListUrl = 'build.php?gid=16&amp;t=99&amp;action=addList&amp;x='.$farmListTargetX.'&amp;y='.$farmListTargetY.'&amp;from_map=1';
+		}
+	?>
+		<a class="a arrow" href="<?php echo $farmListUrl; ?>">Agregar a lista de granjas</a>
+	<?php } ?>
+	</div>
+<?php } ?>
     
 </div>
 			</div>

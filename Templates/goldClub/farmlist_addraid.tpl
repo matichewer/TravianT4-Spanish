@@ -1,5 +1,8 @@
 <?php
 
+$errormsg = '';
+$targetX = isset($_POST['x']) ? $_POST['x'] : (isset($_GET['x']) ? $_GET['x'] : '');
+$targetY = isset($_POST['y']) ? $_POST['y'] : (isset($_GET['y']) ? $_GET['y'] : '');
 $requestedLid = isset($_GET['lid']) && is_numeric($_GET['lid']) ? (int)$_GET['lid'] : 0;
 if($requestedLid > 0) {
     $requestedListData = $database->getFLData($requestedLid);
@@ -11,13 +14,16 @@ if($requestedLid > 0) {
 
 if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_POST['lid']) {
 
-    $troops = $_POST['t1']+$_POST['t2']+$_POST['t3']+$_POST['t4']+$_POST['t5']+$_POST['t6']+$_POST['t7']+$_POST['t8']+$_POST['t9']+$_POST['t10']."";
+    $troops = 0;
+    for($troopIndex = 1; $troopIndex <= 10; $troopIndex++) {
+        $troops += isset($_POST['t'.$troopIndex]) ? (int)$_POST['t'.$troopIndex] : 0;
+    }
     
-    $validX = is_numeric($_POST['x']) && floor($_POST['x']) == $_POST['x'];
-    $validY = is_numeric($_POST['y']) && floor($_POST['y']) == $_POST['y'];
+    $validX = is_numeric($targetX) && floor($targetX) == $targetX;
+    $validY = is_numeric($targetY) && floor($targetY) == $targetY;
 
     if($validX && $validY){
-        $Wref = $database->getVilWref($_POST['x'], $_POST['y']);
+        $Wref = $database->getVilWref($targetX, $targetY);
         $oasistype = $database->getVillageType2($Wref);
         $vdata = $database->getVillage($Wref);
     }
@@ -30,6 +36,8 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
     	$errormsg .= "No hay ninguna aldea en esas coordenadas.";
     }elseif($troops == 0){
      	$errormsg .= "No se ha seleccionado ninguna tropa.";
+	}elseif($database->farmListTargetExists((int)$_POST['lid'], $session->uid, $Wref)){
+		$errormsg .= "Este objetivo ya está agregado a la lista seleccionada.";
     }else{
     
         $coor = $database->getCoor($village->wid);
@@ -46,12 +54,16 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
                    return round($dist, 1);
                }
             
-        $distance = getDistance($coor['x'], $coor['y'], $_POST['x'], $_POST['y']);
+        $distance = getDistance($coor['x'], $coor['y'], $targetX, $targetY);
 
         // addSlotFarm valida internamente que `lid` sea una lista del usuario logueado.
-        $database->addSlotFarm($_POST['lid'], $session->uid, $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
+        $slotAdded = $database->addSlotFarm($_POST['lid'], $session->uid, $Wref, $targetX, $targetY, $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
 
-        header("Location: build.php?id=39&t=99");
+		if($slotAdded) {
+			header("Location: build.php?gid=16&t=99");
+			exit;
+		}
+		$errormsg .= "No se pudo agregar el objetivo a la lista seleccionada.";
 }
 }
 ?>
@@ -185,11 +197,11 @@ $lvname = $database->getVillageField($row["wref"], 'name');
             <div class="coordinatesInput">
                 <div class="xCoord">
                     <label for="xCoordInput">X:</label>
-                    <input value="<?php echo $_POST['x']; ?>" name="x" id="xCoordInput" class="text coordinates x ">
+                    <input value="<?php echo htmlspecialchars((string)$targetX, ENT_QUOTES, 'UTF-8'); ?>" name="x" id="xCoordInput" class="text coordinates x ">
                 </div>
                 <div class="yCoord">
                     <label for="yCoordInput">Y:</label>
-                    <input value="<?php echo $_POST['y']; ?>" name="y" id="yCoordInput" class="text coordinates y ">
+                    <input value="<?php echo htmlspecialchars((string)$targetY, ENT_QUOTES, 'UTF-8'); ?>" name="y" id="yCoordInput" class="text coordinates y ">
                 </div>
                 <div class="clear"></div>
             </div>

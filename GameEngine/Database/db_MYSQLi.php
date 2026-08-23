@@ -5209,6 +5209,25 @@ break;
 
             }
 
+			function getFirstOwnedFarmListId($owner) {
+				$owner = (int)$owner;
+				$q = "SELECT id FROM " . TB_PREFIX . "farmlist WHERE owner = $owner ORDER BY name ASC, id ASC LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				$row = $result ? mysqli_fetch_assoc($result) : false;
+				return $row ? (int)$row['id'] : 0;
+			}
+
+			function farmListTargetExists($lid, $owner, $towref) {
+				$lid = (int)$lid;
+				$owner = (int)$owner;
+				$towref = (int)$towref;
+				$q = "SELECT r.id FROM " . TB_PREFIX . "raidlist r"
+					." INNER JOIN " . TB_PREFIX . "farmlist f ON f.id = r.lid"
+					." WHERE r.lid = $lid AND r.towref = $towref AND f.owner = $owner LIMIT 1";
+				$result = mysqli_query($this->connection, $q);
+				return $result && mysqli_num_rows($result) > 0;
+			}
+
 			function getRaidList($id) {
 				$id = (int)$id;
         		$q = "SELECT * FROM " . TB_PREFIX . "raidlist WHERE id = ".$id."";
@@ -5274,7 +5293,9 @@ break;
         		$q = "INSERT INTO " . TB_PREFIX . "farmlist (`wref`, `owner`, `name`)"
         			." SELECT wref, owner, '$name' FROM " . TB_PREFIX . "vdata WHERE wref = $wref AND owner = $owner";
         		$result = mysqli_query($this->connection,$q);
-        		return $result && mysqli_affected_rows($this->connection) === 1;
+				return $result && mysqli_affected_rows($this->connection) === 1
+					? (int)mysqli_insert_id($this->connection)
+					: 0;
         	}
 
 			// El INSERT ... SELECT solo agrega el campo si `lid` pertenece al `owner`,
@@ -5288,8 +5309,10 @@ break;
 				$distance = (float)$distance;
 				$t1 = (int)$t1; $t2 = (int)$t2; $t3 = (int)$t3; $t4 = (int)$t4; $t5 = (int)$t5;
 				$t6 = (int)$t6; $t7 = (int)$t7; $t8 = (int)$t8; $t9 = (int)$t9; $t10 = (int)$t10;
-        		$q = "INSERT INTO " . TB_PREFIX . "raidlist (`lid`, `towref`, `x`, `y`, `distance`, `t1`, `t2`, `t3`, `t4`, `t5`, `t6`, `t7`, `t8`, `t9`, `t10`)"
-        			." SELECT id, $towref, $x, $y, $distance, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10 FROM " . TB_PREFIX . "farmlist WHERE id = $lid AND owner = $owner";
+				$q = "INSERT INTO " . TB_PREFIX . "raidlist (`lid`, `towref`, `x`, `y`, `distance`, `t1`, `t2`, `t3`, `t4`, `t5`, `t6`, `t7`, `t8`, `t9`, `t10`)"
+					." SELECT f.id, $towref, $x, $y, $distance, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10"
+					." FROM " . TB_PREFIX . "farmlist f WHERE f.id = $lid AND f.owner = $owner"
+					." AND NOT EXISTS (SELECT 1 FROM " . TB_PREFIX . "raidlist r WHERE r.lid = f.id AND r.towref = $towref)";
         		$result = mysqli_query($this->connection,$q);
         		return $result && mysqli_affected_rows($this->connection) === 1;
         	}

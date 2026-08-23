@@ -4,7 +4,13 @@ if(isset($_GET['t']) && $_GET['t'] == 99 && !isset($_GET['action'])) {
 
 if(isset($_GET['t']) && $_GET['t'] == 99 && isset($_POST['action']) && $_POST['action'] === 'addList'){
 	// createFarmList valida internamente que `did` sea una aldea del usuario logueado.
-	$database->createFarmList((int)$_POST['did'], $session->uid, $_POST['name']);
+	$newFarmListId = $database->createFarmList((int)$_POST['did'], $session->uid, $_POST['name']);
+	if($newFarmListId && isset($_POST['from_map']) && $_POST['from_map'] == 1) {
+		$mapX = isset($_POST['map_x']) ? (int)$_POST['map_x'] : 0;
+		$mapY = isset($_POST['map_y']) ? (int)$_POST['map_y'] : 0;
+		header('Location: build.php?gid=16&t=99&action=showSlot&lid='.(int)$newFarmListId.'&x='.$mapX.'&y='.$mapY.'&from_map=1');
+		exit;
+	}
 }
 
 $sql = mysql_query("SELECT * FROM ".TB_PREFIX."farmlist WHERE owner = $session->uid ORDER BY wref = $village->wid DESC");
