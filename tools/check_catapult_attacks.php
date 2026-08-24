@@ -180,6 +180,99 @@ for($attempt = 0; $attempt < 100; $attempt++) {
 catapultAssert($randomTargetsAreValid, 'el objetivo aleatorio siempre pertenece a una casilla ocupada');
 catapultAssert($missingTargetsAreValid, 'un tipo ausente siempre cae en una casilla ocupada');
 
+// El disparo al azar reparte por casilla ocupada, no por tipo de casilla. Es lo que hace
+// que un fortín natar coma casi siempre campos de recursos —18 campos contra 6 edificios—
+// y no un sesgo del sorteo: sin este chequeo, un `array_rand` que se saltara la franja de
+// edificios se veía exactamente igual desde el informe. La semilla fija hace el reparto
+// reproducible; las tolerancias siguen siendo anchas (>6 sigma) para no depender de ella.
+mt_srand(20260824);
+$settlement = array();
+foreach(array_merge(range(1, 40), array(99)) as $slot) {
+    $settlement['f'.$slot] = 0;
+    $settlement['f'.$slot.'t'] = 0;
+}
+for($slot = 1; $slot <= 18; $slot++) {
+    $settlement['f'.$slot] = 5;
+    $settlement['f'.$slot.'t'] = (($slot - 1) % 4) + 1;
+}
+// El plan de natarSettlementBuildingLevels(): cuartel, establo, almacén, granero,
+// escondite y edificio principal, más la muralla en la casilla 40.
+$settlementBuildings = array(19 => 19, 20 => 20, 21 => 10, 22 => 11, 23 => 23, 24 => 15);
+foreach($settlementBuildings as $slot => $type) {
+    $settlement['f'.$slot] = 3;
+    $settlement['f'.$slot.'t'] = $type;
+}
+$settlement['f40'] = 6;
+$settlement['f40t'] = 31;
+
+$occupiedSlots = array_merge(range(1, 18), array_keys($settlementBuildings));
+$draws = 24000;
+$hits = array_fill_keys($occupiedSlots, 0);
+$outsideHits = 0;
+for($attempt = 0; $attempt < $draws; $attempt++) {
+    $slot = $automation->selectCatapultTargetSlot($settlement, 0);
+    if(isset($hits[$slot])) {
+        $hits[$slot]++;
+    } else {
+        $outsideHits++;
+    }
+}
+catapultAssert($outsideHits === 0, 'el disparo al azar nunca cae fuera de las casillas ocupadas (muralla incluida)');
+
+$unreachedSlots = array();
+foreach($hits as $slot => $count) {
+    if($count === 0) {
+        $unreachedSlots[] = $slot;
+    }
+}
+catapultAssert(
+    !$unreachedSlots,
+    'el disparo al azar alcanza todas las casillas ocupadas, edificios y escondite incluidos'
+);
+
+$uniformShare = 1 / count($occupiedSlots);
+$slotDeviation = 0;
+foreach($hits as $count) {
+    $slotDeviation = max($slotDeviation, abs($count / $draws - $uniformShare));
+}
+catapultAssert(
+    $slotDeviation < 0.01,
+    'el reparto por casilla es uniforme (desvío máximo '.round($slotDeviation * 100, 2).' puntos sobre '.round($uniformShare * 100, 2).'%)'
+);
+
+$buildingHits = 0;
+foreach(array_keys($settlementBuildings) as $slot) {
+    $buildingHits += $hits[$slot];
+}
+$buildingShare = $buildingHits / $draws;
+$expectedBuildingShare = count($settlementBuildings) / count($occupiedSlots);
+catapultAssert(
+    abs($buildingShare - $expectedBuildingShare) < 0.02,
+    'los edificios reciben su parte por ocupación ('.round($buildingShare * 100, 1).'% contra '.round($expectedBuildingShare * 100, 1).'% esperado)'
+);
+
+// Y la contracara: en una aldea de jugador con la franja de edificios llena, el sorteo
+// pega en un edificio la mayoría de las veces. La proporción sale de la aldea, no de una
+// preferencia del motor por los campos.
+$developed = $settlement;
+for($slot = 19; $slot <= 38; $slot++) {
+    if((int)$developed['f'.$slot.'t'] === 0) {
+        $developed['f'.$slot] = 3;
+        $developed['f'.$slot.'t'] = 17;
+    }
+}
+$developedBuildingHits = 0;
+for($attempt = 0; $attempt < $draws; $attempt++) {
+    if($automation->selectCatapultTargetSlot($developed, 0) >= 19) {
+        $developedBuildingHits++;
+    }
+}
+$developedShare = $developedBuildingHits / $draws;
+catapultAssert(
+    abs($developedShare - 20 / 38) < 0.02,
+    'con la franja 19-38 llena el sorteo pega más en edificios que en campos ('.round($developedShare * 100, 1).'%)'
+);
+
 $emptyFields = array();
 catapultAssert($automation->selectCatapultTargetSlot($emptyFields, 0) === 0, 'una aldea sin objetivos no produce índices inválidos');
 
