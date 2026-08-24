@@ -81,15 +81,20 @@ if($village->resarray['f'.$id] >= DEMOLISH_LEVEL_REQ) {
 		<td><form action='build.php?gid=15' method='POST'><input type='hidden' name='cancel' value='1'><input type='hidden' name='c' value='".$demolitionToken."'><button type='submit' title='Cancelar' aria-label='Cancelar demolición' style='border:0;background:transparent;padding:0'><img class='del' src='img/x.gif' alt='Cancelar'></button></form></td><td>
 		<b>".htmlspecialchars($name,ENT_QUOTES,'UTF-8')."</b></td><td><span id='timer1'>".$generator->getTimeFormat(max(0,$Demolition['timetofinish']-time()))."</span></td>
 		</tr></tbody></table>";
+		// Los dos atajos con oro van en su propia línea, despegados de la tabla del reloj.
+		$goldActions = '';
 		if($demolitionGold >= Building::FINISH_ALL_GOLD) {
-			echo '<form action="build.php?gid=15" method="POST" style="display:inline">
+			$goldActions .= '<form action="build.php?gid=15" method="POST" style="display:inline">
 			<input type="hidden" name="finishnow" value="1"><input type="hidden" name="c" value="'.$demolitionToken.'">
-			<button type="submit" value="Finalizar" onclick="return confirm(\'¿Finalizar el nivel en curso por '.Building::FINISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Finalizar ahora ('.Building::FINISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro">)</div></div></button></form>';
+			<button type="submit" value="Finalizar" onclick="return confirm(\'¿Finalizar el nivel en curso por '.Building::FINISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Finalizar ahora ('.Building::FINISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro" style="vertical-align:middle">)</div></div></button></form>';
 		}
 		if($demolitionGold >= Building::DEMOLISH_ALL_GOLD && $building->canDemolishInstantly($field)) {
-			echo '<form action="build.php?gid=15" method="POST" style="display:inline">
+			$goldActions .= '<form action="build.php?gid=15" method="POST" style="display:inline;margin-left:10px">
 			<input type="hidden" name="razeall" value="1"><input type="hidden" name="c" value="'.$demolitionToken.'"><input type="hidden" name="type" value="'.$field.'">
-			<button type="submit" value="Derribar" onclick="return confirm(\'¿Derribar el edificio entero por '.Building::DEMOLISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Derribar entero ('.Building::DEMOLISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro">)</div></div></button></form>';
+			<button type="submit" value="Derribar" onclick="return confirm(\'¿Derribar el edificio entero por '.Building::DEMOLISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Derribar entero ('.Building::DEMOLISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro" style="vertical-align:middle">)</div></div></button></form>';
+		}
+		if($goldActions !== '') {
+			echo '<div style="margin-top:8px">'.$goldActions.'</div>';
 		}
 	} else {
 		$options = '';
@@ -107,12 +112,12 @@ if($village->resarray['f'.$id] >= DEMOLISH_LEVEL_REQ) {
 			echo '<form action="build.php?gid=15" method="POST" style="display:inline">
 			<input type="hidden" name="demolish" value="1"><input type="hidden" name="c" value="'.$demolitionToken.'">
 			<select name="type" class="dropdown">'.$options.'</select>
-			<button type="submit" value="Demoler" id="btn_demolish"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Demoler</div></div></button>';
+			<button type="submit" value="Demoler" id="btn_demolish" style="vertical-align:top"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Demoler</div></div></button>';
 			// El derribo completo comparte el desplegable: el mismo formulario cambia de
 			// acción según el botón que se apretó, así no hay dos selectores que puedan
 			// apuntar a edificios distintos.
 			if($demolitionGold >= Building::DEMOLISH_ALL_GOLD && (int)$VillageResourceLevels['f99t'] !== 40) {
-				echo '<button type="submit" name="razeall" value="1" id="btn_demolish_all" onclick="return confirm(\'¿Derribar el edificio entero por '.Building::DEMOLISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Derribar entero ('.Building::DEMOLISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro">)</div></div></button>';
+				echo '<button type="submit" name="razeall" value="1" id="btn_demolish_all" style="margin-left:14px;vertical-align:top" onclick="return confirm(\'¿Derribar el edificio entero por '.Building::DEMOLISH_ALL_GOLD.' de oro?\')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Derribar entero ('.Building::DEMOLISH_ALL_GOLD.' <img src="img/x.gif" class="gold" alt="oro" style="vertical-align:middle">)</div></div></button>';
 			}
 			echo '</form>';
 		}
