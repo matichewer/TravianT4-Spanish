@@ -65,6 +65,16 @@ class Logging {
 			$database->query($q);
 		}
 	}
+
+	/** Derribo completo de un edificio con oro: se anota en el mismo registro. */
+	public function goldDemolitionLog($wid) {
+		global $database;
+		if(LOG_GOLD_FIN) {
+			$log = "Derribo completo de un edificio con oro";
+			$q = "Insert into ".TB_PREFIX."gold_fin_log values (0,".(int)$wid.",'$log')";
+			$database->query($q);
+		}
+	}
 	
 	public function addAdminLog() {
 		global $database;

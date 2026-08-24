@@ -64,7 +64,14 @@ for($lv = 1; $lv <= 20; $lv++) {
 		$progresivo = false;
 	}
 }
-check($progresivo,'cada nivel suma exactamente 10 puntos porcentuales');
+check($progresivo,'cada nivel suma exactamente 10 puntos porcentuales (columna oficial de galos y teutones)');
+
+// La tabla guarda UNA sola columna, la de galos y teutones. La romana (120..500) se
+// deriva en tradeOfficeBonusPercent(): que bid28 sea la columna baja es parte del trato.
+check(Automation::tradeOfficeBonusPercent(3,20) == 300 && Automation::tradeOfficeBonusPercent(2,20) == 300,
+	'galos y teutones leen la tabla tal cual');
+check(Automation::tradeOfficeBonusPercent(1,20) == 500,'el romano dobla el bono, no la capacidad');
+check(Automation::tradeOfficeBonusPercent(1,0) == 100,'sin Oficina el romano no tiene ningun bono (100%, no 200%)');
 
 // ---------------------------------------------------------------------------
 section('B. merchantCarryCapacity(): una sola fórmula y sin coma flotante');
@@ -90,7 +97,58 @@ check(Automation::merchantCarryCapacity(3,13) === 1725.0 || Automation::merchant
 	'galo con Oficina 13: exactamente 1725, no 1724.999...');
 check(Automation::merchantCarryCapacity(3,20) == 2250,'galo con Oficina 20: 2250 (750 x 300%)');
 check(Automation::merchantCarryCapacity(2,20) == 3000,'teutón con Oficina 20: 3000');
-check(Automation::merchantCarryCapacity(1,20) == 1500,'romano con Oficina 20: 1500');
+
+// --- Bono romano: 20 puntos por nivel (oficial desde T3.5) --------------------------
+// La tabla oficial del wiki, columna por columna. Este repo aplicaba 10%/nivel a las tres
+// tribus, con lo que el romano llegaba a 1500 en vez de 2500 y la Oficina no le devolvia
+// nada de lo que el oficial le da para compensar su comienzo debil.
+$oficial = array(
+	// nivel => array(romano, galo, teuton)
+	1  => array(600,825,1100),
+	2  => array(700,900,1200),
+	3  => array(800,975,1300),
+	4  => array(900,1050,1400),
+	5  => array(1000,1125,1500),
+	6  => array(1100,1200,1600),
+	7  => array(1200,1275,1700),
+	8  => array(1300,1350,1800),
+	9  => array(1400,1425,1900),
+	10 => array(1500,1500,2000),
+	11 => array(1600,1575,2100),
+	12 => array(1700,1650,2200),
+	13 => array(1800,1725,2300),
+	14 => array(1900,1800,2400),
+	15 => array(2000,1875,2500),
+	16 => array(2100,1950,2600),
+	17 => array(2200,2025,2700),
+	18 => array(2300,2100,2800),
+	19 => array(2400,2175,2900),
+	20 => array(2500,2250,3000),
+);
+$tablaOficial = true;
+$primerFallo = '';
+foreach($oficial as $lv => $esperado) {
+	foreach(array(1 => $esperado[0], 3 => $esperado[1], 2 => $esperado[2]) as $tribu => $capacidad) {
+		if(Automation::merchantCarryCapacity($tribu,$lv) != $capacidad) {
+			$tablaOficial = false;
+			if($primerFallo === '') {
+				$primerFallo = ' (tribu '.$tribu.' nivel '.$lv.': '
+					.Automation::merchantCarryCapacity($tribu,$lv).' en vez de '.$capacidad.')';
+			}
+		}
+	}
+}
+check($tablaOficial,'los 20 niveles dan la capacidad oficial para las tres tribus'.$primerFallo);
+check(Automation::merchantCarryCapacity(1,20) == 2500,
+	'romano con Oficina 20: 2500 (500 x 500%), no 1500');
+check(Automation::merchantCarryCapacity(1,20) > Automation::merchantCarryCapacity(3,20)
+	&& Automation::merchantCarryCapacity(1,20) < Automation::merchantCarryCapacity(2,20),
+	'con la Oficina al maximo el romano queda en el medio (esa es la razon de ser del bono)');
+check(Automation::merchantCarryCapacity(1,0) == 500,
+	'sin Oficina el romano sigue siendo el peor: el bono dobla el porcentaje, no la base');
+// El bono es de la tribu del DUENO de la aldea, no del jugador que mira la pantalla.
+check(Automation::merchantCarryCapacity(1,10) == 1500 && Automation::merchantCarryCapacity(3,10) == 1500,
+	'con Oficina 10 el romano alcanza al galo (1500 los dos)');
 
 // El borde que fallaba de punta a punta: la carga justa de todos los mercaderes.
 $carry = Automation::merchantCarryCapacity(3,13);
@@ -103,13 +161,13 @@ check(Automation::merchantsRequired(0,$carry) === 0,'sin recursos no hace falta 
 check(Automation::merchantsRequired(-5,$carry) === 0,'un total negativo no exige mercaderes');
 check(Automation::merchantsRequired(100,0) === 0,'sin capacidad no se calcula ningún mercader');
 
-check(strpos($automationSource,'$capacity * $bid28[$level][\'attri\'] / 100') !== false,
+check(strpos($automationSource,'$capacity * self::tradeOfficeBonusPercent($tribe, $tradeOfficeLevel) / 100') !== false,
 	'el bono se aplica multiplicando primero y dividiendo por 100 al final');
 check(substr_count($marketSource,'$bid28') === 0,
 	'Market ya no recalcula la capacidad por su cuenta');
-$sinFormula = preg_replace('/public static function merchantCarryCapacity\(.*?\n    \}/s','',$automationSource);
-check(strpos($sinFormula,'bid28') === false,
-	'Automation lee bid28 sólo dentro de merchantCarryCapacity()');
+$sinFormula = preg_replace('/public static function tradeOfficeBonusPercent\(.*?\n    \}/s','',$automationSource);
+check(strpos($sinFormula,'$bid28') === false,
+	'Automation lee bid28 sólo dentro de tradeOfficeBonusPercent()');
 
 // ---------------------------------------------------------------------------
 section('C. Niveles fuera de la tabla');
@@ -144,6 +202,12 @@ check(Automation::merchantsRequired(7500,Automation::merchantCarryCapacity(3,0))
 check(Automation::merchantsRequired(7500,Automation::merchantCarryCapacity(3,20)) === 4,
 	'con la Oficina a 20, esa misma ruta pasa a ocupar 4');
 
+// Las ofertas publicadas siguen la misma regla que las rutas (ver check_market_offer_merchants.php).
+check(strpos($automationSource,'public static function offerMerchantsCommitted(') !== false,
+	'existe offerMerchantsCommitted(), que recalcula lo que aparta cada oferta publicada');
+check(strpos($automationSource,'$database->openOfferAmounts($vid)') !== false,
+	'la reserva de una oferta se calcula sobre lo ofrecido, no sobre la columna merchant');
+
 $rutasTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_4.tpl');
 check(strpos($rutasTpl,'$market->routeMerchants($firstRoute)') !== false,
 	'el listado de rutas muestra la reserva de hoy');
@@ -161,8 +225,8 @@ foreach(array('Templates/dorf3/1.tpl','Templates/dorf3/2.tpl') as $resumen) {
 	$source = file_get_contents(dirname(__DIR__).'/'.$resumen);
 	check(strpos($source,'Automation::routeMerchantsCommitted(') === false,
 		$resumen.' no descuenta las rutas: usa la misma definición de "ocupado" que el Mercado');
-	check(strpos($source,'$totalmerchants - (int)$database->totalMerchantUsed($vid)') !== false,
-		$resumen.' cuenta como ocupados sólo los mercaderes realmente de viaje');
+	check(strpos($source,'$totalmerchants - Automation::merchantsBusy($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid)))') !== false,
+		$resumen.' usa la misma definición de "ocupado" que el Mercado, con la capacidad de esta aldea');
 }
 
 // ---------------------------------------------------------------------------

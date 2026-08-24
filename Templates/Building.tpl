@@ -13,7 +13,7 @@
 				<thead>
 					<tr>
 						<th colspan="4"><?php echo BUILDING_UPGRADING;?>
-			<?php if($database->getUserField($session->uid, 'gold', 0) >= 2 && $building->canFinishAll()) { ?>
+			<?php if($database->getUserField($session->uid, 'gold', 0) >= Building::FINISH_ALL_GOLD && $building->canFinishAll()) { ?>
 		<div class="finishNow">
 		  <a class="arrow" href="?cmd=buildingFinish&amp;c=<?php echo $session->checker; ?>" onclick="return confirm('¿Completar todo al instante por 2 de oro?')">Finalizar todo</a>
 		  <b> (precio: <img src="img/x.gif" class="gold" alt="Oro"> 2)</b>
@@ -50,6 +50,22 @@
             echo "<img src=\"img/x.gif\" class=\"del\" title=\"Cancelar\" alt=\"Cancelar\" /></a></td><td>";
 			echo "<span class=\"none\">".$building->procResType($jobs['type'])."</span> <span class=\"lvl\"> Nivel ".$jobs['level']."</span>";
 		}
+		}
+		// La demolición del Edificio Principal también es una obra en curso: el oficial
+		// la muestra en esta misma lista, y sin ella el enlace de arriba era inalcanzable
+		// cuando lo único que estaba corriendo era un derribo.
+		$demolitionJob = $building->demolitionInProgress();
+		if($demolitionJob !== null) {
+			$demolitionSlot = (int)$demolitionJob['buildnumber'];
+			$demolitionType = isset($village->resarray['f'.$demolitionSlot.'t'])
+				? (int)$village->resarray['f'.$demolitionSlot.'t'] : 0;
+			echo "<tr><td class=\"ico\">&nbsp;</td><td>";
+			echo $building->procResType($demolitionType)." <span class=\"lvl\"> Demolición a nivel ".(int)$demolitionJob['lvl']."</span>";
+			echo "</td><td colspan=\"2\" class=\"buildingTime\"><span id=\"timer".$timer."\">";
+			echo $generator->getTimeFormat(max(0,$demolitionJob['timetofinish']-time()));
+			echo "</span> h. ";
+			echo "Hora ".date('H:i', $demolitionJob['timetofinish'])."</td></tr>";
+			$timer += 1;
 		}
         ?>
             </tbody>

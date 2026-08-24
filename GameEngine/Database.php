@@ -7,6 +7,10 @@ require_once(dirname(__FILE__).'/Production.php');
 // include que comparten el motor, esta capa y las páginas públicas (index, serverLogin,
 // serverRegister), que no cargan la sesión ni las tablas de juego.
 require_once(dirname(__FILE__).'/Accounts.php');
+// Nombres, muros y edificios de tribu. Va acá por lo mismo: la conquista (en la capa de
+// datos) tiene que saber qué edificios son de tribu para derribar los que el dueño nuevo
+// no podría construir, y esa lista es la misma que usa Building.php.
+require_once(dirname(__FILE__).'/Catapult.php');
 // Las dos pestañas de tropas del resumen de aldeas. Va acá por el mismo motivo que
 // Production.php: es una agregación sobre varias tablas que tiene que dar el mismo
 // número desde la plantilla y desde los checkers.

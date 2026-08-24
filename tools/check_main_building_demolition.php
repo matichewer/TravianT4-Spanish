@@ -22,8 +22,8 @@ demolitionCheck(strpos($mainView,"DEMOLISH_LEVEL_REQ") !== false,
     'la vista debe respetar el requisito configurable');
 demolitionCheck(strpos($template,"\$_REQUEST") === false,
     'iniciar y cancelar no deben aceptar indistintamente GET y POST');
-demolitionCheck(substr_count($template,"hash_equals") === 2,
-    'inicio y cancelacion deben validar CSRF');
+demolitionCheck(substr_count($template,"hash_equals") === 4,
+    'inicio, cancelacion, finalizacion con oro y derribo completo deben validar CSRF');
 demolitionCheck(strpos($template,"build.php?id=26&cancel=1") === false,
     'la cancelacion no debe depender de un solar fijo');
 demolitionCheck(strpos($template,'for($i = 19; $i <= 40; $i++)') !== false,
@@ -44,13 +44,17 @@ demolitionCheck(strpos($add,'getBuildingByField') !== false
     'el servidor debe rechazar una demolicion solapada con cualquier cola');
 demolitionCheck(strpos($add,'DELETE FROM ".TB_PREFIX."bdata') === false,
     'iniciar una demolicion nunca debe borrar trabajos encolados');
-demolitionCheck(strpos($add,'GET_LOCK') !== false && strpos($add,'RELEASE_LOCK') !== false,
+demolitionCheck(strpos($add,'acquireDemolitionLock') !== false
+    && strpos($add,'releaseDemolitionLock') !== false
+    && strpos($database,"GET_LOCK") !== false && strpos($database,"RELEASE_LOCK") !== false,
     'dos solicitudes simultaneas deben serializarse por aldea');
 demolitionCheck(strpos($database,'mysqli_affected_rows($this->connection) === 1') !== false
     && strpos($automation,"claimDemolition") !== false,
     'solo una peticion debe completar cada demolicion vencida');
-demolitionCheck(strpos($automation,'$this->recountPop($vil[\'vref\']);') !== false,
-    'la finalizacion debe recalcular poblacion y puntos de cultura');
+demolitionCheck(strpos($automation,'$this->demolishFieldLevel($vil[\'vref\'], $vil[\'buildnumber\'], $vil[\'timetofinish\']);') !== false,
+    'la finalizacion debe pasar por el unico paso de demolicion del motor');
+demolitionCheck(preg_match('/function demolishFieldLevel\(.*?\$this->recountPop\(\$villageId\);/s',$automation) === 1,
+    'ese paso debe recalcular poblacion y puntos de cultura');
 
 echo "Main Building demolition checks: $checks; failures: $failures\n";
 exit($failures === 0 ? 0 : 1);

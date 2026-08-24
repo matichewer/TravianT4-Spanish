@@ -42,12 +42,17 @@ if($_GET['action']=='FinishBuilding'){
 
     $buildnum = mysql_num_rows($MyVilId);
     $resnum = mysql_num_rows($MyVilId2);
+    // Una demolición en curso también se apura con oro —es la segunda de las tres
+    // formas de demoler del oficial—, así que cuenta como obra. Sin esto el botón
+    // contestaba "no tenés nada en curso" cuando lo único que corría era un derribo,
+    // y el jugador se quedaba esperando el reloj entero.
+    $demolitionnum = count((array)$database->getDemolition($village->wid));
 
     $goldlog = mysql_query("SELECT * FROM ".TB_PREFIX."gold_fin_log") or die(mysql_error());
 
-if($buildnum == 0 && $resnum == 0) {
-	$done1 = "No tienes ninguna construcción ni investigación en curso.";
-} else if($session->gold >= 2) {
+if($buildnum == 0 && $resnum == 0 && $demolitionnum == 0) {
+	$done1 = "No tienes ninguna construcción, investigación ni demolición en curso.";
+} else if($session->gold >= Building::FINISH_ALL_GOLD) {
 
 		if($session->access!=BANNED){
 		global $automation;
@@ -64,7 +69,7 @@ if($buildnum == 0 && $resnum == 0) {
 			$database->finishDemolition($village->wid);
 			$technology->finishTech();
 			$logging->goldFinLog($village->wid);
-			$database->modifyGold($session->uid,2,0);
+			$database->modifyGold($session->uid,Building::FINISH_ALL_GOLD,0);
 
 			// Lo que quedaba encolado detrás arranca ahora: se le descuenta el tiempo
 			// que la obra apurada se iba a llevar. Sin esto el jugador paga el oro y
@@ -376,9 +381,9 @@ if (mysql_num_rows($MyGold)) {
 	<tbody>
 
 		<tr>
-			<td class="desc">Completa todas las construcciones e investigaciones al instante.</td>
+			<td class="desc">Completa todas las construcciones, investigaciones y la demolición en curso al instante.</td>
 			<td class="dur">Instantáneo</td>
-			<td class="cost"><img src="img/x.gif" class="gold" alt="gold">2</td>
+			<td class="cost"><img src="img/x.gif" class="gold" alt="gold"><?php echo Building::FINISH_ALL_GOLD; ?></td>
 			<td class="act">
 <?php
 if (mysql_num_rows($MyGold)) {
@@ -390,6 +395,18 @@ if (mysql_num_rows($MyGold)) {
 	}
 }
  ?>
+			</td>
+		</tr>
+		<tr>
+			<td class="desc">Derriba un edificio entero al instante (Edificio Principal nivel <?php echo DEMOLISH_LEVEL_REQ; ?>).</td>
+			<td class="dur">Instantáneo</td>
+			<td class="cost"><img src="img/x.gif" class="gold" alt="gold"><?php echo Building::DEMOLISH_ALL_GOLD; ?></td>
+			<td class="act link">
+            <?php if($building->getTypeLevel(15) >= DEMOLISH_LEVEL_REQ){ ?>
+            <a class="arrow" href="build.php?gid=15">Ir al edificio principal</a>
+            <?php }else{ ?>
+            <span class="none"><center>Ir al edificio principal</center></span>
+            <?php } ?>
 			</td>
 		</tr>
 			<tr>

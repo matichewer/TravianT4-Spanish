@@ -141,19 +141,17 @@ oasisAssert(
     'un oasis fuera de alcance conserva su lealtad'
 );
 
-// Loyalty regeneration must not depend on how frequently automation runs.
-$regen = Automation::oasisLoyaltyRegenerationOutcome(50, 1000, 10, 1100, 1);
+// La regeneración no puede depender de cada cuánto corre la automatización. El ritmo
+// oficial es 1 punto cada 30 minutos, fijo; el detalle vive en check_oasis_annexation.php.
+$regen = Automation::oasisLoyaltyRegenerationOutcome(50, 1000, 1100, 1);
 oasisAssert($regen['loyalty'] === 50 && $regen['clock'] === 1000,
     'conserva el reloj mientras todavía no completa un punto de lealtad');
-$regen = Automation::oasisLoyaltyRegenerationOutcome(50, $regen['clock'], 10, 1360, 1);
-oasisAssert($regen['loyalty'] === 51 && $regen['clock'] === 1360,
+$regen = Automation::oasisLoyaltyRegenerationOutcome(50, $regen['clock'], 2800, 1);
+oasisAssert($regen['loyalty'] === 51 && $regen['clock'] === 2800,
     'acredita el punto exacto al acumular el tiempo suficiente');
-$regen = Automation::oasisLoyaltyRegenerationOutcome(99, 1000, 20, 2000, 5);
-oasisAssert($regen['loyalty'] === 100 && $regen['clock'] === 2000,
+$regen = Automation::oasisLoyaltyRegenerationOutcome(99, 1000, 20000, 5);
+oasisAssert($regen['loyalty'] === 100 && $regen['clock'] === 20000,
     'al llegar a 100 cierra el reloj sin dejar tiempo retroactivo');
-$regen = Automation::oasisLoyaltyRegenerationOutcome(50, 1000, 0, 2000, 1);
-oasisAssert($regen['loyalty'] === 50 && $regen['clock'] === 2000,
-    'sin residencia ni palacio no acumula regeneración pendiente');
 
 $automationSource = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 $mansionSource = file_get_contents(dirname(__DIR__).'/Templates/Build/37_heromansion.tpl');

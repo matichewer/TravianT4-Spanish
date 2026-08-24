@@ -11,9 +11,14 @@
 	<?php
 	// Un nivel fuera de la tabla (0 recien construido, o uno editado desde el panel de
 	// administracion) dejaba la celda vacia: sin bonus la capacidad es la base, 100%.
+	// El porcentaje sale del mismo helper que la capacidad real, porque el romano suma 20
+	// puntos por nivel y las otras dos tribus 10: imprimir bid28 a secas le anunciaba al
+	// romano la mitad del bono que el juego le da.
 	$tradeOfficeLevel = (int)$village->resarray['f'.$id];
 	$tradeOfficeMax = count($bid28);
-	$tradeOfficeBonus = isset($bid28[$tradeOfficeLevel]['attri']) ? $bid28[$tradeOfficeLevel]['attri'] : ($tradeOfficeLevel > 0 ? $bid28[$tradeOfficeMax]['attri'] : 100);
+	$tradeOfficeBonus = isset($bid28[$tradeOfficeLevel]['attri']) || $tradeOfficeLevel <= 0
+		? Automation::tradeOfficeBonusPercent($session->tribe,$tradeOfficeLevel)
+		: Automation::tradeOfficeBonusPercent($session->tribe,$tradeOfficeMax);
 	?>
 		<tr>
 			<th>Capacidad de transporte por mercader:</th>
@@ -24,7 +29,7 @@
         ?>
 		<tr>
 			<th>Capacidad de transporte por mercader en el nivel  <?php echo $tradeOfficeLevel+1; ?> </th>
-			<td><b><?php echo $bid28[$tradeOfficeLevel+1]['attri']; ?>%</b></td>
+			<td><b><?php echo Automation::tradeOfficeBonusPercent($session->tribe,$tradeOfficeLevel+1); ?>%</b></td>
 		</tr>
             <?php
             }

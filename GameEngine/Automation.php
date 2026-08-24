@@ -909,13 +909,46 @@ class Automation {
         return $now - (int)floor(self::OASIS_RAID_WINDOW * (1 - $consumed));
     }
 
+    /**
+     * Cuánta lealtad se recupera por segundo con una residencia/palacio de ese nivel.
+     *
+     * El T4 oficial dice "por cada nivel la lealtad sube 2 puntos cada 3 horas", o sea
+     * dos tercios de punto por nivel y por hora: una residencia 20 llena 100 puntos en
+     * siete horas y media. Acá estaba escrito como un punto por nivel y por hora, un 50%
+     * más rápido, y con eso una aldea recién conquistada volvía a ser inconquistable en
+     * dos tercios del tiempo que le corresponde.
+     *
+     * Sin residencia ni palacio no hay regeneración: es lo que hace que una aldea recién
+     * tomada quede en 0 hasta que el conquistador levante el edificio.
+     */
+    public static function loyaltyRegenerationRate($level, $speed) {
+        $level = max(0, (int)$level);
+        return $level * 2 / 3 * (float)$speed / 3600;
+    }
+
+    /**
+     * La lealtad de un oasis sube **1 punto cada 30 minutos**, y punto.
+     *
+     * Es la regla oficial entera: "la lealtad del oasis aumenta un 1% cada 30 minutos y el
+     * jugador no puede influir en ella". Acá estaba copiada de la aldea —un punto por hora
+     * por cada nivel de la residencia o el palacio de la aldea que lo tiene—, así que un
+     * oasis de una aldea con palacio 20 se curaba veinte veces más rápido de lo que
+     * corresponde (100 puntos en cinco horas en vez de dos días) y, al revés, el oasis de
+     * una aldea sin residencia no se recuperaba nunca. Por eso ya no recibe el nivel de
+     * ningún edificio: no hay ninguno que mirar.
+     */
+    const OASIS_LOYALTY_REGEN_SECONDS = 1800;
+
+    public static function oasisLoyaltyRegenerationRate($speed) {
+        return (float)$speed / self::OASIS_LOYALTY_REGEN_SECONDS;
+    }
+
     /** Regenera puntos enteros sin descartar el tiempo fraccionario pendiente. */
-    public static function oasisLoyaltyRegenerationOutcome($loyalty, $clock, $level, $now, $speed) {
+    public static function oasisLoyaltyRegenerationOutcome($loyalty, $clock, $now, $speed) {
         $loyalty = max(0, min(100, (int)$loyalty));
         $clock = (int)$clock;
-        $level = max(0, (int)$level);
         $now = (int)$now;
-        $rate = $level * (float)$speed / 3600;
+        $rate = self::oasisLoyaltyRegenerationRate($speed);
         if($clock <= 0 || $clock > $now || $rate <= 0) {
             return array('loyalty' => $loyalty, 'clock' => $now);
         }
@@ -975,6 +1008,187 @@ class Automation {
     }
 
 
+    /**
+     * Lo que le pasa a una aldea recién conquistada y que no es una escritura suelta de SQL.
+     *
+     * La parte de base de datos —dueño, cupo de expansión, investigación, colas, mercado,
+     * listas de granjeo, tropas de viaje y edificios de tribu— la hace
+     * `mysqli_DB::applyConquestLoyalty()` en una sola función. Acá va lo que necesita las
+     * piezas del motor: el recuento de población, las trampas, los prisioneros, los oasis
+     * y el héroe.
+     */
+    private function completeVillageConquest($target, $attackerOwner, $defenderOwner) {
+        global $database;
+        $target = (int)$target;
+        $attackerOwner = (int)$attackerOwner;
+        $defenderOwner = (int)$defenderOwner;
+        if($target <= 0 || $defenderOwner <= 0) {
+            return false;
+        }
+
+        // La conquista derriba el muro (siempre) y los edificios que la tribu del
+        // conquistador no puede tener. `vdata.pop` y `vdata.cp` son contadores
+        // incrementales: sin recontarlos la aldea sigue comiendo cereal y produciendo
+        // cultura por edificios que ya no existen, que es exactamente de dónde salieron
+        // los graneros en -47.000. recountPop() recuenta también la cultura y pasa por
+        // villagePopulationSlots(), así que la Maravilla del campo 99 no se pierde.
+        $this->recountPop($target);
+        // Si el trampero era uno de esos edificios, sus trampas quedan en 0 y los presos
+        // que sostenía salen libres hacia sus aldeas.
+        $this->syncTrapperCapacity($target);
+
+        // Las tropas de la aldea que estaban presas en trampas ajenas se pierden con ella
+        // —pertenecen a la aldea— y la trampa que las retenía queda libre.
+        foreach($database->getPrisoners3($target) as $prisoner) {
+            $disbanded = $database->disbandPrisonersAtomic(
+                (int)$prisoner['id'],
+                (int)$prisoner['wref'],
+                (int)$prisoner['from'],
+                $defenderOwner
+            );
+            if(!$disbanded) {
+                $database->discardPrisonersAtomic((int)$prisoner['id'], (int)$prisoner['wref']);
+            }
+        }
+
+        // Los oasis anexados quedan libres: no cambian de dueño con la aldea. Va después
+        // de que la limpieza borró los refuerzos que salían de esta aldea, así que lo
+        // único que vuelve a casa desde el oasis es lo que pusieron ahí otras aldeas.
+        $this->releaseVillageOasesSafely($target);
+
+        $this->conquestHeroCasualty($target, $defenderOwner);
+        return true;
+    }
+
+    /**
+     * El héroe del que perdió la aldea desaparece si esa era su aldea natal.
+     *
+     * Es la regla oficial: "todas las tropas que pertenecen a la aldea conquistada
+     * desaparecen, incluido el héroe si era su aldea natal". Si la natal era otra, el
+     * héroe sigue vivo donde estuviera.
+     *
+     * Se lo saca de donde esté antes de matarlo, porque el héroe vive en un solo lugar
+     * —`units` de una aldea, una fila de refuerzo o un movimiento— y dejar el rastro lo
+     * dejaría defendiendo una aldea del conquistador o volviendo a ella. Y se le reasigna
+     * la aldea natal, que es la que después necesita el revivir.
+     */
+    private function conquestHeroCasualty($target, $defenderOwner) {
+        global $database;
+        $target = (int)$target;
+        $defenderOwner = (int)$defenderOwner;
+        if($target <= 0 || $defenderOwner <= 0 || !isPlayerAccount($defenderOwner)) {
+            return false;
+        }
+        $hero = $database->getHeroData($defenderOwner);
+        if(!is_array($hero) || heroHomeVillage($hero) !== $target) {
+            return false;
+        }
+
+        $location = isset($hero['wref']) ? (int)$hero['wref'] : 0;
+        if($location > 0) {
+            // En `units` sólo si esa aldea es del defensor, o es la que le acaban de
+            // quitar: `units.hero` de una aldea ajena es el héroe de otro jugador.
+            $database->query("UPDATE ".TB_PREFIX."units u"
+                ." LEFT JOIN ".TB_PREFIX."vdata v ON v.wref = u.vref"
+                ." SET u.hero = 0"
+                ." WHERE u.vref = ".$location." AND (v.owner = ".$defenderOwner." OR u.vref = ".$target.")");
+            // Y en una fila de refuerzo, que se reconoce por la aldea de origen.
+            $database->query("UPDATE ".TB_PREFIX."enforcement e"
+                ." INNER JOIN ".TB_PREFIX."vdata v ON v.wref = e.`from`"
+                ." SET e.hero = 0"
+                ." WHERE e.vref = ".$location." AND e.hero > 0 AND v.owner = ".$defenderOwner);
+        }
+        // Una aventura en curso se cancela con él: el movimiento sort_type 9 no tiene fila
+        // en `attacks`, así que alcanza con borrarlo.
+        $database->query("DELETE m FROM ".TB_PREFIX."movement m"
+            ." LEFT JOIN ".TB_PREFIX."vdata v ON v.wref = m.`from`"
+            ." WHERE m.sort_type = 9 AND (v.owner = ".$defenderOwner." OR m.`from` = ".$target.")");
+
+        $wasAlive = (int)$hero['dead'] === 0;
+        $database->modifyHero2('dead', 1, $defenderOwner, 0);
+        $database->modifyHero2('health', 0, $defenderOwner, 0);
+        // Sin natal viva no hay dónde revivirlo ni contra qué comparar los bonos.
+        reassignHeroHomeVillage($database, $defenderOwner);
+
+        if($wasAlive) {
+            $villageName = $database->getVillageField($target, 'name');
+            $database->sendMessage(
+                $defenderOwner,
+                UID_MULTIHUNTER,
+                'Perdiste a tu héroe',
+                "[message]Perdiste [b]".addslashes($villageName)."[/b], la aldea natal de tu héroe,"
+                    ." y tu héroe cayó con ella. Puedes revivirlo desde la pantalla del héroe.[/message]",
+                0, 0, 0, 0, 0
+            );
+        }
+        return true;
+    }
+
+    /**
+     * Deja en la aldea recién conquistada lo que sobrevivió del ataque.
+     *
+     * Regla oficial: al llegar la lealtad a 0 el administrador desaparece y "las tropas
+     * que viajaban con él se quedan en la aldea como defensa". Quedan como refuerzo de la
+     * aldea que atacó (`enforcement.from` = la de origen), que es donde este juego guarda
+     * las tropas de una aldea propia estacionadas en otra: así siguen pagando su cereal
+     * en la aldea de origen, aparecen en la pestaña de tropas del resumen y el dueño las
+     * puede mandar de vuelta desde la plaza de reuniones.
+     *
+     * La fila de `attacks` ya trae descontadas las bajas, las que siguen atrapadas y el
+     * administrador que se gastó en la conquista: es exactamente lo que iba a volver. Sus
+     * columnas son los diez huecos de la tribu del atacante; las de `enforcement` son ids
+     * absolutos de unidad.
+     */
+    private function stationConqueringArmy($data, $fromWref, $toWref, $ownTribe) {
+        global $database;
+        $fromWref = (int)$fromWref;
+        $toWref = (int)$toWref;
+        $ownTribe = (int)$ownTribe;
+        if($fromWref <= 0 || $toWref <= 0 || $ownTribe < 1 || $ownTribe > 5) {
+            return false;
+        }
+        $survivors = $database->getAttack($data['ref']);
+        if(!is_array($survivors)) {
+            return false;
+        }
+
+        $troops = array();
+        $total = 0;
+        for($slot = 1; $slot <= 10; $slot++) {
+            $amount = max(0, (int)$survivors['t'.$slot]);
+            $troops[$slot] = $amount;
+            $total += $amount;
+        }
+        if($total > 0) {
+            $existing = $database->getEnforce($toWref, $fromWref);
+            if(isset($existing['id'])) {
+                for($slot = 1; $slot <= 10; $slot++) {
+                    if($troops[$slot] > 0) {
+                        $database->modifyEnforce($existing['id'], ($ownTribe - 1) * 10 + $slot, $troops[$slot], 1);
+                    }
+                }
+            } else {
+                $payload = array('to' => $toWref, 'from' => $fromWref);
+                for($slot = 1; $slot <= 10; $slot++) {
+                    $payload['t'.$slot] = $troops[$slot];
+                }
+                $database->addEnforce($payload);
+            }
+        }
+
+        // El héroe también se queda. La aldea ya es del atacante, así que vale la misma
+        // convención que un refuerzo a aldea propia: vive en `units` y `hero.wref` lo
+        // sigue. La aldea natal no se toca.
+        if(max(0, (int)$survivors['t11']) > 0) {
+            $attackerOwner = (int)$database->getVillageField($fromWref, 'owner');
+            if($attackerOwner > 0) {
+                $database->modifyUnit($toWref, 'hero', 1, 1);
+                $database->modifyHero2('wref', $toWref, $attackerOwner, 0);
+            }
+        }
+        return true;
+    }
+
     private function loyaltyRegeneration() {
         if(file_exists("GameEngine/Prevention/loyalty.txt")) {
             @unlink("GameEngine/Prevention/loyalty.txt");
@@ -1005,7 +1219,7 @@ class Automation {
                         $database->query("UPDATE ".TB_PREFIX."vdata SET loyaltyupdate = $now WHERE wref = $villageId");
                         continue;
                     }
-                    $rate = $value * SPEED / 3600;
+                    $rate = self::loyaltyRegenerationRate($value, SPEED);
                     if($rate <= 0) {
                         // Sin residencia ni palacio no hay regeneracion, pero el reloj
                         // sigue corriendo para no acumular tiempo pendiente.
@@ -1028,25 +1242,18 @@ class Automation {
             }
         }
         $array = array();
-        // Occupied oases regenerate loyalty like villages do, driven by the
-        // residence/palace of the village holding them. odata has no `lastupdate`
-        // column: `lastupdated2` is the loyalty clock here (on free oases the same
-        // column times the animal respawn instead), and it is reset on every
-        // change so the elapsed time never counts twice.
+        // Un oasis ocupado recupera lealtad a ritmo fijo: 1 punto cada 30 minutos, sin
+        // mirar ningún edificio (ver oasisLoyaltyRegenerationRate). `odata` no tiene
+        // columna `lastupdate`: acá el reloj de la lealtad es `lastupdated2` (en un oasis
+        // libre esa misma columna cronometra la repoblación de animales) y se reinicia en
+        // cada cambio para que el tiempo transcurrido no se cuente dos veces.
         $q = "SELECT * FROM ".TB_PREFIX."odata WHERE loyalty < 100 AND conqured <> 0";
         $array = $database->query_return($q);
         if(!empty($array)) {
             foreach ($array as $loyalty) {
-                if($this->getTypeLevel(25, $loyalty['conqured']) >= 1) {
-                    $value = $this->getTypeLevel(25, $loyalty['conqured']);
-                } elseif($this->getTypeLevel(26, $loyalty['conqured']) >= 1) {
-                    $value = $this->getTypeLevel(26, $loyalty['conqured']);
-                } else {
-                    $value = 0;
-                }
                 $now = time();
                 $outcome = self::oasisLoyaltyRegenerationOutcome(
-                    $loyalty['loyalty'], $loyalty['lastupdated2'], $value, $now, SPEED
+                    $loyalty['loyalty'], $loyalty['lastupdated2'], $now, SPEED
                 );
                 $oldLoyalty = (int)$loyalty['loyalty'];
                 $oldClock = (int)$loyalty['lastupdated2'];
@@ -1865,18 +2072,44 @@ class Automation {
         return ($attackerGreatCelebration ? 5 : 0) - ($defenderGreatCelebration ? 5 : 0);
     }
 
-    public static function merchantCarryCapacity($tribe, $tradeOfficeLevel) {
+    /**
+     * Bono de la Oficina de comercio, en porcentaje de la capacidad base del mercader.
+     *
+     * Oficial desde T3.5: cada nivel suma 10 puntos porcentuales para galos y teutones y
+     * **20 para romanos**. Es lo que compensa la debilidad romana del comienzo — con la
+     * Oficina a 20 el romano queda en 2500 por mercader (500% de 500), entre el galo
+     * (2250) y el teuton (3000), en vez de ser el peor de los tres para siempre. Este
+     * repo aplicaba la columna de galos y teutones a las tres tribus, asi que el romano
+     * llegaba a 1500 y la Oficina no le devolvia nada de lo que el oficial le da.
+     *
+     * bid28 guarda la columna oficial de galos y teutones (110..300); la romana
+     * (120..500) se deriva doblando el **bono**, no la capacidad: doblar la capacidad
+     * dejaria el nivel 0 valiendo 1000.
+     */
+    public static function tradeOfficeBonusPercent($tribe, $tradeOfficeLevel) {
         global $bid28;
+        $level = (int)$tradeOfficeLevel;
+        if($level <= 0 || !is_array($bid28) || empty($bid28)) {
+            return 100;
+        }
+        $level = min($level, count($bid28));
+        if(!isset($bid28[$level]['attri'])) {
+            return 100;
+        }
+        $bonus = $bid28[$level]['attri'];
+        if((int)$tribe == 1) {
+            $bonus = 100 + 2 * ($bonus - 100);
+        }
+        return $bonus;
+    }
+
+    public static function merchantCarryCapacity($tribe, $tradeOfficeLevel) {
         $tribe = (int)$tribe;
         $capacity = (($tribe == 1) ? 500 : (($tribe == 2) ? 1000 : 750)) * TRADER_CAPACITY;
-        $level = (int)$tradeOfficeLevel;
-        if($level > 0 && is_array($bid28) && !empty($bid28)) {
-            $level = min($level, count($bid28));
-            if(isset($bid28[$level]['attri'])) {
-                $capacity = $capacity * $bid28[$level]['attri'] / 100;
-            }
-        }
-        return $capacity;
+        // Multiplicar primero y dividir por 100 al final: con la division antes, un galo
+        // con Oficina 13 daba 1724.99999999999977 en vez de 1725 y el envio de capacidad
+        // justa se rechazaba por "mercaderes insuficientes".
+        return $capacity * self::tradeOfficeBonusPercent($tribe, $tradeOfficeLevel) / 100;
     }
 
     /**
@@ -1889,6 +2122,43 @@ class Automation {
             return 0;
         }
         return (int)ceil(($amount - 0.1) / $carryCapacity);
+    }
+
+    /**
+     * Mercaderes que las ofertas publicadas de una aldea tienen apartados, **con la
+     * capacidad de hoy**, no con la del dia en que se publicaron.
+     *
+     * La columna market.merchant guarda el numero del dia de la publicacion y no se lee
+     * mas: una oferta puesta sin Oficina y vendida con la Oficina a 20 apartaba (y
+     * despachaba) el triple de mercaderes de los que hacian falta, y subir el edificio no
+     * liberaba ninguno hasta que alguien comprara. Misma regla que ya tenian las rutas
+     * comerciales (routeMerchantsCommitted).
+     *
+     * El redondeo es por oferta, no sobre la suma: cada oferta viaja por separado.
+     */
+    public static function offerMerchantsCommitted($vid, $carryCapacity) {
+        global $database;
+        $busy = 0;
+        foreach($database->openOfferAmounts($vid) as $amount) {
+            $busy += self::merchantsRequired((int)$amount, $carryCapacity);
+        }
+        return $busy;
+    }
+
+    /**
+     * Mercaderes de una aldea que no estan en casa: los que viajan (ida y vuelta) mas los
+     * que esperan en una oferta publicada. Es la unica definicion de "ocupado" — la usan
+     * el contador del Mercado, el resumen de aldeas y el envio automatico, y tienen que
+     * dar todos el mismo numero.
+     *
+     * $carryCapacity es la de la aldea (merchantCarryCapacity con su Oficina y la tribu
+     * del dueno) y hace falta si o si para la parte de las ofertas. Lo que ya esta de
+     * viaje NO se recalcula: esa carga salio con los mercaderes que salio y no cambia
+     * porque el edificio suba o caiga mientras el envio esta en el camino.
+     */
+    public static function merchantsBusy($vid, $carryCapacity) {
+        global $database;
+        return (int)$database->travelingMerchants($vid) + self::offerMerchantsCommitted($vid, $carryCapacity);
     }
 
     /**
@@ -2262,8 +2532,8 @@ class Automation {
         // Mercaderes del Mercado de la aldea de origen. Coincidia con el nivel por
         // casualidad (bid17 da 1 mercader por nivel); leer la tabla es lo que hace el
         // resto del juego y no se rompe si esos valores cambian.
-        $merchantAvail2 = self::marketMerchants($this->getTypeLevel(17, $from)) - (int)$database->totalMerchantUsed($from);
         $maxcarry2 = self::merchantCarryCapacity($tribe, $this->getTypeLevel(28, $from));
+        $merchantAvail2 = self::marketMerchants($this->getTypeLevel(17, $from)) - self::merchantsBusy($from, $maxcarry2);
         $reqMerc = self::merchantsRequired(array_sum($resource), $maxcarry2);
         if($reqMerc <= 0 || $reqMerc > $merchantAvail2) {
             return self::SEND_NO_MERCHANTS;
@@ -2354,6 +2624,9 @@ class Automation {
             // el de la siguiente.
             $wallgid = $wallid = 0;
             $breweryActive = false;
+            // Se reinicia por ataque como todo lo demás: el foreach comparte el scope y una
+            // conquista dejaba a la siguiente aldea atacada quedándose con el ejército.
+            $conquestGarrisonStays = false;
             $herosend_att = (int)$data['t11'];
             $cage = array('id' => 0, 'type' => 0);
             // Se reinicia por ataque: el foreach comparte el scope y si no, el oasis
@@ -3571,11 +3844,14 @@ class Automation {
                             if($conquestStatus === 'loyalty_reduced') {
                                 $info_chief = "".$chief_pic.", Lealtad reducida de <b>".$conquestResult['old_loyalty']."</b> a <b>".$conquestResult['new_loyalty']."</b>.";
                             } elseif($conquestStatus === 'conquered') {
-                                $info_chief = "".$chief_pic.", ¡Conquistaste la aldea!";
-                                // Si al que perdió la aldea le tomaron la natal del héroe,
-                                // hay que mudarlo o pierde el bono de recursos y el de
-                                // entrenamiento sin forma de enterarse.
-                                reassignHeroHomeVillage($database, $defenderOwner);
+                                // Neutral a propósito: el informe del defensor comparte la carga
+                                // con el del atacante, así que un "¡Conquistaste la aldea!" salía
+                                // también en el informe del que la perdió.
+                                $info_chief = "".$chief_pic.", La aldea fue conquistada.";
+                                $this->completeVillageConquest($data['to'], $attackerOwner, $defenderOwner);
+                                // Y lo que sobrevivió del ataque se queda de guarnición en la
+                                // aldea tomada en vez de volver a casa, como en el oficial.
+                                $conquestGarrisonStays = true;
                             } else {
                                 $conquestMessages = array(
                                     'same_owner' => 'No puedes conquistar una aldea propia.',
@@ -3602,7 +3878,13 @@ class Automation {
                     }
                 }
 
-                if($data['t11'] > 0) {
+                // El héroe anexa oasis y reclama artefactos, y las dos cosas exigen un
+                // ataque normal. En un asalto (type 4) el héroe entra, saquea y se va: no
+                // se queda a tomar posesión de nada. Sin esta guarda, farmear un oasis con
+                // el héroe en la lista de granjeo lo anexaba solo —gastando el cupo de la
+                // Mansión sin que el jugador lo pidiera— y bastaba un asalto para bajarle
+                // la lealtad a un oasis ajeno.
+                if($data['t11'] > 0 && (int)$type === 3) {
                     if($isoasis != 0) {
                         //count oasis troops: $troops_o
                         $troops_o = 0;
@@ -3715,7 +3997,11 @@ class Automation {
                                     break;
                             }
                         }
-                    } else {
+                    } elseif(!$conquestGarrisonStays) {
+                        // Si la aldea acaba de caer, su artefacto ya cambió de dueño con
+                        // ella y se queda donde está: volver a "reclamarlo" con el héroe lo
+                        // mudaba a la aldea atacante —o fallaba por falta de tesorería y,
+                        // peor, pisaba con "" el aviso de que la conquista salió bien.
                         $artifact = $database->getOwnArtefactInfo($data['to']);
                         if($artifact['vref'] == $data['to']) {
                             // El requisito de tesorería es de la aldea ATACANTE, y el artefacto
@@ -3900,6 +4186,13 @@ class Automation {
                         // Sin regreso, la fila de `attacks` ya no la referencia nadie: el
                         // camino normal la deja para que la reutilice el movimiento de
                         // vuelta, y acá ese movimiento no existe.
+                        $database->removeAttack($data['ref']);
+                    } elseif($conquestGarrisonStays) {
+                        // Regla oficial: al conquistar, el administrador desaparece y las
+                        // tropas que lo acompañaban se quedan en la aldea tomada haciendo de
+                        // defensa. No vuelven, así que tampoco hay movimiento de regreso ni
+                        // fila de `attacks` que reutilizar.
+                        $this->stationConqueringArmy($data, $from['wref'], $to['wref'], $owntribe);
                         $database->removeAttack($data['ref']);
                     } else {
                         $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
@@ -5340,36 +5633,7 @@ class Automation {
 				if(!$claimed) {
 					continue;
 				}
-                $type = $database->getFieldType($vil['vref'], $vil['buildnumber']);
-                $level = $database->getFieldLevel($vil['vref'], $vil['buildnumber']);
-				if((int)$level <= 0 || (int)$type <= 0) {
-					if(!method_exists($database,'claimDemolition')) {
-						$database->delDemolition($vil['vref']);
-					}
-					continue;
-				}
-                // Igual que al construir: se cobra lo producido con el nivel viejo
-                // hasta el momento en que termina la demolición.
-                if((int)$type >= 1 && (int)$type <= 9) {
-                    $this->accrueProductionBeforeChange($vil['vref'], $vil['timetofinish']);
-                }
-                $this->applyStorageCapacityDelta($vil['vref'], $type, $level, $level - 1);
-                if($level == 1) {
-                    $clear = ",f".$vil['buildnumber']."t=0";
-                } else {
-                    $clear = "";
-                }
-                $q = "UPDATE ".TB_PREFIX."fdata SET f".$vil['buildnumber']."=".($level - 1).$clear." WHERE vref=".$vil['vref'];
-                $database->query($q);
-                if($type == 18) {
-                    $this->refreshEmbassyCapacity($vil['vref']);
-                }
-                if($type == 36) {
-                    $this->syncTrapperCapacity($vil['vref']);
-                }
-				// El recuento autoritativo actualiza habitantes y puntos de cultura.
-				// Antes la demolición dejaba CP fantasma del nivel eliminado.
-				$this->recountPop($vil['vref']);
+                $this->demolishFieldLevel($vil['vref'], $vil['buildnumber'], $vil['timetofinish']);
 				if(!method_exists($database,'claimDemolition')) {
 					$database->delDemolition($vil['vref']);
 				}
@@ -5378,6 +5642,88 @@ class Automation {
         if(file_exists("GameEngine/Prevention/demolition.txt")) {
             @unlink("GameEngine/Prevention/demolition.txt");
         }
+    }
+
+    /**
+     * Baja un nivel de un edificio y deja la aldea consistente: acredita lo que
+     * produjo el nivel viejo antes de cambiarlo, mueve la capacidad de almacenamiento,
+     * limpia el tipo cuando la casilla queda vacía y recuenta habitantes y puntos de
+     * cultura. Devuelve false si no había nada que demoler.
+     *
+     * Es el único lugar donde se demuele. demolitionComplete() lo llama cuando vence
+     * el reloj del Edificio Principal y demolishBuildingNow() lo repite hasta el suelo
+     * para el derribo completo con oro: una segunda copia terminaría olvidándose de una
+     * de estas cuatro cosas, que es exactamente lo que le pasó al fin de obra del Plus.
+     */
+    private function demolishFieldLevel($villageId, $field, $until = null) {
+        global $database;
+        $villageId = (int)$villageId;
+        $field = (int)$field;
+        $type = (int)$database->getFieldType($villageId, $field);
+        $level = (int)$database->getFieldLevel($villageId, $field);
+        if($level <= 0 || $type <= 0) {
+            return false;
+        }
+        // Igual que al construir: se cobra lo producido con el nivel viejo
+        // hasta el momento en que termina la demolición.
+        if($type >= 1 && $type <= 9) {
+            $this->accrueProductionBeforeChange($villageId, $until === null ? time() : (int)$until);
+        }
+        $this->applyStorageCapacityDelta($villageId, $type, $level, $level - 1);
+        $database->setVillageLevel($villageId, 'f'.$field, $level - 1);
+        if($level == 1) {
+            $database->setVillageLevel($villageId, 'f'.$field.'t', 0);
+        }
+        if($type == 18) {
+            $this->refreshEmbassyCapacity($villageId);
+        }
+        if($type == 36) {
+            $this->syncTrapperCapacity($villageId);
+        }
+        // El recuento autoritativo actualiza habitantes y puntos de cultura.
+        // Antes la demolición dejaba CP fantasma del nivel eliminado.
+        $this->recountPop($villageId);
+        return true;
+    }
+
+    /**
+     * Derribo completo con oro: el mismo paso, repetido hasta que la casilla queda
+     * vacía. Devuelve cuántos niveles cayeron, y 0 significa que no había nada que
+     * demoler — quien llama no debe cobrar el oro en ese caso.
+     */
+    public function demolishBuildingNow($villageId, $field) {
+        global $database;
+        $villageId = (int)$villageId;
+        $field = (int)$field;
+        $levels = 0;
+        // Mismo cerrojo que pide una demolición común: dos clics seguidos no pueden
+        // derribar dos veces el mismo edificio ni cobrar dos veces el oro.
+        $locked = method_exists($database,'acquireDemolitionLock')
+            ? $database->acquireDemolitionLock($villageId)
+            : true;
+        if(!$locked) {
+            return 0;
+        }
+        try {
+            // El tope es el nivel más alto de buidata con margen: si una escritura fallara
+            // en silencio (mysql_query devuelve false y nadie lo mira), el bucle tiene que
+            // terminar igual en vez de colgar la petición.
+            while($levels < 30 && $this->demolishFieldLevel($villageId, $field)) {
+                $levels++;
+            }
+            if($levels > 0) {
+                $demolition = $database->getDemolition($villageId);
+                if(!empty($demolition) && (int)$demolition[0]['buildnumber'] === $field) {
+                    // El reloj que estaba corriendo sobre esa casilla ya no tiene objetivo.
+                    $database->delDemolition($villageId);
+                }
+            }
+        } finally {
+            if(method_exists($database,'releaseDemolitionLock')) {
+                $database->releaseDemolitionLock($villageId);
+            }
+        }
+        return $levels;
     }
 
     private function updateHero() {

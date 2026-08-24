@@ -343,7 +343,9 @@ class Market {
         // ocupan mercaderes hasta que salen (igual que en Travian): descontarlas todo el
         // dia dejaba "Mercaderes 1/16" sin un solo movimiento a la vista, bloqueaba
         // vender y comprar, y ademas los contaba dos veces mientras la ruta viajaba.
-        $this->used = (int)$database->totalMerchantUsed($village->wid);
+        // Las ofertas publicadas se recalculan con $maxcarry (por eso va despues), igual
+        // que las rutas: subir la Oficina libera los mercaderes que sobran al instante.
+        $this->used = Automation::merchantsBusy($village->wid,$this->maxcarry);
         $this->routeReserved = $this->routeMerchantsCommitted();
         $this->onmarket = $database->getMarket($village->wid,0);
         if(isset($_SESSION['marketOfferDraft'][$village->wid]) && is_array($_SESSION['marketOfferDraft'][$village->wid])) {
@@ -478,6 +480,16 @@ class Market {
     }
 
     /**
+     * Mercaderes que una oferta propia tiene apartados hoy. Es la misma cuenta que hace
+     * la reserva (Automation::offerMerchantsCommitted) y la que va a usar el envio cuando
+     * alguien la acepte, asi que lo que muestra la pestana es lo que de verdad se ocupa.
+     * La columna market.merchant, congelada el dia de la publicacion, ya no se muestra.
+     */
+    public function offerMerchants($offer) {
+        return $this->merchantsFor((int)$offer['gamt']);
+    }
+
+    /**
      * Mercaderes que las rutas de esta aldea tienen comprometidos: el pico de los que
      * estan de viaje a la vez, la misma cuenta que valida el guardado.
      */
@@ -598,6 +610,9 @@ class Market {
         if(!$database->deductResourcesIfAvailable($village->wid,$resource[1],$resource[2],$resource[3],$resource[4])) {
             $this->marketFailure('resources',$id,$tab);
         }
+        // El ultimo parametro escribe market.merchant, que queda como dato historico del
+        // dia de la publicacion: nadie lo lee. Lo apartado y lo que despues viaja se
+        // cuentan con la Oficina del momento (offerMerchantsCommitted / acceptOffer).
         $offerId = $database->addMarket($village->wid,$gtype,$gamt,$wtype,$wamt,$time,$alliance,$reqMerc,0);
         if(!$offerId) {
             $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);
@@ -609,7 +624,7 @@ class Market {
     }
      
     private function acceptOffer($get) {
-        global $database,$village,$session,$logging,$generator;
+        global $database,$village,$session,$logging,$generator,$building;
         $offerId = $this->positiveInteger(isset($get['g']) ? $get['g'] : null);
         $infoarray = $offerId ? $database->getMarketInfo($offerId) : false;
         $id = isset($get['id']) ? $get['id'] : 0;
@@ -652,7 +667,7 @@ class Market {
 
         // Se relee lo ocupado despues de reclamar la oferta: entre el chequeo de arriba y
         // este punto pudo salir otro envio de esta misma aldea.
-        $currentMerchantAvail = max(0,$this->merchant - (int)$database->totalMerchantUsed($village->wid));
+        $currentMerchantAvail = max(0,$this->merchant - Automation::merchantsBusy($village->wid,$this->maxcarry));
         $myresource = $this->resourceArray((int)$infoarray['wtype'],(int)$infoarray['wamt']);
         $hisresource = $this->resourceArray((int)$infoarray['gtype'],(int)$infoarray['gamt']);
         if($reqMerc > $currentMerchantAvail) {
@@ -664,9 +679,25 @@ class Market {
             $this->marketFailure('resources',$id,$tab);
         }
 
+        $targettribe = $database->getUserField($sellerOwner,"tribe",0);
+        // Los mercaderes del vendedor se cuentan AHORA, con su Oficina de comercio y su
+        // tribu de hoy, no con el numero congelado en market.merchant el dia que publico:
+        // si mientras la oferta esperaba subio la Oficina, la venta tiene que salir con
+        // los mercaderes que hacen falta hoy, no con el triple. La capacidad se toma de la
+        // aldea vendedora, que no es la del comprador que esta ejecutando esto.
+        $hisMerc = Automation::merchantsRequired(
+            (int)$infoarray['gamt'],
+            Automation::merchantCarryCapacity($targettribe,$building->getTypeLevel(28,(int)$infoarray['vref']))
+        );
+        // Al reves (le catapultaron la Oficina despues de publicar) la venta sale igual
+        // aunque el vendedor quede en sobregiro: los recursos ya estaban apartados al
+        // publicar, y rechazar la compra convertiria catapultear una Oficina ajena en una
+        // forma de congelarle todas las ventas. El contador ya recorta en 0.
+        if($hisMerc <= 0) {
+            $hisMerc = 1;
+        }
         $mysendid = $database->sendResource($myresource[1],$myresource[2],$myresource[3],$myresource[4],$reqMerc,0);
-        $hissendid = $database->sendResource($hisresource[1],$hisresource[2],$hisresource[3],$hisresource[4],(int)$infoarray['merchant'],0);
-        $targettribe = $database->getUserField($database->getVillageField($infoarray['vref'],"owner"),"tribe",0);
+        $hissendid = $database->sendResource($hisresource[1],$hisresource[2],$hisresource[3],$hisresource[4],$hisMerc,0);
         $histime = $generator->procDistanceTime($village->coor,$hiscoor,$targettribe,0);
         $myresdata = implode(",",$myresource);
         $hisresdata = implode(",",$hisresource);
@@ -762,16 +793,17 @@ class Market {
         return in_array((int)$type,array(1,2,3,4),true);
     }
 
+    // Lo ofrecido y lo pedido tienen que ser positivos; los mercaderes ya no entran en la
+    // validacion porque no se leen de la fila: se cuentan con la Oficina de hoy.
     private function validOffer($offer) {
         return is_array($offer)
-            && isset($offer['vref'],$offer['gtype'],$offer['gamt'],$offer['wtype'],$offer['wamt'],$offer['accept'],$offer['alliance'],$offer['merchant'],$offer['maxtime'])
+            && isset($offer['vref'],$offer['gtype'],$offer['gamt'],$offer['wtype'],$offer['wamt'],$offer['accept'],$offer['alliance'],$offer['maxtime'])
             && (int)$offer['accept'] === 0
             && $this->validResourceType($offer['gtype'])
             && $this->validResourceType($offer['wtype'])
             && (int)$offer['gtype'] !== (int)$offer['wtype']
             && (int)$offer['gamt'] > 0
-            && (int)$offer['wamt'] > 0
-            && (int)$offer['merchant'] > 0;
+            && (int)$offer['wamt'] > 0;
     }
 
     private function resourceArray($type,$amount) {

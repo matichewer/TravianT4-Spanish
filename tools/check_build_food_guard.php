@@ -394,7 +394,8 @@ check(preg_match('/finishBuildingsNow.*?\$this->buildComplete\(\$now, false\)/s'
     'que adelanta el reloj y llama al fin de obra de siempre');
 check(strpos($source, "in_array((int)\$jobs['type'], array(25,26,40), true)") !== false,
     'residencia, palacio y maravilla del mundo siguen sin poder terminarse con oro');
-check(strpos($source, '$database->modifyGold($session->uid,2,0);') !== false,
+check(strpos($source, '$database->modifyGold($session->uid,self::FINISH_ALL_GOLD,0);') !== false
+    && Building::FINISH_ALL_GOLD === 2,
     'y se siguen cobrando 2 de oro una sola vez');
 
 // ---------------------------------------------------------------------------

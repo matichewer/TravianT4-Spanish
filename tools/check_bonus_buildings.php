@@ -381,7 +381,10 @@ foreach(array_merge($sources,array('GameEngine/Database/db_MYSQLi.php')) as $sou
 $automation = file_get_contents(dirname(__DIR__).'/GameEngine/Automation.php');
 check(strpos($automation,'accrueProductionBeforeChange($indi[\'wid\'], $indi[\'timestamp\'])') !== false,
 	'al terminar una construcción se cobra la producción vieja hasta ese instante');
-check(strpos($automation,'accrueProductionBeforeChange($vil[\'vref\'], $vil[\'timetofinish\'])') !== false,
+// La demolición pasa por Automation::demolishFieldLevel(), que recibe el instante en
+// que vence el reloj y acredita con él antes de tocar el campo.
+check(strpos($automation,'$this->demolishFieldLevel($vil[\'vref\'], $vil[\'buildnumber\'], $vil[\'timetofinish\'])') !== false
+	&& preg_match('/function demolishFieldLevel\(.*?accrueProductionBeforeChange\(\$villageId, \$until/s',$automation) === 1,
 	'al terminar una demolición también');
 check(strpos($automation,'$this->accrueProductionBeforeChange($data[\'from\'], $conquestTime)') !== false,
 	'al conquistar un oasis se cierra el tramo de producción de la aldea que lo gana');

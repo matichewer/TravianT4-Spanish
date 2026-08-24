@@ -16,7 +16,7 @@
  *   E4) espionaje: la Naturaleza no tiene espías; un oasis sólo resiste con
  *       espías estacionados dentro
  *   E5) sólo se conquista un oasis a 3 casillas o menos de la aldea atacante
- *   F) al conquistar la aldea, sus oasis cambian de dueño
+ *   F) al conquistar la aldea, sus oasis quedan libres
  *   G) al borrar la aldea, sus oasis vuelven a quedar libres
  *   H) no se puede soltar el oasis de otro desde la Mansión del Héroe
  *
@@ -161,7 +161,13 @@ setMansion($A_VIL, 20);
 q("UPDATE {$P}hero SET dead = 0, health = 100, wref = $A_VIL WHERE uid = $A_UID");
 q("UPDATE {$P}units SET hero = 1 WHERE vref = $A_VIL");
 q("UPDATE {$P}units SET u31=0,u32=0,u33=0,u34=0,u35=0,u36=0,u37=0,u38=0,u39=0,u40=0 WHERE vref = $O");
+// Con un asalto no alcanza: anexar un oasis exige ataque normal, igual que chifear.
 dispatch($A_VIL, $O, array(11 => 1), 4);
+$od = one("SELECT conqured FROM {$P}odata WHERE wref = $O");
+check((int)$od['conqured'] === 0, "un asalto con el héroe no anexa el oasis");
+q("UPDATE {$P}hero SET dead = 0, health = 100, wref = $A_VIL WHERE uid = $A_UID");
+q("UPDATE {$P}units SET hero = 1 WHERE vref = $A_VIL");
+dispatch($A_VIL, $O, array(11 => 1), 3);
 
 $od = one("SELECT * FROM {$P}odata WHERE wref = $O");
 $wd = one("SELECT occupied FROM {$P}wdata WHERE id = $O");
@@ -453,7 +459,7 @@ q("UPDATE {$P}odata SET conqured = 0, owner = 3, loyalty = 100 WHERE wref = $FAR
 q("UPDATE {$P}hero SET dead = 0, health = 100, wref = $A_VIL WHERE uid = $A_UID");
 q("UPDATE {$P}units SET hero = 1 WHERE vref = $A_VIL");
 q("DELETE FROM {$P}ndata");
-dispatch($A_VIL, $FAR, array(11 => 1), 4);
+dispatch($A_VIL, $FAR, array(11 => 1), 3);
 $farData = one("SELECT conqured, owner, loyalty FROM {$P}odata WHERE wref = $FAR");
 check((int)$farData['conqured'] === 0 && (int)$farData['owner'] === 3,
       "un oasis a más de 3 casillas no se conquista");
@@ -463,13 +469,23 @@ $farReport = one("SELECT data FROM {$P}ndata WHERE uid = $A_UID ORDER BY id DESC
 check($farReport && strpos($farReport['data'], 'demasiado lejos') !== false,
       "el informe explica por qué no se conquistó");
 
-// ------------------------- F) la aldea cambia de dueño: los oasis la siguen
-say("\n== F) al conquistar la aldea, los oasis cambian de dueño ==");
-$transfer = $database->transferVillageOases($A_VIL, $B_UID);
-$od = one("SELECT owner, conqured FROM {$P}odata WHERE wref = $O");
-check((int)$od['owner'] === $B_UID, "el oasis pasa al nuevo dueño de la aldea");
-check((int)$od['conqured'] === $A_VIL, "el oasis sigue atado a la misma aldea");
-$database->transferVillageOases($A_VIL, $A_UID);
+// ------------------- F) la aldea cambia de dueño: los oasis quedan libres
+// Regla oficial: "si te conquistan la aldea, todos sus oasis se liberan
+// automáticamente, incluso si después recuperás la aldea". Antes seguían a la aldea y
+// el conquistador se los quedaba.
+say("\n== F) al conquistar la aldea, los oasis quedan libres ==");
+$reflection = new ReflectionClass('Automation');
+$automationForConquest = $reflection->newInstanceWithoutConstructor();
+$release = $reflection->getMethod('releaseVillageOasesSafely');
+$release->setAccessible(true);
+$release->invoke($automationForConquest, $A_VIL);
+$od = one("SELECT owner, conqured, loyalty FROM {$P}odata WHERE wref = $O");
+check((int)$od['conqured'] === 0, "el oasis se suelta al cambiar de dueño la aldea");
+check((int)$od['owner'] !== $B_UID, "no lo hereda el conquistador");
+check((int)$od['loyalty'] === 100, "y vuelve al 100% de lealtad, listo para que lo tomen");
+// Se lo devuelve a la aldea A para los escenarios que siguen.
+q("UPDATE {$P}odata SET conqured = $A_VIL, owner = $A_UID, name = 'Oasis conquistado' WHERE wref = $O");
+q("UPDATE {$P}wdata SET occupied = 1 WHERE id = $O");
 
 // ----------------------------- G) la aldea desaparece: los oasis se liberan
 say("\n== G) al borrar la aldea, los oasis vuelven a quedar libres ==");

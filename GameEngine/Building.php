@@ -4,6 +4,14 @@ require_once __DIR__.'/Catapult.php';
 
 class Building {	
 
+	/**
+	 * El oficial cobra el fin de obra y el derribo completo por separado: 2 de oro
+	 * terminan todo lo que la aldea tenga en curso (incluida la demolición que esté
+	 * corriendo) y 5 de oro tiran un edificio entero al instante.
+	 */
+	const FINISH_ALL_GOLD = 2;
+	const DEMOLISH_ALL_GOLD = 5;
+
 	public $NewBuilding = false;
 	private $maxConcurrent;
 	private $allocated;
@@ -203,8 +211,12 @@ class Building {
 	 * cereal libre por debajo de 1: sería saltarse el candado por el otro lado y
 	 * quedar sin salida. Cualquier otro edificio se puede demoler siempre, porque
 	 * bajar habitantes es justamente cómo se sale de un bloqueo.
+	 *
+	 * $targetLevel es el nivel con el que queda la casilla: uno menos en la demolición
+	 * común y 0 en el derribo completo con oro, que se lleva todos los niveles juntos.
+	 * El candado se mide contra ese nivel, no contra el actual.
 	 */
-	public function demolitionAllowed($field) {
+	public function demolitionAllowed($field, $targetLevel = null) {
 		global $village;
 		$field = (int)$field;
 		$type = isset($village->resarray['f'.$field.'t']) ? (int)$village->resarray['f'.$field.'t'] : 0;
@@ -212,10 +224,14 @@ class Building {
 			return true;
 		}
 		$level = isset($village->resarray['f'.$field]) ? (int)$village->resarray['f'.$field] : 0;
+		$targetLevel = $targetLevel === null ? $level - 1 : max(0,(int)$targetLevel);
 		$dataarray = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : array();
-		$popBack = isset($dataarray[$level]['pop']) ? (int)$dataarray[$level]['pop'] : 0;
+		$popBack = 0;
+		for($lost = $level; $lost > $targetLevel; $lost--) {
+			$popBack += isset($dataarray[$lost]['pop']) ? (int)$dataarray[$lost]['pop'] : 0;
+		}
 		$population = max(0,(int)$village->pop - $popBack);
-		return ($this->baseCropWithField($field,$type,$level - 1) - $population) >= 1;
+		return ($this->baseCropWithField($field,$type,$targetLevel) - $population) >= 1;
 	}
 
 	/**
@@ -619,22 +635,17 @@ class Building {
 	private function isTribeBuildingAllowed($tid) {
 		global $session,$village;
 		$tribe = isset($session->tribe) ? (int)$session->tribe : 0;
-		switch((int)$tid) {
-			case 31:
-				return in_array($tribe, array(1, 5), true);
-			case 32:
-				return in_array($tribe, array(2, 4), true);
-			case 33:
-				return $tribe === 3;
-			case 35:
-				return $tribe === 2 && (int)$village->capital === 1;
-			case 36:
-				return $tribe === 3;
-			case 41:
-				return $tribe === 1;
-			default:
-				return true;
+		// Qué edificio es de qué tribu vive en Catapult.php (`buildingTribeLock`), porque
+		// la conquista necesita la misma lista para decidir cuáles se caen al cambiar de
+		// tribu la aldea. Acá sólo queda lo que además depende de la aldea.
+		if(!tribeCanBuild($tid, $tribe)) {
+			return false;
 		}
+		// La Cervecería, además de germana, es de la capital.
+		if((int)$tid === 35) {
+			return (int)$village->capital === 1;
+		}
+		return true;
 	}
 
 	/**
@@ -961,8 +972,14 @@ class Building {
 			}
 		}
 
+		return $this->demolitionInProgress() !== null;
+	}
+
+	/** La demolición que la aldea tiene en curso, o null si no hay ninguna. */
+	public function demolitionInProgress() {
+		global $database,$village;
 		$demolition = $database->getDemolition($village->wid);
-		return !empty($demolition);
+		return empty($demolition) ? null : $demolition[0];
 	}
 	
 	/**
@@ -974,14 +991,35 @@ class Building {
 	 * reordena lo que haya quedado en la cola.
 	 */
 	public function finishAll() {
-		global $database,$session,$logging,$village,$automation;
+		global $session;
 		if($session->access==BANNED) {
 			header("Location: banned.php");
 			return;
 		}
-		if($database->getUserField($session->uid, 'gold', 0) < 2 || !$this->canFinishAll()) {
+		$this->finishAllNow();
+		if(isset($_GET['id'])) {
+			header("Location: ".$session->referrer . "?id=" . $_GET['id']);
+		}
+		else {
 			header("Location: ".$session->referrer);
-			return;
+		}
+	}
+
+	/**
+	 * El fin de obra con oro sin redirecciones: devuelve true si se cobró.
+	 *
+	 * Lo usa el enlace "Finalizar todo" de dorf1/dorf2 y también el Edificio
+	 * Principal, donde una demolición puede ser lo único en curso. Es el mismo
+	 * cobro y el mismo camino: una demolición apurada con oro sigue bajando un solo
+	 * nivel, como en el oficial.
+	 */
+	public function finishAllNow() {
+		global $database,$session,$logging,$village,$automation;
+		if($session->access==BANNED) {
+			return false;
+		}
+		if($database->getUserField($session->uid, 'gold', 0) < self::FINISH_ALL_GOLD || !$this->canFinishAll()) {
+			return false;
 		}
 		$jobIds = array();
 		foreach($this->buildArray as $jobs) {
@@ -997,14 +1035,13 @@ class Building {
 		if(!empty($jobIds) && is_object($automation) && method_exists($automation,'finishBuildingsNow')) {
 			$finished = $automation->finishBuildingsNow($village->wid, $jobIds) > 0;
 		}
-		$demolition = $database->getDemolition($village->wid);
-		if(!empty($demolition)) {
+		if($this->demolitionInProgress() !== null) {
 			$database->finishDemolition($village->wid);
 			$finished = true;
 		}
 		if($finished) {
 			$logging->goldFinLog($village->wid);
-			$database->modifyGold($session->uid,2,0);
+			$database->modifyGold($session->uid,self::FINISH_ALL_GOLD,0);
 			// Lo que no se puede terminar (una residencia, un palacio) queda en la cola:
 			// se reordena para que arranque ya y no herede el reloj de lo que terminó.
 			if(method_exists($database,'resequenceBuildingQueue')) {
@@ -1012,12 +1049,68 @@ class Building {
 				$database->resequenceBuildingQueue($village->wid,19);
 			}
 		}
-		if(isset($_GET['id'])) {
-			header("Location: ".$session->referrer . "?id=" . $_GET['id']);
+		return $finished;
+	}
+
+	/**
+	 * Requisitos del derribo completo con oro. Son los mismos que los de la demolición
+	 * común (Edificio Principal en DEMOLISH_LEVEL_REQ, casilla interior ocupada y sin
+	 * obras encoladas encima) con dos diferencias: el candado de alimentos del molino y
+	 * la panadería se mide contra el nivel 0, porque cae el edificio entero, y una
+	 * Aldea de la Maravilla no compra atajos con oro, igual que en el fin de obra.
+	 */
+	public function canDemolishInstantly($field) {
+		global $database,$village;
+		$field = (int)$field;
+		if($field < 19 || $field > 40) {
+			return false;
 		}
-		else {
-			header("Location: ".$session->referrer);
+		$type = isset($village->resarray['f'.$field.'t']) ? (int)$village->resarray['f'.$field.'t'] : 0;
+		$level = isset($village->resarray['f'.$field]) ? (int)$village->resarray['f'.$field] : 0;
+		if($type <= 0 || $level <= 0) {
+			return false;
 		}
+		if($this->getTypeLevel(15) < DEMOLISH_LEVEL_REQ) {
+			return false;
+		}
+		if(isset($village->resarray['f99t']) && (int)$village->resarray['f99t'] === 40) {
+			return false;
+		}
+		if(!empty($database->getBuildingByField($village->wid,$field))
+			|| !empty($database->getMasterJobsByField($village->wid,$field))) {
+			return false;
+		}
+		return $this->demolitionAllowed($field,0);
+	}
+
+	/**
+	 * Derriba un edificio entero al instante por 5 de oro (la tercera forma de demoler
+	 * del oficial). El derribo lo hace Automation nivel por nivel, el mismo paso que
+	 * usa el reloj del Edificio Principal, así que la población, los puntos de cultura,
+	 * la capacidad de los almacenes y la producción acreditada quedan como corresponde.
+	 *
+	 * Devuelve 'ok', o el motivo del rechazo. El oro se cobra sólo si cayó algún nivel:
+	 * dos clics seguidos dejan el segundo sin nada que demoler y sin cobro.
+	 */
+	public function demolishInstantly($field) {
+		global $database,$session,$village,$automation,$logging;
+		$field = (int)$field;
+		if($session->access==BANNED) {
+			return 'banned';
+		}
+		if(!$this->canDemolishInstantly($field)) {
+			return 'denied';
+		}
+		if($database->getUserField($session->uid, 'gold', 0) < self::DEMOLISH_ALL_GOLD) {
+			return 'gold';
+		}
+		$levels = is_object($automation) ? (int)$automation->demolishBuildingNow($village->wid,$field) : 0;
+		if($levels <= 0) {
+			return 'denied';
+		}
+		$database->modifyGold($session->uid,self::DEMOLISH_ALL_GOLD,0);
+		$logging->goldDemolitionLog($village->wid);
+		return 'ok';
 	}
 	
 	public function resourceRequired($id,$tid,$plus=1) {

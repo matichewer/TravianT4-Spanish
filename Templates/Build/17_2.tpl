@@ -124,7 +124,7 @@ Ofrezco</th>
 	echo $offer['wamt'];		
 ?></td>
 			<?php if((int)$session->alliance > 0){ ?><td class="al"><?php echo ($offer['alliance'] == 0)? 'No' : 'Sí'; ?></td><?php } ?>
-			<td class="tra"><?php echo $offer['merchant']; ?></td>
+			<td class="tra"><?php echo $market->offerMerchants($offer); ?></td>
 			<td class="dur"><?php
         if($offer['maxtime'] != 0) {
         	echo $offer['maxtime']/3600;

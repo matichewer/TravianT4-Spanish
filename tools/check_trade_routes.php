@@ -250,7 +250,7 @@ section('G. Los mercaderes de una ruta no se ocupan hasta que sale');
 // Una ruta reservaba sus mercaderes las 24 horas: el Mercado mostraba "1/16" sin un solo
 // movimiento a la vista, no se podia enviar, vender ni comprar, y mientras la ruta
 // viajaba los mismos mercaderes se contaban dos veces (la reserva + el envio real).
-check(strpos($marketSource,'$this->used = (int)$database->totalMerchantUsed($village->wid);') !== false,
+check(strpos($marketSource,'$this->used = Automation::merchantsBusy($village->wid,$this->maxcarry);') !== false,
 	'los mercaderes ocupados son solo los que estan de viaje o esperando en una oferta');
 check(strpos($marketSource,'+ $this->routeMerchantsCommitted()') === false,
 	'ya no queda la reserva permanente de rutas sumada a los mercaderes ocupados');

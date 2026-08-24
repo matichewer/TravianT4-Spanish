@@ -70,6 +70,35 @@ function buildingIsWall($type) {
 }
 
 /**
+ * Los edificios que sólo puede levantar una tribu, y cuáles son esas tribus.
+ *
+ * Es la única lista: la usa `Building::isTribeBuildingAllowed()` para decidir qué se
+ * puede construir y la conquista para decidir qué se cae cuando la aldea cambia de
+ * tribu. Estaban escritas por separado y una conquista entre tribus distintas dejaba en
+ * pie una Cervecería germana en manos de un romano —un edificio que el dueño nuevo no
+ * podía ni mejorar ni volver a construir si lo demolía.
+ *
+ * Devuelve null si el edificio no es de tribu.
+ */
+function buildingTribeLock($type) {
+    $locks = array(
+        31 => array(1, 5), // Muralla: romanos (y natares)
+        32 => array(2, 4), // Muro de tierra: germanos (y la naturaleza)
+        33 => array(3),    // Empalizada: galos
+        35 => array(2),    // Cervecería: germanos
+        36 => array(3),    // Trampero: galos
+        41 => array(1)     // Abrevadero: romanos
+    );
+    return isset($locks[(int)$type]) ? $locks[(int)$type] : null;
+}
+
+/** ¿Esta tribu puede tener este edificio? Los que no son de tribu los puede tener cualquiera. */
+function tribeCanBuild($type, $tribe) {
+    $lock = buildingTribeLock($type);
+    return $lock === null || in_array((int)$tribe, $lock, true);
+}
+
+/**
  * Clase CSS del ícono de 16x16 de un edificio.
  *
  * El gpack activo trae `img/g/icon/gNIcon.gif` para casi todos, pero con la numeración

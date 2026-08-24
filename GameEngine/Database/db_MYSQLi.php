@@ -747,7 +747,14 @@
 							// Aldea de la Maravilla y la tomara se quedaba con una aldea marcada
 							// como escenario: sin manutención de tropas y a prueba de hambruna.
 							. ($this->ensureNpcVillageColumns() ? " destination.npckind = " . NPC_KIND_PLAYER . ", destination.npcupdate = 0," : "")
-							. " destination.loyalty = 33" . ($loyaltyClock === "" ? "" : ", destination.loyaltyupdate = " . time()) . ","
+							// Lealtad 0, como en el T4 oficial. La aldea acaba de caer justamente
+							// porque llegó a 0 y no vuelve a subir sola: la regeneración es 2/3 del
+							// nivel de la residencia/palacio por hora y ese edificio tuvo que estar
+							// derribado para poder conquistarla. Por eso lo primero que hace el
+							// conquistador es levantar una Residencia — hasta que la tenga, un solo
+							// administrador enemigo le devuelve el golpe. Acá había un 33 inventado
+							// que hacía falsamente segura la aldea recién tomada.
+							. " destination.loyalty = 0" . ($loyaltyClock === "" ? "" : ", destination.loyaltyupdate = " . time()) . ","
 							// La celebración se cancela junto con el cambio de dueño: iba en la
 							// misma escritura a propósito, porque si la fiesta sobrevive a la
 							// conquista los puntos de cultura que pagó el defensor se los acredita
@@ -771,7 +778,7 @@
 							return array('status' => 'no_chief');
 						}
 
-						// La guarnición que sobrevivió no cambia de bando: se disuelve.
+						// La guarnición que quedó adentro no cambia de bando: se disuelve.
 						//
 						// Antes el conquistador heredaba lo que quedara adentro. Con una aldea
 						// natar eso es directamente malo —te quedás con tropas de una tribu que
@@ -801,19 +808,159 @@
 							. " exp3 = IF(exp3 = $target,0,exp3)"
 							. " WHERE wref != $from AND (exp1 = $target OR exp2 = $target OR exp3 = $target)"
 						);
-						// Los oasis siguen a la aldea, así que cambian de dueño con ella.
-						$this->transferVillageOases($target, $attackerOwner);
+						// Ojo con lo que NO se limpia: los `exp` de la propia aldea tomada quedan
+						// como estaban. Es la regla oficial —"las aldeas fundadas o conquistadas
+						// por esa aldea siguen ocupando sus cupos de expansión"—, así que el dueño
+						// nuevo hereda una residencia con los cupos ya gastados.
+						//
+						// Todo lo demás que la aldea deja de tener (investigación, colas, mercado,
+						// listas de granjeo, tropas de viaje, edificios de tribu) va en una sola
+						// función para que no se pueda olvidar la mitad.
+						$this->conquestVillageCleanup($target, $attackerOwner, $defenderOwner);
 						$this->syncClimberPopulation($defenderOwner);
 						$this->syncClimberPopulation($attackerOwner);
 						return array(
 							'status' => 'conquered',
 							'old_loyalty' => $oldLoyalty,
-							'new_loyalty' => 33,
+							'new_loyalty' => 0,
 							'cleanup' => (bool)$cleanup
 						);
 					} finally {
 						mysqli_query($this->connection, "SELECT RELEASE_LOCK('$lockName')");
 					}
+				}
+
+				/**
+				 * Lo que una aldea pierde al cambiar de dueño por conquista.
+				 *
+				 * Son las reglas oficiales del T4, todas juntas acá para que agregar una no
+				 * signifique buscar el otro lugar donde había media limpieza:
+				 *
+				 *   - **Los edificios de tribu se caen** si el conquistador es de otra tribu
+				 *     (Cervecería, Trampero, Abrevadero). Con la misma tribu sobreviven. El
+				 *     muro se cae siempre, y eso ya lo hace el UPDATE de la conquista sobre
+				 *     `f40`, incluso reconquistando una aldea propia.
+				 *   - **La investigación se reinicia**: academia (`tdata` + la cola de
+				 *     `research`) y herrería (`abdata`). El dueño nuevo empieza de cero.
+				 *   - **Las colas se cancelan**: construcción, demolición y entrenamiento. Las
+				 *     tropas en cola son tropas de la aldea, y esas desaparecen.
+				 *   - **Las tropas de la aldea que estaban afuera desaparecen**: reforzando otra
+				 *     aldea o un oasis (`enforcement.from`), de viaje de ida (sort_type 3) o de
+				 *     vuelta (sort_type 4), y los colonos en camino (sort_type 5). El ataque que
+				 *     se está resolviendo es sort_type 3 con `to` = la aldea, así que ninguno de
+				 *     los tres lo alcanza.
+				 *   - **Lo del dueño viejo que seguiría funcionando solo** se borra: ofertas de
+				 *     mercado, rutas comerciales y listas de granjeo. Sin esto el conquistador
+				 *     heredaba la lista de objetivos del otro y sus rutas seguían mandándole
+				 *     recursos a las aldeas del enemigo.
+				 *
+				 * Los prisioneros, los oasis, la población y el héroe se resuelven desde
+				 * Automation, que es donde están las funciones que los saben devolver.
+				 */
+				function conquestVillageCleanup($target, $attackerOwner, $defenderOwner) {
+					$target = (int)$target;
+					$attackerOwner = (int)$attackerOwner;
+					$defenderOwner = (int)$defenderOwner;
+					if($target <= 0) {
+						return false;
+					}
+
+					// --- Edificios que el dueño nuevo no podría construir ---------------------
+					// La tribu se lee a mano y no con getUserField(), que muere con `or die()`
+					// si la columna no está: acá una lectura fallida tiene que dejar los
+					// edificios en paz, no derribarlos todos por tribu 0.
+					$attackerTribe = 0;
+					$tribeQuery = mysqli_query($this->connection,
+						"SELECT tribe FROM ".TB_PREFIX."users WHERE id = $attackerOwner LIMIT 1");
+					$tribeRow = $tribeQuery ? mysqli_fetch_assoc($tribeQuery) : false;
+					if($tribeRow && isset($tribeRow['tribe'])) {
+						$attackerTribe = (int)$tribeRow['tribe'];
+					}
+					$fields = $attackerTribe > 0 ? $this->getResourceLevel($target) : false;
+					if(is_array($fields)) {
+						$razed = array();
+						for($field = 19; $field <= 38; $field++) {
+							if(!isset($fields['f'.$field.'t'])) {
+								continue;
+							}
+							$type = (int)$fields['f'.$field.'t'];
+							if($type > 0 && !tribeCanBuild($type, $attackerTribe)) {
+								$razed[] = "f$field = 0";
+								$razed[] = "f{$field}t = 0";
+							}
+						}
+						if($razed) {
+							mysqli_query($this->connection,
+								"UPDATE ".TB_PREFIX."fdata SET ".implode(', ', $razed)." WHERE vref = $target");
+						}
+					}
+
+					// --- Investigación -------------------------------------------------------
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."research WHERE vref = $target");
+					$this->resetVillageColumns('tdata', 'vref', $target);
+					$this->resetVillageColumns('abdata', 'vref', $target);
+
+					// --- Colas ---------------------------------------------------------------
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."bdata WHERE wid = $target");
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."demolition WHERE vref = $target");
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."training WHERE vref = $target");
+
+					// --- Tropas de la aldea que estaban afuera --------------------------------
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."enforcement WHERE `from` = $target");
+					// Los colonos en camino tenían reservada su casilla del mapa: sin soltarla
+					// queda ocupada para siempre y nadie puede volver a fundar ahí.
+					$settlers = mysqli_query($this->connection,
+						"SELECT `to` FROM ".TB_PREFIX."movement WHERE sort_type = 5 AND `from` = $target");
+					while($settlers && $row = mysqli_fetch_assoc($settlers)) {
+						$this->releaseUninitializedSettlementClaim((int)$row['to']);
+					}
+					mysqli_query($this->connection,
+						"DELETE a FROM ".TB_PREFIX."attacks a "
+						."INNER JOIN ".TB_PREFIX."movement m ON m.ref = a.id "
+						."WHERE (m.sort_type = 3 AND m.`from` = $target) OR (m.sort_type = 4 AND m.`to` = $target)");
+					mysqli_query($this->connection,
+						"DELETE FROM ".TB_PREFIX."movement WHERE (sort_type = 3 AND `from` = $target)"
+						." OR (sort_type = 4 AND `to` = $target) OR (sort_type = 5 AND `from` = $target)");
+
+					// --- Lo que seguiría corriendo solo a nombre del dueño viejo --------------
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."market WHERE vref = $target");
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."route WHERE `from` = $target OR wid = $target");
+					mysqli_query($this->connection,
+						"DELETE r FROM ".TB_PREFIX."raidlist r "
+						."INNER JOIN ".TB_PREFIX."farmlist f ON f.id = r.lid WHERE f.wref = $target");
+					mysqli_query($this->connection, "DELETE FROM ".TB_PREFIX."farmlist WHERE wref = $target");
+
+					// La deuda de cereal del dueño anterior no se hereda.
+					mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX."vdata SET starv = 0, starvupdate = 0 WHERE wref = $target");
+					return true;
+				}
+
+				/**
+				 * Pone en 0 todas las columnas numéricas de una fila indexada por aldea.
+				 *
+				 * `tdata` (investigaciones de la academia) y `abdata` (mejoras de la herrería)
+				 * tienen una columna por unidad y la lista cambió más de una vez; leerla del
+				 * esquema evita que agregar una unidad deje una investigación sin reiniciar.
+				 */
+				private function resetVillageColumns($table, $key, $vref) {
+					$vref = (int)$vref;
+					$columns = mysqli_query($this->connection, "SHOW COLUMNS FROM ".TB_PREFIX.$table);
+					if(!$columns) {
+						return false;
+					}
+					$assignments = array();
+					while($column = mysqli_fetch_assoc($columns)) {
+						if($column['Field'] === $key) {
+							continue;
+						}
+						$assignments[] = "`".$column['Field']."` = 0";
+					}
+					if(!$assignments) {
+						return false;
+					}
+					return (bool)mysqli_query($this->connection,
+						"UPDATE ".TB_PREFIX.$table." SET ".implode(', ', $assignments)." WHERE `$key` = $vref");
 				}
 
 				function cleanupFailedSettlement($wid, $uid) {
@@ -3019,6 +3166,17 @@
         		return $this->mysqli_fetch_all($result);
         	}
 
+			/** La fila de `attacks` de un movimiento, con las bajas y las trampas ya descontadas. */
+			function getAttack($ref) {
+				$ref = (int)$ref;
+				if($ref <= 0) {
+					return false;
+				}
+				$result = mysqli_query($this->connection,
+					"SELECT * FROM " . TB_PREFIX . "attacks WHERE id = $ref LIMIT 1");
+				return $result ? mysqli_fetch_assoc($result) : false;
+			}
+
 			function getAlliAttacks($aid) {
         		$q = "SELECT * FROM " . TB_PREFIX . "ndata WHERE ally = $aid ORDER BY time DESC";
         	}
@@ -3195,6 +3353,23 @@
                 return isset($uprequire['time']) ? max(0,(int)$uprequire['time']) : 0;
             }
 
+			/**
+			 * Cerrojo por aldea de todo lo que demuele: lo toman tanto el pedido de una
+			 * demolición común como el derribo completo con oro, así que dos peticiones
+			 * simultáneas no pueden bajar niveles a la vez sobre la misma aldea.
+			 */
+			function acquireDemolitionLock($wid) {
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'demolition_'.(int)$wid);
+				$lock = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',2)");
+				$lockRow = $lock ? mysqli_fetch_row($lock) : false;
+				return $lockRow && (int)$lockRow[0] === 1;
+			}
+
+			function releaseDemolitionLock($wid) {
+				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'demolition_'.(int)$wid);
+				return mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+			}
+
         	function addDemolition($wid, $field) {
 				global $building;
 				$wid = (int)$wid;
@@ -3202,10 +3377,7 @@
 				if($wid <= 0 || $field < 19 || $field > 40 || !is_object($building)) {
 					return false;
 				}
-				$lockName = mysqli_real_escape_string($this->connection,TB_PREFIX.'demolition_'.$wid);
-				$lock = mysqli_query($this->connection,"SELECT GET_LOCK('$lockName',2)");
-				$lockRow = $lock ? mysqli_fetch_row($lock) : false;
-				if(!$lockRow || (int)$lockRow[0] !== 1) {
+				if(!$this->acquireDemolitionLock($wid)) {
 					return false;
 				}
 				try {
@@ -3231,7 +3403,7 @@
 					$q = "INSERT INTO ".TB_PREFIX."demolition (vref,buildnumber,lvl,timetofinish) VALUES ($wid,$field,".($level-1).",$finish)";
 					return mysqli_query($this->connection,$q);
 				} finally {
-					mysqli_query($this->connection,"SELECT RELEASE_LOCK('$lockName')");
+					$this->releaseDemolitionLock($wid);
 				}
         	}
 
@@ -3571,18 +3743,46 @@
         	Function to retrieve used merchant
         	References: Village
         	***************************/
-        	function totalMerchantUsed($vid) {
-        		$time = time();
+        	/**
+        	 * Mercaderes de la aldea que estan en el camino: los que llevan una carga
+        	 * (sort_type 0) y los que vuelven de dejarla (sort_type 2). Ambos numeros son
+        	 * los que se fijaron al salir y no se recalculan.
+        	 *
+        	 * Las ofertas publicadas NO estan aca: ocupan mercaderes segun la capacidad de
+        	 * hoy y se cuentan en Automation::offerMerchantsCommitted(). Sumar las dos
+        	 * partes es Automation::merchantsBusy(), que es lo que hay que llamar — esta
+        	 * funcion se llamaba totalMerchantUsed() y devolvia el total; se le cambio el
+        	 * nombre a proposito para que cualquier lugar que no se haya actualizado falle
+        	 * en vez de contar de menos en silencio.
+        	 */
+        	function travelingMerchants($vid) {
+        		$vid = (int)$vid;
         		$q = "SELECT sum(" . TB_PREFIX . "send.merchant) from " . TB_PREFIX . "send, " . TB_PREFIX . "movement where " . TB_PREFIX . "movement.from = $vid and " . TB_PREFIX . "send.id = " . TB_PREFIX . "movement.ref and " . TB_PREFIX . "movement.proc = 0 and sort_type = 0";
         		$result = mysqli_query($this->connection,$q);
         		$row = mysqli_fetch_row($result);
         		$q2 = "SELECT sum(ref) from " . TB_PREFIX . "movement where sort_type = 2 and " . TB_PREFIX . "movement.to = $vid and proc = 0";
         		$result2 = mysqli_query($this->connection,$q2);
         		$row2 = mysqli_fetch_row($result2);
-        		$q3 = "SELECT sum(merchant) from " . TB_PREFIX . "market where vref = $vid and accept = 0";
-        		$result3 = mysqli_query($this->connection,$q3);
-        		$row3 = mysqli_fetch_row($result3);
-        		return $row[0] + $row2[0] + $row3[0];
+        		return $row[0] + $row2[0];
+        	}
+
+        	/**
+        	 * Lo ofrecido en cada oferta publicada y todavia sin aceptar de la aldea. Es
+        	 * una fila por oferta y no la suma, porque los mercaderes se redondean por
+        	 * oferta: dos ofertas de 600 con capacidad 1000 son dos mercaderes, no uno.
+        	 */
+        	function openOfferAmounts($vid) {
+        		$vid = (int)$vid;
+        		$amounts = array();
+        		$q = "SELECT gamt from " . TB_PREFIX . "market where vref = $vid and accept = 0";
+        		$result = mysqli_query($this->connection,$q);
+        		if(!$result) {
+        			return $amounts;
+        		}
+        		while($row = mysqli_fetch_row($result)) {
+        			$amounts[] = (int)$row[0];
+        		}
+        		return $amounts;
         	}
 
 			function getOrdinaryTroopReturnsInWindow($village, $windowStart, $windowEnd) {
@@ -5394,6 +5594,12 @@ break;
 			 * a la misma aldea, pero `owner` tiene que seguir al jugador: es la columna
 			 * que decide a quién le llegan los informes de defensa del oasis, quién
 			 * figura como propietario en el mapa y quién lo ve en la Mansión del Héroe.
+			 *
+			 * La conquista NO pasa por acá: en el T4 oficial los oasis anexados quedan
+			 * libres cuando la aldea cambia de dueño, y de eso se encarga
+			 * `Automation::releaseVillageOasesSafely()`. Esta función queda para los
+			 * traspasos administrativos, donde la aldea sigue siendo la misma y sólo
+			 * cambia la cuenta.
 			 */
 			function transferVillageOases($vref, $newOwner) {
                 $vref = (int)$vref;

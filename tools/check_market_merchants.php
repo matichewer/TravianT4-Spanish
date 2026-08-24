@@ -52,12 +52,17 @@ $merchantsTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_merchant
 // ---------------------------------------------------------------------------
 section('A. Ocupados = de viaje o esperando en una oferta');
 // ---------------------------------------------------------------------------
-check(strpos($marketSource,'$this->used = (int)$database->totalMerchantUsed($village->wid);') !== false,
+check(strpos($marketSource,'$this->used = Automation::merchantsBusy($village->wid,$this->maxcarry);') !== false,
 	'loadMarket() cuenta como ocupados sólo los movimientos y las ofertas publicadas');
 check(strpos($marketSource,'+ $this->routeMerchantsCommitted()') === false,
 	'las rutas ya no se suman a los mercaderes ocupados');
-check(preg_match('/function totalMerchantUsed\(\$vid\).*?sort_type = 0.*?sort_type = 2.*?market where vref = \$vid and accept = 0/s',$dbSource) === 1,
-	'totalMerchantUsed() suma envíos en curso, regresos y ofertas publicadas');
+check(preg_match('/function travelingMerchants\(\$vid\).*?sort_type = 0.*?sort_type = 2/s',$dbSource) === 1,
+	'travelingMerchants() suma los envíos en curso y los regresos');
+check(strpos($dbSource,'function totalMerchantUsed(') === false,
+	'ya no existe totalMerchantUsed(): cualquier llamada vieja falla en vez de contar de menos en silencio');
+check(strpos($automationSource,'public static function merchantsBusy($vid, $carryCapacity)') !== false
+	&& strpos($automationSource,'(int)$database->travelingMerchants($vid) + self::offerMerchantsCommitted($vid, $carryCapacity)') !== false,
+	'merchantsBusy() es la única suma de "de viaje" + "esperando en una oferta"');
 check(strpos($marketSource,'return max(0,$this->merchant - $this->used);') !== false,
 	'merchantAvail() nunca devuelve un número negativo');
 
@@ -165,14 +170,19 @@ check(strpos($automationSource,'public static function marketMerchants($marketLe
 	'existe marketMerchants(), única traducción de nivel de Mercado a mercaderes');
 check(strpos($automationSource,'return (int)$bid17[min($marketLevel, count($bid17))][\'attri\'];') !== false,
 	'marketMerchants() sale de bid17 y recorta el nivel a la tabla (un nivel fuera de rango dejaba el Mercado inservible)');
-check(strpos($automationSource,'self::marketMerchants($this->getTypeLevel(17, $from)) - (int)$database->totalMerchantUsed($from)') !== false,
+check(strpos($automationSource,'self::marketMerchants($this->getTypeLevel(17, $from)) - self::merchantsBusy($from, $maxcarry2)') !== false,
 	'sendResource2() saca los mercaderes de la tabla y no del nivel del Mercado');
+// La capacidad tiene que calcularse ANTES: merchantsBusy() la necesita para las ofertas.
+check(strpos($automationSource,"\$maxcarry2 = self::merchantCarryCapacity(\$tribe, \$this->getTypeLevel(28, \$from));\n        \$merchantAvail2") !== false,
+	'sendResource2() calcula la capacidad antes de contar los mercaderes ocupados');
 check(strpos($marketSource,'$this->merchant = Automation::marketMerchants($building->getTypeLevel(17));') !== false,
 	'loadMarket() usa el mismo helper que el envío automático');
 foreach(array('Templates/dorf3/1.tpl','Templates/dorf3/2.tpl') as $resumen) {
 	$source = file_get_contents(dirname(__DIR__).'/'.$resumen);
 	check(strpos($source,'Automation::marketMerchants($building->getTypeLevel(17,$vid))') !== false,
 		$resumen.' cuenta los mercaderes con el helper, no con el nivel del edificio');
+	check(strpos($source,'Automation::merchantsBusy($vid,') !== false,
+		$resumen.' descuenta los ocupados con el mismo helper que el Mercado');
 }
 
 echo "\n";

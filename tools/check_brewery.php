@@ -206,8 +206,15 @@ check($building->canBuild(22, 35) === 1,
 // La vista tiene que ofrecer exactamente lo mismo que valida el servidor.
 check(strpos($availablePhp, '$session->tribe == 2 && $village->capital == 1 && !$database->getBuildList(35) && $brewery == 0 && $rallypoint >= 10 && $granary == 20') !== false,
 	'avaliable.tpl ofrece la Cervecería con los mismos requisitos que meetRequirement()');
-check(preg_match('/case 35:\s*return \$tribe === 2 && \(int\)\$village->capital === 1;/', $buildingPhp) === 1,
-	'isTribeBuildingAllowed() sigue atando la Cervecería a germanos y a la capital');
+// La mitad "germana" vive en buildingTribeLock() (Catapult.php), que es la lista que
+// comparte con la conquista para decidir qué edificios se caen al cambiar de tribu la
+// aldea; la mitad "capital" se queda en Building.php porque no depende de la tribu.
+check(buildingTribeLock(35) === array(2),
+	'buildingTribeLock() sigue atando la Cervecería a los germanos');
+check(!tribeCanBuild(35, 1) && !tribeCanBuild(35, 3) && tribeCanBuild(35, 2),
+	'sólo un germano puede tener Cervecería');
+check(preg_match('/if\(\(int\)\$tid === 35\) \{\s*return \(int\)\$village->capital === 1;/', $buildingPhp) === 1,
+	'isTribeBuildingAllowed() sigue atando la Cervecería a la capital');
 
 // ---------------------------------------------------------------------------
 section('C. Las guardas del servidor en brewery.php');

@@ -19,7 +19,9 @@
 		// comprometidos en rutas hacia que la misma aldea mostrara "12/20" en el resumen
 		// y "20/20" en el Mercado; las rutas no ocupan a nadie hasta que salen.
 		$totalmerchants = Automation::marketMerchants($building->getTypeLevel(17,$vid));
-		$availmerchants = max(0,$totalmerchants - (int)$database->totalMerchantUsed($vid));
+		// Las ofertas publicadas apartan mercaderes segun la capacidad de HOY, asi que hace
+		// falta la de esta aldea (su Oficina de comercio) para contarlas igual que el Mercado.
+		$availmerchants = max(0,$totalmerchants - Automation::merchantsBusy($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid))));
 		$incoming_attacks = $database->getMovement(3,$vid,1);
 		$bui = '<span class="none">-</span>';
 		$tro = '<span class="none">-</span>';

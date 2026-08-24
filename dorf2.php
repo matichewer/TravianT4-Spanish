@@ -53,7 +53,7 @@ include "Templates/html.tpl";
 						<div id="content" class="village2">
 <?php
 include("Templates/dorf2.tpl");
-if($building->NewBuilding) {
+if($building->NewBuilding || $building->demolitionInProgress() !== null) {
 	include("Templates/Building.tpl");
 }
 include("Templates/build_notifications.tpl");

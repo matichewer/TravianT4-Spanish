@@ -17,7 +17,7 @@ $u5=array('atk'=>120,'di'=>65,'dc'=>50,'wood'=>550,'clay'=>440,'iron'=>320,'crop
 $u6=array('atk'=>180,'di'=>80,'dc'=>105,'wood'=>550,'clay'=>640,'iron'=>800,'crop'=>180,'pop'=>4,'speed'=>10,'time'=>3520,'cap'=>70);
 $u7=array('atk'=>60,'di'=>30,'dc'=>75,'wood'=>900,'clay'=>360,'iron'=>500,'crop'=>70,'pop'=>3,'speed'=>4,'time'=>4600,'cap'=>0);
 $u8=array('atk'=>75,'di'=>60,'dc'=>10,'wood'=>950,'clay'=>1350,'iron'=>600,'crop'=>90,'pop'=>6,'speed'=>3,'time'=>9000,'cap'=>0);
-$u9=array('atk'=>50,'di'=>40,'dc'=>30,'wood'=>30750,'clay'=>27200,'iron'=>45000,'crop'=>37500,'pop'=>5,'speed'=>5,'time'=>90700,'cap'=>0);
+$u9=array('atk'=>50,'di'=>40,'dc'=>30,'wood'=>30750,'clay'=>27200,'iron'=>45000,'crop'=>37500,'pop'=>5,'speed'=>4,'time'=>90700,'cap'=>0);
 $u10=array('atk'=>0,'di'=>80,'dc'=>80,'wood'=>5800,'clay'=>5300,'iron'=>7200,'crop'=>5500,'pop'=>1,'speed'=>5,'time'=>26900,'cap'=>3000);
 $u11=array('atk'=>40,'di'=>20,'dc'=>5,'wood'=>95,'clay'=>75,'iron'=>40,'crop'=>40,'pop'=>1,'speed'=>7,'time'=>720,'cap'=>60);
 $u12=array('atk'=>10,'di'=>35,'dc'=>60,'wood'=>145,'clay'=>70,'iron'=>85,'crop'=>40,'pop'=>1,'speed'=>7,'time'=>1120,'cap'=>40);
@@ -27,7 +27,7 @@ $u15=array('atk'=>55,'di'=>100,'dc'=>40,'wood'=>370,'clay'=>270,'iron'=>290,'cro
 $u16=array('atk'=>150,'di'=>50,'dc'=>75,'wood'=>450,'clay'=>515,'iron'=>480,'crop'=>80,'pop'=>3,'speed'=>9,'time'=>2960,'cap'=>80);
 $u17=array('atk'=>65,'di'=>30,'dc'=>80,'wood'=>1000,'clay'=>300,'iron'=>350,'crop'=>70,'pop'=>3,'speed'=>4,'time'=>4200,'cap'=>0);
 $u18=array('atk'=>50,'di'=>60,'dc'=>10,'wood'=>900,'clay'=>1200,'iron'=>600,'crop'=>60,'pop'=>6,'speed'=>3,'time'=>9000,'cap'=>0);
-$u19=array('atk'=>40,'di'=>60,'dc'=>40,'wood'=>35500,'clay'=>26600,'iron'=>25000,'crop'=>27200,'pop'=>4,'speed'=>5,'time'=>70500,'cap'=>0);
+$u19=array('atk'=>40,'di'=>60,'dc'=>40,'wood'=>35500,'clay'=>26600,'iron'=>25000,'crop'=>27200,'pop'=>4,'speed'=>4,'time'=>70500,'cap'=>0);
 $u20=array('atk'=>10,'di'=>80,'dc'=>80,'wood'=>7200,'clay'=>5500,'iron'=>5800,'crop'=>6500,'pop'=>1,'speed'=>5,'time'=>31000,'cap'=>3000);
 $u21=array('atk'=>15,'di'=>40,'dc'=>50,'wood'=>100,'clay'=>130,'iron'=>55,'crop'=>30,'pop'=>1,'speed'=>7,'time'=>1040,'cap'=>35);
 $u22=array('atk'=>65,'di'=>35,'dc'=>20,'wood'=>140,'clay'=>150,'iron'=>185,'crop'=>60,'pop'=>1,'speed'=>6,'time'=>1440,'cap'=>45);
@@ -37,7 +37,7 @@ $u25=array('atk'=>45,'di'=>115,'dc'=>55,'wood'=>360,'clay'=>330,'iron'=>280,'cro
 $u26=array('atk'=>140,'di'=>50,'dc'=>165,'wood'=>500,'clay'=>620,'iron'=>675,'crop'=>170,'pop'=>3,'speed'=>13,'time'=>3120,'cap'=>65);
 $u27=array('atk'=>50,'di'=>30,'dc'=>105,'wood'=>950,'clay'=>555,'iron'=>330,'crop'=>75,'pop'=>3,'speed'=>4,'time'=>5000,'cap'=>0);
 $u28=array('atk'=>70,'di'=>45,'dc'=>10,'wood'=>960,'clay'=>1450,'iron'=>630,'crop'=>90,'pop'=>6,'speed'=>3,'time'=>9000,'cap'=>0);
-$u29=array('atk'=>40,'di'=>50,'dc'=>50,'wood'=>30750,'clay'=>45400,'iron'=>31000,'crop'=>37500,'pop'=>4,'speed'=>4,'time'=>90700,'cap'=>0);
+$u29=array('atk'=>40,'di'=>50,'dc'=>50,'wood'=>30750,'clay'=>45400,'iron'=>31000,'crop'=>37500,'pop'=>4,'speed'=>5,'time'=>90700,'cap'=>0);
 $u30=array('atk'=>0,'di'=>80,'dc'=>80,'wood'=>5500,'clay'=>7000,'iron'=>5300,'crop'=>4900,'pop'=>1,'speed'=>5,'time'=>22700,'cap'=>3000);
 $u31=array('atk'=>10,'di'=>25,'dc'=>20,'wood'=>85,'clay'=>75,'iron'=>120,'crop'=>25,'speed'=>7,'pop'=>1,'time'=>1600,'cap'=>45);
 $u32=array('atk'=>20,'di'=>35,'dc'=>40,'wood'=>125,'clay'=>130,'iron'=>60,'crop'=>40,'speed'=>7,'pop'=>1,'time'=>1800,'cap'=>65);

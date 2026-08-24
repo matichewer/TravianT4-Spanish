@@ -55,7 +55,7 @@ include "Templates/html.tpl";
 <?php
 include("Templates/field.tpl");
 $timer = 1;
-if($building->NewBuilding) {
+if($building->NewBuilding || $building->demolitionInProgress() !== null) {
 	include("Templates/Building.tpl");
 }
 include("Templates/build_notifications.tpl");

@@ -17,7 +17,9 @@ foreach($varray as $vil){
 	// comprometidos en rutas hacia que la misma aldea mostrara "12/20" en el resumen y
 	// "20/20" en el Mercado; las rutas no ocupan a nadie hasta que salen.
 	$totalmerchants = Automation::marketMerchants($building->getTypeLevel(17,$vid));
-	$availmerchants = max(0,$totalmerchants - (int)$database->totalMerchantUsed($vid));
+	// Las ofertas publicadas apartan mercaderes segun la capacidad de HOY, asi que hace
+	// falta la de esta aldea (su Oficina de comercio) para contarlas igual que el Mercado.
+	$availmerchants = max(0,$totalmerchants - Automation::merchantsBusy($vid,Automation::merchantCarryCapacity($session->tribe,$building->getTypeLevel(28,$vid))));
 	if($vdata['wood'] > $vdata['maxstore']) { $wood = $vdata['maxstore']; } else { $wood = $vdata['wood']; }
 	if($vdata['clay'] > $vdata['maxstore']) { $clay = $vdata['maxstore']; } else { $clay = $vdata['clay']; }
 	if($vdata['iron'] > $vdata['maxstore']) { $iron = $vdata['maxstore']; } else { $iron = $vdata['iron']; }
