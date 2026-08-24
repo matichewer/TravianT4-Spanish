@@ -87,6 +87,22 @@ catapultAssert(catapultNormalizeTarget(15, 10) === 15, 'acepta un objetivo desbl
 catapultAssert(catapultNormalizeTarget(23, 20) === 0, 'el escondite sólo puede recibir impactos aleatorios');
 catapultAssert(catapultNormalizeTarget(42, 10) === 42, 'permite seleccionar el Gran taller');
 
+// El segundo objetivo pide las dos condiciones del oficial: la Plaza en 20 y 20
+// catapultas en el ataque. Faltaba la segunda, así que la plaza sola partía la potencia.
+catapultAssert(catapultSecondTargetMinimum() === 20, 'el segundo objetivo pide 20 catapultas');
+catapultAssert(
+    catapultSecondTargetAllowed(20, 20) === true,
+    'con plaza 20 y 20 catapultas se habilita el segundo objetivo'
+);
+catapultAssert(
+    catapultSecondTargetAllowed(20, 19) === false,
+    '19 catapultas no alcanzan aunque la plaza esté al máximo'
+);
+catapultAssert(
+    catapultSecondTargetAllowed(19, 100) === false,
+    'y una plaza de nivel 19 no lo habilita por muchas catapultas que vayan'
+);
+
 $firing = $battle->calculateSiegeFiring(100, 0.25, 1000, 500);
 catapultAssert(is_finite($firing) && $firing > 0 && $firing < 75, 'calcula potencia de disparo finita tras las bajas');
 catapultAssert(

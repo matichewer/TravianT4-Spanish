@@ -248,7 +248,7 @@ if($canMoveHome){
                             } ?>
                         </select>
 
-            <?php if($building->getTypeLevel(16) == 20) { ?>
+            <?php if(catapultSecondTargetAllowed($building->getTypeLevel(16), $t8)) { ?>
                      <select name="ctar2" class="dropdown">
                 <option value="0">-</option>
                 <option value="99">Aleatorio</option>

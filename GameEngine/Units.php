@@ -594,7 +594,8 @@ class Units {
 		$post['ctar1'] = $hasCatapults
 			? $this->normalizeCatapultTarget(isset($post['ctar1']) ? $post['ctar1'] : 0)
 			: 0;
-		$post['ctar2'] = $hasCatapults && $building->getTypeLevel(16) >= 20
+		$post['ctar2'] = $hasCatapults
+			&& catapultSecondTargetAllowed($building->getTypeLevel(16), $data['u8'])
 			? $this->normalizeCatapultTarget(isset($post['ctar2']) ? $post['ctar2'] : 0, true)
 			: 0;
         // El valor llega crudo desde $_POST y termina interpolado en el INSERT de

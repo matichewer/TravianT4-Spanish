@@ -184,6 +184,23 @@ function catapultTargetCatalog() {
     return $catalog;
 }
 
+/**
+ * Cuántas catapultas hay que llevar para poder partir el disparo en dos objetivos.
+ *
+ * El oficial pide las dos condiciones a la vez: Plaza de reuniones 20 **y** 20 catapultas
+ * en el ataque. Acá alcanzaba con el edificio, así que con la plaza al máximo tres
+ * catapultas ya dividían la potencia entre dos objetivos. Es peor para el atacante
+ * —cada mitad rara vez alcanza para tirar un nivel— pero no es la regla.
+ */
+function catapultSecondTargetMinimum() {
+    return 20;
+}
+
+/** Única definición de "este ataque puede elegir un segundo objetivo". */
+function catapultSecondTargetAllowed($rallyPointLevel, $catapultCount) {
+    return (int)$rallyPointLevel >= 20 && (int)$catapultCount >= catapultSecondTargetMinimum();
+}
+
 function catapultNormalizeTarget($value, $rallyPointLevel, $allowSecondRandom = false) {
     if(!is_scalar($value) || !is_numeric($value)) return 0;
     $target = (int)$value;
