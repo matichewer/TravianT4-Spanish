@@ -958,6 +958,22 @@ class Battle {
 		return $outcome;
 	}
 
+	/**
+	 * El multiplicador de espionaje de una aldea, o 1 si no tiene el artefacto activo.
+	 *
+	 * Vive acá y no en el motor porque la resolución del espionaje es de Battle y porque
+	 * el simulador (`simulate()`) NO lo aplica a propósito: el simulador no sabe de qué
+	 * aldea sale el ataque, así que anunciaría un resultado que la batalla real no da.
+	 */
+	private function battleScoutingArtefact($villageId, $ownerId) {
+		global $database;
+		if(!is_object($database) || !method_exists($database, 'getArtefactEffectValue')) {
+			return 1.0;
+		}
+		$value = (float)$database->getArtefactEffectValue((int)$villageId, (int)$ownerId, ARTEFACT_EAGLE);
+		return $value > 0 ? $value : 1.0;
+	}
+
 	// 1 = scouting, 3 = normal attack, 4 = raid
 	function calculateBattle($Attacker, $Defender, $def_wall, $att_tribe, $def_tribe, $residence, $attpop, $defpop, $type, $def_ab, $att_ab, $tblevel, $stonemason, $walllevel = 0, $AttackerID = 0, $DefenderID = 0, $AttackerWref = 0, $DefenderWref = 0) {
 		global $bid34, $database;
@@ -1189,6 +1205,12 @@ class Battle {
 		}
 
 		if((int)$type === 1) {
+			// Los ojos del águila multiplican la eficacia de los exploradores (x5 el
+			// pequeño, x3 el grande, x10 el único) y valen para los dos lados: el
+			// oficial dice explícitamente "incluidos los que defienden la aldea". Este
+			// efecto no estaba implementado en ningún lado.
+			$attackerScout *= $this->battleScoutingArtefact($AttackerWref, $AttackerID);
+			$defenderScout *= $this->battleScoutingArtefact($DefenderWref, $DefenderID);
 			$result['Attack_points'] = $attackerScout;
 			$result['Defend_points'] = $defenderScout;
 			$result['Winner'] = $attackerScout > $defenderScout ? 'attacker' : 'defender';

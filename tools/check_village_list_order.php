@@ -60,7 +60,10 @@ $tmp = array(
 	"CREATE TEMPORARY TABLE {$prefix}fdata (vref int NOT NULL, ".implode(', ', $fdataParts).",
 		PRIMARY KEY(vref)) ENGINE=MyISAM",
 	"CREATE TEMPORARY TABLE {$prefix}attacks (id int NOT NULL, t9 int NOT NULL DEFAULT 0, PRIMARY KEY(id)) ENGINE=MyISAM",
-	"CREATE TEMPORARY TABLE {$prefix}artefacts (vref int NOT NULL, owner int NOT NULL, PRIMARY KEY(vref)) ENGINE=MyISAM",
+	// `conquered` es la fecha de captura: la conquista la reinicia en la misma escritura
+	// que cambia el dueño del artefacto, así que el doble tiene que traerla o el UPDATE
+	// entero falla y la conquista se reporta como error de base de datos.
+	"CREATE TEMPORARY TABLE {$prefix}artefacts (vref int NOT NULL, owner int NOT NULL, conquered int NOT NULL DEFAULT 0, PRIMARY KEY(vref)) ENGINE=MyISAM",
 	"CREATE TEMPORARY TABLE {$prefix}users (id int NOT NULL, cp int NOT NULL DEFAULT 0, PRIMARY KEY(id)) ENGINE=MyISAM"
 );
 foreach($tmp as $q) {

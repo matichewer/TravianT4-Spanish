@@ -37,6 +37,7 @@ if(!function_exists('mysql_fetch_assoc')) {
 	}
 }
 
+require_once dirname(__DIR__).'/GameEngine/Artefact.php';
 require dirname(__DIR__).'/GameEngine/Data/unitdata.php';
 require dirname(__DIR__).'/GameEngine/Data/buidata.php';
 require dirname(__DIR__).'/GameEngine/Technology.php';
@@ -90,8 +91,14 @@ class TrainingDatabaseStub {
 
 	public $artefacts = array();
 
-	public function getActiveArtefactsByType($wid,$uid,$type) {
-		return (int)$type === 5 ? $this->artefacts : array();
+	public function getArtefactsByOwner($owner) { return $this->artefacts; }
+
+	public function getActiveArtefactsByOwner($owner) {
+		return artefactActiveRows($this->getArtefactsByOwner($owner));
+	}
+
+	public function getArtefactEffectValue($vref,$owner,$type) {
+		return artefactVillageEffectValue($this->getActiveArtefactsByOwner($owner), $type, $vref);
 	}
 
 	public function getHeroData($uid) { return $this->hero; }
@@ -232,25 +239,50 @@ trainingAssert(
 $database->wearHelmet(0);
 $building->levels[41] = 0;
 
-// El artefacto de entrenamiento aplica a los tres edificios, no solo al taller.
-$database->artefacts = array(array('size' => 2));
-trainingAssert(
-	queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],0.25),
-	'el cuartel no descontó el artefacto de entrenamiento'
+// El artefacto del entrenador aplica a los tres edificios, no solo al taller, y su
+// tabla es la oficial: 1/2 el pequeño y el único, 3/4 el grande. Acá el grande valía
+// 0,25 —cuatro veces más rápido, el más fuerte de los tres— y el checker lo pinaba.
+$trainerFactors = array(
+	1 => array(0.5,  'pequeño (aldea)'),
+	2 => array(0.75, 'grande (cuenta)'),
+	3 => array(0.5,  'único (cuenta)')
 );
-trainingAssert(
-	queuedTime(4,20,20,5) === expectedTime($u4['time'],$bid20[5]['attri'],0.25),
-	'el establo no descontó el artefacto de entrenamiento'
-);
-trainingAssert(
-	queuedTime(7,20,21,5) === expectedTime($u7['time'],$bid21[5]['attri'],0.25),
-	'el taller no descontó el artefacto de entrenamiento'
-);
+foreach($trainerFactors as $size => $expected) {
+	list($factor,$label) = $expected;
+	$database->artefacts = array(array(
+		'id' => 1, 'vref' => 100, 'owner' => 3,
+		'type' => ARTEFACT_TRAINER, 'size' => $size, 'conquered' => 0
+	));
+	trainingAssert(
+		queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],$factor),
+		'el cuartel no descontó el artefacto de entrenamiento '.$label
+	);
+	trainingAssert(
+		queuedTime(4,20,20,5) === expectedTime($u4['time'],$bid20[5]['attri'],$factor),
+		'el establo no descontó el artefacto de entrenamiento '.$label
+	);
+	trainingAssert(
+		queuedTime(7,20,21,5) === expectedTime($u7['time'],$bid21[5]['attri'],$factor),
+		'el taller no descontó el artefacto de entrenamiento '.$label
+	);
+}
+
+// Un artefacto recién capturado todavía no hace nada: el retardo de activación primero.
+$database->artefacts = array(array(
+	'id' => 1, 'vref' => 100, 'owner' => 3,
+	'type' => ARTEFACT_TRAINER, 'size' => 1, 'conquered' => time()
+));
+trainingAssert(queuedTime(1,20,19,5) === $barracksBase,
+	'un artefacto sin activar ya aceleraba el entrenamiento');
 
 // Artefacto y casco se acumulan.
+$database->artefacts = array(array(
+	'id' => 1, 'vref' => 100, 'owner' => 3,
+	'type' => ARTEFACT_TRAINER, 'size' => 1, 'conquered' => 0
+));
 $database->wearHelmet(15);
 trainingAssert(
-	queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],0.25 * 0.80),
+	queuedTime(1,20,19,5) === expectedTime($u1['time'],$bid19[5]['attri'],0.5 * 0.80),
 	'el artefacto y el casco de cuartel no se acumularon'
 );
 $database->wearHelmet(0);

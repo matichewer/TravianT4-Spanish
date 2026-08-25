@@ -12,6 +12,9 @@ require_once __DIR__.'/Hero.php';
 require_once __DIR__.'/GeneratorX.php';
 require_once __DIR__.'/Production.php';
 require_once __DIR__.'/Catapult.php';
+// Los artefactos. Se declara acá además de en Database.php por lo mismo que Accounts.php:
+// hay checkers que cargan Automation con un doble de la capa de datos.
+require_once __DIR__.'/Artefact.php';
 
 class Automation {
 
@@ -173,8 +176,22 @@ class Automation {
         if(isPlayerAccount($owner) && count($database->getProfileVillages($owner)) === 1) {
             return false;
         }
+        // Una aldea que guarda un artefacto NO desaparece del mapa aunque la dejen en
+        // cero habitantes: es la regla oficial, y es la única que evita el estado
+        // absurdo al que llevaba borrarla. Nada limpiaba `artefacts`, así que la fila
+        // quedaba apuntando a una aldea inexistente: el artefacto seguía haciendo
+        // efecto, seguía figurando en la lista del Tesoro y ya no había forma de
+        // robarlo, porque no quedaba aldea a la que atacar.
+        if(method_exists($database, 'villageHoldsArtefact') && $database->villageHoldsArtefact($villageId)) {
+            return false;
+        }
 
-        $database->query("DELETE FROM ".TB_PREFIX."abdata WHERE wref = ".$villageId);
+        // `abdata` se indexa por `vref`, no por `wref`: el DELETE fallaba en silencio
+        // —el shim legacy devuelve false y nadie lo mira— y dejaba la fila de mejoras de
+        // herrería viva. Como `wref` es el id de la casilla del mapa y generateBase()
+        // reutiliza casillas libres, la próxima aldea fundada ahí heredaba las mejoras
+        // del dueño anterior. En este mundo habia 88 filas asi.
+        $database->query("DELETE FROM ".TB_PREFIX."abdata WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."bdata WHERE wid = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."enforcement WHERE vref = ".$villageId);
         $database->query("DELETE FROM ".TB_PREFIX."fdata WHERE vref = ".$villageId);
@@ -253,19 +270,16 @@ class Automation {
         if($slot >= 19 && (int)$stonemasonLevel > 0 && isset($bid34[(int)$stonemasonLevel]['attri'])) {
             $durability = max(1, (float)$bid34[(int)$stonemasonLevel]['attri'] / 100);
         }
-        if(method_exists($database,'getActiveArtefactsByType')) {
-            $artefacts = $database->getActiveArtefactsByType(
-                (int)$villageId,
-                isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
-                1
-            );
-            $artefactDurability = 1;
-            foreach($artefacts as $artefact) {
-                $size = (int)$artefact['size'];
-                $artefactDurability = max($artefactDurability,$size === 1 ? 4 : ($size === 2 ? 3 : 5));
-            }
-            $durability *= $artefactDurability;
-        }
+        // El secreto del arquitecto multiplica la durabilidad de los edificios del
+        // DEFENSOR (x4 el pequeño, x3 el grande, x5 el único), encima del taller de
+        // cantería. El valor sale de la tabla oficial en Artefact.php; acá estaba escrito
+        // a mano y, sobre todo, la consulta pedía una columna inexistente y devolvía
+        // siempre vacío, así que ningún artefacto protegía nada.
+        $durability *= $this->artefactValue(
+            (int)$villageId,
+            isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
+            ARTEFACT_ARCHITECT
+        );
         $outcome = $battle->calculateSiegeOutcome(
             $firingPower,
             $oldLevel,
@@ -329,20 +343,22 @@ class Automation {
             $secondTarget = 0;
         }
         global $database;
-        if(method_exists($database,'getActiveArtefactsByType')) {
-            $confusion = $database->getActiveArtefactsByType(
-                (int)$data['to'],
-                isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
-                7
-            );
-            foreach($confusion as $artefact) {
-                $unique = (int)$artefact['size'] === 3;
-                if($firstTarget !== 40 && ($unique || $firstTarget !== 27)) {
-                    $firstTarget = 0;
-                }
-                if($secondTarget !== 40 && ($unique || $secondTarget !== 27)) {
-                    $secondTarget = 0;
-                }
+        // La confusión del rival obliga a las catapultas enemigas a disparar al azar. El
+        // Tesoro y la Maravilla se siguen pudiendo apuntar; con el artefacto único, el
+        // Tesoro tampoco. El necio puede estar imitando este efecto, así que la fila sale
+        // del mismo resolvedor que todo lo demás y no de una consulta propia.
+        $confusion = $this->artefactRow(
+            (int)$data['to'],
+            isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
+            ARTEFACT_CONFUSION
+        );
+        if($confusion !== null) {
+            $unique = (int)$confusion['size'] === ARTEFACT_SIZE_UNIQUE;
+            if($firstTarget !== 40 && ($unique || $firstTarget !== 27)) {
+                $firstTarget = 0;
+            }
+            if($secondTarget !== 40 && ($unique || $secondTarget !== 27)) {
+                $secondTarget = 0;
             }
         }
 
@@ -508,6 +524,27 @@ class Automation {
                 : 0;
         }
         return $payload;
+    }
+
+    /**
+     * El artefacto activo que manda sobre una aldea para un tipo de efecto, o null.
+     *
+     * Los dos envoltorios existen para que el motor no tenga que preguntar por
+     * `method_exists()` en cada punto de uso: los checkers que traen un doble de la capa
+     * de datos sin estos métodos siguen recibiendo el valor neutro en vez de un fatal.
+     */
+    private function artefactRow($villageId, $owner, $type) {
+        global $database;
+        if(!is_object($database) || !method_exists($database, 'getActiveArtefactsByOwner')) {
+            return null;
+        }
+        return artefactEffectiveRow($database->getActiveArtefactsByOwner($owner), $type, $villageId);
+    }
+
+    /** El valor efectivo de un tipo de efecto en una aldea; 1 si no hay artefacto. */
+    private function artefactValue($villageId, $owner, $type) {
+        $row = $this->artefactRow($villageId, $owner, $type);
+        return $row === null ? 1.0 : artefactEffectValue($row, $type);
     }
 
     public function calculateCrannyProtection($buildings, $attackerTribe, $defenderTribe, $capacityMultiplier = null) {
@@ -764,7 +801,8 @@ class Automation {
                 min($speeds),
                 1,
                 $bootsBonus,
-                $travelBonus
+                $travelBonus,
+                artefactTroopSpeedFactor($database, $owner, $homeVillage)
             );
 
             for($slot = 1; $slot <= 10; $slot++) {
@@ -1292,7 +1330,8 @@ class Automation {
                 $needVillage = $database->getVillagesID($need['uid']);
                 foreach ($needVillage as $village) {
                     $getvillage = $database->getVillage($village);
-                    $q = "DELETE FROM ".TB_PREFIX."abdata where wref = ".$village;
+                    // Misma columna equivocada que en destroyCatapultedVillage(): `vref`.
+                    $q = "DELETE FROM ".TB_PREFIX."abdata where vref = ".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."bdata where wid = ".$village;
                     $database->query($q);
@@ -3530,7 +3569,7 @@ class Automation {
                                 $speeds[] = max(1, (int)$unitarray['speed']);
                             }
                         }
-                        $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1);
+                        $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, 0, 0, artefactTroopSpeedFactor($database, $AttackerID, $from['wref']));
                         if($time < (86400 / HEAL_SPEED)) {
                             $time = 86400 / HEAL_SPEED;
                         }
@@ -3569,10 +3608,16 @@ class Automation {
 
                 if(!$isoasis) {
                     $buildarray = $database->getResourceLevel($data['to']);
+                    // La confusión del rival multiplica la capacidad del escondite del
+                    // defensor (x200 el pequeño, x100 el grande, x500 el único). Este
+                    // efecto no existía: el artefacto sólo desviaba las catapultas y la
+                    // mitad que protege el botín no estaba escrita en ningún lado.
                     $crannyProtection = $this->calculateCrannyProtection(
                         $buildarray,
                         $owntribe,
-                        $targettribe
+                        $targettribe,
+                        (defined('CRANNY_CAPACITY') ? (float)CRANNY_CAPACITY : 1)
+                            * $this->artefactValue($data['to'], $to['owner'], ARTEFACT_CONFUSION)
                     );
                     $cranny = $crannyProtection['capacity'];
                     $cranny_eff = $crannyProtection['protected'];
@@ -3998,21 +4043,49 @@ class Automation {
                             }
                         }
                     } elseif(!$conquestGarrisonStays) {
-                        // Si la aldea acaba de caer, su artefacto ya cambió de dueño con
-                        // ella y se queda donde está: volver a "reclamarlo" con el héroe lo
-                        // mudaba a la aldea atacante —o fallaba por falta de tesorería y,
-                        // peor, pisaba con "" el aviso de que la conquista salió bien.
+                        // Robar un artefacto. Si la aldea acaba de caer, su artefacto ya
+                        // cambió de dueño con ella y se queda donde está: volver a
+                        // "reclamarlo" con el héroe lo mudaba a la aldea atacante —o
+                        // fallaba y, peor, pisaba con "" el aviso de que la conquista salió
+                        // bien.
+                        //
+                        // Las condiciones están todas en artefactTheftOutcome(). Dos no se
+                        // comprobaban: que el héroe VUELVA VIVO y que el Tesoro de la aldea
+                        // atacada esté derribado. Sin la segunda, el héroe entraba a una
+                        // aldea con el Tesoro intacto y se llevaba el artefacto sin
+                        // necesidad de una sola catapulta. Se mide acá y no antes porque las
+                        // catapultas de esta misma oleada ya se resolvieron más arriba: la
+                        // oleada que derriba el Tesoro y la que se lleva el artefacto pueden
+                        // ser el mismo ataque, igual que en el oficial.
                         $artifact = $database->getOwnArtefactInfo($data['to']);
-                        if($artifact['vref'] == $data['to']) {
-                            // El requisito de tesorería es de la aldea ATACANTE, y el artefacto
-                            // se muda a ella. Antes se preguntaba por la aldea atacada y se
-                            // llamaba a claimArtefact() con el destino repetido, así que el
-                            // artefacto se quedaba donde estaba y sólo cambiaba de dueño.
-                            if($database->canClaimArtifact($data['from'], $artifact['size'])) {
-                                $database->claimArtefact($data['from'], $data['to'], $database->getVillageField($data['from'], "owner"));
-                                $info_chief = "".$hero_pic.", tu héroe lleva un artefacto de regreso a la aldea.";
-                            } else {
-                                $info_chief = "";
+                        if(is_array($artifact) && isset($artifact['vref'])
+                            && (int)$artifact['vref'] === (int)$data['to']) {
+                            $attackerVillage = (int)$data['from'];
+                            $theft = artefactTheftOutcome(
+                                array(
+                                    'type' => (int)$type,
+                                    'hero_sent' => (int)$data['t11'],
+                                    'hero_dead' => (int)$dead11
+                                ),
+                                array(
+                                    'artefact' => true,
+                                    'size' => (int)$artifact['size'],
+                                    'treasury' => $database->getVillageTreasuryLevel((int)$data['to'])
+                                ),
+                                array(
+                                    'treasury' => $database->getVillageTreasuryLevel($attackerVillage),
+                                    'artefact' => $database->villageHoldsArtefact($attackerVillage)
+                                )
+                            );
+                            if($theft['status'] === 'claimed') {
+                                $attackerOwnerId = (int)$database->getVillageField($attackerVillage, "owner");
+                                if(!$database->claimArtefact($attackerVillage, (int)$data['to'], $attackerOwnerId)) {
+                                    $theft = array('status' => 'database_error');
+                                }
+                            }
+                            $theftMessage = artefactTheftMessage($theft);
+                            if($theftMessage !== '') {
+                                $info_chief = "".$hero_pic.", ".$theftMessage;
                             }
                         }
                     }
@@ -4159,8 +4232,7 @@ class Automation {
                 // manda ataques que nadie descontó, y ningún jugador tiene una.
                 $attackerIsScenery = isset($fromF) && is_array($fromF) && isStaticNpcVillage($fromF);
                 if($totalsend_att - ($totaldead_att + $totalstilltraped_att) > 0) {
-                    $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus, $travelBonus) + $AttackArrivalTime;
-                    //$endtime = $this->procDistanceTime($from,$to,min($speeds),1) + time();
+                    $endtime = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, $bootsBonus, $travelBonus, artefactTroopSpeedFactor($database, $AttackerID, $from['wref'])) + $AttackArrivalTime;
                     // Las tropas que revivió la venda vuelven por su cuenta y en su propio
                     // movimiento: sin esta línea el atacante las veía aparecer sin ninguna
                     // explicación en el informe. Va solo en su copia, no en la del defensor.
@@ -4262,7 +4334,7 @@ class Automation {
                         $returnSpeeds[] = max(1, (int)$unitarray['speed']);
                     }
                 }
-                $endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1, $returnBootsBonus, $returnTravelBonus) + $AttackArrivalTime;
+                $endtime = $this->procDistanceTime($from, $to, empty($returnSpeeds) ? 1 : min($returnSpeeds), 1, $returnBootsBonus, $returnTravelBonus, artefactTroopSpeedFactor($database, $AttackerID, $from['wref'])) + $AttackArrivalTime;
                 $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
 
                 $cagesBefore = $cage['type'];
@@ -4331,7 +4403,7 @@ class Automation {
                         $unitarray = $GLOBALS["u".$i];
                         $speeds[] = max(1, (int)$unitarray['speed']);
                     }
-                    $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1);
+                    $time = $this->procDistanceTime($from, $to, empty($speeds) ? 1 : min($speeds), 1, 0, 0, artefactTroopSpeedFactor($database, $AttackerID, $from['wref']));
                     $reference = $database->addAttack($to['wref'], $captured1, $captured2, $captured3, $captured4, $captured5, $captured6, $captured7, $captured8, $captured9, $captured10, 0, 2, 0, 0, 0, 0);
                     $database->addMovement(3, 0, $from['wref'], $reference, $datar, ($time + $AttackArrivalTime));
 
@@ -4558,7 +4630,8 @@ class Automation {
             min($speeds),
             1,
             $bootsBonus,
-            $travelBonus
+            $travelBonus,
+            artefactTroopSpeedFactor($database, $owner, (int)$prisoner['from'])
         );
         $start = time();
         return $database->returnPrisonersAtomic(
@@ -5373,9 +5446,6 @@ class Automation {
 
 	    private function bountycalculateProduction($bountywid, $uid) {
 	        global $technology, $database;
-	        $normalA = $database->getOwnArtefactInfoByType($bountywid, 4);
-	        $largeA = $database->getOwnUniqueArtefactInfo($uid, 4, 2);
-	        $uniqueA = $database->getOwnUniqueArtefactInfo($uid, 4, 3);
 	        $upkeep = $this->getUpkeep($this->getAllUnits($bountywid), 0, $bountywid);
 	        // Las guarniciones estáticas no comen: no son un ejército simulado sino parte
 	        // del escenario, igual que en Travian, donde las tropas natar no se entrenan,
@@ -5409,24 +5479,11 @@ class Automation {
 	        $this->bountyproduction['clay'] = $gross['production']['clay']+$heroProduction['clay'];
 	        $this->bountyproduction['iron'] = $gross['production']['iron']+$heroProduction['iron'];
 
-	        // Sin artefacto, las consultas devuelven null: leerles un índice llenaba el log
-	        // de "Trying to access array offset on value of type null" en cada acreditación
-	        // de producción, o sea prácticamente en cada carga de página.
-	        $normalA = is_array($normalA) ? $normalA : array();
-	        $largeA = is_array($largeA) ? $largeA : array();
-	        $uniqueA = is_array($uniqueA) ? $uniqueA : array();
-	        if(isset($uniqueA['size'],$uniqueA['owner']) && $uniqueA['size'] == 3 && $uniqueA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
-
-	        } else if(isset($normalA['type'],$normalA['size'],$normalA['owner']) && $normalA['type'] == 4 && $normalA['size'] == 1 && $normalA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
-
-	        } else if(isset($largeA['size'],$largeA['owner']) && $largeA['size'] == 2 && $largeA['owner'] == $uid) {
-	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
-
-	        } else {
-	            $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-$upkeep+$heroProduction['crop'];
-	        }
+	        // El artefacto de dieta, con la misma función que usa dorf1: esta producción
+	        // escribe recursos reales y de ella come la hambruna, así que no puede diferir
+	        // de la que el jugador tiene a la vista.
+	        $upkeepDetail = artefactTroopUpkeep($database, $uid, $bountywid, $upkeep);
+	        $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-$upkeepDetail['charged']+$heroProduction['crop'];
 	    }
 
     private function bountyprocessProduction($bountywid, $until = null) {
@@ -5504,7 +5561,7 @@ class Automation {
     // bono de la Plaza de Torneos sale del helper compartido y no de una copia local.
     // $bootsBonus: porcentaje de las botas de mercenario del héroe que viaja en el
     // movimiento; tiene su propio umbral, distinto al de la Plaza de Torneos.
-    private function procDistanceTime($coor, $thiscoor, $ref, $mode, $bootsBonus = 0, $travelBonus = 0) {
+    private function procDistanceTime($coor, $thiscoor, $ref, $mode, $bootsBonus = 0, $travelBonus = 0, $artefactFactor = 1) {
         $xdistance = ABS($thiscoor['x'] - $coor['x']);
         if($xdistance > WORLD_MAX) {
             $xdistance = (2 * WORLD_MAX + 1) - $xdistance;
@@ -5533,6 +5590,11 @@ class Automation {
         $effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
         if($mode && $travelBonus > 0) {
             $speed *= 1 + max(0, (float)$travelBonus) / 100;
+        }
+        // Botas de los titanes: ver GeneratorX::procDistanceTime, que tiene que dar el
+        // mismo número para el mismo viaje.
+        if($mode && $artefactFactor > 0) {
+            $speed *= (float)$artefactFactor;
         }
 
         return round(($effectiveDistance / $speed) * 3600 / INCREASE_SPEED);

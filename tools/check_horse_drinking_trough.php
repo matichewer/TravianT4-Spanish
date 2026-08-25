@@ -342,7 +342,9 @@ class TroughTrainingBuildingStub {
 
 $trainingSession = (object)array('uid' => 1,'tribe' => 1,'access' => 2);
 $trainingDatabase = new class {
-	public function getActiveArtefactsByType($wid,$uid,$type) { return array(); }
+	public function getArtefactsByOwner($owner) { return array(); }
+	public function getActiveArtefactsByOwner($owner) { return array(); }
+	public function getArtefactEffectValue($vref,$owner,$type) { return 1; }
 	public function getHeroData($uid) { return array('dead' => 1,'wref' => 0,'home' => 0); }
 	public function getHeroInventory($uid) { return array(); }
 	public function getItemData($id) { return false; }

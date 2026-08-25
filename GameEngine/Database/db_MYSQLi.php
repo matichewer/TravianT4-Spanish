@@ -766,11 +766,23 @@
 							// jugador se le colaba arriba de todo, antes de las suyas propias.
 							. " destination.created = " . time() . ","
 							. " fields.f40 = 0, fields.f40t = 0,"
-							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner"
+							// El artefacto cambia de dueño con la aldea y se queda donde está, y su
+							// reloj de captura vuelve a cero: conquistar la aldea que lo guarda es
+							// una captura como cualquier otra, así que arranca de nuevo el retardo
+							// de activación y el artefacto pasa al fondo de la cola de prioridad
+							// (ver el encabezado de GameEngine/Artefact.php). Sin reiniciarlo, una
+							// aldea tomada entregaba un artefacto activo al instante.
+							. " attack.t9 = attack.t9 - 1, artefact.owner = $attackerOwner,"
+							. " artefact.conquered = " . time()
 							. " WHERE source.wref = $from AND source.owner = $attackerOwner"
 							. " AND source.exp$slot = 0 AND destination.owner = $defenderOwner"
 							. " AND destination.capital = 0 AND attack.t9 > 0";
 						$updated = mysqli_query($this->connection, $query);
+						// La conquista toca `artefacts` por SQL directo (dueño y fecha de captura),
+						// así que el cache por request que arma el conjunto activo queda viejo: sin
+						// esto, lo que se resuelva después en la misma pasada del barrido seguiría
+						// viendo el artefacto en manos del defensor.
+						$this->flushArtefactCache();
 						if(!$updated) {
 							return array('status' => 'database_error');
 						}
@@ -5044,83 +5056,132 @@ break;
         		return $slots;
         	}
 
-	function addArtefact($vref, $owner, $type, $size, $name, $desc, $effect, $img) {
-		$q = "INSERT INTO `" . TB_PREFIX . "artefacts` (`vref`, `owner`, `type`, `size`, `conquered`, `name`, `desc`, `effect`, `img`) VALUES ('$vref', '$owner', '$type', '$size', '" . time() . "', '$name', '$desc', '$effect', '$img')";
-		return mysqli_query($this->connection,$q);
-	}
+			/**
+			 * Los artefactos: una sola lectura por dueño y por request.
+			 *
+			 * Todo lo que decide si un artefacto hace efecto —el retardo de activación, el
+			 * límite de tres activos, que el de aldea pise al de cuenta, la tirada del necio—
+			 * vive en GameEngine/Artefact.php y se calcula acá arriba de estas filas. Las
+			 * consultas que había antes pedían `artefacts.active` y `artefacts.kind`, dos
+			 * columnas que nunca existieron: fallaban en silencio y por eso ningún efecto de
+			 * artefacto funcionaba. Ver el encabezado de Artefact.php.
+			 */
+			private $artefactCacheByOwner = array();
 
-			function getOwnArtefactInfo($vref) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref";
-				$result = mysqli_query($this->connection,$q);
-				return mysqli_fetch_array($result);
+			function flushArtefactCache() {
+				$this->artefactCacheByOwner = array();
 			}
 
-			function getOwnArtefactInfo2($vref) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref";
+			function getArtefactsByOwner($owner) {
+				$owner = (int)$owner;
+				if($owner <= 0) {
+					return array();
+				}
+				if(isset($this->artefactCacheByOwner[$owner])) {
+					return $this->artefactCacheByOwner[$owner];
+				}
+				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $owner ORDER BY conquered ASC, id ASC";
 				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
+				$rows = $result ? $this->mysqli_fetch_all($result) : array();
+				$this->artefactCacheByOwner[$owner] = is_array($rows) ? $rows : array();
+				return $this->artefactCacheByOwner[$owner];
 			}
 
-			function getOwnArtefactInfo3($uid) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $uid";
-				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
+			/** Los artefactos de la cuenta que están activos ahora mismo (como mucho tres). */
+			function getActiveArtefactsByOwner($owner) {
+				return artefactActiveRows($this->getArtefactsByOwner($owner));
 			}
 
-			function getOwnArtefactInfoByType($vref, $type) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref AND type = $type order by size";
-				$result = mysqli_query($this->connection,$q);
-				return mysqli_fetch_array($result);
-			}
-
-			function getOwnArtefactInfoByType2($vref, $type) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref AND type = $type";
-				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
-			}
-
+			/**
+			 * El artefacto activo que manda sobre una aldea para un tipo de efecto.
+			 *
+			 * Devuelve una lista de cero o un elemento porque los consumidores del motor la
+			 * recorren con foreach; nunca puede traer dos, justamente porque el de aldea pisa
+			 * al de cuenta en vez de sumarse.
+			 */
 			function getActiveArtefactsByType($vref, $owner, $type) {
+				$row = artefactEffectiveRow($this->getActiveArtefactsByOwner($owner), $type, $vref);
+				return $row === null ? array() : array($row);
+			}
+
+			/** El valor efectivo de un tipo de efecto en una aldea (1 = sin artefacto). */
+			function getArtefactEffectValue($vref, $owner, $type) {
+				return artefactVillageEffectValue($this->getActiveArtefactsByOwner($owner), $type, $vref);
+			}
+
+			/** ¿La aldea tiene activo un artefacto de ese tipo? (para el plano, que es binario) */
+			function hasActiveArtefactEffect($vref, $owner, $type) {
+				return artefactVillageHasEffect($this->getActiveArtefactsByOwner($owner), $type, $vref);
+			}
+
+			/** El artefacto guardado en una aldea, o array() si no hay ninguno. */
+			function getOwnArtefactInfo($vref) {
+				$vref = (int)$vref;
+				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				$row = $result ? mysqli_fetch_array($result, MYSQLI_ASSOC) : null;
+				return is_array($row) ? $row : array();
+			}
+
+			/** Todos los artefactos del mundo, para las listas de la pantalla del Tesoro. */
+			function getAllArtefacts() {
+				$q = "SELECT * FROM " . TB_PREFIX . "artefacts ORDER BY size ASC, type ASC, id ASC";
+				$result = mysqli_query($this->connection,$q);
+				$rows = $result ? $this->mysqli_fetch_all($result) : array();
+				return is_array($rows) ? $rows : array();
+			}
+
+			function countArtefacts() {
+				return count($this->getAllArtefacts());
+			}
+
+			function addArtefact($vref, $owner, $type, $size) {
 				$vref = (int)$vref;
 				$owner = (int)$owner;
 				$type = (int)$type;
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE active = 1 AND type = $type AND ((size = 1 AND vref = $vref) OR (size > 1 AND owner = $owner))";
-				$result = mysqli_query($this->connection,$q);
-				return $result ? $this->mysqli_fetch_all($result) : array();
+				$size = (int)$size;
+				// El nombre y el texto del efecto salen del catálogo, no de quien inserta:
+				// había artefactos con el nombre de un efecto y el número de otro porque
+				// cada sembrador escribía los suyos. `name`/`desc`/`effect`/`img` se siguen
+				// guardando para que un mundo viejo se siga leyendo, pero la pantalla usa
+				// el catálogo. Ver artefactTypeCatalog().
+				$name = mysql_real_escape_string(artefactDisplayName($type, $size));
+				$desc = mysql_real_escape_string(artefactTypeEffectText($type));
+				$effect = mysql_real_escape_string(artefactSizeName($size));
+				$img = 'type'.$type.'.gif';
+				$q = "INSERT INTO `" . TB_PREFIX . "artefacts` (`vref`, `owner`, `type`, `size`, `conquered`, `name`, `desc`, `effect`, `img`) "
+					."VALUES ('$vref', '$owner', '$type', '$size', '" . time() . "', '$name', '$desc', '$effect', '$img')";
+				$ok = mysqli_query($this->connection,$q);
+				$this->flushArtefactCache();
+				return $ok;
 			}
 
-			function getOwnUniqueArtefactInfo($id, $type, $size) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $id AND type = $type AND size=$size";
-				$result = mysqli_query($this->connection,$q);
-				return mysqli_fetch_array($result);
-			}
-
-			function getOwnUniqueArtefactInfo2($id, $type, $size, $mode) {
-			if(!$mode){
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $id AND active = 1 AND type = $type AND size=$size";
-			}else{
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $id AND active = 1 AND type = $type AND size=$size";
-			}
-				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
-			}
-
-			function getFoolArtefactInfo($type,$vid,$uid) {
-				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vid AND type = 8 AND kind = $type OR owner = $uid AND size > 1 AND active = 1 AND type = 8 AND kind = $type";
-				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
-			}
-
+			/**
+			 * El artefacto pasa a la aldea del atacante y **la captura reinicia el reloj**.
+			 *
+			 * Reiniciar `conquered` no es cosmético: es el retardo de activación y además el
+			 * orden de prioridad entre los tres activos, así que volver a capturar un
+			 * artefacto propio es la forma oficial de mandarlo al fondo de la cola. Antes
+			 * este UPDATE sólo movía `vref` y `owner`.
+			 */
 			function claimArtefact($vref, $ovref, $id) {
+				$vref = (int)$vref;
+				$ovref = (int)$ovref;
+				$id = (int)$id;
 				$time = time();
-				$q = "UPDATE " . TB_PREFIX . "artefacts SET vref = $vref, owner = $id WHERE vref = $ovref";
-				return mysqli_query($this->connection,$q);
+				$q = "UPDATE " . TB_PREFIX . "artefacts SET vref = $vref, owner = $id, conquered = $time WHERE vref = $ovref";
+				$ok = mysqli_query($this->connection,$q);
+				$this->flushArtefactCache();
+				return $ok;
 			}
 
-        	function getArtefactDetails($id) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE id = " . $id . "";
-        		$result = mysqli_query($this->connection,$q);
-        		return mysqli_fetch_array($result);
-        	}
+			function getArtefactDetails($id) {
+				$id = (int)$id;
+				$q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE id = $id LIMIT 1";
+				$result = mysqli_query($this->connection,$q);
+				$row = $result ? mysqli_fetch_array($result, MYSQLI_ASSOC) : null;
+				return is_array($row) ? $row : array();
+			}
 
 			function HeroFace($uid) {
         		$q = "SELECT * FROM " . TB_PREFIX . "heroface WHERE uid = ".$uid."";
@@ -6553,38 +6614,66 @@ break;
 			 * Las ranuras van de la 19 a la 40, como en el resto del motor: el 38 de antes dejaba
 			 * fuera dos ranuras de edificio.
 			 */
-			public function canClaimArtifact($attackerVillage, $size) {
-				$attackerVillage = (int)$attackerVillage;
-				$size = (int)$size;
-				if($attackerVillage <= 0) {
-					return false;
+			/**
+			 * El nivel de Tesoro de una aldea (0 si no tiene).
+			 *
+			 * Se queda con el mayor por si quedaran dos —no debería: el Tesoro es único por
+			 * aldea— y recorre hasta la ranura 40 porque el muro vive en la 40 y una aldea
+			 * puede tener edificios ahí; cortar en la 38 dejaba fuera un caso real.
+			 */
+			public function getVillageTreasuryLevel($village) {
+				$village = (int)$village;
+				if($village <= 0) {
+					return 0;
 				}
-				// Una aldea sostiene un solo artefacto, como en el original.
-				$held = $this->getOwnArtefactInfo($attackerVillage);
-				if(is_array($held) && isset($held['vref']) && (int)$held['vref'] === $attackerVillage) {
-					return false;
-				}
-				$fields = $this->getResourceLevel($attackerVillage);
+				$fields = $this->getResourceLevel($village);
 				if(!is_array($fields)) {
-					return false;
+					return 0;
 				}
 				$treasury = 0;
 				for($slot = 19; $slot <= 40; $slot++) {
 					if(isset($fields['f'.$slot.'t']) && (int)$fields['f'.$slot.'t'] === 27) {
-						// El nivel mayor, por si quedaran dos tesorerías y una estuviera dañada.
 						$treasury = max($treasury, (int)$fields['f'.$slot]);
 					}
 				}
-				if($treasury <= 0) {
+				return $treasury;
+			}
+
+			/** ¿Esta aldea ya guarda un artefacto? Una aldea sostiene uno solo. */
+			public function villageHoldsArtefact($village) {
+				$village = (int)$village;
+				if($village <= 0) {
 					return false;
 				}
-				if($size === 1) {
-					return $treasury >= 10;      // artefacto de aldea
+				$held = $this->getOwnArtefactInfo($village);
+				return is_array($held) && isset($held['vref']) && (int)$held['vref'] === $village;
+			}
+
+			/**
+			 * ¿La aldea ATACANTE puede quedarse un artefacto de este tamaño?
+			 *
+			 * Es la mitad "en casa" de la regla del robo: el nivel de Tesoro que pide el
+			 * tamaño y que ese Tesoro esté vacío. La otra mitad —ataque normal, héroe vivo,
+			 * Tesoro del defensor derribado— está en `artefactTheftOutcome()`, y esta
+			 * función la llama con la mitad de campo ya satisfecha justamente para que las
+			 * dos no puedan divergir. Se conserva como función propia porque
+			 * `tools/check_artifact_claim.php` la prueba contra el mundo real.
+			 */
+			public function canClaimArtifact($attackerVillage, $size) {
+				$attackerVillage = (int)$attackerVillage;
+				$size = (int)$size;
+				if($attackerVillage <= 0 || !in_array($size, array(1,2,3), true)) {
+					return false;
 				}
-				if($size === 2 || $size === 3) {
-					return $treasury >= 20;      // de cuenta y único
-				}
-				return false;
+				$outcome = artefactTheftOutcome(
+					array('type' => 3, 'hero_sent' => 1, 'hero_dead' => 0),
+					array('artefact' => true, 'size' => $size, 'treasury' => 0),
+					array(
+						'treasury' => $this->getVillageTreasuryLevel($attackerVillage),
+						'artefact' => $this->villageHoldsArtefact($attackerVillage)
+					)
+				);
+				return $outcome['status'] === 'claimed';
 			}
 
 			function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){

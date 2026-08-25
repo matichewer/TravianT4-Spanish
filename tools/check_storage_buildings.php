@@ -49,6 +49,7 @@ define('TRAPPER_CAPACITY', 1);
 define('CRANNY_CAPACITY', 1);
 
 require dirname(__FILE__).'/../GameEngine/Data/buidata.php';
+require_once dirname(__FILE__).'/../GameEngine/Artefact.php';
 
 // Shims de las funciones legacy mysql_* que usa Automation::updateStore().
 $GLOBALS['sqlFdata'] = array();
@@ -599,22 +600,41 @@ class StorageVillageStub {
     }
 }
 
-// Doble mínimo para las consultas de artefactos que hace hasStorageArtefact().
+// Doble mínimo para la consulta de artefactos que hace hasStorageArtefact().
+// Devuelve filas crudas y deja que el resolvedor real (Artefact.php) decida cuáles
+// están activas: así el checker prueba también el retardo y el límite de tres.
 class StorageArtefactDatabaseStub {
-    public $inVillage = null;   // artefacto tipo 6 en la aldea
-    public $account = array();  // tamaño => artefacto tipo 6 de la cuenta
-    public function getOwnArtefactInfoByType($vref, $type) {
-        return ((int)$type === 6 && $this->inVillage !== null)
-            ? array('vref' => $vref, 'size' => $this->inVillage) : false;
+    public $inVillage = null;   // tamaño del plano guardado en LA aldea que se mira
+    public $account = array();  // tamaños de plano de cuenta
+    public $villageId = 0;
+    public $rows = null;        // filas explícitas, si el caso las necesita
+    public function getArtefactsByOwner($owner) {
+        if($this->rows !== null) {
+            return $this->rows;
+        }
+        $rows = array();
+        $id = 1;
+        if($this->inVillage !== null) {
+            $rows[] = array('id' => $id++, 'vref' => $this->villageId, 'owner' => $owner,
+                'type' => ARTEFACT_STORAGE, 'size' => (int)$this->inVillage, 'conquered' => 0);
+        }
+        foreach($this->account as $size) {
+            $rows[] = array('id' => $id++, 'vref' => 999000 + $id, 'owner' => $owner,
+                'type' => ARTEFACT_STORAGE, 'size' => (int)$size, 'conquered' => 0);
+        }
+        return $rows;
     }
-    public function getOwnUniqueArtefactInfo($uid, $type, $size) {
-        return ((int)$type === 6 && in_array($size, $this->account, true))
-            ? array('owner' => $uid, 'size' => $size) : false;
+    public function getActiveArtefactsByOwner($owner) {
+        return artefactActiveRows($this->getArtefactsByOwner($owner));
+    }
+    public function hasActiveArtefactEffect($vref, $owner, $type) {
+        return artefactVillageHasEffect($this->getActiveArtefactsByOwner($owner), $type, $vref);
     }
 }
 class StorageSessionStub { public $uid = 7; public $tribe = 1; }
 
 $artefactDb = new StorageArtefactDatabaseStub();
+$artefactDb->villageId = 1;   // el wid de StorageVillageStub
 $buildingObj = (new ReflectionClass('Building'))->newInstanceWithoutConstructor();
 
 function requirementFor($buildingObj, $tid, StorageVillageStub $stub, array $queue = array()) {

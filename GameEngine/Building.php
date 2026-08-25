@@ -649,24 +649,22 @@ class Building {
 	}
 
 	/**
-	 * El gran almacén y el gran granero exigen un artefacto de almacenamiento
-	 * (tipo 6): pequeño en esta misma aldea, o grande/único en la cuenta.
+	 * El gran almacén y el gran granero exigen el plano de almacenamiento: pequeño en esta
+	 * misma aldea, o grande en la cuenta.
+	 *
+	 * Pasa por el conjunto activo como cualquier otro artefacto, así que un plano recién
+	 * capturado no habilita nada hasta que pasa el retardo, y un plano desplazado del
+	 * podio de tres activos deja de habilitar. Es lo oficial ("mientras poseas ese
+	 * artefacto puedes construir y ampliar esos edificios") y el motivo por el que el
+	 * plano no puede tener su propia consulta: era el único artefacto que hacía efecto
+	 * y lo hacía sin mirar ninguna de las dos reglas.
 	 */
 	public function hasStorageArtefact() {
 		global $database,$session,$village;
-		$inVillage = $database->getOwnArtefactInfoByType($village->wid,6);
-		if(is_array($inVillage) && !empty($inVillage['vref'])
-			&& (int)$inVillage['vref'] === (int)$village->wid) {
-			return true;
+		if(!is_object($database) || !method_exists($database,'hasActiveArtefactEffect')) {
+			return false;
 		}
-		foreach(array(2,3) as $size) {
-			$account = $database->getOwnUniqueArtefactInfo($session->uid,6,$size);
-			if(is_array($account) && !empty($account['owner'])
-				&& (int)$account['owner'] === (int)$session->uid) {
-				return true;
-			}
-		}
-		return false;
+		return $database->hasActiveArtefactEffect((int)$village->wid,(int)$session->uid,ARTEFACT_STORAGE);
 	}
 
 	/**

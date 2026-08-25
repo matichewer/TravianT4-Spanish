@@ -264,7 +264,10 @@ class Units {
 		}
 		$trapCoordinates = $database->getCoor((int)$prisoner['wref']);
 		$homeCoordinates = $database->getCoor((int)$prisoner['from']);
-		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus,$travelBonus));
+		// Las botas de los titanes se miden sobre la aldea de la que salieron las tropas,
+		// que es a la que vuelven.
+		$speedArtefact = artefactTroopSpeedFactor($database,$owner,(int)$prisoner['from']);
+		$travelTime = max(1, (int)$generator->procDistanceTime($homeCoordinates,$trapCoordinates,min($speeds),1,$bootsBonus,$travelBonus,$speedArtefact));
 		$troops = array();
 		for($i = 1; $i <= 11; $i++) {
 			$troops[$i] = max(0,(int)$prisoner['t'.$i]);
@@ -585,7 +588,10 @@ class Units {
 			}
 		}
 
-		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus,$travelBonus);
+		// Botas de los titanes de la aldea que envía. Este efecto sólo existía en la
+		// lista de granjeo, así que el mismo ataque salido de acá tardaba el doble.
+		$speedArtefact = artefactTroopSpeedFactor($database,$session->uid,$village->wid);
+		$time = $generator->procDistanceTime($from,$to,empty($speeds) ? 1 : min($speeds),1,$bootsBonus,$travelBonus,$speedArtefact);
 		$sentAt = time();
 		$catapultUnit = $battle->getTribeCatapultUnit((int)$session->tribe);
 		$hasCatapults = $catapultUnit > 0
@@ -732,7 +738,10 @@ class Units {
 				$travelBonus = $heroReturns
 					? heroEquippedTravelSpeedBonus($database,$to['owner'],$village->wid,$enforce['from'],true)
 					: 0;
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,$travelBonus);
+				// El refuerzo vuelve a SU aldea (`enforce['from']`), que puede ser de otro
+				// jugador: el artefacto que cuenta es el de esa aldea y ese dueño.
+				$speedArtefact = artefactTroopSpeedFactor($database,$to['owner'],$enforce['from']);
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,$travelBonus,$speedArtefact);
 				$reference = $database->addAttack($enforce['from'],$post['t1'],$post['t2'],$post['t3'],$post['t4'],$post['t5'],$post['t6'],$post['t7'],$post['t8'],$post['t9'],$post['t10'],$post['t11'],2,0,0,0,0);
 				$database->addMovement(4,$village->wid,$enforce['from'],$reference,0,($time+time()));
 				$technology->checkReinf($post['ckey']);

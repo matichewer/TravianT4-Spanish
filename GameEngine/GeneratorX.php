@@ -93,7 +93,7 @@ class GeneratorX {
    // $travelBonus es el de la mano izquierda (mapa, estandarte o bandera). A diferencia
    // de las botas, que solo acortan el tramo que pasa el umbral, este sube la velocidad
    // de todo el viaje. Quien llama ya decidió si corresponde para ese trayecto.
-   public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0,$travelBonus=0) {
+   public function procDistanceTime($coor,$thiscoor,$ref,$mode,$bootsBonus=0,$travelBonus=0,$artefactFactor=1) {
 		$xdistance = ABS($thiscoor['x'] - $coor['x']);
 		if($xdistance > WORLD_MAX) {
 			$xdistance = (2 * WORLD_MAX + 1) - $xdistance;
@@ -128,6 +128,12 @@ class GeneratorX {
 		$effectiveDistance = heroBootsTravelDistance($distance, $mode ? $bootsBonus : 0);
 		if($mode && $travelBonus > 0) {
 			$speed *= 1 + max(0, (float)$travelBonus) / 100;
+		}
+		// Las botas de los titanes multiplican la velocidad del movimiento entero, como
+		// el estandarte y a diferencia de las botas del héroe. Sólo en modo tropa: los
+		// mercaderes y los colonos van a velocidad fija y el artefacto no los toca.
+		if($mode && $artefactFactor > 0) {
+			$speed *= (float)$artefactFactor;
 		}
 		return round(($effectiveDistance/$speed) * 3600 / INCREASE_SPEED);
 	}

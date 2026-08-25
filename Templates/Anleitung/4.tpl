@@ -2591,7 +2591,7 @@ En cuanto el administrador de una ciudad (senador, jefe germano, jefe galo) haya
 
         <th class="text">
 
-            Tesorería        </th>
+            Tesoro        </th>
 
                 <td>
 

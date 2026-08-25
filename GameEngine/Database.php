@@ -11,6 +11,10 @@ require_once(dirname(__FILE__).'/Accounts.php');
 // datos) tiene que saber qué edificios son de tribu para derribar los que el dueño nuevo
 // no podría construir, y esa lista es la misma que usa Building.php.
 require_once(dirname(__FILE__).'/Catapult.php');
+// Qué artefacto hace efecto, cuándo y cuánto. Va acá porque la capa de datos resuelve
+// el conjunto activo (retardo, límite de tres, aldea sobre cuenta) antes de devolverlo,
+// y porque la pantalla del Tesoro lee el catálogo de nombres sin cargar el motor.
+require_once(dirname(__FILE__).'/Artefact.php');
 // Las dos pestañas de tropas del resumen de aldeas. Va acá por el mismo motivo que
 // Production.php: es una agregación sobre varias tablas que tiene que dar el mismo
 // número desde la plantilla y desde los checkers.

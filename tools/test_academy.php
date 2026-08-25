@@ -131,7 +131,9 @@ class StubDatabase {
 	public function getResearching($vid) { return $this->research; }
 	public function getUnit($vid) { return array(); }
 	public function getTraining($vid) { return array(); }
-	public function getActiveArtefactsByType($wid, $uid, $type) { return array(); }
+	public function getArtefactsByOwner($owner) { return array(); }
+	public function getActiveArtefactsByOwner($owner) { return array(); }
+	public function getArtefactEffectValue($vref,$owner,$type) { return 1; }
 }
 
 /* ------------------------------------------------------------------ *

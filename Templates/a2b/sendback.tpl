@@ -74,7 +74,9 @@ if ($enforce['hero']>0){ $colspan = 11; }else{ $colspan = 10; }
 						}
 					}
 				}
-				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0);
+				// Vista previa del regreso del refuerzo: mismo cálculo que hace Units.php al
+				// mandarlo de vuelta, artefacto de velocidad incluido.
+				$time = $generator->procDistanceTime($fromCor,$toCor,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0,artefactTroopSpeedFactor($database,$to['owner'],$enforce['from']));
 
 			?>
    <tbody class="infos">

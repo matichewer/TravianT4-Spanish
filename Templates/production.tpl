@@ -31,8 +31,12 @@ function productionBreakdownTooltip($resource, $label, $details, $total) {
 	if($resource === 'crop') {
 		$lines[] = 'Población: −'.productionBreakdownNumber($details['population']);
 		$lines[] = 'Consumo de tropas: −'.productionBreakdownNumber($details['upkeep']);
+		// El ahorro puede ser negativo: un artefacto del necio en su cara mala cobra de
+		// más en vez de ahorrar, y el jugador tiene que poder ver de dónde sale.
 		if($details['artefact_saving'] > 0) {
 			$lines[] = 'Artefacto (consumo ahorrado): +'.productionBreakdownNumber($details['artefact_saving']);
+		} elseif($details['artefact_saving'] < 0) {
+			$lines[] = 'Artefacto (consumo extra): −'.productionBreakdownNumber(-$details['artefact_saving']);
 		}
 	}
 	$lines[] = '<b>Total actual: '.productionBreakdownNumber($total).'</b>';

@@ -82,7 +82,9 @@ class TroopTrainingDatabaseStub {
 		$this->refunds[] = array($wid,$wood,$clay,$iron,$crop,$mode);
 		return true;
 	}
-	public function getActiveArtefactsByType($wid,$uid,$type) { return array(); }
+	public function getArtefactsByOwner($owner) { return array(); }
+	public function getActiveArtefactsByOwner($owner) { return array(); }
+	public function getArtefactEffectValue($vref,$owner,$type) { return 1; }
 }
 
 $session = new TroopTrainingSessionStub();

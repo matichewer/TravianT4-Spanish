@@ -68,9 +68,17 @@ foreach(array('wood'=>'getWoodProd','clay'=>'getClayProd','iron'=>'getIronProd')
 		'Normal village production does not add the hero '.$resource.' rate directly'
 	);
 }
+// El bono de cereal del heroe se suma UNA sola vez. Antes habia cuatro copias de la
+// linea, una por rama del artefacto de dieta, y las cuatro tenian que estar; hoy el
+// artefacto sale de artefactTroopUpkeep() y la produccion se escribe una sola vez, asi
+// que lo que hay que fijar es que la suma siga estando y que no vuelvan las ramas.
 heroAttributeAssert(
-	substr_count($normalizedVillageEngine,'+$heroProduction[\'crop\'];')===4,
-	'Normal village production does not add the hero crop rate directly in every upkeep branch'
+	substr_count($normalizedVillageEngine,'+$heroProduction[\'crop\'];')===1,
+	'Normal village production does not add the hero crop rate exactly once'
+);
+heroAttributeAssert(
+	strpos($normalizedVillageEngine,'artefactTroopUpkeep($database,$session->uid,$this->wid,$upkeep)')!==false,
+	'Normal village production no longer routes troop upkeep through the shared diet artefact helper'
 );
 
 $heroTemplate = file_get_contents(dirname(__DIR__).'/Templates/hero.tpl');

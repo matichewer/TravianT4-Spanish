@@ -129,42 +129,29 @@ class Village {
 
 	}
 	
-	private function calculateProduction() { 
+	private function calculateProduction() {
 		global $technology,$database,$session;
-        $normalA = $database->getOwnArtefactInfoByType($_SESSION['wid'],4);  
-		$largeA = $database->getOwnUniqueArtefactInfo($session->uid,4,2);
-			$uniqueA = $database->getOwnUniqueArtefactInfo($session->uid,4,3);
-	        $upkeep = $technology->getUpkeep($this->unitall,0);
-			$heroData = $database->getHeroData($session->uid);
-			$heroProduction = heroVillageResourceBonus($heroData, $this->wid, SPEED);
+		$upkeep = $technology->getUpkeep($this->unitall,0);
+		// El artefacto de dieta sale de una sola función compartida con el camino que
+		// acredita los recursos de verdad (Automation::bountycalculateProduction): acá
+		// había una cascada de tres `if` con los porcentajes al revés que el oficial.
+		$upkeepDetail = artefactTroopUpkeep($database, $session->uid, $this->wid, $upkeep);
+		$heroData = $database->getHeroData($session->uid);
+		$heroProduction = heroVillageResourceBonus($heroData, $this->wid, SPEED);
 
-	        $this->production['wood'] = $this->getWoodProd()+$heroProduction['wood'];
-			$this->production['clay'] = $this->getClayProd()+$heroProduction['clay'];
-			$this->production['iron'] = $this->getIronProd()+$heroProduction['iron'];
-			$cropProduction = $this->getCropProd();
-			foreach(array('wood','clay','iron','crop') as $resource) {
-				$this->productionBreakdown[$resource]['hero'] = $heroProduction[$resource];
-			}
-			$this->productionBreakdown['crop']['population'] = $this->pop;
-			$this->productionBreakdown['crop']['upkeep'] = $upkeep;
-			$this->productionBreakdown['crop']['artefact_saving'] = 0;
+		$this->production['wood'] = $this->getWoodProd()+$heroProduction['wood'];
+		$this->production['clay'] = $this->getClayProd()+$heroProduction['clay'];
+		$this->production['iron'] = $this->getIronProd()+$heroProduction['iron'];
+		$cropProduction = $this->getCropProd();
+		foreach(array('wood','clay','iron','crop') as $resource) {
+			$this->productionBreakdown[$resource]['hero'] = $heroProduction[$resource];
+		}
+		$this->productionBreakdown['crop']['population'] = $this->pop;
+		$this->productionBreakdown['crop']['upkeep'] = $upkeep;
+		$this->productionBreakdown['crop']['artefact_saving'] = $upkeepDetail['saving'];
 
-	        if ($uniqueA['size']==3 && $uniqueA['owner']==$session->uid){
-	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.50))+$heroProduction['crop'];
-			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.50);
-
-	        }else if ($normalA['type']==4 && $normalA['size']==1 && $normalA['owner']==$session->uid){
-	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
-			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.25);
-
-	        }else if ($largeA['size']==2 && $largeA['owner']==$session->uid){
-	        $this->production['crop'] = $cropProduction-$this->pop-(($upkeep)-round($upkeep*0.25))+$heroProduction['crop'];
-			$this->productionBreakdown['crop']['artefact_saving'] = round($upkeep*0.25);
-
-	        }else{
-			$this->production['crop'] = $cropProduction-$this->pop-$upkeep+$heroProduction['crop'];
+		$this->production['crop'] = $cropProduction - $this->pop - $upkeepDetail['charged'] + $heroProduction['crop'];
 	}
-    }
 	
 	
 	private function processProduction() {

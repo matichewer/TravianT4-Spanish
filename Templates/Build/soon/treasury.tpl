@@ -3,14 +3,14 @@ $_GET['bid'] = 27;
 $bid = $_GET['bid'];
 $uprequire = $building->resourceRequired($id,$bid);
 ?>
-<h2>Tesorería</h2>
+<h2>Tesoro</h2>
 <div class="build_desc">
 	<a href="#" onclick="return Travian.Game.iPopup(27,4);" class="build_logo">
-		<img class="building big white g27" src="img/x.gif" alt="Tesorería">
+		<img class="building big white g27" src="img/x.gif" alt="Tesoro">
 
 
 	</a>
-	Las riquezas de tu imperio se guardan en la tesorería. Una tesorería solo puede almacenar un artefacto. Para capturar un tesoro debes destruir la tesorería que lo contiene y luego lanzar un ataque normal desde la aldea donde está tu tesorería a nivel 10. El ataque debe tener éxito (al menos una unidad atacante debe sobrevivir). Tu héroe debe participar en el ataque y sobrevivir para reclamar planos de construcción y artefactos.</div>
+	En el tesoro se guardan las riquezas de tu imperio. Cada tesoro solo puede almacenar un artefacto. Para capturar uno hay que derribar el tesoro de la aldea que lo guarda y lanzar un ataque normal —no un asalto— desde la aldea donde tengas tu tesoro al nivel que pide el artefacto. El ataque debe tener éxito y tu héroe debe participar y sobrevivir.</div>
 <div id="contract" class="contract contractNew contractWrapper">
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">

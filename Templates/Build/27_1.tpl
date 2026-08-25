@@ -1,24 +1,16 @@
-﻿<?php
-    // @todo re-check this once artefacts are available
-    $artefact = $database->getOwnArtefactInfo($village->wid);
-    $result = mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = " . $village->wid . ""));
-    if ($result)
-    {
-       $wref = $village->wid;
-       $coor = $database->getCoor($wref); 
-       $coor2= $database->getCoor($artefact['vref']);
-     }
-   function getDistance($coorx1, $coory1, $coorx2, $coory2) {
-    $max = 2 * WORLD_MAX + 1;
-    $x1 = intval($coorx1);
-    $y1 = intval($coory1);
-    $x2 = intval($coorx2);
-    $y2 = intval($coory2);
-    $distanceX = min(abs($x2 - $x1), abs($max - abs($x2 - $x1)));
-    $distanceY = min(abs($y2 - $y1), abs($max - abs($y2 - $y1)));
-    $dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
-    return round($dist, 1);
-   }
+<?php
+/**
+ * Pestaña "Resumen" del Tesoro: los artefactos propios y los del resto del mundo.
+ *
+ * Un Tesoro de nivel 1 ya deja consultar dónde están todos los artefactos del servidor:
+ * es lo que hace útil el edificio antes de llegar al 10.
+ */
+include("27_rows.tpl");
+
+$ownArtefacts = $database->getArtefactsByOwner($session->uid);
+$activeArtefacts = artefactActiveRows($ownArtefacts);
+$allArtefacts = $database->getAllArtefacts();
+$hereCoor = $database->getCoor($village->wid);
 ?>
 <div class="gid27">
 <h4 class="round">Tus artefactos</h4>
@@ -26,113 +18,73 @@
         <thead>
             <tr>
                 <td></td>
-                <td>Nombre del artefacto</td>
+                <td>Artefacto</td>
                 <td>Aldea</td>
-                <td>Fecha</td>
+                <td>Capturado</td>
+                <td>Estado</td>
             </tr>
         </thead>
-
         <tbody>
-            <tr>
-            <?php
-
-        if($result == 0) {
-        	echo '<td colspan="4" class="none">No tienes ningún artefacto</td>';
-        } else {
-        	if($artefact['size'] == 1) {
-        		$reqlvl = 10;
-        		$effect = "Aldea con inscripciones";
-        	} elseif($artefact['size'] == 2 or 3) {
-        		$reqlvl = 20;
-        		$effect = "Todas las aldeas";
-        	}
-        	echo '<td class="icon"><img class="artefact_icon_' . $artefact['type'] . '" src="img/x.gif"></td>';
-        	echo '<td class="nam">
-                            <a href="build.php?id=' . $id . '&show='.$artefact['id'].'">' . $artefact['name'] . '</a> <span class="bon">(' . $artefact['effect'] . ')</span>
-                            <div class="info">
-                                Kincstár <b>' . $reqlvl . '</b>, Efecto <b>' . $effect . '</b>
-                            </div>
-                        </td>';
-        	echo '<td class="pla"><a href="karte.php?d=' . $artefact['vref'] . '&c=' . $generator->getMapCheck($artefact['vref']) . '">' . $database->getVillageField($artefact['vref'], "name") . '</a></td>';
-        	echo '<td class="dist">' . date("Y.m.d H:i", $artefact['conquered']) . '</td>';
-        }
-
+<?php
+if(count($ownArtefacts) === 0) {
+	echo '<tr><td colspan="5" class="none">No tienes ningún artefacto</td></tr>';
+} else {
+	foreach($ownArtefacts as $row) {
+		echo '<tr>';
+		echo '<td class="icon">'.treasuryArtefactIcon($row).'</td>';
+		echo treasuryArtefactNameCell($row, $id);
+		echo treasuryArtefactVillageCell($row, 'vil');
+		echo '<td class="cap">'.date("d/m/Y H:i", (int)$row['conquered']).'</td>';
+		echo treasuryArtefactStateCell($row, $activeArtefacts);
+		echo '</tr>';
+	}
+	if(count($ownArtefacts) > count($activeArtefacts)) {
+		echo '<tr><td colspan="5" class="none">Sólo pueden estar activos '.ARTEFACT_MAX_ACTIVE
+			.' artefactos a la vez y uno solo de cuenta. Tienen prioridad los capturados hace más tiempo.</td></tr>';
+	}
+}
 ?>
-            </tr>
         </tbody>
     </table>
-<br /><h4 class="round">Artefactos cercanos</h4>
+<br /><h4 class="round">Artefactos del servidor</h4>
     <table id="near" cellpadding="1" cellspacing="1">
         <thead>
             <tr>
                 <td></td>
-
-                <td>Nombre del artefacto</td>
-
+                <td>Artefacto</td>
                 <td>Jugador</td>
-
+                <td>Aldea</td>
                 <td>Distancia</td>
             </tr>
         </thead>
-
         <tbody>
-          <?php
-
-        if(mysql_num_rows(mysql_query("SELECT * FROM " . TB_PREFIX . "artefacts")) == 0) {
-        	echo '<td colspan="4" class="none">No hay artefactos cerca</td>';
-        } else {
-
-
-        	function haversine($l1, $o1, $l2, $o2) {
-        		$l1 = deg2rad($l1);
-        		$sinl1 = sin($l1);
-        		$l2 = deg2rad($l2);
-        		$o1 = deg2rad($o1);
-        		$o2 = deg2rad($o2);
-
-        		return (7926 - 26 * $sinl1) * asin(min(1, 0.707106781186548 * sqrt((1 - (sin($l2) * $sinl1) - cos($l1) * cos($l2) * cos($o2 - $o1)))));
-        	}
-
-
-        	unset($reqlvl);
-        	unset($effect);
-        	$arts = mysql_query("SELECT * FROM " . TB_PREFIX . "artefacts");
-        	$rows = array();
-        	while($row = mysql_fetch_array($arts)) {
-        		$query = mysql_query('SELECT * FROM `' . TB_PREFIX . 'wdata` WHERE `id` = ' . $row['vref']);
-        		$coor2 = mysql_fetch_assoc($query);
-
-        		
-        		$dist = haversine($coor['y'], $coor['x'], $coor2['y'], $coor2['x']);
-
-        		$rows[$dist] = $row;
-
-        	}
-        	ksort($rows, SORT_DESC);
-        	foreach($rows as $row) {
-                $wref = $village->wid;
-                $coor = $database->getCoor($wref);
-                $wref2 = $row['vref'];
-                $coor2 = $database->getCoor($wref2);
-        		echo '<tr>';
-        		echo '<td class="icon"><img class="artefact_icon_' . $row['type'] . '" src="img/x.gif" alt="" title=""></td>';
-        		echo '<td class="nam">';
-        		echo '<a href="build.php?id=' . $id . '&show='.$row['id'].'">' . $row['name'] . '</a> <span class="bon">(' . $row['effect'] . ')</span>';
-        		echo '<div class="info">';
-        		if($row['size'] == 1) {
-        			$reqlvl = 10;
-        			$effect = "Aldea con inscripciones";
-        		} elseif($row['size'] == 2 or $row['size'] == 3) {
-        			$reqlvl = 20;
-        			$effect = "Todas las aldeas";
-        		}
-        		echo '<div class="info">Kincstár <b>' . $reqlvl . '</b>, Efecto <b>' . $effect . '</b>';
-        		echo '</div></td><td class="pla"><a href="karte.php?d=' . $row['vref'] . '&c=' . $generator->getMapCheck($row['vref']) . '">' . $database->getUserField($row['owner'], "username", 0) . '</a></td>';
-        		echo '<td class="dist">'.getDistance($coor['y'], $coor['x'], $coor2['y'], $coor2['x']).'</td>';
-        		echo '</tr>';
-        	}
-        }
-
+<?php
+if(count($allArtefacts) === 0) {
+	echo '<tr><td colspan="5" class="none">Todavía no hay artefactos en el servidor</td></tr>';
+} else {
+	// Se ordena por distancia sin usarla de clave: dos artefactos equidistantes son dos
+	// filas, no una.
+	$sorted = array();
+	foreach($allArtefacts as $row) {
+		$sorted[] = array('row' => $row, 'distance' => treasuryArtefactDistance($row, $hereCoor));
+	}
+	usort($sorted, function($a, $b) {
+		if($a['distance'] == $b['distance']) {
+			return (int)$a['row']['id'] < (int)$b['row']['id'] ? -1 : 1;
+		}
+		return $a['distance'] < $b['distance'] ? -1 : 1;
+	});
+	foreach($sorted as $entry) {
+		$row = $entry['row'];
+		echo '<tr>';
+		echo '<td class="icon">'.treasuryArtefactIcon($row).'</td>';
+		echo treasuryArtefactNameCell($row, $id);
+		echo treasuryArtefactOwnerCell($row);
+		echo treasuryArtefactVillageCell($row);
+		echo '<td class="dist">'.number_format($entry['distance'], 1, ',', '.').'</td>';
+		echo '</tr>';
+	}
+}
 ?>
         </tbody>
     </table>

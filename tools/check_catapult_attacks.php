@@ -55,8 +55,18 @@ class CatapultPersistenceDatabaseStub {
         return true;
     }
 
-    public function getActiveArtefactsByType($villageId, $owner, $type) {
-        return isset($this->artefacts[$type]) ? $this->artefacts[$type] : array();
+    // El doble devuelve filas crudas: quién está activo lo decide Artefact.php, que es
+    // lo que hace el motor de verdad.
+    public function getArtefactsByOwner($owner) {
+        return $this->artefacts;
+    }
+
+    public function getActiveArtefactsByOwner($owner) {
+        return artefactActiveRows($this->getArtefactsByOwner($owner));
+    }
+
+    public function getArtefactEffectValue($vref, $owner, $type) {
+        return artefactVillageEffectValue($this->getActiveArtefactsByOwner($owner), $type, $vref);
     }
 }
 
@@ -308,7 +318,7 @@ $targetVillage = array('owner' => 77, 'capital' => 1);
 $database->fields['f23'] = 5;
 $database->fields['f23t'] = 14;
 $requiredForFive = $battle->calculateSiegeOutcome(0, 5, 0, 1, 1)['required'];
-$database->artefacts[1] = array(array('size' => 1));
+$database->artefacts = array(array('id' => 1, 'vref' => 900, 'owner' => 77, 'type' => ARTEFACT_ARCHITECT, 'size' => 1, 'conquered' => 0));
 $impactMethod->invoke($persistenceAutomation, 900, 14, $requiredForFive, 0, 1, 0, $targetVillage);
 catapultAssert($database->fields['f23'] > 0, 'el artefacto del arquitecto aumenta la resistencia del edificio');
 $database->artefacts = array();

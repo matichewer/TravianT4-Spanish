@@ -29,6 +29,8 @@ require_once __DIR__.'/Accounts.php';
 require_once __DIR__.'/Production.php';
 require_once __DIR__.'/Data/buidata.php';
 require_once __DIR__.'/Data/unitdata.php';
+// Por artefactDisplayName(), que nombra las aldeas natar que guardan un artefacto.
+require_once __DIR__.'/Artefact.php';
 
 // Campos de recursos (f1..f18), slots de edificios (f19..f38), plaza de reuniones y muralla.
 define('NATAR_FIRST_RESOURCE_FIELD', 1);
@@ -451,7 +453,7 @@ function natarWonderVillageName($wref, $x = null, $y = null) {
  * oficial se corrigio el instalador y las dos copias del panel quedaron poniendola igual,
  * asi que una Maravilla creada desde el panel nacia otra vez inconquistable sin catapultas.
  *
- * Sin residencia ni palacio, como en el original. Tesoreria 10, escondite 10, Maravilla en
+ * Sin residencia ni palacio, como en el original. Tesoro 10, escondite 10, Maravilla en
  * la ranura 99, edificio principal y punto de reunion en 1.
  */
 function natarWonderBuildings($wref) {
@@ -459,7 +461,7 @@ function natarWonderBuildings($wref) {
     $wref = (int)$wref;
     return mysqli_query($database->connection,
         "UPDATE ".TB_PREFIX."fdata SET "
-        ."`f22t` = 27, `f22` = 10, "      // tesoreria
+        ."`f22t` = 27, `f22` = 10, "      // tesoro
         ."`f28t` = 0,  `f28` = 0, "       // sin residencia: ver el comentario de arriba
         ."`f19t` = 23, `f19` = 10, "      // escondite
         ."`f99t` = 40, "                  // la Maravilla
@@ -467,4 +469,58 @@ function natarWonderBuildings($wref) {
         ."`f21t` = 15, `f21` = 1, "       // edificio principal
         ."`f39t` = 16, `f39` = 1 "        // punto de reunion
         ."WHERE `vref` = ".$wref);
+}
+
+/**
+ * Los edificios fijos de una aldea natar que guarda un artefacto.
+ *
+ * Es la misma idea que `natarWonderBuildings()` pero sin Maravilla y con el Tesoro al
+ * nivel que pide el artefacto que guarda: 10 para el pequeno, 20 para el grande y el
+ * unico. Sin residencia ni palacio, igual que las Maravillas, para que se pueda tomar
+ * con catapultas y no haga falta bajarle la lealtad.
+ *
+ * Existe porque el panel de administracion las creaba con SQL a mano y sin marcarlas como
+ * NPC: nacian como aldeas de jugador propiedad de los Natars, o sea pagando manutencion
+ * de tropas y entrando en hambruna, y su guarnicion se moria sola. Es exactamente el bug
+ * que ya se habia arreglado en las Maravillas.
+ */
+function natarArtefactBuildings($wref, $treasuryLevel) {
+    global $database;
+    $wref = (int)$wref;
+    $treasuryLevel = max(1, min(20, (int)$treasuryLevel));
+    return mysqli_query($database->connection,
+        "UPDATE ".TB_PREFIX."fdata SET "
+        ."`f22t` = 27, `f22` = ".$treasuryLevel.", "   // el Tesoro que guarda el artefacto
+        ."`f28t` = 0,  `f28` = 0, "                    // sin residencia
+        ."`f19t` = 23, `f19` = 10, "                   // escondite
+        ."`f99t` = 0, "                                // no hay Maravilla
+        ."`f26t` = 0,  `f26` = 0, "                    // sin muralla
+        ."`f21t` = 15, `f21` = 1, "                    // edificio principal
+        ."`f39t` = 16, `f39` = 1 "                     // punto de reunion
+        ."WHERE `vref` = ".$wref);
+}
+
+/**
+ * El nombre de una aldea natar que guarda un artefacto.
+ *
+ * En el T4 oficial las aldeas natar normales se llaman con su coordenada y solo las que
+ * guardan un artefacto llevan nombre propio; ese es justamente el aviso visual de que
+ * ahi hay algo. Nunca empieza con "Aldea", por lo mismo que `natarSettlementName()`:
+ * varios listados anteponen esa palabra ellos mismos.
+ */
+function natarArtefactVillageName($type, $size, $wref, $x = null, $y = null) {
+    global $database;
+    if($x === null || $y === null) {
+        $coor = is_object($database) && method_exists($database, 'getCoor')
+            ? $database->getCoor((int)$wref) : null;
+        if(is_array($coor) && isset($coor['x'], $coor['y'])) {
+            $x = (int)$coor['x'];
+            $y = (int)$coor['y'];
+        }
+    }
+    $name = artefactDisplayName($type, $size);
+    if($x === null || $y === null) {
+        return $name;
+    }
+    return $name.' ('.(int)$x.'|'.(int)$y.')';
 }

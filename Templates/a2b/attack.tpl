@@ -311,7 +311,10 @@ if($canMoveHome){
                     }
                 }
 
-                $time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0);
+                // Esta es la vista previa de la llegada y tiene que dar exactamente lo mismo
+                // que Units::sendUnits(), que es quien crea el movimiento: las botas de los
+                // titanes se aplican en los dos o la pantalla anuncia una hora y llega a otra.
+                $time = $generator->procDistanceTime($from,$to,min($speeds),1,$bootsBonus,isset($travelBonus) ? $travelBonus : 0,artefactTroopSpeedFactor($database,$session->uid,$village->wid));
 
             ?>
 

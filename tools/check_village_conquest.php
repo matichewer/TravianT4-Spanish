@@ -417,6 +417,10 @@ check((int)scalar("SELECT created FROM {$P}vdata WHERE wref = ".V_TARGET) >= tim
     'para el conquistador la aldea nace hoy');
 check((int)scalar("SELECT owner FROM {$P}artefacts WHERE vref = ".V_TARGET) === U_ATT,
     'el artefacto que guardaba la aldea cambia de dueño con ella y se queda donde está');
+// Y su reloj vuelve a cero: conquistar la aldea es una captura, así que el artefacto
+// arranca de nuevo el retardo de activación en vez de llegar activo al conquistador.
+check((int)scalar("SELECT conquered FROM {$P}artefacts WHERE vref = ".V_TARGET) > 0,
+    'la conquista reinicia la fecha de captura del artefacto');
 
 // =====================================================================================
 section('D. Misma tribu: los edificios de tribu sobreviven');
@@ -564,7 +568,7 @@ check(strpos($automationSource, 'reassignHeroHomeVillage($database, $defenderOwn
     'y la reasignación de la aldea natal del héroe sigue en pie');
 
 // El bloque del héroe no puede pisar el aviso de la conquista.
-check(preg_match('/\} elseif\(!\$conquestGarrisonStays\) \{\s*\/\/ Si la aldea acaba de caer/s', $automationSource) === 1,
+check(preg_match('/\} elseif\(!\$conquestGarrisonStays\) \{\s*\/\/ Robar un artefacto\./s', $automationSource) === 1,
     'reclamar el artefacto con el héroe no corre sobre una aldea recién conquistada');
 
 // El bloqueo por una conquista simultánea y el cerrojo de expansión.

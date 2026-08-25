@@ -687,19 +687,21 @@ class Technology {
 		}
 	}
 
+	/**
+	 * El factor que el artefacto del entrenador le aplica al tiempo de entrenamiento.
+	 *
+	 * Oficial: el pequeño y el único lo parten a la mitad, el grande lo deja en 3/4. Acá
+	 * el grande valía 0,25 —o sea, era el más fuerte de los tres y cuadruplicaba la
+	 * velocidad— porque la tabla estaba escrita a mano y al revés. Ahora sale de
+	 * artefactValueTable(), que es la tabla oficial completa.
+	 */
 	public function getTrainingArtefactFactor() {
 		global $database, $session, $village;
-		if(!method_exists($database,'getActiveArtefactsByType')) {
+		if(!is_object($database) || !method_exists($database,'getArtefactEffectValue')) {
 			return 1;
 		}
-		$factor = 1;
-		$artefacts = $database->getActiveArtefactsByType((int)$village->wid,(int)$session->uid,5);
-		foreach($artefacts as $artefact) {
-			$size = (int)$artefact['size'];
-			$candidate = $size === 2 ? 0.25 : 0.5;
-			$factor = min($factor,$candidate);
-		}
-		return $factor;
+		$factor = (float)$database->getArtefactEffectValue((int)$village->wid,(int)$session->uid,ARTEFACT_TRAINER);
+		return $factor > 0 ? $factor : 1;
 	}
 	
 	public function meetRRequirement($tech) {

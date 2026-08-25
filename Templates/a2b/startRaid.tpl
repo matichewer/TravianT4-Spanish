@@ -57,30 +57,20 @@
                 }
             }
             
-            $artefact = count($database->getOwnUniqueArtefactInfo2($getFLData['owner'],2,3,0));
-			$artefact1 = count($database->getOwnUniqueArtefactInfo2($getFLData['wref'],2,1,1));
-			$artefact2 = count($database->getOwnUniqueArtefactInfo2($getFLData['owner'],2,2,0));
-			if($artefact > 0){
-			$fastertroops = 3;
-			}else if($artefact1 > 0){
-			$fastertroops = 2;
-			}else if($artefact2 > 0){
-			$fastertroops = 1.5;
-			}else{
-			$fastertroops = 1;
-			}
-			$time = round($generator->procDistanceTime($from,$to,min($speeds),1)/$fastertroops);
-			$foolartefact = $database->getFoolArtefactInfo(2,$village->wid,$session->uid);
-			if(count($foolartefact) > 0){
-			foreach($foolartefact as $arte){
-			if($arte['bad_effect'] == 1){
-			$time *= $arte['effect2'];
-			}else{
-			$time /= $arte['effect2'];
-			$time = round($time);
-			}
-			}
-			}
+			// Botas de los titanes de la aldea que lanza el asalto. Antes esto se resolvía
+			// acá con tres consultas propias que además daban el único x3 (el oficial es
+			// x2), y el artefacto del necio se leía de columnas que nunca existieron. Es
+			// la misma función que usa el punto de reunión, así que la lista de granjeo ya
+			// no puede tener su propia velocidad.
+			$time = $generator->procDistanceTime(
+				$from,
+				$to,
+				min($speeds),
+				1,
+				0,
+				0,
+				artefactTroopSpeedFactor($database,$getFLData['owner'],$getFLData['wref'])
+			);
 			if($data['u7'] > 0){
             $ctar1 = 99;
 			}else{

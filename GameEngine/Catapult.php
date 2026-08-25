@@ -19,7 +19,7 @@ function buildingDisplayName($type, $fallback = 'Error') {
         12 => 'Herrería', 14 => 'Plaza de torneos', 15 => 'Edificio principal',
         16 => 'Plaza de reuniones', 17 => 'Mercado', 18 => 'Embajada', 19 => 'Cuartel',
         20 => 'Establo', 21 => 'Taller', 22 => 'Academia', 23 => 'Escondite',
-        24 => 'Ayuntamiento', 25 => 'Residencia', 26 => 'Palacio', 27 => 'Tesorería',
+        24 => 'Ayuntamiento', 25 => 'Residencia', 26 => 'Palacio', 27 => 'Tesoro',
         28 => 'Oficina de comercio', 29 => 'Gran cuartel', 30 => 'Gran establo',
         31 => 'Muralla', 32 => 'Muro de tierra', 33 => 'Empalizada',
         34 => 'Taller de cantería', 35 => 'Cervecería', 36 => 'Trampero',
@@ -51,7 +51,6 @@ function buildingNameIsFeminine($type) {
         18, // Embajada
         22, // Academia
         25, // Residencia
-        27, // Tesorería
         28, // Oficina de comercio
         31, // Muralla
         33, // Empalizada

@@ -139,8 +139,9 @@ class StarvationDatabaseStub {
         return true;
     }
     public function getUserField($uid, $field, $mode) { return 0; }
-    public function getOwnArtefactInfoByType($wref, $type) { return array('type'=>0, 'size'=>0, 'owner'=>0, 'vref'=>0); }
-    public function getOwnUniqueArtefactInfo($uid, $type, $size) { return array('type'=>0, 'size'=>0, 'owner'=>0); }
+    public function getArtefactsByOwner($owner) { return array(); }
+    public function getActiveArtefactsByOwner($owner) { return array(); }
+    public function getArtefactEffectValue($vref, $owner, $type) { return 1; }
     public function getHeroData($uid) { return array('dead'=>1, 'home'=>0, 'wref'=>0); }
     public function query($q) { return true; }
     public function query_return($q) { return array(); }

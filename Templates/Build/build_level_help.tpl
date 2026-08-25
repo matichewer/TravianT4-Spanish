@@ -103,13 +103,13 @@ if ($buildingHelpType === 'rally-point') {
 	}
 	$buildingHelpNote = 'El nivel de Academia no basta por sí solo: cada unidad puede exigir además Herrería, Cuartel, Establo, Taller, Plaza de reuniones u otro edificio. Cada nivel reduce también la duración de las investigaciones.';
 } elseif ($buildingHelpType === 'treasury') {
-	$buildingHelpTitle = 'Ventajas de la Tesorería';
+	$buildingHelpTitle = 'Ventajas del Tesoro';
 	$buildingHelpItems = array(
 		1 => 'Permite consultar los artefactos propios y los artefactos disponibles en el servidor.',
 		10 => 'Permite guardar y capturar un artefacto pequeño.',
 		20 => 'Permite guardar y capturar un artefacto grande o único.'
 	);
-	$buildingHelpNote = 'Cada Tesorería almacena un solo artefacto. Para capturarlo, hay que destruir la Tesorería enemiga y realizar un ataque normal con el héroe, que debe sobrevivir.';
+	$buildingHelpNote = 'Cada Tesoro almacena un solo artefacto. Para capturarlo hay que derribar el Tesoro enemigo y ganar un ataque normal (no un asalto) con el héroe, que además debe sobrevivir.';
 } elseif ($buildingHelpType === 'tournament-square') {
 	$buildingHelpTitle = 'Ventajas de la Plaza de torneos';
 	$buildingHelpItems = array(
