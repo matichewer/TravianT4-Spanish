@@ -208,7 +208,8 @@ class adm_DB {
     mysql_query($q, $this->connection);  
     $q = "DELETE FROM ".TB_PREFIX."bdata WHERE `wid` = $wref;";
     mysql_query($q, $this->connection); 
-    $q = "DELETE FROM ".TB_PREFIX."abdata WHERE `wid` = $wref;";
+    // `abdata` se indexa por `vref`. Con `wid` el DELETE falla y la fila queda huerfana.
+    $q = "DELETE FROM ".TB_PREFIX."abdata WHERE `vref` = $wref;";
     mysql_query($q, $this->connection);    
     $q = "DELETE FROM ".TB_PREFIX."fdata WHERE `vref` = $wref;";
     mysql_query($q, $this->connection);
