@@ -157,6 +157,61 @@ class Technology {
 		}
 		return $listArray;
 	}
+
+	/**
+	 * Agrupa por tipo todas las tropas alojadas en una aldea para el bloque lateral.
+	 * `units` y cada fila de `enforcement` son contingentes distintos, pero al jugador
+	 * le interesa la guarnicion total: un mismo uN no debe ocupar varios renglones.
+	 */
+	public function aggregateHostedUnitList($units, $reinforcements) {
+		$totals = array();
+		$names = array();
+		$order = array();
+
+		foreach((array)$units as $unit) {
+			$id = isset($unit['id']) ? (string)$unit['id'] : '';
+			$amount = isset($unit['amt']) ? (int)$unit['amt'] : 0;
+			if(($id === 'hero' || ctype_digit($id)) && $amount > 0) {
+				if(!isset($totals[$id])) {
+					$totals[$id] = 0;
+					$order[] = $id;
+				}
+				$totals[$id] += $amount;
+				$names[$id] = isset($unit['name']) ? $unit['name'] : ($id === 'hero' ? U0 : $this->unarray[(int)$id]);
+			}
+		}
+
+		foreach((array)$reinforcements as $reinforcement) {
+			$heroAmount = isset($reinforcement['hero']) ? (int)$reinforcement['hero'] : 0;
+			if($heroAmount > 0) {
+				if(!isset($totals['hero'])) {
+					$totals['hero'] = 0;
+					$names['hero'] = U0;
+					$order[] = 'hero';
+				}
+				$totals['hero'] += $heroAmount;
+			}
+			for($i = 1; $i <= 50; $i++) {
+				$amount = isset($reinforcement['u'.$i]) ? (int)$reinforcement['u'.$i] : 0;
+				if($amount <= 0) {
+					continue;
+				}
+				$id = (string)$i;
+				if(!isset($totals[$id])) {
+					$totals[$id] = 0;
+					$names[$id] = $this->unarray[$i];
+					$order[] = $id;
+				}
+				$totals[$id] += $amount;
+			}
+		}
+
+		$list = array();
+		foreach($order as $id) {
+			$list[] = array('id' => $id, 'name' => $names[$id], 'amt' => $totals[$id]);
+		}
+		return $list;
+	}
 	
 	/**
 	 * Cuántas unidades de este tipo se pueden pedir de una: sólo lo que alcanzan los
