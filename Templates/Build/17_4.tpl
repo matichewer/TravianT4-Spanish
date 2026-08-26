@@ -125,6 +125,15 @@ $routes = $database->getTradeRoute($session->uid,$village->wid);
     if(count($routes) == 0) {
     echo "<tr><td colspan=\"6\" class=\"none\">No hay rutas comerciales activas.</td></tr>";
     }else{
+$routeIntervalLabel = function($seconds){
+	$seconds = (int)$seconds;
+	if($seconds % 3600 === 0){
+		$hours = (int)($seconds / 3600);
+		return $hours === 1 ? 'hora' : $hours.' horas';
+	}
+	$minutes = (int)($seconds / 60);
+	return $minutes === 1 ? 'minuto' : $minutes.' minutos';
+};
 // Una ruta con varios horarios es, por dentro, una fila por horario: se agrupan las
 // que comparten destino+recursos+envios para mostrar un solo renglon con todos sus
 // horarios juntos, en vez de repetir la descripcion una vez por horario.
@@ -170,10 +179,32 @@ echo "<a href=karte.php?d=".(int)$firstRoute['wid']."&amp;c=".$generator->getMap
 <td>
 <?php
 $scheduleTimes = array();
+$scheduleSeconds = array();
 foreach($groupRoutes as $groupRoute){
 	$scheduleTimes[] = sprintf('%02d:%02d',(int)$groupRoute['start'],(int)$groupRoute['start_minute']);
+	$scheduleSeconds[] = (int)$groupRoute['start']*3600 + (int)$groupRoute['start_minute']*60;
 }
-echo implode('<br>',$scheduleTimes);
+$scheduleSummary = implode(', ',$scheduleTimes);
+$scheduleCount = count($scheduleSeconds);
+if($scheduleCount >= 3){
+	$interval = $scheduleSeconds[1] - $scheduleSeconds[0];
+	$regular = $interval > 0;
+	for($scheduleIndex = 2; $regular && $scheduleIndex < $scheduleCount; $scheduleIndex++){
+		$regular = ($scheduleSeconds[$scheduleIndex] - $scheduleSeconds[$scheduleIndex - 1]) === $interval;
+	}
+	if($regular){
+		$wrapInterval = 86400 - $scheduleSeconds[$scheduleCount - 1] + $scheduleSeconds[0];
+		if($wrapInterval === $interval){
+			$scheduleSummary = $interval === 3600 ? 'Cada hora' : 'Cada '.$routeIntervalLabel($interval);
+		}else{
+			$scheduleSummary = $scheduleTimes[0].'–'.$scheduleTimes[$scheduleCount - 1].', cada '.$routeIntervalLabel($interval);
+		}
+	}else if($scheduleCount > 3){
+		$scheduleSummary = implode(', ',array_slice($scheduleTimes,0,3)).' y '.($scheduleCount - 3).' más';
+	}
+}
+$scheduleTooltip = 'Horarios: '.implode(', ',$scheduleTimes);
+echo '<span title="'.htmlspecialchars($scheduleTooltip,ENT_QUOTES,'UTF-8').'">'.htmlspecialchars($scheduleSummary,ENT_QUOTES,'UTF-8').'</span>';
 ?>
 </td>
 <td>

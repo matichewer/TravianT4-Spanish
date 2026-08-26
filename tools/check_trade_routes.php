@@ -203,8 +203,13 @@ section('E2. Agrupar varios horarios en una sola fila del listado');
 // mismo), que es lo que procTradeRoutes() usa para decidir que filas van al mismo grupo.
 check(strpos($tplSource,"\$groupKey = \$route['wid'].'|'.\$route['wood'].'|'.\$route['clay'].'|'.\$route['iron'].'|'.\$route['crop'].'|'.\$route['deliveries'];") !== false,
 	'el agrupado usa la misma firma (destino+recursos+envios) que define un grupo al guardar');
-check(strpos($tplSource,"echo implode('<br>',\$scheduleTimes);") !== false,
-	'todos los horarios de un grupo se listan juntos, uno debajo del otro, en una sola fila de la tabla');
+check(strpos($tplSource,"\$scheduleSummary = \$interval === 3600 ? 'Cada hora' : 'Cada '.\$routeIntervalLabel(\$interval);") !== false,
+	'un calendario que cubre el dia con intervalos regulares se resume sin alargar la fila');
+check(strpos($tplSource,"\$scheduleTooltip = 'Horarios: '.implode(', ',\$scheduleTimes);") !== false
+	&& strpos($tplSource,'htmlspecialchars($scheduleTooltip,ENT_QUOTES') !== false,
+	'el resumen conserva en un tooltip el detalle de todos los horarios del grupo');
+check(strpos($tplSource,".' y '.(\$scheduleCount - 3).' más'") !== false,
+	'un grupo numeroso sin patron muestra solo tres horarios y la cantidad restante');
 check(strpos($tplSource,'function($a,$b){') !== false && substr_count($tplSource,'<=>') >= 2,
 	'tanto los grupos como los horarios dentro de cada grupo se ordenan de forma estable, no en el orden en que llegaron de la base');
 
