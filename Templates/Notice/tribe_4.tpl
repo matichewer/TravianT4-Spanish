@@ -11,7 +11,7 @@ $start=31;
             echo '<a href="spieler.php?uid='.$database->getUserField($dataarray[30],"id",0).'">';
             echo "<span class=\"none2\">Naturaleza</span>";
             $coor = $database->getCoor($dataarray[31]);
-            echo '</a> desde la aldea <a href="karte.php?d='.$dataarray[31].'&amp;c='.$generator->getMapCheck($dataarray[31]).'">
+            echo '</a> desde la aldea <a href="karte.php?d='.$dataarray[31].'&amp;c='.$generator->getMapCheck($dataarray[31]).'&amp;popup=1">
             '.stripslashes($dataarray[32]).' ('.$coor['x'].'|'.$coor['y'].')</a>';
             } else {
             echo REPORT_REINF;

@@ -387,8 +387,10 @@ body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:
 		});
 	}
 	function openTileDetails(event,link){
-		event.preventDefault();
-		event.stopPropagation();
+		if(event){
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		if(dialogOpen) return false;
 		var url=new URI(link.href);
 		var x=parseInt(url.getData('x'),10), y=parseInt(url.getData('y'),10);
@@ -432,6 +434,11 @@ body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:
 				openTileDetails(event,link);
 			}
 		},true);
+		<?php if(isset($_GET['popup']) && $_GET['popup'] === '1' && isset($_GET['d']) && isset($_GET['c']) && $generator->getMapCheck($_GET['d']) == $_GET['c']) { ?>
+		/* Los enlaces de informes pueden pedir el mismo detalle que abre un clic en la
+		   casilla, después de que el mapa ya quedó centrado en el destino firmado. */
+		openTileDetails(null,{href:'position_details.php?x=<?php echo (int)$x; ?>&y=<?php echo (int)$y; ?>'});
+		<?php } ?>
 		data.addEventListener('dragstart', function(e){ e.preventDefault(); });
 		data.addEventListener('pointerdown', function(e){
 			if(e.button!==0) return;               /* primary mouse button / touch / pen */
