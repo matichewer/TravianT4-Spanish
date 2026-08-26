@@ -87,7 +87,26 @@ if($validGroup){
 }else{
 ?>
 
-<table id="npc" cellpadding="1" cellspacing="1">
+<style type="text/css">
+div#build.gid17 table.tradeRoutes col.resourcesColumn { width: 120px; }
+div#build.gid17 table.tradeRoutes .routeResource {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	white-space: nowrap;
+}
+div#build.gid17 table.tradeRoutes .routeResource img { flex: 0 0 auto; }
+</style>
+<table id="npc" class="tradeRoutes" cellpadding="1" cellspacing="1">
+<colgroup>
+<col class="resourcesColumn">
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
 <thead>
 <tr>
 <th>Recursos</th>
@@ -137,9 +156,9 @@ $routeResourceLabels = array(1=>'Madera',2=>'Barro',3=>'Hierro',4=>'Cereal');
 $routeResourceValues = array(1=>$firstRoute['wood'],2=>$firstRoute['clay'],3=>$firstRoute['iron'],4=>$firstRoute['crop']);
 $routeResourceLines = array();
 foreach($routeResourceLabels as $resIndex => $resLabel){
-	$routeResourceLines[] = '<img src="'.GP_LOCATE.'img/r/'.$resIndex.'.gif" alt="'.$resLabel.'" title="'.$resLabel.'"> '.(int)$routeResourceValues[$resIndex];
+	$routeResourceLines[] = '<span class="routeResource"><img src="'.GP_LOCATE.'img/r/'.$resIndex.'.gif" alt="'.$resLabel.'" title="'.$resLabel.'"><span>'.number_format((int)$routeResourceValues[$resIndex],0,',','.').'</span></span>';
 }
-echo implode('<br>',$routeResourceLines);
+echo implode('',$routeResourceLines);
 ?>
 </td>
 <td>
