@@ -251,6 +251,10 @@ warsimReportAssert($battle->getReportSimulationInput(37) === false, 'rechaza un 
 
 $warsimSource = file_get_contents(dirname(__DIR__).'/warsim.php');
 warsimReportAssert(
+	strpos($warsimSource, "if(\$refillAttackerFromVillage && !empty(\$_SESSION['warsimLastInput']))") !== false,
+	'la última simulación sólo se restaura al cambiar de aldea'
+);
+warsimReportAssert(
 	strpos($warsimSource, "getReportSimulationInput(\$_GET['bid'])") !== false,
 	'warsim.php atiende el parámetro bid del botón del informe'
 );

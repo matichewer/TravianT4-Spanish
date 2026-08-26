@@ -10,11 +10,14 @@ if(isset($_GET['newdid'])) {
 $simulationInput = $_POST;
 $refillAttackerFromVillage = false;
 if(empty($simulationInput) && !isset($_GET['newdid'])) {
-	if(!empty($_SESSION['warsimLastInput'])) {
-		$simulationInput = $_SESSION['warsimLastInput'];
-	}
 	$refillAttackerFromVillage = !empty($_SESSION['warsimRefillAttacker']);
 	unset($_SESSION['warsimRefillAttacker']);
+	// La última configuración sólo existe para sobrevivir al selector de aldea del
+	// simulador. Entrar normalmente desde el menú debe empezar en blanco; los accesos
+	// desde un oasis o un informe cargan sus propios escenarios más abajo.
+	if($refillAttackerFromVillage && !empty($_SESSION['warsimLastInput'])) {
+		$simulationInput = $_SESSION['warsimLastInput'];
+	}
 }
 if(empty($_POST) && isset($_GET['bid'])) {
 	// Botón "simular" de un informe: precarga el combate tal como lo vio el jugador.
