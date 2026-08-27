@@ -23,10 +23,10 @@ if($bindicate == 1) {
 	<div class="contractText">Costo:</div>
 	<div class="contractCosts">
     <div class="showCosts">
-    <span class="resources r1 little_res"><img class="r1" src="img/x.gif" title="Madera"><?php echo $uprequire['wood']; ?></span>
-    <span class="resources r2 little_res"><img class="r2" src="img/x.gif" title="Barro"><?php echo $uprequire['clay']; ?></span>
-    <span class="resources r3 little_res"><img class="r3" src="img/x.gif" title="Hierro"><?php echo $uprequire['iron']; ?></span>
-    <span class="resources r4"><img class="r4" src="img/x.gif" title="Cereal"><?php echo $uprequire['crop']; ?></span>
+    <span class="resources r1 little_res"><img class="r1" src="img/x.gif" title="Madera"><?php echo number_format($uprequire['wood'], 0, ',', '.'); ?></span>
+    <span class="resources r2 little_res"><img class="r2" src="img/x.gif" title="Barro"><?php echo number_format($uprequire['clay'], 0, ',', '.'); ?></span>
+    <span class="resources r3 little_res"><img class="r3" src="img/x.gif" title="Hierro"><?php echo number_format($uprequire['iron'], 0, ',', '.'); ?></span>
+    <span class="resources r4"><img class="r4" src="img/x.gif" title="Cereal"><?php echo number_format($uprequire['crop'], 0, ',', '.'); ?></span>
     <span class="resources r5"><img class="r5" src="img/x.gif" title="Consumo de cereal"><?php echo $uprequire['pop']; ?></span>
     <div class="clear"></div>
     <span class="clocks"><img class="clock" src="img/x.gif" title="Duración">
