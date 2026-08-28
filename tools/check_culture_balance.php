@@ -54,8 +54,9 @@ function mysql_error() { return ''; }
 require dirname(__DIR__).'/GameEngine/Production.php';
 require dirname(__DIR__).'/GameEngine/Automation.php';
 
-// --- A. Las dos tablas de requisitos son las oficiales ----------------------------
-// Verificadas dígito por dígito contra la tabla de Travian: Legends.
+// --- A. Las tablas oficiales y la intermedia conservan su definición ---------------
+// Las oficiales están verificadas dígito por dígito contra Travian: Legends. La
+// intermedia es exactamente 2/3 de x1, redondeada a la centena más cercana.
 
 cultureBalanceAssert(
 	travianCultureRequiredForVillageCount(2, 1) === 2000
@@ -75,25 +76,56 @@ cultureBalanceAssert(
 		&& travianCultureRequiredForVillageCount(50, 0) === 4115800,
 	'El modo 0 dejó de ser la columna oficial x3.'
 );
+cultureBalanceAssert(
+	travianCultureRequiredForVillageCount(2, 2) === 1000
+		&& travianCultureRequiredForVillageCount(3, 2) === 4600,
+	'El modo 2 histórico cambió al introducir la curva intermedia.'
+);
+$slowThresholds = travianCultureThresholds(1);
+$intermediateThresholds = travianCultureThresholds(3);
+cultureBalanceAssert(
+	count($intermediateThresholds) === count($slowThresholds) && count($intermediateThresholds) === 125,
+	'La curva intermedia no cubre las mismas 125 capacidades que la x1.'
+);
+$previousIntermediate = -1;
+foreach($slowThresholds as $villageCount => $slowRequirement){
+	$expectedIntermediate = (int)(round((((int)$slowRequirement * 2) / 3) / 100) * 100);
+	$actualIntermediate = isset($intermediateThresholds[$villageCount]) ? (int)$intermediateThresholds[$villageCount] : null;
+	cultureBalanceAssert(
+		$actualIntermediate === $expectedIntermediate,
+		"El modo 3 no es 2/3 de x1, redondeado a centenas, para la aldea $villageCount."
+	);
+	cultureBalanceAssert(
+		$actualIntermediate !== null && $actualIntermediate > $previousIntermediate,
+		"La curva intermedia dejó de ser estrictamente creciente en la aldea $villageCount."
+	);
+	$previousIntermediate = $actualIntermediate;
+}
+cultureBalanceAssert(
+	travianCultureRequiredForVillageCount(2, 3) === 1300
+		&& travianCultureRequiredForVillageCount(3, 3) === 5300
+		&& travianCultureRequiredForVillageCount(4, 3) === 13300
+		&& travianCultureRequiredForVillageCount(5, 3) === 26000,
+	'La curva intermedia dejó de publicar 1.300 / 5.300 / 13.300 / 26.000 al comienzo.'
+);
 
 // --- B. El modo sale de la velocidad del mundo ------------------------------------
 
 $installerConfigTemplate = file_get_contents(dirname(__DIR__).'/install/data/constant_format_mysqli.tpl');
 $worldConfig = file_get_contents(dirname(__DIR__).'/config/config.php');
-// El único desvío deliberado del oficial: la columna x1 de umbrales sobre una economía
-// x3, o sea expansión 3 veces más lenta. La producción pasiva sigue siendo la oficial
-// sin tocar, que es lo que el resto de este archivo verifica.
+// El único desvío deliberado del oficial: la curva intermedia sobre una economía x3,
+// con objetivo de ~10 días. La producción pasiva sigue oficial y sin tocar.
 foreach(array('el instalador' => $installerConfigTemplate, 'config/config.php' => $worldConfig) as $where => $source){
 	cultureBalanceAssert(
-		strpos($source, 'define("CP", 1);') !== false,
-		"En $where la tabla de cultura dejó de ser la columna x1."
+		strpos($source, 'define("CP", 3);') !== false,
+		"En $where la tabla de cultura dejó de ser la curva intermedia."
 	);
 }
 // Cambiar la tabla en un mundo en juego sin trasladar los saldos regala (o quita) tres
 // aldeas de golpe a cada cuenta. Que la herramienta exista y sepa ir en los dos
 // sentidos es parte del contrato de este knob.
 cultureBalanceAssert(
-	travianCultureRescale(travianCultureRescale(33368, 1, 0)['newPoints'], 0, 1)['newPoints'] === 33367,
+	travianCultureRescale(travianCultureRescale(33368, 1, 3)['newPoints'], 3, 1)['newPoints'] === 33367,
 	'El traslado de saldos dejó de poder deshacerse: cambiar de tabla sería irreversible.'
 );
 cultureBalanceAssert(
@@ -341,10 +373,10 @@ cultureBalanceAssert(
 // Es lo que hace seguro cambiar de columna en un mundo en juego: nadie gana ni pierde
 // un cupo de aldea, y la barra de progreso queda donde estaba.
 
-foreach(array(0, 3, 1999, 2000, 22164, 24978, 33368, 251000, 12347000) as $points){
-	$rescaled = travianCultureRescale($points, 1, 0);
+foreach(array(0, 3, 1299, 1999, 2000, 22164, 24978, 33368, 251000, 12347000, 104470000, 120000000) as $points){
+	$rescaled = travianCultureRescale($points, 1, 3);
 	$before = travianCultureStatus($points, 0, 1);
-	$after = travianCultureStatus($rescaled['newPoints'], 0, 0);
+	$after = travianCultureStatus($rescaled['newPoints'], 0, 3);
 	cultureBalanceAssert(
 		$before['cultureCapacity'] === $after['cultureCapacity'],
 		"Trasladar $points PC cambió el cupo de aldeas (".$before['cultureCapacity'].' -> '.$after['cultureCapacity'].').'
@@ -354,14 +386,34 @@ foreach(array(0, 3, 1999, 2000, 22164, 24978, 33368, 251000, 12347000) as $point
 		"Trasladar $points PC movió el avance hacia la aldea siguiente."
 	);
 }
-cultureBalanceAssert(travianCultureRescale(33368, 1, 0)['newPoints'] === 11062, 'El traslado dejó de conservar la posición en la curva.');
-cultureBalanceAssert(travianCultureRescale(0, 1, 0)['newPoints'] === 0, 'Una cuenta sin PC no puede salir del traslado con PC.');
+cultureBalanceAssert(travianCultureRescale(2000, 1, 3)['newPoints'] === 1300, 'Un umbral exacto debe caer en el mismo umbral de la curva intermedia.');
+cultureBalanceAssert(travianCultureRescale(33368, 1, 3)['newPoints'] === 22235, 'El traslado dejó de conservar la posición fraccionaria en la curva.');
+cultureBalanceAssert(travianCultureRescale(104470000, 1, 3)['newPoints'] === 69646700, 'La última fila configurada no se traslada al umbral intermedio correspondiente.');
+cultureBalanceAssert(travianCultureRescale(120000000, 1, 3)['newPoints'] === 80000038, 'El saldo por encima de la tabla dejó de usar la razón de la última fila.');
+cultureBalanceAssert(travianCultureRescale(0, 1, 3)['newPoints'] === 0, 'Una cuenta sin PC no puede salir del traslado con PC.');
 
 $rescaleTool = file_get_contents(dirname(__DIR__).'/tools/rescale_culture_points.php');
 cultureBalanceAssert(strpos($rescaleTool, "in_array('--aplicar', \$argv, true)") !== false, 'La herramienta de traslado debe requerir --aplicar explícito.');
+cultureBalanceAssert(strpos($rescaleTool, '$toMode = 3;') !== false, 'La herramienta debe proponer por defecto el traslado x1 -> intermedia.');
 cultureBalanceAssert(strpos($rescaleTool, 'mysqli_begin_transaction') !== false, 'El traslado debe correr dentro de una transacción.');
 cultureBalanceAssert(strpos($rescaleTool, 'admin_log') !== false, 'El traslado debe anotarse para no poder repetirse.');
 cultureBalanceAssert(strpos($rescaleTool, "playerAccountSql") !== false, 'El traslado debe excluir las cuentas del sistema con el helper compartido.');
+cultureBalanceAssert(
+	strpos($rescaleTool, "travianCultureStatus(\$row['cp'], 0, \$fromMode)") !== false
+		&& strpos($rescaleTool, "travianCultureStatus(\$rescale['newPoints'], 0, \$toMode)") !== false,
+	'La migración debe comparar la capacidad cultural pura, sin enmascararla con las aldeas poseídas.'
+);
+cultureBalanceAssert(
+	strpos($rescaleTool, 'if($apply && !mysqli_begin_transaction') !== false
+		&& strpos($rescaleTool, 'if($apply) {'.PHP_EOL."\t\t\$newPoints") !== false,
+	'La simulación debe ser de sólo lectura y las escrituras deben quedar detrás de --aplicar.'
+);
+cultureBalanceAssert(
+	strpos($rescaleTool, 'if($slotDrift > 0)') !== false
+		&& strpos($rescaleTool, 'mysqli_rollback') !== false
+		&& strpos($rescaleTool, '$previous') !== false,
+	'La aplicación debe abortar por deriva de cupos y negarse a repetir una migración registrada.'
+);
 
 $recountTool = file_get_contents(dirname(__DIR__).'/tools/fix_village_cp.php');
 cultureBalanceAssert(strpos($recountTool, "in_array('--aplicar', \$argv, true)") !== false, 'El recuento de vdata.cp debe requerir --aplicar explícito.');

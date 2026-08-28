@@ -256,7 +256,11 @@ check($database->getConquestEligibility(V_ATT, V_TARGET, U_ATT, U_THIRD)['status
 $cultureAt = function($cp, $villages) {
     return travianCultureExpansionEligibility($cp, $villages, 0, CP)['eligible'];
 };
+check(CP === 3 && travianCultureRequiredForVillageCount(2, CP) === 1300,
+    'la conquista usa la curva cultural intermedia autoritativa');
 check($cultureAt(0, 1) === false, 'sin puntos de cultura no alcanza para una aldea más');
+check($cultureAt(1299, 1) === false && $cultureAt(1300, 1) === true,
+    'la conquista cambia de elegibilidad exactamente en el umbral intermedio');
 check($cultureAt(99999999, 1) === true, 'con puntos de sobra sí');
 $automationSource = file_get_contents($root.'/GameEngine/Automation.php');
 check(preg_match('/if\(!\$cultureEligibility\[.eligible.\]\) \{\s*\$conquestStatus = .culture.;/', $automationSource) === 1,

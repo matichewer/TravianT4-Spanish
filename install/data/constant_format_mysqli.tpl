@@ -87,15 +87,15 @@ define("CRANNY_CAPACITY","%CRANNYCAP%");
 define("TRAPPER_CAPACITY","%TRAPPERCAP%");
 
 // ***** Village Expand
-// Culture-point requirement table. 1 = official x1 column ($cp1), 0 = official x3
-// column ($cp0), 2 = a curve this repo invented (not official, do not use).
+// Culture-point requirement table. 3 = this world's intermediate curve (two thirds
+// of x1, rounded to hundreds), 1 = official x1, 0 = official x3, 2 = the historical
+// custom curve (do not use).
 // Not configurable by the installer.
 //
-// Deliberately the x1 column even on a speed world: passive production stays official
-// and unscaled, so this makes expansion three times slower than an official x3 world
-// (~15 days per village instead of ~5). Official pacing is calibrated for gameworlds
-// with thousands of players; this one has a handful. See config/config.php.
-define("CP", 1);
+// Passive production stays official and unscaled. The intermediate threshold targets
+// ~10 days per village: between official x3 (~5) and the x1 curve previously used
+// here (~15). See config/config.php.
+define("CP", 3);
 
 // ***** Demolish Level Required
 // Defines which level of Main building is required to be able to

@@ -397,6 +397,18 @@ $cp2 = array(
 	125 => 60320000);
 
 /*
+ * Modo 3: curva intermedia propia de este mundo, con un objetivo aproximado de
+ * 10 días por aldea sobre su economía x3. Se deriva de la columna oficial x1:
+ * dos tercios de cada requisito, redondeados a la centena más cercana. Así el
+ * origen del balance queda auditable y no se cambia el modo 2 histórico.
+ */
+$cp3 = array();
+foreach($cp1 as $villageCount => $requiredCulture) {
+	$cp3[(int)$villageCount] = (int)(round((((int)$requiredCulture * 2) / 3) / 100) * 100);
+}
+unset($villageCount, $requiredCulture);
+
+/*
  * Keep every culture-point check on the same rule. This file is included more
  * than once by some legacy templates, so the functions must be guarded.
  */
@@ -531,14 +543,15 @@ if(!function_exists('travianCultureThresholds')) {
 	 * Modo 1 = la columna x1 del T4 oficial ($cp1) y modo 0 = la columna x3 ($cp0).
 	 * Las dos son las tablas oficiales verificadas dígito por dígito (aldea 2: 2.000
 	 * y 500; aldea 10: 251.000 y 83.500; aldea 50: 12.347.000 y 4.115.800). El modo 2
-	 * ($cp2) es un invento de este repositorio, no una tabla del juego.
+	 * ($cp2) es un invento histórico de este repositorio. El modo 3 ($cp3) es la curva
+	 * intermedia documentada: dos tercios de x1, redondeados a centenas.
 	 *
 	 * Qué modo usa el mundo lo decide `CP` en config/config.php, derivado de SPEED:
 	 * en el oficial la producción pasiva no escala con la velocidad, escala el
 	 * requisito hacia abajo.
 	 */
 	function travianCultureThresholds($mode) {
-		global $cp0, $cp1, $cp2;
+		global $cp0, $cp1, $cp2, $cp3;
 
 		$mode = (int)$mode;
 		if($mode === 0) {
@@ -549,6 +562,9 @@ if(!function_exists('travianCultureThresholds')) {
 		}
 		if($mode === 2) {
 			return $cp2;
+		}
+		if($mode === 3) {
+			return $cp3;
 		}
 
 		return array();

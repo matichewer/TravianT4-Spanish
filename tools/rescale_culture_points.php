@@ -5,19 +5,18 @@
  *
  *   docker compose exec -T web php tools/rescale_culture_points.php
  *   docker compose exec -T web php tools/rescale_culture_points.php --aplicar
- *   docker compose exec -T web php tools/rescale_culture_points.php --desde=1 --hasta=0
+ *   docker compose exec -T web php tools/rescale_culture_points.php --desde=1 --hasta=3
  *
  * Sin --aplicar sólo informa.
  *
  * Hay que correrlo **una sola vez y junto al cambio de tabla**. Este mundo x3 usaba la
- * columna oficial x1 ($cp1: 2.000 / 8.000 / 20.000 ...) y pasa a la columna oficial x3
- * ($cp0: 500 / 2.600 / 6.700 ...), que es la que corresponde a su velocidad. Los PC ya
- * acumulados se ganaron contra la tabla vieja: si se dejan como están, cada jugador se
- * encuentra de golpe con dos o tres aldeas de más habilitadas.
+ * columna oficial x1 ($cp1: 2.000 / 8.000 / 20.000 ...) y pasa a la curva intermedia
+ * propia ($cp3: 1.300 / 5.300 / 13.300 ...), que apunta a unos 10 días por aldea. Los
+ * PC acumulados se ganaron contra la tabla vieja: si se dejan intactos al bajar los
+ * requisitos, algunos jugadores obtienen progreso o cupos que todavía no habían ganado.
  *
- * Lo que se conserva es la posición en la curva, no un factor fijo: las dos tablas
- * oficiales no son una la otra dividida por tres (aldea 2 va de 2.000 a 500, aldea 3
- * de 8.000 a 2.600). Ver travianCultureRescale() en GameEngine/Data/cp.php. Después de
+ * Lo que se conserva es la posición en la curva, no el saldo bruto. Ver
+ * travianCultureRescale() en GameEngine/Data/cp.php. Después de
  * correrlo, cada jugador tiene exactamente las mismas aldeas habilitadas y el mismo
  * porcentaje de avance hacia la siguiente que antes.
  *
@@ -35,7 +34,7 @@ require_once dirname(__DIR__).'/GameEngine/Data/cp.php';
 $apply = in_array('--aplicar', $argv, true);
 $force = in_array('--forzar', $argv, true);
 $fromMode = 1;
-$toMode = 0;
+$toMode = 3;
 foreach($argv as $argument) {
 	if(preg_match('/^--desde=(\d+)$/', $argument, $matches)) {
 		$fromMode = (int)$matches[1];
@@ -93,8 +92,12 @@ foreach($rows as $row) {
 	$uid = (int)$row['id'];
 	$owned = (int)$row['villages'];
 	$rescale = travianCultureRescale($row['cp'], $fromMode, $toMode);
-	$statusBefore = travianCultureStatus($row['cp'], $owned, $fromMode);
-	$statusAfter = travianCultureStatus($rescale['newPoints'], $owned, $toMode);
+	// El segundo argumento de travianCultureStatus() sólo evita que la interfaz
+	// muestre menos cupos que aldeas ya poseídas. Para validar la migración hace falta
+	// la capacidad cultural pura; pasar $owned aquí ocultaría una deriva por debajo de
+	// ese número.
+	$statusBefore = travianCultureStatus($row['cp'], 0, $fromMode);
+	$statusAfter = travianCultureStatus($rescale['newPoints'], 0, $toMode);
 
 	// La invariante que justifica todo el traslado: mismo cupo de aldeas y mismo
 	// porcentaje de avance. Si alguna cuenta se sale, se informa y no se escribe nada.
