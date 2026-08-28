@@ -63,6 +63,11 @@ function check($ok, $message) {
     }
 }
 
+check(NATAR_SETTLEMENT_TRAINING_INTERVAL === 10800,
+    'la guarnición acredita entrenamiento cada 3 horas');
+check(NATAR_SETTLEMENT_CATCHUP_CAP === 8,
+    'una puesta al día acredita como máximo 8 intervalos');
+
 $created = array();
 function dropScratch() {
     global $database, $created;

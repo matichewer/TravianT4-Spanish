@@ -77,7 +77,9 @@ if(!defined('NATAR_SETTLEMENT_CATCHUP_CAP')) {
     // Es el cinturón contra el bug que ya nos mordió una vez: una aldea que nadie tocó en
     // meses no puede materializar meses de entrenamiento de golpe. El techo del cereal ya
     // acota el total, pero esto acota además la velocidad a la que se llega.
-    define('NATAR_SETTLEMENT_CATCHUP_CAP', 24);
+    // Ocho intervalos de 3 h: como cada intervalo acredita una hora de producción del
+    // cuartel/establo, una aldea abandonada sólo recupera 8 h de entrenamiento de golpe.
+    define('NATAR_SETTLEMENT_CATCHUP_CAP', 8);
 }
 if(!defined('NATAR_SETTLEMENT_WALL_TYPE')) {
     // Qué muro levanta una aldea viva. El T4.0 no tiene un muro natar —los gids 31/32/33
@@ -93,8 +95,10 @@ if(!defined('NATAR_SETTLEMENT_WALL_TYPE')) {
     define('NATAR_SETTLEMENT_WALL_TYPE', 31);
 }
 if(!defined('NATAR_SETTLEMENT_TRAINING_INTERVAL')) {
-    // Duración de un intervalo de entrenamiento (segundos). 1 h.
-    define('NATAR_SETTLEMENT_TRAINING_INTERVAL', 3600);
+    // Cada 3 h acredita una hora de producción del cuartel/establo. Conserva la
+    // guarnición sostenible final, pero hace que una aldea limpiada tarde 3 veces más
+    // en reconstruirla y deja una ventana útil para volver a saquearla.
+    define('NATAR_SETTLEMENT_TRAINING_INTERVAL', 10800);
 }
 
 /**
@@ -397,11 +401,11 @@ function natarSettlementBringUpToDate($wref, $now = null, $accrue = null) {
     $consumed = min($intervals, NATAR_SETTLEMENT_CATCHUP_CAP);
     // Adónde queda el reloj:
     //  - si NO se recortó, avanza sólo lo que se acreditó y el resto del intervalo queda
-    //    para la próxima. Saltar a $now perdería hasta una hora en cada pasada, y eso se
+    //    para la próxima. Saltar a $now perdería hasta un intervalo en cada pasada, y eso se
     //    acumula: la aldea entrenaría sistemáticamente más lento de lo que le toca.
     //  - si SÍ se recortó, salta a $now y el atraso se descarta a propósito. Guardarlo
     //    haría que la pasada siguiente —que llega 50 segundos después— acreditara otras
-    //    24 horas, y el tope dejaría de ser un tope.
+    //    otros 8 intervalos, y el tope dejaría de ser un tope.
     $capped = $intervals > NATAR_SETTLEMENT_CATCHUP_CAP;
     $newClock = $capped ? $now : ($clock + $consumed * NATAR_SETTLEMENT_TRAINING_INTERVAL);
     // Reclamar el tramo ANTES de acreditar nada: si dos requests entran juntos, sólo uno
