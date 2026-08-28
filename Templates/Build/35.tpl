@@ -71,7 +71,8 @@ if(isset($_SESSION['brewery_status'])) {
 				<form method="post" action="brewery.php">
 					<input type="hidden" name="id" value="<?php echo (int)$id; ?>">
 					<input type="hidden" name="c" value="<?php echo htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
-					<button type="submit" class="build"><span class="button-contents">Celebrar</span></button>
+					<button type="submit" value="Celebrar" class="build"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div>
+						<div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Celebrar</div></div></button>
 				</form>
 <?php } ?>
 			</div>
