@@ -23,7 +23,7 @@ Report list filtering is split between `berichte.php`, `Message::noticeType()`, 
 - Apply `del = 0` and `archive = 0` to unread counts so badges describe reports reachable from the normal/unread lists. The alternative of counting archived unread reports leaves an unexplained badge for non-Plus users and disagrees with the unread tab.
 - Represent the unread view as filter `t=8` and allow the all-reports template to accept an additional SQL predicate and pagination base. This avoids another large copied template.
 - Make shared category list templates derive detail links from the active controller filter instead of hardcoding their original category. This lets the Rutas wrapper retain `t=7` and makes detail-neighbor queries use the same route predicate.
-- Render "No leídos" as a compact second navigation row/control scoped to the report page rather than squeezing nine full labels into the 557px strip.
+- Keep "No leídos" in the single report navigation row and use a report-scoped flex layout so the available tabs share the complete width equally; this also adapts automatically when Archivo is hidden for a non-Plus account.
 - Use explicit CSS background colors with the sprite used only for shape where possible, instead of hue/brightness filters whose result varies with the source image and cached styles.
 - Render Rutas with a medium neutral gray at partial alpha and white text, so it remains legible without competing visually with actionable adventure or combat badges.
 

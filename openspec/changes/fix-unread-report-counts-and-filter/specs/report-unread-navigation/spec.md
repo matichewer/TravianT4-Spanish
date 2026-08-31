@@ -31,7 +31,7 @@ The system SHALL provide a "No leídos" tab that lists all and only the current 
 
 #### Scenario: Report navigation remains within the report panel
 - **WHEN** all report tabs available to the player are rendered
-- **THEN** the navigation remains usable without clipping a tab outside the fixed-width report panel
+- **THEN** the navigation distributes the tabs across the available bar width without clipping a tab outside the fixed-width report panel or leaving large unused side gaps
 
 ### Requirement: Report detail preserves its source filter
 The system SHALL keep the active report category when a report is opened and SHALL navigate to newer or older reports within that category.

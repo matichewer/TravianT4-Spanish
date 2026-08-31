@@ -19,7 +19,8 @@ $css = file_get_contents($root . '/gpack/travian_Travian_4.0_41/lang/ir/compact1
 $assert(strpos($berichte, "array('1', '2', '3', '4', '5', '6', '7', '8')") !== false, 'The unread report filter is not accepted by the controller.');
 $assert(strpos($berichte, 'berichte.php?t=8') !== false && strpos($berichte, 'No leídos') !== false, 'The No leídos tab is missing.');
 $assert(strpos($berichte, '$noticeSqlFilter = "and viewed = 0"') !== false, 'The No leídos tab is not restricted to unread reports.');
-$assert(strpos($berichte, 'reportsNavi') !== false && strpos($berichte, 'padding-left: 4px') !== false, 'The expanded tab row has no compact report-only layout.');
+$assert(strpos($berichte, '.reportsNavi { display: flex; padding-left: 0; padding-right: 0; }') !== false, 'The report tabs do not fill the available navigation width.');
+$assert(strpos($berichte, 'flex: 1 1 0') !== false && strpos($berichte, 'text-align: center') !== false, 'The report tabs are not distributed and centered evenly.');
 
 $assert(strpos($tradeList, '&amp;t=".$reportFilter.') !== false, 'The shared trade/route list still hardcodes its report detail filter.');
 $assert(strpos($tradeList, '&amp;t=2') === false, 'A hardcoded Commerce detail link remains in the shared route list.');

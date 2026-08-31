@@ -33,7 +33,13 @@ include "Templates/html.tpl";
 		#content.reports .reportImage { display: none; }
 		#content.reports .reportsPerPage { float: right; margin: -3px 12px 0 10px; }
 		#content.reports .reportsPerPage label { margin-right: 4px; }
-		#content.reports .reportsNavi .container .content .tabItem { padding-left: 4px; padding-right: 4px; }
+		#content.reports .reportsNavi { display: flex; padding-left: 0; padding-right: 0; }
+		#content.reports .reportsNavi .container { float: none; flex: 1 1 0; min-width: 0; }
+		#content.reports .reportsNavi .container .content { margin-left: 1px; margin-right: 1px; }
+		#content.reports .reportsNavi .container .content a,
+		#content.reports .reportsNavi .container .content .tabItem { display: block; width: 100%; box-sizing: border-box; text-align: center; }
+		#content.reports .reportsNavi .container .content .tabItem { padding-left: 1px; padding-right: 1px; }
+		#content.reports .reportsNavi > .clear { display: none; }
 	</style>
 	<div id="wrapper"> 
 		<img id="staticElements" src="img/x.gif" alt="" /> 
