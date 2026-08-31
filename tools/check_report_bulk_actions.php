@@ -49,4 +49,10 @@ if(substr_count($allReportsSource, '$excludeTradeRoutes') < 3
 	exit(1);
 }
 
+$databaseSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
+if(strpos($databaseSource, '0 => "archive = 0 AND NOT (ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE') === false) {
+	fwrite(STDERR, "The All-tab previous/next navigation can enter a trade-route report.\n");
+	exit(1);
+}
+
 echo "Report bulk actions: OK (100 selections and route-only filtering).\n";
