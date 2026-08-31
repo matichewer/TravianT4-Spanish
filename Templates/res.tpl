@@ -125,8 +125,9 @@ foreach ($resourceSlots as $resourceKey => $slot) {
 		$clock = $formatClock(($capacity - $amount) * 3600 / $production);
 	}
 	$fillTime = $formatStorageFillTime($capacity, $amount, $production);
+	$missingAmount = max(0, $capacity - $amount);
 ?>
-	<li class="<?php echo $slot['slot']; ?>" title="<div style=color:#FFF><b><?php echo $slot['name']; ?></b></div><?php echo $fillTime; ?>">
+	<li class="<?php echo $slot['slot']; ?>" title="<div style=color:#FFF><b><?php echo $slot['name']; ?></b></div><?php echo $fillTime; ?><br>Faltan para llenarse: <?php echo $formatResourceAmount($missingAmount); ?>">
 		<span class="resAmount"><img src="img/x.gif" alt="<?php echo $slot['name']; ?>" /><span class="resValue" id="resValue_<?php echo $resourceKey; ?>"><?php echo $formatResourceAmount($amount); ?></span></span>
 		<span class="resBar<?php echo $barClass; ?>" id="resBar_<?php echo $resourceKey; ?>"><span class="resBarFill" id="resFill_<?php echo $resourceKey; ?>" style="width:<?php echo number_format($percent, 2, '.', ''); ?>%;"></span><span class="resBarClock" id="resClock_<?php echo $resourceKey; ?>"><?php echo $clock; ?></span></span>
 		<span class="resFoot"><span class="resRate">/h: <?php echo $formatResourceAmount($production); ?></span><span class="resMax">máx <?php echo $formatResourceAmount($slot['capacity']); ?></span></span>
