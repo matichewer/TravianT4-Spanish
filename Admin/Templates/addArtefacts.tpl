@@ -10,6 +10,17 @@
  */
 $counts = array(1 => 6, 2 => 4, 3 => 1);
 $delayHours = round(artefactActivationDelay(SPEED) / 3600);
+// Cuántos hay ya. Sembrar sobre un mundo que ya tiene artefactos los DUPLICA, y no hay
+// forma de deshacerlo desde el panel: por eso, si ya hay, el formulario pide una
+// confirmación explícita en vez de limitarse a un cartel que nadie lee.
+$existing = $database->getAllArtefacts();
+$existingCount = count($existing);
+$existingVillages = 0;
+foreach($existing as $artefact) {
+    if((int)$artefact['vref'] > 0) {
+        $existingVillages++;
+    }
+}
 ?>
 <form action="../GameEngine/Admin/Mods/addArtefacts.php" method="POST">
 	<input type="hidden" name="admid" id="admid" value="<?php echo (int)$_SESSION['id']; ?>">
@@ -59,12 +70,38 @@ foreach(artefactTypeCatalog() as $type => $info) {
 	<b><?php echo $delayHours; ?> horas</b> en hacer efecto, y que una cuenta sólo puede tener
 	<b><?php echo ARTEFACT_MAX_ACTIVE; ?></b> artefactos activos a la vez, uno solo de ellos de cuenta.</p>
 
-	<p><b>Esto no se puede deshacer desde el panel.</b> Sembrar dos veces duplica todos los artefactos.</p>
-
+<?php
+if($existingCount > 0) {
+	echo '<div style="border:2px solid #a00;background:#ffe8e8;padding:10px;margin:10px 0;">'
+		.'<p style="color:#a00;font-size:14px;"><b>Este mundo YA tiene '.$existingCount
+		.' artefacto(s) repartido(s) en '.$existingVillages.' aldea(s).</b></p>'
+		.'<p>Volver a sembrar <b>no reemplaza nada</b>: crea otro juego completo de aldeas y '
+		.'artefactos encima de los que ya hay. Los jugadores se encontrarían con dos '
+		.'artefactos únicos del mismo tipo, y el podio de tres activos por cuenta pasaría a '
+		.'llenarse con duplicados. <b>No se puede deshacer desde el panel.</b></p>'
+		.'<p><label><input type="checkbox" name="confirmar" value="si"> '
+		.'Entiendo que voy a <b>duplicar</b> los artefactos que ya existen y quiero hacerlo igual.'
+		.'</label></p>'
+		.'</div>';
+	echo '<h4>Los que ya están:</h4><ul>';
+	foreach($existing as $artefact) {
+		echo '<li>'.htmlspecialchars(artefactDisplayName((int)$artefact['type'], (int)$artefact['size']), ENT_QUOTES, 'UTF-8')
+			.' — '.htmlspecialchars((string)$database->getVillageField((int)$artefact['vref'], 'name'), ENT_QUOTES, 'UTF-8')
+			.'</li>';
+	}
+	echo '</ul>';
+} else {
+	echo '<p>Este mundo todavía no tiene artefactos. <b>Esto no se puede deshacer desde el panel.</b></p>';
+}
+?>
 	<center><input type="image" src="../img/admin/b/ok1.gif" value="submit"></center>
 </form>
 <?php
 if(isset($_GET['g'])) {
 	echo '<p><b>Artefactos creados: '.(int)$_GET['g'].' aldeas.</b></p>';
+}
+if(isset($_GET['e']) && $_GET['e'] === 'confirmar') {
+	echo '<p style="color:#a00;"><b>No se sembró nada:</b> el mundo ya tiene artefactos y no '
+		.'marcaste la casilla de confirmación.</p>';
 }
 ?>

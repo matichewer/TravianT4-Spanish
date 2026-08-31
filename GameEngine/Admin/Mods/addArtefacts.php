@@ -110,6 +110,17 @@ function seedArtefactVillage($type, $size, $natarId) {
     return true;
 }
 
+/**
+ * Sembrar sobre un mundo que ya tiene artefactos los DUPLICA: no hay reemplazo ni forma de
+ * deshacerlo desde el panel. La pantalla avisa y pide una casilla; esta guarda es la que de
+ * verdad protege, porque un doble clic o un F5 sobre el POST no pasan por la pantalla.
+ */
+$alreadySeeded = count($database->getAllArtefacts());
+if($alreadySeeded > 0 && (!isset($_POST['confirmar']) || $_POST['confirmar'] !== 'si')) {
+    header("Location: ../../../Admin/admin.php?p=addArtefacts&e=confirmar");
+    exit;
+}
+
 $counts = artefactSeedCounts();
 $created = 0;
 foreach(array_keys(artefactTypeCatalog()) as $type) {
