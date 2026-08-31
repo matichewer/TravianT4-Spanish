@@ -3,6 +3,13 @@
 $units = $database->getMovement("34",$village->wid,1);
 $total_for = count($units);
 
+// ¿Esta aldea ve el tipo de las tropas que vienen? Es la segunda mitad de los ojos del
+// águila (artefacto tipo 3), y se resuelve una vez para toda la pantalla en vez de una
+// vez por ataque: el conjunto activo de la cuenta es el mismo para todos.
+$incomingTroopTypesVisible = is_object($database)
+	&& method_exists($database,'hasActiveArtefactEffect')
+	&& $database->hasActiveArtefactEffect((int)$village->wid,(int)$session->uid,ARTEFACT_EAGLE);
+
 for($y=0;$y < $total_for;$y++){
 $timer += 1;
 if ($units[$y]['sort_type']==3){
@@ -66,17 +73,24 @@ if($isNature){
 			echo "<td class=\"none\">0</td>";
 		}
 	}
-}elseif($village->resarray['f39'] >= 5){
+}elseif($incomingTroopTypesVisible){
+	// Los ojos del águila: "puedes ver el TIPO de tropas que vienen, pero no cuántas
+	// son". O sea que la columna de una unidad que viene queda marcada y la de una que
+	// no viene queda en cero — el jugador lee la composición del ataque sin los números.
+	//
+	// Era la mitad del artefacto que faltaba: el multiplicador de espionaje estaba, pero
+	// esto no existía en ningún lado.
 	for($t=1;$t<=11;$t++){
-        if($units[$y]['t'.$t]){
-        	if($t!=7 or $t!=8 or $t!=8){
-				echo "<td class=\"none\">?</td>";
-            }
+		if($units[$y]['t'.$t]){
+			echo "<td class=\"none\" title=\"Los ojos del águila revelan el tipo de tropa, no la cantidad\">?</td>";
 		}else{
-			echo "<td class=\"none\">?</td>";
+			echo "<td class=\"none\">0</td>";
 		}
-    }
+	}
 }else{
+	// Sin artefacto no se sabe nada de la composición. Acá había dos ramas —una para
+	// punto de reunión 5 o más y otra para el resto— que imprimían exactamente lo mismo:
+	// la de arriba tenía además un `if($t!=7 or $t!=8 or $t!=8)` que es siempre cierto.
 	for($t=1;$t<=11;$t++){
 		echo "<td class=\"none\">?</td>";
 	}

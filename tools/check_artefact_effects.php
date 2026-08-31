@@ -203,7 +203,8 @@ $sources = array(
     'Village'     => file_get_contents($root.'/GameEngine/Village.php'),
     'Units'       => file_get_contents($root.'/GameEngine/Units.php'),
     'GeneratorX'  => file_get_contents($root.'/GameEngine/GeneratorX.php'),
-    'startRaid'   => file_get_contents($root.'/Templates/a2b/startRaid.tpl')
+    'startRaid'   => file_get_contents($root.'/Templates/a2b/startRaid.tpl'),
+    'incoming'    => file_get_contents($root.'/Templates/Build/16_incomming.tpl')
 );
 $all = implode("\n", $sources);
 
@@ -213,6 +214,15 @@ check(strpos($sources['Technology'], 'ARTEFACT_TRAINER') !== false,
     'el artefacto del entrenador se aplica al tiempo de entrenamiento');
 check(strpos($sources['Battle'], 'ARTEFACT_EAGLE') !== false,
     'los ojos del águila se aplican en la resolución del espionaje');
+// El artefacto del águila tiene DOS mitades oficiales y la segunda faltaba: además de
+// reforzar a los exploradores, deja ver el TIPO de las tropas que vienen (no la cantidad)
+// en el punto de reunión.
+check(strpos($sources['incoming'], 'ARTEFACT_EAGLE') !== false,
+    'y también revelan el tipo de tropas entrantes en el punto de reunión');
+check(strpos($sources['incoming'], '$incomingTroopTypesVisible') !== false,
+    'la revelación se decide una vez por pantalla, no una vez por ataque');
+check(preg_match('/\$incomingTroopTypesVisible\)\s*\{.*?>0<.*?\}/s', $sources['incoming']) === 1,
+    'con el artefacto, una unidad que NO viene se muestra en 0: es lo que revela el tipo');
 check(strpos($sources['Building'], 'ARTEFACT_STORAGE') !== false,
     'el plano de almacenamiento gatea el gran almacén y el gran granero');
 check(strpos($all, 'artefactTroopUpkeep(') !== false,
