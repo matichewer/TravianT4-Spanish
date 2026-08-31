@@ -23,6 +23,11 @@ $assert(strpos($berichte, 'berichte.php?t=8') !== false && strpos($berichte, 'No
 $assert(strpos($berichte, '$noticeSqlFilter = "and viewed = 0"') !== false, 'The No leídos tab is not restricted to unread reports.');
 $assert(strpos($berichte, '.reportsNavi { display: flex; width: 597px; padding-left: 0; padding-right: 0; }') !== false, 'The report tab background does not cover the complete navigation width.');
 $assert(strpos($berichte, 'flex: 1 1 auto') !== false && strpos($berichte, 'text-align: center') !== false, 'The report tabs do not allocate width according to their labels.');
+$assert(strpos($berichte, 'report-tab-unread-dots') !== false, 'Unread dots are missing from the report tabs.');
+$assert(strpos($berichte, "array('attack', 'defense')") !== false, 'The Attack tab does not represent both attack and defense reports.');
+$assert(strpos($berichte, "array('adventure', 'misc')") !== false, 'The Misc tab does not represent adventures and miscellaneous reports.');
+$assert(strpos($berichte, 'width: 7px; height: 7px') !== false, 'Report tab unread indicators are not rendered as compact dots.');
+$assert(strpos($berichte, 'report-tab-unread-content') === false, 'Report tab unread indicators unexpectedly contain numeric labels.');
 
 $assert(strpos($tradeList, '&amp;t=".$reportFilter.') !== false, 'The shared trade/route list still hardcodes its report detail filter.');
 $assert(strpos($tradeList, '&amp;t=2') === false, 'A hardcoded Commerce detail link remains in the shared route list.');

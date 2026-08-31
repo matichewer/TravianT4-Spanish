@@ -32,7 +32,9 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
 		$unmsg = $database->getUnreadMessageCount($session->uid);
     	if($unmsg > 1000) { $unmsg = "+1000"; }
 		
-		$unreadNoticeCategories = $database->getUnreadNoticeCountsByCategory($session->uid);
+		if(!isset($unreadNoticeCategories)) {
+			$unreadNoticeCategories = $database->getUnreadNoticeCountsByCategory($session->uid);
+		}
 		$unnotice = array_sum($unreadNoticeCategories);
 		$hasUnreadNotices = $unnotice > 0;
 		$noticeCategoryLabels = array(

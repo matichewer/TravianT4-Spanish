@@ -2,6 +2,23 @@
 
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
+$unreadNoticeCategories = $database->getUnreadNoticeCountsByCategory($session->uid);
+$reportTabUnreadDots = function($categories) use ($unreadNoticeCategories) {
+	$html = '';
+	foreach((array)$categories as $category) {
+		$count = $category === 'all'
+			? array_sum($unreadNoticeCategories)
+			: (isset($unreadNoticeCategories[$category]) ? (int)$unreadNoticeCategories[$category] : 0);
+		if($count <= 0) {
+			continue;
+		}
+		$title = $count.' '.HEADER_NOTICES_NEW;
+		$html .= '<span class="report-tab-unread report-tab-unread-'.$category.'" title="'
+			.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'" aria-label="'
+			.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"></span>';
+	}
+	return $html === '' ? '' : '<span class="report-tab-unread-dots">'.$html.'</span>';
+};
 $reportFilter = 0;
 $reportPageSizes = array(10, 20, 50, 100);
 if(isset($_GET['per_page']) && in_array((int)$_GET['per_page'], $reportPageSizes, true)) {
@@ -38,7 +55,16 @@ include "Templates/html.tpl";
 		#content.reports .reportsNavi .container .content { margin-left: 1px; margin-right: 1px; }
 		#content.reports .reportsNavi .container .content a,
 		#content.reports .reportsNavi .container .content .tabItem { display: block; width: 100%; box-sizing: border-box; text-align: center; }
-		#content.reports .reportsNavi .container .content .tabItem { padding-left: 1px; padding-right: 1px; }
+		#content.reports .reportsNavi .container .content .tabItem { display: flex; align-items: center; justify-content: center; gap: 3px; padding-left: 1px; padding-right: 1px; }
+		#content.reports .report-tab-unread-dots { display: inline-flex; flex: 0 0 auto; gap: 1px; }
+		#content.reports .report-tab-unread { display: block; width: 7px; height: 7px; border-radius: 50%; background: #6f7b85; box-shadow: 0 0 0 1px rgba(255,255,255,.7); }
+		#content.reports .report-tab-unread-attack { background: #b72222; }
+		#content.reports .report-tab-unread-defense { background: #34759b; }
+		#content.reports .report-tab-unread-spy { background: #77639a; }
+		#content.reports .report-tab-unread-trade { background: #555; }
+		#content.reports .report-tab-unread-routes { background: rgba(80,80,80,.38); }
+		#content.reports .report-tab-unread-reinforcement { background: #9a6d45; }
+		#content.reports .report-tab-unread-adventure { background: #7eaa16; }
 		#content.reports .reportsNavi > .clear { display: none; }
 	</style>
 	<div id="wrapper"> 
@@ -71,43 +97,43 @@ include "Templates/html.tpl";
 				<div title="" class="container <?php if (!isset($_GET['t'])) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php"><span class="tabItem">Todos</span></a></div>
+					<div class="content"><a href="berichte.php"><span class="tabItem">Todos<?php echo $reportTabUnreadDots('all'); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 8) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=8"><span class="tabItem">No leídos</span></a></div>
+					<div class="content"><a href="berichte.php?t=8"><span class="tabItem">No leídos<?php echo $reportTabUnreadDots('all'); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 1) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=1"><span class="tabItem">Ataque</span></a></div>
+					<div class="content"><a href="berichte.php?t=1"><span class="tabItem">Ataque<?php echo $reportTabUnreadDots(array('attack', 'defense')); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 6) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=6"><span class="tabItem">Espías</span></a></div>
+					<div class="content"><a href="berichte.php?t=6"><span class="tabItem">Espías<?php echo $reportTabUnreadDots('spy'); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 5) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=5"><span class="tabItem">Refuerzo</span></a></div>
+					<div class="content"><a href="berichte.php?t=5"><span class="tabItem">Refuerzo<?php echo $reportTabUnreadDots('reinforcement'); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 3) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=3"><span class="tabItem">Varios</span></a></div>
+					<div class="content"><a href="berichte.php?t=3"><span class="tabItem">Varios<?php echo $reportTabUnreadDots(array('adventure', 'misc')); ?></span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 2) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=2"><span class="tabItem">Comercio</span></a></div>
+					<div class="content"><a href="berichte.php?t=2"><span class="tabItem">Comercio<?php echo $reportTabUnreadDots('trade'); ?></span></a></div>
 
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 7) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="berichte.php?t=7"><span class="tabItem">Rutas</span></a></div>
+					<div class="content"><a href="berichte.php?t=7"><span class="tabItem">Rutas<?php echo $reportTabUnreadDots('routes'); ?></span></a></div>
 				</div>
                 <?php if($session->plus) { ?>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 4) { echo "active"; }else{ echo "normal"; } ?>">
