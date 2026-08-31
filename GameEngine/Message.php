@@ -252,10 +252,8 @@
 
 			private function removeNotice($post) {
 				global $database, $session;
-				for($i = 1; $i <= 10; $i++) {
-					if(isset($post['n' . $i])) {
-						$database->removeNotice($post['n' . $i], $session->uid);
-					}
+				foreach($this->selectedNoticeIds($post) as $noticeId) {
+					$database->removeNotice($noticeId, $session->uid);
 				}
 				if(isset($post['t'])){
 					header("Location: berichte.php?t=".$post['t']."");
@@ -267,10 +265,8 @@
 
 			private function markNoticesRead($post) {
 				global $database, $session;
-				for($i = 1; $i <= 10; $i++) {
-					if(isset($post['n' . $i])) {
-						$database->noticeViewed($post['n' . $i], $session->uid);
-					}
+				foreach($this->selectedNoticeIds($post) as $noticeId) {
+					$database->noticeViewed($noticeId, $session->uid);
 				}
 				if(isset($post['t'])) {
 					header("Location: berichte.php?t=".(int)$post['t']);
@@ -281,10 +277,8 @@
 
 			private function markNoticesUnread($post) {
 				global $database, $session;
-				for($i = 1; $i <= 10; $i++) {
-					if(isset($post['n' . $i])) {
-						$database->noticeUnviewed($post['n' . $i], $session->uid);
-					}
+				foreach($this->selectedNoticeIds($post) as $noticeId) {
+					$database->noticeUnviewed($noticeId, $session->uid);
 				}
 				if(isset($post['t'])) {
 					header("Location: berichte.php?t=".(int)$post['t']);
@@ -295,22 +289,32 @@
 
 			private function archiveNotice($post) {
 				global $database, $session;
-				for($i = 1; $i <= 10; $i++) {
-					if(isset($post['n' . $i])) {
-						$database->archiveNotice($post['n' . $i], $session->uid);
-					}
+				foreach($this->selectedNoticeIds($post) as $noticeId) {
+					$database->archiveNotice($noticeId, $session->uid);
 				}
 				header("Location: berichte.php?t=4");
 			}
 
 			private function unarchiveNotice($post) {
 				global $database, $session;
-				for($i = 1; $i <= 10; $i++) {
-					if(isset($post['n' . $i])) {
-						$database->unarchiveNotice($post['n' . $i], $session->uid);
-					}
+				foreach($this->selectedNoticeIds($post) as $noticeId) {
+					$database->unarchiveNotice($noticeId, $session->uid);
 				}
 				header("Location: berichte.php");
+			}
+
+			/**
+			 * The report page can render more than the legacy ten rows. Read every
+			 * submitted n<number> checkbox instead of silently truncating the action.
+			 */
+			private function selectedNoticeIds($post) {
+				$ids = array();
+				foreach($post as $key => $value) {
+					if(preg_match('/^n[1-9][0-9]*$/', (string)$key) && (int)$value > 0) {
+						$ids[] = (int)$value;
+					}
+				}
+				return array_values(array_unique($ids));
 			}
 
 			public function loadNotes() {

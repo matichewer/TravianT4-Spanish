@@ -9,7 +9,11 @@ $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas
 $noticeClass[Automation::NTYPE_ROUTE_NOT_SENT] = 'Ruta comercial sin ejecutar';
 $noticeIconType = array(Automation::NTYPE_ROUTE_NOT_SENT => 13);
 $prefix = "".TB_PREFIX."ndata";
-$sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 and del = 0 ORDER BY time DESC");
+// Las rutas tienen su propia pestaña. Esto excluye tanto las entregas realizadas
+// (tipos de comercio con la marca `route`) como las salidas que no se ejecutaron.
+$excludeTradeRoutes = "and not (ntype = ".Automation::NTYPE_ROUTE_NOT_SENT
+    ." or (ntype IN (10,11,12,13) and data LIKE '%,route'))";
+$sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 and del = 0 $excludeTradeRoutes ORDER BY time DESC");
 $query = mysql_num_rows($sql); // Obtener el número de consultas de la base de datos
 
 if (isset($_GET['page'])) { // Obtener el número de página
@@ -102,7 +106,7 @@ if ($page <= 1 && $lastPage <= 1) {
 
 
 $limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
-$sql2 = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 and del = 0 ORDER BY time DESC $limit");
+$sql2 = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 and del = 0 $excludeTradeRoutes ORDER BY time DESC $limit");
 $paginationDisplay = "";
 // $page ya viene acotado a [1, ultima pagina]; $_GET['page'] puede no existir.
 $nextPage = $page + 1;
