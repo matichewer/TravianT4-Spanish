@@ -1,4 +1,4 @@
-@CHARSET "UTF-8";@import "compact1.css?v=69";@import "hero.css";.boxesColor.orange .boxes-tr{background-position:-25px 0;}
+@CHARSET "UTF-8";@import "compact1.css?v=70";@import "hero.css";.boxesColor.orange .boxes-tr{background-position:-25px 0;}
 .boxesColor.orange .boxes-bl{background-position:0 -26px;}.boxesColor.orange .boxes-br{background-position:-26px -26px;}
 .boxesColor.green .boxes-container{color:#FFF;}.boxesColor.green .boxes-tl,.boxesColor.green .boxes-tc,.boxesColor.green .boxes-tr,.boxesColor.green .boxes-ml,.boxesColor.green .boxes-mc,.boxesColor.green .boxes-mr,.boxesColor.green .boxes-bl,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-br{background-image:url(../../img/round/boxes/green/sprite.png);}
 .boxesColor.green .boxes-ml,.boxesColor.green .boxes-mr,.boxesColor.green .boxes-tc,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-bc,.boxesColor.green .boxes-mc{background-image:none;background-color:#498843;}

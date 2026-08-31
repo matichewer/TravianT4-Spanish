@@ -14,6 +14,8 @@ $database = file_get_contents($root . '/GameEngine/Database/db_MYSQLi.php');
 $tradeList = file_get_contents($root . '/Templates/Notice/t_2.tpl');
 $routeList = file_get_contents($root . '/Templates/Notice/t_7.tpl');
 $navigation = file_get_contents($root . '/Templates/navigation.tpl');
+$html = file_get_contents($root . '/Templates/html.tpl');
+$compact = file_get_contents($root . '/gpack/travian_Travian_4.0_41/lang/ir/compact.css');
 $css = file_get_contents($root . '/gpack/travian_Travian_4.0_41/lang/ir/compact1.css');
 
 $assert(strpos($berichte, "array('1', '2', '3', '4', '5', '6', '7', '8')") !== false, 'The unread report filter is not accepted by the controller.');
@@ -31,8 +33,9 @@ $assert(strpos($message, "if(\$get['t'] == 7)") !== false, 'Message report filte
 
 $assert(strpos($navigation, "'adventure' => 'Aventura'") !== false, 'Adventure badges have no navigation label.');
 $assert(strpos($css, '.report-badge-trade .report-badge-background{background-color:#555;}') !== false, 'Trade badges are not dark gray.');
-$assert(strpos($css, '.report-badge-routes{color:#222;background:#aaa!important;border-radius:8px;}') !== false, 'The route badge container does not force a visible light-gray background.');
-$assert(strpos($css, '.report-badge-routes .report-badge-background{background:#aaa!important;}') !== false, 'The route badge background layers do not force visible light gray.');
+$assert(strpos($css, '.report-badge-routes{color:#333;background:rgba(80,80,80,.45)!important;border-radius:8px;}') !== false, 'The route badge container does not force a muted translucent gray.');
+$assert(strpos($css, '.report-badge-routes .report-badge-background{background:rgba(80,80,80,.45)!important;}') !== false, 'The route badge background layers do not force muted translucent gray.');
+$assert(strpos($html, 'compact.css?asd484') !== false && strpos($compact, 'compact1.css?v=70') !== false, 'The two stylesheet cache-busters were not advanced with the route badge style.');
 $assert(strpos($css, '.report-badge-adventure .report-badge-background{background-color:#7eaa16;}') !== false, 'Adventure badges are not green.');
 $assert(substr_count($css, 'background-color:#7eaa16;') === 1, 'Adventure green is assigned to another report category.');
 
