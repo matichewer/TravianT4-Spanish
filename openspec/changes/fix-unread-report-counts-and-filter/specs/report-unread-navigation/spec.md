@@ -16,7 +16,7 @@ The system SHALL count each undeleted unread report owned by the current player 
 - **THEN** they do not contribute to the current player's unread badges
 
 ### Requirement: Semantic unread badge colors
-The system SHALL display route badges in light gray, trade badges in dark gray, and adventure badges in green; no other report category SHALL use the adventure green.
+The system SHALL display route badges in a muted semitransparent gray, trade badges in dark gray, and adventure badges in green; no other report category SHALL use the adventure green.
 
 #### Scenario: Route, trade, and adventure badges are present
 - **WHEN** all three unread categories are displayed

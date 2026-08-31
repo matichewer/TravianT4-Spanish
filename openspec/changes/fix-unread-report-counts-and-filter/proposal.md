@@ -5,7 +5,7 @@ Unread report badges currently do not communicate their report kind reliably: ro
 ## What Changes
 
 - Classify unread adventure reports separately from other miscellaneous reports.
-- Give unread report badges stable semantic colors: routes light gray, trade dark gray, and adventures green.
+- Give unread report badges stable semantic colors: routes muted semitransparent gray, trade dark gray, and adventures green.
 - Add a "No leídos" report tab that lists every unarchived unread report owned by the player.
 - Keep the report navigation usable within its fixed width despite the additional filter.
 - Add regression coverage for unread ownership, deletion/archive visibility, classification, filtering, and navigation rendering.

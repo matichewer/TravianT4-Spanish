@@ -25,6 +25,7 @@ Report list filtering is split between `berichte.php`, `Message::noticeType()`, 
 - Make shared category list templates derive detail links from the active controller filter instead of hardcoding their original category. This lets the Rutas wrapper retain `t=7` and makes detail-neighbor queries use the same route predicate.
 - Render "No leídos" as a compact second navigation row/control scoped to the report page rather than squeezing nine full labels into the 557px strip.
 - Use explicit CSS background colors with the sprite used only for shape where possible, instead of hue/brightness filters whose result varies with the source image and cached styles.
+- Render Rutas with a medium neutral gray at partial alpha and white text, so it remains legible without competing visually with actionable adventure or combat badges.
 
 ## Risks / Trade-offs
 

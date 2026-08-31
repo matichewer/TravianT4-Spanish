@@ -30,7 +30,8 @@ $assert(strpos($message, "if(\$get['t'] == 7)") !== false, 'Message report filte
 
 $assert(strpos($navigation, "'adventure' => 'Aventura'") !== false, 'Adventure badges have no navigation label.');
 $assert(strpos($css, '.report-badge-trade .report-badge-background{background-color:#555;}') !== false, 'Trade badges are not dark gray.');
-$assert(strpos($css, '.report-badge-routes .report-badge-background{background-color:#d2d2d2;}') !== false, 'Route badges are not light gray.');
+$assert(strpos($css, '.report-badge-routes{color:#fff;}') !== false, 'Route badge text is not legible over its muted background.');
+$assert(strpos($css, '.report-badge-routes .report-badge-background{background-color:rgba(105,110,115,.68);}') !== false, 'Route badges are not muted semitransparent gray.');
 $assert(strpos($css, '.report-badge-adventure .report-badge-background{background-color:#7eaa16;}') !== false, 'Adventure badges are not green.');
 $assert(substr_count($css, 'background-color:#7eaa16;') === 1, 'Adventure green is assigned to another report category.');
 
