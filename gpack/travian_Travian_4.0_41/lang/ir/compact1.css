@@ -1565,8 +1565,8 @@ div.village2 div#village_map .l40{left:310px;top:470px;}
 #navigation .report-badge-defense .report-badge-background{background-color:#34759b;}
 #navigation .report-badge-spy .report-badge-background{background-color:#77639a;}
 #navigation .report-badge-trade .report-badge-background{background-color:#555;}
-#navigation .report-badge-routes{color:#fff;}
-#navigation .report-badge-routes .report-badge-background{background-color:rgba(105,110,115,.68);}
+#navigation .report-badge-routes{color:#333;}
+#navigation .report-badge-routes .report-badge-background{background-color:rgba(80,80,80,.45);}
 #navigation .report-badge-reinforcement .report-badge-background{background-color:#9a6d45;}
 #navigation .report-badge-adventure .report-badge-background{background-color:#7eaa16;}
 #navigation .report-badge-misc .report-badge-background{background-color:#6f7b85;}

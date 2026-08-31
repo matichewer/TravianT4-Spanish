@@ -25,7 +25,7 @@ Report list filtering is split between `berichte.php`, `Message::noticeType()`, 
 - Make shared category list templates derive detail links from the active controller filter instead of hardcoding their original category. This lets the Rutas wrapper retain `t=7` and makes detail-neighbor queries use the same route predicate.
 - Keep "No leídos" in the single report navigation row and use a report-scoped flex layout whose basis follows each label width, so longer labels receive more room while all tabs collectively cover the complete bar. Recover the 40 pixels formerly supplied by the removed side padding in the explicit navigation width; this also adapts automatically when Archivo is hidden for a non-Plus account.
 - Use explicit CSS background colors with the sprite used only for shape where possible, instead of hue/brightness filters whose result varies with the source image and cached styles.
-- Render Rutas with a medium neutral gray at partial alpha and white text, so it remains legible without competing visually with actionable adventure or combat badges.
+- Render Rutas with a dark neutral gray at low alpha and dark text, producing a visibly light-gray badge over the navigation background without competing visually with actionable adventure or combat badges.
 
 ## Risks / Trade-offs
 
