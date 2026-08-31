@@ -1709,11 +1709,21 @@
                 else return false;
         	}
 
+        	/**
+        	 * Un permiso de alianza, por id de usuario ($mode = 0) o por nombre ($mode = 1).
+        	 *
+        	 * La rama del nombre consultaba `ali_permission.username`, una columna que no
+        	 * existe: la tabla se indexa por `uid`. No llegó a hacer daño porque el único
+        	 * lugar que la usa pasa $mode = 0, pero era una trampa esperando al primero que
+        	 * pasara un nombre — habría devuelto null en silencio, o sea "sin permiso".
+        	 */
         	function getAlliancePermission($ref, $field, $mode) {
         		if(!$mode) {
         			$q = "SELECT $field FROM " . TB_PREFIX . "ali_permission where uid = '$ref'";
         		} else {
-        			$q = "SELECT $field FROM " . TB_PREFIX . "ali_permission where username = '$ref'";
+        			$q = "SELECT p.$field FROM " . TB_PREFIX . "ali_permission p"
+        				. " INNER JOIN " . TB_PREFIX . "users u ON u.id = p.uid"
+        				. " where u.username = '" . mysql_real_escape_string($ref) . "'";
         		}
         		$result = mysqli_query($this->connection,$q) or die(mysqli_error());
         		$dbarray = mysqli_fetch_array($result);
@@ -2032,7 +2042,7 @@
         	*****************************************/
         	function updateAlliPermissions($uid, $aid, $rank, $opt1, $opt2, $opt3, $opt4, $opt5, $opt6, $opt7, $opt8) {
 
-        		$q = "UPDATE " . TB_PREFIX . "ali_permission SET rank = '$rank', opt1 = '$opt1', opt2 = '$opt2', opt3 = '$opt3', opt4 = '$opt4', opt5 = '$opt5', opt6 = '$opt6', opt7 = '$opt7', opt8 = $opt8 where uid = $uid && alliance =$aid";
+        		$q = "UPDATE " . TB_PREFIX . "ali_permission SET `rank` = '$rank', opt1 = '$opt1', opt2 = '$opt2', opt3 = '$opt3', opt4 = '$opt4', opt5 = '$opt5', opt6 = '$opt6', opt7 = '$opt7', opt8 = $opt8 where uid = $uid && alliance =$aid";
         		return mysqli_query($this->connection,$q);
         	}
 

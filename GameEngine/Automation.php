@@ -1329,13 +1329,16 @@ class Automation {
             foreach ($needDelete as $need) {
                 $needVillage = $database->getVillagesID($need['uid']);
                 foreach ($needVillage as $village) {
-                    $getvillage = $database->getVillage($village);
                     // Misma columna equivocada que en destroyCatapultedVillage(): `vref`.
                     $q = "DELETE FROM ".TB_PREFIX."abdata where vref = ".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."bdata where wid = ".$village;
                     $database->query($q);
-                    $q = "DELETE FROM ".TB_PREFIX."enforcement where from = ".$village;
+                    // `from` es palabra reservada de MySQL: sin backticks esto no fallaba
+                    // por la columna, fallaba por SINTAXIS, y el shim legacy se lo tragaba.
+                    // O sea que las tropas que el jugador tenía reforzando a otros
+                    // sobrevivían a su cuenta. En el oficial desaparecen con él.
+                    $q = "DELETE FROM ".TB_PREFIX."enforcement where `from` = ".$village;
                     $database->query($q);
                     $q = "DELETE FROM ".TB_PREFIX."fdata where vref = ".$village;
                     $database->query($q);
@@ -1364,7 +1367,18 @@ class Automation {
                         $database->addMovement(4, $movedata['to'], $movedata['from'], $movedata['ref'], $time, $time + $time2);
                         $database->setMovementProc($movedata['moveid']);
                     }
-                    $q = "DELETE FROM ".TB_PREFIX."movement where from = ".$village;
+                    // Misma palabra reservada. Y las filas de `attacks` a las que apuntan
+                    // esos movimientos se van con ellos: si no, quedan colgadas para siempre.
+                    $database->query("DELETE a FROM ".TB_PREFIX."attacks a "
+                        ."INNER JOIN ".TB_PREFIX."movement m ON m.ref = a.id "
+                        ."WHERE m.`to` = ".$village." OR m.`from` = ".$village);
+                    // Lo que SALE de la aldea son tropas del que se borra: desaparecen con
+                    // él. Lo que ENTRABA ya se devolvió arriba, así que las filas viejas
+                    // sólo pueden quedar apuntando a una aldea inexistente. Los regresos
+                    // recién creados van hacia la aldea del OTRO jugador, no hacia ésta, así
+                    // que este DELETE no se los lleva.
+                    $q = "DELETE FROM ".TB_PREFIX."movement where `from` = ".$village
+                        ." or `to` = ".$village;
                     $database->query($q);
                     $getprisoners = $database->getPrisoners($village);
                     foreach ($getprisoners as $pris) {
@@ -1410,7 +1424,28 @@ class Automation {
                         $q = "DELETE FROM ".TB_PREFIX."enforcement where id = ".$enforce['id'];
                         $database->query($q);
                     }
+                    // Y acá desaparece la aldea. Dos cosas que estaban mal:
+                    //
+                    // 1. Este bloque vivía FUERA del foreach, usando el `$village` que
+                    //    quedaba de la última vuelta: de una cuenta con seis aldeas se
+                    //    borraba la fila de `vdata` de UNA. Las otras cinco quedaban en el
+                    //    mapa como fantasmas, sin `fdata` ni `units`, ocupando su casilla
+                    //    para siempre.
+                    // 2. La capital no se borraba: se le intentaba pasar a los natars con
+                    //    `UPDATE vdata ... WHERE id`, una columna que no existe, así que el
+                    //    UPDATE fallaba en silencio y la capital quedaba a nombre de un
+                    //    usuario recién borrado. Y aunque hubiera funcionado, no es lo que
+                    //    hace el original: al borrarse una cuenta **todas** sus aldeas
+                    //    desaparecen y dejan casillas vacías, ninguna pasa a los natars.
+                    $q = "DELETE FROM ".TB_PREFIX."vdata where wref = ".$village;
+                    $database->query($q);
+                    $q = "UPDATE ".TB_PREFIX."wdata set occupied = 0 where id = ".$village;
+                    $database->query($q);
+                    $database->releaseExpansionSlots($village);
                 }
+                // El héroe pierde su aldea natal junto con la cuenta; se lo muda antes de
+                // que la fila de `hero` se borre, por si el barrido llegara a medias.
+                reassignHeroHomeVillage($database, (int)$need['uid']);
                 for ($i = 0; $i < 20; $i++) {
                     $q = "SELECT * FROM ".TB_PREFIX."users where friend".$i." = ".$need['uid']." or friend".$i."wait = ".$need['uid']."";
                     $array = $database->query_return($q);
@@ -1457,25 +1492,8 @@ class Automation {
                 $database->query($q);
                 $q = "DELETE FROM ".TB_PREFIX."deleting where uid = ".$need['uid'];
                 $database->query($q);
-                if($getvillage['capital'] == 0) {
-                    $q = "DELETE FROM ".TB_PREFIX."vdata where wref = ".$village;
-                    $database->query($q);
-                    $q = "UPDATE ".TB_PREFIX."wdata set occupied = 0 where id = ".$village;
-                    $database->query($q);
-                    $database->releaseExpansionSlots($village);
-                } else {
-                    $q = "UPDATE ".TB_PREFIX."vdata set capital = 0, owner = 2 where id = ".$village;
-                    $database->query($q);
-                    $database->addTech($village);
-                    $database->addABTech($village);
-                    $database->addUnits($village);
-                }
-                $q = "DELETE FROM ".TB_PREFIX."mdata where target = ".$need['uid']." or owner = ".$need['uid'];
-                $database->query($q);
-                $q = "DELETE FROM ".TB_PREFIX."ndata where uid = ".$need['uid'];
-                $database->query($q);
-                $q = "DELETE FROM ".TB_PREFIX."users where id = ".$need['uid'];
-                $database->query($q);
+                // Las aldeas ya se borraron una por una dentro del foreach de arriba.
+                // Los tres DELETE de cuenta que había repetidos acá abajo ya corrieron.
             }
         }
         if(file_exists("GameEngine/Prevention/cleardeleting.txt")) {
