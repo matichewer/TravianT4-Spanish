@@ -11,7 +11,7 @@ $reportsPerPage = isset($_SESSION['reports_per_page'])
 	&& in_array((int)$_SESSION['reports_per_page'], $reportPageSizes, true)
 	? (int)$_SESSION['reports_per_page']
 	: 10;
-if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6'), true)) {
+if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6', '7'), true)) {
 	$reportFilter = (int)$_GET['t'];
 } elseif(isset($_GET['t'])) {
 	$reportFilter = 0;
@@ -91,6 +91,11 @@ include "Templates/html.tpl";
 					<div class="background-end">&nbsp;</div>
 					<div class="content"><a href="berichte.php?t=2"><span class="tabItem">Comercio</span></a></div>
 
+				</div>
+				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 7) { echo "active"; }else{ echo "normal"; } ?>">
+					<div class="background-start">&nbsp;</div>
+					<div class="background-end">&nbsp;</div>
+					<div class="content"><a href="berichte.php?t=7"><span class="tabItem">Rutas</span></a></div>
 				</div>
                 <?php if($session->plus) { ?>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 4) { echo "active"; }else{ echo "normal"; } ?>">

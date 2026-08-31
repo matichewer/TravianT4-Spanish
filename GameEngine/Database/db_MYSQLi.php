@@ -2966,11 +2966,12 @@
 				$filterConditions = array(
 					0 => "archive = 0",
 					1 => "archive = 0 AND ntype IN (1,2,3,4,5,6,7,25)",
-					2 => "archive = 0 AND ntype IN (10,11,12,13)",
+					2 => "archive = 0 AND ntype IN (10,11,12,13) AND data NOT LIKE '%,route'",
 					3 => "archive = 0 AND ntype IN (9,15,16,17,18,19,20,21)",
 					4 => "archive = 1",
 					5 => "archive = 0 AND ntype = 8",
-					6 => "archive = 0 AND ntype IN (0,22,23,24)"
+					6 => "archive = 0 AND ntype IN (0,22,23,24)",
+					7 => "archive = 0 AND (ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE '%,route'))"
 				);
 				$filterCondition = isset($filterConditions[$filter])
 					? $filterConditions[$filter]
@@ -3010,6 +3011,7 @@
 					'defense' => 0,
 					'spy' => 0,
 					'trade' => 0,
+					'routes' => 0,
 					'reinforcement' => 0,
 					'misc' => 0
 				);
@@ -3017,6 +3019,7 @@
 					." WHEN ntype IN (1,2,3,25) THEN 'attack'"
 					." WHEN ntype IN (4,5,6,7) THEN 'defense'"
 					." WHEN ntype IN (0,22,23,24) THEN 'spy'"
+					." WHEN ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE '%,route') THEN 'routes'"
 					." WHEN ntype IN (10,11,12,13) THEN 'trade'"
 					." WHEN ntype = 8 THEN 'reinforcement'"
 					." WHEN ntype IN (9,15,16,17,18,19,20,21) THEN 'misc'"

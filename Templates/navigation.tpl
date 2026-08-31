@@ -40,6 +40,7 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
 			'defense' => 'Defensa',
 			'spy' => 'Espionaje',
 			'trade' => 'Comercio',
+			'routes' => 'Rutas',
 			'reinforcement' => 'Refuerzo',
 			'misc' => 'Varios'
 		);

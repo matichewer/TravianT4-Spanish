@@ -17,16 +17,22 @@ $assert = function($condition, $message) {
 
 $table = TB_PREFIX . 'ndata';
 $schema = "CREATE TEMPORARY TABLE $table ("
-	."id INT NOT NULL PRIMARY KEY, uid INT NOT NULL, ntype INT NOT NULL, viewed TINYINT NOT NULL DEFAULT 0"
+	."id INT NOT NULL PRIMARY KEY, uid INT NOT NULL, ntype INT NOT NULL, data TEXT NOT NULL, viewed TINYINT NOT NULL DEFAULT 0"
 	.") ENGINE=InnoDB";
 $assert(mysqli_query($database->connection, $schema), mysqli_error($database->connection));
 
-$types = array(1, 25, 4, 7, 0, 22, 10, 13, 8, 9, 21);
-foreach($types as $index => $type) {
+$reports = array(
+	array(1, ''), array(25, ''), array(4, ''), array(7, ''), array(0, ''), array(22, ''),
+	array(10, '1,2,3'), array(13, '1,2,3'), array(10, '1,2,3,route'), array(26, '1,2,3'),
+	array(8, ''), array(9, ''), array(21, '')
+);
+foreach($reports as $index => $report) {
 	$id = $index + 1;
-	$assert(mysqli_query($database->connection, "INSERT INTO $table VALUES ($id, 101, $type, 0)"), mysqli_error($database->connection));
+	$type = (int)$report[0];
+	$data = mysqli_real_escape_string($database->connection, $report[1]);
+	$assert(mysqli_query($database->connection, "INSERT INTO $table VALUES ($id, 101, $type, '$data', 0)"), mysqli_error($database->connection));
 }
-$assert(mysqli_query($database->connection, "INSERT INTO $table VALUES (20, 101, 1, 1), (21, 202, 8, 0)"), mysqli_error($database->connection));
+$assert(mysqli_query($database->connection, "INSERT INTO $table VALUES (20, 101, 1, '', 1), (21, 202, 8, '', 0)"), mysqli_error($database->connection));
 
 $counts = $database->getUnreadNoticeCountsByCategory(101);
 $assert($counts === array(
@@ -34,6 +40,7 @@ $assert($counts === array(
 	'defense' => 2,
 	'spy' => 2,
 	'trade' => 2,
+	'routes' => 2,
 	'reinforcement' => 1,
 	'misc' => 2
 ), 'Unread reports were not grouped into the expected categories.');

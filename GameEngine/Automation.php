@@ -2396,7 +2396,7 @@ class Automation {
             // barrido para el resto de las rutas.
             $status = self::SEND_FAILED;
             try {
-                $status = $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries']);
+                $status = $this->sendResource2($data['wood'], $data['clay'], $data['iron'], $data['crop'], $data['from'], $data['wid'], $targettribe, $data['deliveries'], null, null, true);
             } catch(Throwable $e) {
                 error_log('TradeRoute '.$data['id'].' falló: '.$e->getMessage().' ('.$e->getFile().':'.$e->getLine().')');
             }
@@ -2475,7 +2475,10 @@ class Automation {
                 $travelTime = $this->procDistanceTime($fromcoor, $tocoor, $senderTribe, 0);
                 $totalDeliveries = (int)$data['ref2'] > 0 ? (int)$data['ref2'] : max(1, (int)$data['send']);
                 $currentDelivery = max(1, $totalDeliveries - (int)$data['send'] + 1);
-                $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.','.$currentDelivery.','.$totalDeliveries.'';
+                $movementPayload = explode(',', (string)$data['data']);
+                $isTradeRoute = isset($movementPayload[4]) && $movementPayload[4] === 'route';
+                $noticeData = ''.$from['wref'].','.$to['wref'].','.$data['wood'].','.$data['clay'].','.$data['iron'].','.$data['crop'].','.$travelTime.','.$currentDelivery.','.$totalDeliveries
+                    .($isTradeRoute ? ',route' : '').'';
                 $database->addNotice($to['owner'], $to['wref'], $toAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
                 if($from['owner'] != $to['owner']) {
                     $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
@@ -2504,7 +2507,9 @@ class Automation {
                     $totalDeliveries = (int)$data1['ref2'] > 0 ? (int)$data1['ref2'] : max(1, (int)$data1['send']);
                     // Lo PEDIDO por la cadena, no lo que cargo el tramo anterior.
                     $payload = $this->chainPayload($data1);
-                    $status = $this->sendResource2($payload[0], $payload[1], $payload[2], $payload[3], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime'], $totalDeliveries);
+                    $movementPayload = explode(',', (string)$data1['data']);
+                    $isTradeRoute = isset($movementPayload[4]) && $movementPayload[4] === 'route';
+                    $status = $this->sendResource2($payload[0], $payload[1], $payload[2], $payload[3], $data1['to'], $data1['from'], $targettribe1, $send, $data1['endtime'], $totalDeliveries, $isTradeRoute);
                     // El tramo que no sale corta la cadena entera: no queda ninguna fila
                     // pendiente de la que reintentar, asi que un "x3" se convertia en un
                     // "x1" sin dejar rastro. Al menos hay que contarselo al jugador.
@@ -2545,7 +2550,7 @@ class Automation {
      *
      * Devuelve una de las constantes SEND_*.
      */
-    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null) {
+    private function sendResource2($wtrans, $ctrans, $itrans, $crtrans, $from, $to, $tribe, $send, $departureTime = null, $totalDeliveries = null, $isTradeRoute = false) {
         global $database, $generator;
         // La produccion solo se acredita a la base cuando alguien carga una pagina de
         // esa aldea (Village.php::processProduction); un envio automatico (la salida de
@@ -2591,7 +2596,8 @@ class Automation {
         }
         $departureTime = $departureTime === null ? time() : (int)$departureTime;
         $totalDeliveries = $totalDeliveries === null ? max(1, (int)$send) : max(1, (int)$totalDeliveries);
-        if(!$database->addMovement(0, $from, $to, $reference, implode(',', $requested), $departureTime + $timetaken, $send, 0, 0, 0, 0, $totalDeliveries)) {
+        $movementData = implode(',', $requested).($isTradeRoute ? ',route' : '');
+        if(!$database->addMovement(0, $from, $to, $reference, $movementData, $departureTime + $timetaken, $send, 0, 0, 0, 0, $totalDeliveries)) {
             $database->sendResource($reference, 0, 0, 0, 0, 1);
             $database->modifyResource($from, $resource[0], $resource[1], $resource[2], $resource[3], 1);
             return self::SEND_FAILED;

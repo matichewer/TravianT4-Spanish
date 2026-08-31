@@ -10,7 +10,9 @@ $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas
 $noticeClass[Automation::NTYPE_ROUTE_NOT_SENT] = 'Ruta comercial sin ejecutar';
 $noticeIconType = array(Automation::NTYPE_ROUTE_NOT_SENT => 13);
 $prefix = "".TB_PREFIX."ndata";
-$limit2 = "and (ntype = 10 or ntype = 11 or ntype = 12 or ntype = 13 or ntype = ".Automation::NTYPE_ROUTE_NOT_SENT.")";
+$limit2 = isset($noticeSqlFilter)
+    ? $noticeSqlFilter
+    : "and ntype IN (10,11,12,13) and data NOT LIKE '%,route'";
 $sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 $limit2 and del = 0 ORDER BY time DESC");
 $query = mysql_num_rows($sql);
 
