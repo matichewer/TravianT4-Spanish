@@ -2981,7 +2981,8 @@
 					4 => "archive = 1",
 					5 => "archive = 0 AND ntype = 8",
 					6 => "archive = 0 AND ntype IN (0,22,23,24)",
-					7 => "archive = 0 AND (ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE '%,route'))"
+					7 => "archive = 0 AND (ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE '%,route'))",
+					8 => "archive = 0 AND (viewed = 0 OR id = $id)"
 				);
 				$filterCondition = isset($filterConditions[$filter])
 					? $filterConditions[$filter]
@@ -3009,7 +3010,8 @@
 
 			function getUnreadNoticeCount($uid) {
 				$uid = (int)$uid;
-				$q = "SELECT COUNT(1) 'count' FROM " . TB_PREFIX . "ndata where uid = $uid and viewed = 0";
+				$q = "SELECT COUNT(1) 'count' FROM " . TB_PREFIX . "ndata"
+					." where uid = $uid and viewed = 0 and archive = 0 and del = 0";
 				$result = mysqli_query($this->connection,$q);
 				return mysqli_fetch_assoc($result)['count'];
 			}
@@ -3023,6 +3025,7 @@
 					'trade' => 0,
 					'routes' => 0,
 					'reinforcement' => 0,
+					'adventure' => 0,
 					'misc' => 0
 				);
 				$q = "SELECT CASE"
@@ -3032,10 +3035,11 @@
 					." WHEN ntype = 26 OR (ntype IN (10,11,12,13) AND data LIKE '%,route') THEN 'routes'"
 					." WHEN ntype IN (10,11,12,13) THEN 'trade'"
 					." WHEN ntype = 8 THEN 'reinforcement'"
-					." WHEN ntype IN (9,15,16,17,18,19,20,21) THEN 'misc'"
+					." WHEN ntype = 9 THEN 'adventure'"
+					." WHEN ntype IN (15,16,17,18,19,20,21) THEN 'misc'"
 					." END AS category, COUNT(1) AS count"
 					." FROM " . TB_PREFIX . "ndata"
-					." WHERE uid = $uid AND viewed = 0"
+					." WHERE uid = $uid AND viewed = 0 AND archive = 0 AND del = 0"
 					." GROUP BY category";
 				$result = mysqli_query($this->connection, $q);
 				while($result && $row = mysqli_fetch_assoc($result)) {

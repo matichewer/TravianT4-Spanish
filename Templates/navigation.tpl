@@ -42,6 +42,7 @@ if($navigationPage == 'build.php' && isset($_GET['id'])) {
 			'trade' => 'Comercio',
 			'routes' => 'Rutas',
 			'reinforcement' => 'Refuerzo',
+			'adventure' => 'Aventura',
 			'misc' => 'Varios'
 		);
 		$unnoticeDisplay = $unnotice > 1000 ? '+1000' : $unnotice;

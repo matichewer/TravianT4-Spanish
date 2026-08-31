@@ -1,6 +1,6 @@
 ﻿
 <?php
-$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales");
+$noticeClass = array("Informe de exploración","Victoria como atacante sin bajas","Victoria como atacante con bajas","Derrota como atacante con bajas","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Derrota como defensor sin bajas","Refuerzo llegado","Aventura","Madera entregada","Barro entregado","Hierro entregado","Cereal entregado","","Victoria como defensor sin bajas","Victoria como defensor con bajas","Derrota como defensor con bajas","Victoria explorando como atacante","Derrota explorando como atacante","Victoria explorando como defensor","Derrota explorando como defensor","Espionaje sin bajas","Espionaje con bajas","Espionaje con bajas totales","Animales capturados");
 
 // Informe de "la salida de la ruta comercial no se ejecuto" (ntype 26, lo escribe
 // Automation::reportFailedDeparture). Se agrega por separado en vez de alargar el
@@ -174,7 +174,11 @@ while($row = mysql_fetch_array($sql2)){
     if($type==9){
     	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport21\" alt=\"".$noticeClass[$ntype]."\" title=\"".$noticeClass[$ntype]."\" /> <div>";
     }else{
-    	$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport".(isset($noticeIconType[$type]) ? $noticeIconType[$type] : $type)."\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
+		$iconType = $type;
+		if($type >= 15 && $type <= 17) $iconType = $type - 11;
+		if($type == 25) $iconType = 1;
+		if(isset($noticeIconType[$type])) $iconType = $noticeIconType[$type];
+		$outputList .= "<img src=\"img/x.gif\" class=\"iReport iReport".$iconType."\" alt=\"".$noticeClass[$type]."\" title=\"".$noticeClass[$type]."\" /> <div>";
     }
 
 if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){
@@ -191,14 +195,23 @@ if($type==1 || $type==2 || $type==5 || $type==6 || $type==7){
     
 }elseif($type==9){
 $btype = $dataarray[1];
-$type = $dataarray[2];
-include "Templates/Auction/alt.tpl";
-$typeArray = array("","helmet","body","leftHand","rightHand","shoes","horse","bandage25","bandage33","cage","scroll","ointment","bucketOfWater","bookOfWisdom","lawTables","artWork");
-if($dataarray[1]){
-	$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$name." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"reportInfo itemCategory itemCategory_".$typeArray[$dataarray[1]]."\"></div>";
-    }
+if($btype == 'dead') {
+	$outputList .= "<div class=\"reportInfoIcon\"><img src=\"img/x.gif\" class=\"reportInfo adventureDifficulty0\" title=\"Tu héroe ha muerto\"></div>";
+} elseif(is_numeric($btype)) {
+	if($btype < 16) {
+		$type = $dataarray[2];
+		include "Templates/Auction/alt.tpl";
+		$typeArray = array("","helmet","body","leftHand","rightHand","shoes","horse","bandage25","bandage33","cage","scroll","ointment","bucketOfWater","bookOfWisdom","lawTables","artWork");
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$name." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"reportInfo itemCategory itemCategory_".$typeArray[$btype]."\"></div>";
+	} elseif($btype == 16) {
+		$unitType = (($session->tribe - 1) * 10) + $dataarray[2];
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$technology->getUnitName($unitType)." (".$dataarray[3]."x)\" src=\"img/x.gif\" class=\"unit u".$unitType."\"></div>";
+	} else {
+		$outputList .= "<div class=\"reportInfoIcon\"><img title=\"".$dataarray[3]." de plata\" src=\"img/x.gif\" class=\"silver\"></div>";
+	}
 }
-    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=2\">".$topic." </a> ";
+}
+    $outputList .= "<a href=\"berichte.php?id=".$id."&amp;t=".$reportFilter."\">".$topic." </a> ";
     if($viewed == 0) { $outputList .= "(Nuevo)"; }
     $date = $generator->procMtime($time);
     $outputList .= "</div><div class=\"clear\"></div></td>

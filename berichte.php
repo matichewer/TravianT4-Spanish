@@ -11,7 +11,7 @@ $reportsPerPage = isset($_SESSION['reports_per_page'])
 	&& in_array((int)$_SESSION['reports_per_page'], $reportPageSizes, true)
 	? (int)$_SESSION['reports_per_page']
 	: 10;
-if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6', '7'), true)) {
+if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '5', '6', '7', '8'), true)) {
 	$reportFilter = (int)$_GET['t'];
 } elseif(isset($_GET['t'])) {
 	$reportFilter = 0;
@@ -33,6 +33,7 @@ include "Templates/html.tpl";
 		#content.reports .reportImage { display: none; }
 		#content.reports .reportsPerPage { float: right; margin: -3px 12px 0 10px; }
 		#content.reports .reportsPerPage label { margin-right: 4px; }
+		#content.reports .reportsNavi .container .content .tabItem { padding-left: 4px; padding-right: 4px; }
 	</style>
 	<div id="wrapper"> 
 		<img id="staticElements" src="img/x.gif" alt="" /> 
@@ -60,11 +61,16 @@ include "Templates/html.tpl";
 <div class="contentContainer">
 <div id="content" class="reports">
 <h1 class="titleInHeader">Informes</h1>
-<div class="contentNavi subNavi">
+<div class="contentNavi subNavi reportsNavi">
 				<div title="" class="container <?php if (!isset($_GET['t'])) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
 					<div class="content"><a href="berichte.php"><span class="tabItem">Todos</span></a></div>
+				</div>
+				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 8) { echo "active"; }else{ echo "normal"; } ?>">
+					<div class="background-start">&nbsp;</div>
+					<div class="background-end">&nbsp;</div>
+					<div class="content"><a href="berichte.php?t=8"><span class="tabItem">No leídos</span></a></div>
 				</div>
 				<div title="" class="container <?php if (isset($_GET['t']) && $_GET['t'] == 1) { echo "active"; }else{ echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
@@ -142,7 +148,12 @@ if(isset($_GET['id'])) {
 	}
 }
 elseif(isset($_GET['t'])) {
-	include("Templates/Notice/t_".$reportFilter.".tpl");
+	if($reportFilter === 8) {
+		$noticeSqlFilter = "and viewed = 0";
+		include("Templates/Notice/t_2.tpl");
+	} else {
+		include("Templates/Notice/t_".$reportFilter.".tpl");
+	}
 } else {
 	include("Templates/Notice/all.tpl");
 }
