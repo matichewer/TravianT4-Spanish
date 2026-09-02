@@ -68,18 +68,80 @@ check(NATAR_SETTLEMENT_TRAINING_INTERVAL === 10800,
 check(NATAR_SETTLEMENT_CATCHUP_CAP === 8,
     'una puesta al día acredita como máximo 8 intervalos');
 
-$created = array();
-function dropScratch() {
-    global $database, $created;
-    foreach($created as $wref) {
-        foreach(array('vdata' => 'wref', 'fdata' => 'vref', 'units' => 'vref', 'tdata' => 'vref', 'abdata' => 'vref') as $table => $key) {
-            $database->query("DELETE FROM ".TB_PREFIX.$table." WHERE $key = ".(int)$wref);
+// --- El banco de pruebas -------------------------------------------------------------
+//
+// Todo corre sobre TABLAS TEMPORALES copiadas del esquema real, como
+// check_village_conquest.php. Antes este checker creaba su aldea en el MUNDO DE VERDAD y
+// la borraba con un register_shutdown_function, lo cual traía dos problemas:
+//
+//   - dependía del estado del mundo, y dejó de correr el día que todas las aldeas de
+//     jugador llegaron al cupo de aldeas natar cercanas (`natarSettlementPickAnchor()`
+//     devuelve null y no hay ancla donde colocar la de prueba). Un checker que se apaga
+//     solo cuando el mundo madura es peor que no tenerlo: queda rojo para siempre y tapa
+//     las fallas de verdad;
+//   - la sección de hambruna llama a `starvation()`, que barre TODAS las aldeas: este
+//     checker le pasaba la hambruna al mundo real en cada corrida.
+//
+// Con el mundo propio, además, las distancias y el cupo son los que la prueba elige.
+scratchWorld();
+
+function scratchWorld() {
+    global $database;
+    $P = TB_PREFIX;
+    $tables = array();
+    $result = mysqli_query($database->connection, "SHOW TABLES LIKE '".$P."%'");
+    while($line = mysqli_fetch_row($result)) {
+        $name = substr($line[0], strlen($P));
+        // `config` queda afuera: sus constantes ya se leyeron al arrancar.
+        if($name !== 'config') {
+            $tables[] = $name;
         }
-        $database->query("UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = ".(int)$wref);
     }
-    $created = array();
+    foreach($tables as $table) {
+        $create = mysqli_fetch_assoc(mysqli_query($database->connection, "SHOW CREATE TABLE {$P}{$table}"));
+        mysqli_query($database->connection,
+            preg_replace('/^CREATE TABLE/', 'CREATE TEMPORARY TABLE', $create['Create Table']));
+    }
+    foreach($tables as $table) {
+        mysqli_query($database->connection, "DELETE FROM {$P}{$table}");
+    }
+
+    // La cuenta natar tiene que existir: natarsAccountId() la resuelve por nombre.
+    mysqli_query($database->connection, "INSERT INTO {$P}users (id,username,tribe,cp,access,alliance) VALUES "
+        ."(".UID_NATARS.",'Natars',5,0,2,0),(9401,'vecino',1,0,3,0)");
+
+    // Un tablero de 53x53 casillas libres alrededor del (0|0). Hace falta que sobre banda
+    // entre NATAR_SETTLEMENT_MIN_DISTANCE y MAX_DISTANCE alrededor del jugador.
+    $rows = array();
+    $span = (int)NATAR_SETTLEMENT_MAX_DISTANCE + 1;
+    for($x = -$span; $x <= $span; $x++) {
+        for($y = -$span; $y <= $span; $y++) {
+            $id = scratchTile($x, $y);
+            $rows[] = "($id,3,0,$x,$y,0,0)";
+        }
+    }
+    foreach(array_chunk($rows, 500) as $chunk) {
+        mysqli_query($database->connection,
+            "INSERT INTO {$P}wdata (id,fieldtype,oasistype,x,y,occupied,image) VALUES ".implode(',', $chunk));
+    }
+
+    // Una sola aldea de jugador, en el centro: es el ancla de la que cuelga la natar.
+    $player = scratchTile(0, 0);
+    $now = time();
+    mysqli_query($database->connection, "UPDATE {$P}wdata SET occupied = 1 WHERE id = $player");
+    mysqli_query($database->connection, "INSERT INTO {$P}vdata "
+        ."(wref,owner,capital,pop,cp,loyalty,created,lastupdate,maxstore,maxcrop) VALUES "
+        ."($player,9401,1,100,0,100,$now,$now,800,800)");
+    mysqli_query($database->connection, "INSERT INTO {$P}fdata (vref) VALUES ($player)");
+    mysqli_query($database->connection, "INSERT INTO {$P}units (vref) VALUES ($player)");
 }
-register_shutdown_function('dropScratch');
+
+/** El id de casilla que le toca a una coordenada del tablero de prueba. */
+function scratchTile($x, $y) {
+    $span = (int)NATAR_SETTLEMENT_MAX_DISTANCE + 1;
+    $side = $span * 2 + 1;
+    return 500000 + ($x + $span) * $side + ($y + $span);
+}
 
 $reflection = new ReflectionClass('Automation');
 $automation = $reflection->newInstanceWithoutConstructor();
@@ -109,8 +171,6 @@ if($wref <= 0) {
     fwrite(STDERR, "No se pudo crear la aldea de prueba: ¿hay aldeas de jugador y casillas libres?\n");
     exit(1);
 }
-$created[] = $wref;
-
 $village = $database->getVillage($wref);
 check(isLivingNpcVillage($village), 'la aldea nace marcada como NPC viva');
 check((int)$village['owner'] === natarsAccountId(), 'pertenece a la cuenta natar');
@@ -327,8 +387,6 @@ check($healed === natarSettlementName($wref),
     'una aldea con el nombre viejo se renombra sola en el barrido ("'.$healed.'")');
 check(strpos($healed, '|') !== false,
     'y el nombre lleva la coordenada, para poder ubicarla desde un informe');
-
-dropScratch();
 
 echo PHP_EOL.(count($failures) ? count($failures)." FALLA(S)" : "todo en orden").PHP_EOL;
 exit(count($failures) ? 1 : 0);

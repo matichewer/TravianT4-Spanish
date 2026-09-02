@@ -65,18 +65,79 @@ function check($ok, $message) {
     }
 }
 
-$created = array();
-function dropScratch() {
-    global $database, $created;
-    foreach($created as $wref) {
-        foreach(array('vdata' => 'wref', 'fdata' => 'vref', 'units' => 'vref', 'tdata' => 'vref', 'abdata' => 'vref') as $table => $key) {
-            $database->query("DELETE FROM ".TB_PREFIX.$table." WHERE $key = ".(int)$wref);
+// --- El banco de pruebas -------------------------------------------------------------
+//
+// TABLAS TEMPORALES copiadas del esquema real, como check_village_conquest.php. Antes
+// esto creaba sus aldeas en el mundo de verdad y las borraba al salir, y dejó de correr
+// el día que todas las aldeas de jugador llegaron al cupo de aldeas natar cercanas:
+// `natarSettlementPickAnchor()` devolvía null y no había dónde poner la de prueba. Con el
+// mundo propio, el cupo lo fija la prueba.
+//
+// Hacen falta TRES aldeas de jugador porque el cupo es NATAR_SETTLEMENT_PER_CLUSTER (2)
+// por aldea de jugador, y este archivo necesita colocar tres asentamientos.
+scratchWorld(array(array(0, 0), array(-20, -20), array(20, 20)));
+
+function scratchWorld($players) {
+    global $database;
+    $P = TB_PREFIX;
+    $tables = array();
+    $result = mysqli_query($database->connection, "SHOW TABLES LIKE '".$P."%'");
+    while($line = mysqli_fetch_row($result)) {
+        $name = substr($line[0], strlen($P));
+        if($name !== 'config') {
+            $tables[] = $name;
         }
-        $database->query("UPDATE ".TB_PREFIX."wdata SET occupied = 0 WHERE id = ".(int)$wref);
     }
-    $created = array();
+    foreach($tables as $table) {
+        $create = mysqli_fetch_assoc(mysqli_query($database->connection, "SHOW CREATE TABLE {$P}{$table}"));
+        mysqli_query($database->connection,
+            preg_replace('/^CREATE TABLE/', 'CREATE TEMPORARY TABLE', $create['Create Table']));
+    }
+    foreach($tables as $table) {
+        mysqli_query($database->connection, "DELETE FROM {$P}{$table}");
+    }
+
+    $users = array("(".UID_NATARS.",'Natars',5,0,2,0)");
+    foreach($players as $index => $ignored) {
+        $users[] = "(".(9500 + $index).",'vecino".$index."',1,0,3,0)";
+    }
+    mysqli_query($database->connection,
+        "INSERT INTO {$P}users (id,username,tribe,cp,access,alliance) VALUES ".implode(',', $users));
+
+    $rows = array();
+    $span = scratchSpan();
+    for($x = -$span; $x <= $span; $x++) {
+        for($y = -$span; $y <= $span; $y++) {
+            $rows[] = "(".scratchTile($x, $y).",3,0,$x,$y,0,0)";
+        }
+    }
+    foreach(array_chunk($rows, 500) as $chunk) {
+        mysqli_query($database->connection,
+            "INSERT INTO {$P}wdata (id,fieldtype,oasistype,x,y,occupied,image) VALUES ".implode(',', $chunk));
+    }
+
+    $now = time();
+    foreach($players as $index => $coor) {
+        $wref = scratchTile($coor[0], $coor[1]);
+        mysqli_query($database->connection, "UPDATE {$P}wdata SET occupied = 1 WHERE id = $wref");
+        mysqli_query($database->connection, "INSERT INTO {$P}vdata "
+            ."(wref,owner,capital,pop,cp,loyalty,created,lastupdate,maxstore,maxcrop) VALUES "
+            ."($wref,".(9500 + $index).",1,100,0,100,$now,$now,800,800)");
+        mysqli_query($database->connection, "INSERT INTO {$P}fdata (vref) VALUES ($wref)");
+        mysqli_query($database->connection, "INSERT INTO {$P}units (vref) VALUES ($wref)");
+    }
 }
-register_shutdown_function('dropScratch');
+
+/** El tablero llega un poco más lejos que la banda de saqueo, para que sobre sitio. */
+function scratchSpan() {
+    return (int)NATAR_SETTLEMENT_MAX_DISTANCE + 6;
+}
+
+/** El id de casilla que le toca a una coordenada del tablero de prueba. */
+function scratchTile($x, $y) {
+    $span = scratchSpan();
+    return 500000 + ($x + $span) * ($span * 2 + 1) + ($y + $span);
+}
 
 $reflection = new ReflectionClass('Automation');
 $automation = $reflection->newInstanceWithoutConstructor();
@@ -96,7 +157,6 @@ if($wref <= 0) {
     fwrite(STDERR, "No se pudo crear la aldea de prueba.\n");
     exit(1);
 }
-$created[] = $wref;
 
 // Se la envejece para que tenga campos y almacén de verdad.
 $mature = $now - (NATAR_SETTLEMENT_GROWTH_INTERVAL * NATAR_SETTLEMENT_MAX_FIELD_LEVEL);
@@ -131,7 +191,6 @@ check($razed === true && empty($stillThere),
     'las catapultas arrasan una aldea natar viva igual que la de un jugador');
 check((int)$fieldFreed[0]['occupied'] === 0,
     'y la casilla vuelve a quedar libre');
-$created = array_values(array_diff($created, array($wref)));
 
 // --- C. La capital natar no ------------------------------------------------------------
 $capital = $database->query_return(
@@ -143,7 +202,6 @@ if(!is_array($capital) || !isset($capital[0]['wref'])) {
     $free = $database->query_return("SELECT id FROM ".TB_PREFIX."wdata WHERE occupied = 0 AND fieldtype = 3 LIMIT 1");
     if(is_array($free) && isset($free[0]['id'])) {
         $scratchCapital = (int)$free[0]['id'];
-        $created[] = $scratchCapital;
         $database->query("UPDATE ".TB_PREFIX."wdata SET occupied = 1 WHERE id = $scratchCapital");
         $database->addVillage($scratchCapital, natarsAccountId(), 'Natars', '1');
         $database->addResourceFields($scratchCapital, $database->getVillageType($scratchCapital));
@@ -224,7 +282,6 @@ check(strpos($unitsSource, 'No puedes enviar refuerzos a una aldea natar.') !== 
 // --- E. Fuera de las clasificaciones ----------------------------------------------------
 $second = natarSettlementSpawn($now + NATAR_SETTLEMENT_SPAWN_INTERVAL + 1, true);
 if($second > 0) {
-    $created[] = $second;
     $database->query("UPDATE ".TB_PREFIX."vdata SET pop = 9999 WHERE wref = $second");
 }
 $ranking = new Ranking();
@@ -250,7 +307,6 @@ check(!$rankedAccount, 'ni la cuenta natar en la clasificación de jugadores');
 // --- F. Conquistar una aldea natar: cambia de dueño y entrega vacía -----------------------
 $conqTarget = natarSettlementSpawn($now, true);
 if($conqTarget > 0) {
-    $created[] = $conqTarget;
     $attacker = $database->query_return(
         "SELECT wref, owner FROM ".TB_PREFIX."vdata WHERE ".playerAccountSql('owner')." LIMIT 1"
     );
@@ -302,7 +358,6 @@ if($conqTarget > 0) {
     }
 }
 
-dropScratch();
 
 echo PHP_EOL.(count($failures) ? count($failures)." FALLA(S)" : "todo en orden").PHP_EOL;
 exit(count($failures) ? 1 : 0);
