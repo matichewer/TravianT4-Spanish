@@ -6693,9 +6693,45 @@ break;
 				return $outcome['status'] === 'claimed';
 			}
 
+			// Apila una capa PNG sobre otra. Los 23 llamadores (hero_image.php,
+			// hero_body.php) pasan siempre $pct = 100, y con opacidad completa la
+			// formula de abajo es la identidad: sobre una capa que tenga al menos
+			// un pixel opaco queda minalpha = 0 y entonces
+			// alpha = 127 + (alpha - 127) = alpha. O sea que el doble recorrido
+			// pixel por pixel -uno para buscar minalpha y otro para reescribir
+			// cada pixel- solo servia para gastar ~260.000 iteraciones de PHP por
+			// retrato (16.184 pixeles x 2 pasadas x 8 capas). Medido: 2,0 ms por
+			// capa contra 0,116 ms de un imagecopy pelado, con salida byte a byte
+			// identica. Ver tools/check_hero_image_render.php.
+			//
+			// Dos detalles del arte que el checker deja pineados. El unico PNG
+			// apilable sin ningun pixel totalmente opaco es
+			// img/hero/head/31x40/mouth/mouth0.png (minalpha = 1): ahi la formula
+			// estiraba el pixel mas opaco hasta opacidad total y el atajo no, lo
+			// que cambia 3 pixeles de 1240 en 1/255 de un canal sobre la cara real.
+			// Y las capas completamente transparentes son beard5-* y hair5-*, las
+			// opciones "sin barba"/"sin pelo" que ambas paginas ya saltean antes de
+			// llamar aca -- menos mal, porque para minalpha = 127 la formula daba
+			// alpha = 254, fuera del rango 0..127 que acepta imagecolorallocatealpha,
+			// y la capa terminaba pintada de negro opaco.
+			//
+			// Todo esto vale porque las capas que se apilan son truecolor. El arte
+			// indexado que hay bajo img/hero (254x330, items/, thumb/) se sirve como
+			// <img> y no pasa por aca; sobre paleta la formula vieja leia el indice
+			// de color como si fuera un ARGB, o sea basura.
+			//
+			// El camino lento sobrevive para $pct != 100 por si alguna vez alguien
+			// pide una capa semitransparente de verdad.
 			function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){
 				if(!isset($pct)){
 					return false;
+				}
+				if($pct == 100){
+					// imagecopy mezcla segun el flag del DESTINO, no el de la
+					// fuente: sin esto una imagen creada con alphablending en
+					// false se copiaria cruda y pisaria las capas de abajo.
+					imagealphablending($dst_im, true);
+					return imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
 				}
 				$pct /= 100;
 				// Get image width and height

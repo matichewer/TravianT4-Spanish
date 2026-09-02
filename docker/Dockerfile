@@ -3,7 +3,7 @@ FROM php:7.4-apache
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" gd mysqli \
+    && docker-php-ext-install -j"$(nproc)" gd mysqli opcache \
     && rm -rf /var/lib/apt/lists/*
 
 # Match the host user (uid 1000) so the web installer can write
