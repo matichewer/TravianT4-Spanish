@@ -251,7 +251,12 @@ function natarFindBuildingSlot($fields, $type) {
  * No escribe nada: devuelve el plan para que lo aplique natarProvisionVillage() y para
  * que los checkers puedan verificarlo sin tocar la base.
  */
-function natarVillagePlan($fields, $upkeep) {
+function natarVillagePlan($fields, $upkeep, $fieldLevel = null) {
+    // El nivel de los campos es un parámetro y no una constante porque la liberación de
+    // artefactos lo deja configurar desde el panel: un mundo chico puede querer aldeas más
+    // pobres. Si no se pasa nada rige la constante de siempre, que es lo que usan el
+    // instalador y las Aldeas de la Maravilla.
+    $fieldLevel = $fieldLevel === null ? NATAR_RESOURCE_FIELD_LEVEL : max(0, (int)$fieldLevel);
     $plan = is_array($fields) ? $fields : array();
     $cropFields = array();
     // Lo que la aldea tiene HOY, antes de que el plan lo pise. Sin esto el informe de
@@ -266,7 +271,7 @@ function natarVillagePlan($fields, $upkeep) {
             $cropFields[] = $slot;
         }
         $measured[] = (int)$plan['f'.$slot];
-        $plan['f'.$slot] = max(NATAR_RESOURCE_FIELD_LEVEL, (int)$plan['f'.$slot]);
+        $plan['f'.$slot] = max($fieldLevel, (int)$plan['f'.$slot]);
     }
 
     $buildings = array(
@@ -289,14 +294,14 @@ function natarVillagePlan($fields, $upkeep) {
     return array(
         'fields' => $plan,
         'crop_fields' => $cropFields,
-        'crop_level' => NATAR_RESOURCE_FIELD_LEVEL,
+        'crop_level' => $fieldLevel,
         // Medido, no planeado. `above_max` importa porque el plan sólo sube niveles con
         // max(): un campo por encima del nivel oficial es invisible para la reparación y
         // hay que decirlo en vez de dejarlo pasar.
         'measured_min_level' => $measured ? min($measured) : 0,
         'measured_max_level' => $measured ? max($measured) : 0,
-        'above_max' => $measured ? count(array_filter($measured, function ($level) {
-            return $level > NATAR_RESOURCE_FIELD_LEVEL;
+        'above_max' => $measured ? count(array_filter($measured, function ($level) use ($fieldLevel) {
+            return $level > $fieldLevel;
         })) : 0,
         'pop' => $pop,
         'gross_crop' => $grossCrop,
@@ -320,7 +325,7 @@ function natarVillagePlan($fields, $upkeep) {
  * acreditación de producción aplicaría de golpe todo el tiempo que la aldea pasó sin
  * simularse.
  */
-function natarProvisionVillage($wref) {
+function natarProvisionVillage($wref, $fieldLevel = null) {
     global $database;
     $wref = (int)$wref;
     if($wref <= 0) {
@@ -331,7 +336,7 @@ function natarProvisionVillage($wref) {
         return null;
     }
     $upkeep = natarGarrisonUpkeep($database->getUnit($wref));
-    $plan = natarVillagePlan($fields, $upkeep);
+    $plan = natarVillagePlan($fields, $upkeep, $fieldLevel);
 
     $updates = array();
     for($slot = NATAR_FIRST_RESOURCE_FIELD; $slot <= NATAR_LAST_BUILDING_SLOT; $slot++) {
@@ -484,17 +489,29 @@ function natarWonderBuildings($wref) {
  * de tropas y entrando en hambruna, y su guarnicion se moria sola. Es exactamente el bug
  * que ya se habia arreglado en las Maravillas.
  */
-function natarArtefactBuildings($wref, $treasuryLevel) {
+function natarArtefactBuildings($wref, $treasuryLevel, $crannyLevel = 10, $wallLevel = 0, $wallType = 31) {
     global $database;
     $wref = (int)$wref;
     $treasuryLevel = max(1, min(20, (int)$treasuryLevel));
+    $crannyLevel = max(0, min(20, (int)$crannyLevel));
+    $wallLevel = max(0, min(20, (int)$wallLevel));
+    // La muralla va en el campo 40, fuera de la franja 19-38, igual que en las aldeas natar
+    // vivas: `natarFindBuildingSlot()` no recorre ese campo y `Battle::wallFactors` la
+    // resuelve por la tribu del defensor. Oficial: las aldeas de artefacto arrancan sin
+    // muralla y los natars sólo pueden subirla a 1.
+    //
+    // El TIPO llega por parámetro y no de NATAR_SETTLEMENT_WALL_TYPE a propósito:
+    // NatarSettlement.php incluye a este archivo, así que mirar su constante desde acá
+    // sería una dependencia circular. Quien llama ya sabe qué muro quiere.
+    $wallType = $wallLevel > 0 ? max(0, (int)$wallType) : 0;
     return mysqli_query($database->connection,
         "UPDATE ".TB_PREFIX."fdata SET "
         ."`f22t` = 27, `f22` = ".$treasuryLevel.", "   // el Tesoro que guarda el artefacto
-        ."`f28t` = 0,  `f28` = 0, "                    // sin residencia
-        ."`f19t` = 23, `f19` = 10, "                   // escondite
+        ."`f28t` = 0,  `f28` = 0, "                    // sin residencia: se toma con catapultas
+        ."`f19t` = ".($crannyLevel > 0 ? 23 : 0).", `f19` = ".$crannyLevel.", "
         ."`f99t` = 0, "                                // no hay Maravilla
-        ."`f26t` = 0,  `f26` = 0, "                    // sin muralla
+        ."`f26t` = 0,  `f26` = 0, "                    // el muro viejo no se usa
+        ."`f40t` = ".$wallType.", `f40` = ".$wallLevel.", "
         ."`f21t` = 15, `f21` = 1, "                    // edificio principal
         ."`f39t` = 16, `f39` = 1 "                     // punto de reunion
         ."WHERE `vref` = ".$wref);
