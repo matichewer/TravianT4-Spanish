@@ -40,7 +40,19 @@ $assert(strpos($navigation, "'adventure' => 'Aventura'") !== false, 'Adventure b
 $assert(strpos($css, '.report-badge-trade .report-badge-background{background-color:#555;}') !== false, 'Trade badges are not dark gray.');
 $assert(strpos($css, '.report-badge-routes{color:#555;background:transparent!important;border-radius:8px;}') !== false, 'The route badge container compounds the translucent background.');
 $assert(strpos($css, '.report-badge-routes .report-badge-background{background:rgba(80,80,80,.25)!important;}') !== false, 'The route badge background layers are not light and translucent.');
-$assert(strpos($html, 'compact.css?asd485') !== false && strpos($compact, 'compact1.css?v=71') !== false, 'The two stylesheet cache-busters were not advanced with the route badge style.');
+// Los dos cache-busters tuvieron que avanzar cuando entró el estilo del badge de rutas.
+// Se comparan con >= y no con una igualdad: Cloudflare cachea el CSS cuatro horas, así que
+// cada cambio posterior de estilo los vuelve a subir, y una igualdad dejaba este checker en
+// rojo desde el primer bump que no fuera éste. Lo que hay que garantizar es que nunca
+// RETROCEDAN por debajo de la versión en la que entró el estilo.
+preg_match('/compact\.css\?asd(\d+)/', $html, $htmlBuster);
+preg_match('/compact1\.css\?v=(\d+)/', $compact, $compactBuster);
+$assert(isset($htmlBuster[1]) && (int)$htmlBuster[1] >= 485,
+	'The compact.css cache-buster fell behind the route badge style (asd'
+		.(isset($htmlBuster[1]) ? $htmlBuster[1] : '?').' < asd485).');
+$assert(isset($compactBuster[1]) && (int)$compactBuster[1] >= 71,
+	'The compact1.css cache-buster fell behind the route badge style (v='
+		.(isset($compactBuster[1]) ? $compactBuster[1] : '?').' < v=71).');
 $assert(strpos($css, '.report-badge-adventure .report-badge-background{background-color:#7eaa16;}') !== false, 'Adventure badges are not green.');
 $assert(substr_count($css, 'background-color:#7eaa16;') === 1, 'Adventure green is assigned to another report category.');
 
