@@ -131,7 +131,7 @@ crannyProtectionAssert(
 
 $availableSource = file_get_contents(dirname(__DIR__).'/Templates/Build/avaliable.tpl');
 crannyProtectionAssert(
-    strpos($availableSource, '($cranny == 0 || $cranny >= 10)') !== false,
+    preg_match('/if\(\$building->meetRequirement\(23\)[^\n]*\n\s*include\("avaliable\/cranny\.tpl"\)/', $availableSource) === 1,
     'The available-building list must use the same level-10 unlock rule.'
 );
 

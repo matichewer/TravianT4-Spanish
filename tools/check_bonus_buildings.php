@@ -243,11 +243,10 @@ check($meetRequirement->invoke($buildingProbe,9) === false, 'Panadería: una sol
 
 // La lista de construcción tiene que ocultar lo mismo que rechaza el motor.
 $available = file_get_contents(dirname(__DIR__).'/Templates/Build/avaliable.tpl');
-check(strpos($available,'$cropland >= 5 && $mainbuilding >= 5 && !$database->getBuildList(8) && $grainmill == 0') !== false,
-	'la lista de construcción exige Edificio principal 5 para el Molino');
+// La reja de la lista es literalmente la pregunta del motor: requisitos, unicidad y
+// cola salen todos de meetRequirement() (ver tools/check_building_requirements.php).
 foreach(array(5=>'sawmill',6=>'brickyard',7=>'ironfoundry',8=>'grainmill',9=>'bakery') as $type => $var) {
-	check(strpos($available,'$'.$var.' == 0 && !$database->getBuildList('.$type.')') !== false
-		|| strpos($available,'!$database->getBuildList('.$type.') && ') !== false,
+	check(preg_match('/if\(\$building->meetRequirement\('.$type.'\)[^\n]*\n\s*include\("avaliable\/'.$var.'\.tpl"\)/',$available) === 1,
 		'la lista de construcción oculta '.$BONUS[$type].' cuando ya existe o está en cola');
 }
 

@@ -129,7 +129,9 @@ for($level = 2; $level <= 20; $level++) {
 }
 
 $buildingSource = file_get_contents($root.'/GameEngine/Building.php');
-check(preg_match('/case 27:\s*if\(\$this->getTypeLevel\(15\) >= 10\)/', $buildingSource) === 1,
+require_once $root.'/GameEngine/Catapult.php';
+$requisitosTesoro = buildingLevelRequirements(27);
+check(is_array($requisitosTesoro) && count($requisitosTesoro) === 1 && isset($requisitosTesoro[15]) && (int)$requisitosTesoro[15] === 10,
     'el Tesoro pide edificio principal 10, como en el oficial');
 check(preg_match('/\$singlePerVillage = array\((.*?)\);/s', $buildingSource, $m) === 1
     && in_array('27', array_map('trim', explode(',', preg_replace('/\s+/', '', $m[1]))), true),

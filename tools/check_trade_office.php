@@ -237,16 +237,19 @@ check(preg_match('/private static \$singlePerVillage = array\(\s*([0-9,\s]+)\)/'
 	'la Oficina de comercio está en la lista de edificios únicos por aldea');
 check(strpos($buildingSource,'if(!$this->isSingleBuildingAllowed($id)) {') !== false,
 	'meetRequirement() corta por unicidad antes de mirar los requisitos (ver check_unique_buildings.php)');
-check(preg_match('/case 28:.*?getTypeLevel\(17\) == 20 && \$this->getTypeLevel\(20\) >= 10/s',$buildingSource) === 1,
+$requisitosOficina = buildingLevelRequirements(28);
+check(is_array($requisitosOficina) && count($requisitosOficina) === 2
+	&& isset($requisitosOficina[17]) && (int)$requisitosOficina[17] === 20
+	&& isset($requisitosOficina[20]) && (int)$requisitosOficina[20] === 10,
 	'meetRequirement(28) sigue exigiendo Mercado 20 y Establo 10');
 
 $disponiblesTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/avaliable.tpl');
-check(strpos($disponiblesTpl,'$tradeoffice == 0 && !$database->getBuildList(28) && $market == 20 && $stable >= 10') !== false,
+check(preg_match('/if\(\$building->meetRequirement\(28\)[^\n]*\n\s*include\("avaliable\/tradeoffice\.tpl"\)/',$disponiblesTpl) === 1,
 	'la lista de construcciones ofrece la Oficina con el mismo requisito que el servidor');
 
 $prontoTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/soon/tradeoffice.tpl');
-check(strpos($prontoTpl,'Nivel 20') !== false && strpos($prontoTpl,'Nivel 10') !== false,
-	'la ficha de "próximamente" anuncia Mercado 20 y Establo 10');
+check(strpos($prontoTpl,'$building->requirementsHtml(28)') !== false,
+	'la ficha de "próximamente" anuncia los requisitos que pide el motor, sin copiarlos');
 
 // ---------------------------------------------------------------------------
 section('F. Vistas del Mercado sin copias de la fórmula');

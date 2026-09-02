@@ -50,8 +50,8 @@ stonemasonAssert($meetRequirement->invoke($building, 34) === false, 'rechaza una
 
 $availableSource = file_get_contents(dirname(__DIR__).'/Templates/Build/avaliable.tpl');
 stonemasonAssert(
-	substr_count($availableSource, '$stonemasonslodge == 0 && $village->capital == 1') === 2
-		&& strpos($availableSource, '$database->getBuildList(34) && $village->capital == 1') !== false,
+	preg_match('/if\(\$building->meetRequirement\(34\)[^\n]*\n\s*include\("avaliable\/stonemason\.tpl"\)/', $availableSource) === 1
+		&& substr_count($availableSource, '$stonemasonslodge == 0 && $village->capital == 1') === 2,
 	'la lista de edificios oculta el Taller de cantería fuera de la capital'
 );
 

@@ -147,11 +147,13 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
                   $end = ($tribe*10);
                   $coor = $database->getCoor($originWref);
                   echo "<tr><th class=\"coords\">
+					<a class=\"movementOriginCoordinates\" href=\"karte.php?d=".$originWref."&amp;c=".$generator->getMapCheck($originWref)."\" title=\"Ver origen en el mapa\">
 					<span class=\"coordinates coordinatesAligned\">
                     <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
                     <span class=\"coordinateX\">".$coor['y'].")</span>
                     </span>
+					</a>
                     <span class=\"clear\"></span></th>";
                   for($i=$start;$i<=($end);$i++) {
                     echo "<td><a href=\"#\" onclick=\"return Travian.Game.iPopup($i,1);\"><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></a></td>";

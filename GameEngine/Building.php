@@ -504,132 +504,147 @@ class Building {
 		}
 	}
 	
-	private function meetRequirement($id) {
+	/**
+	 * Los requisitos de nivel salen de `buildingLevelRequirements()` (Catapult.php), que es
+	 * la única tabla: acá quedan sólo las condiciones que no son "edificio X en nivel N".
+	 *
+	 * Es público porque la lista de construcciones disponibles es la misma pregunta hecha
+	 * desde la plantilla, y cuando cada lado la contestaba por su cuenta se desincronizaban.
+	 */
+	public function meetRequirement($id) {
 		global $village;
 		$id = (int)$id;
+		$requirements = buildingLevelRequirements($id);
+		// Un gid que no existe no se construye (el 13 no es ningún edificio).
+		if($requirements === null) {
+			return false;
+		}
 		if(!$this->isTribeBuildingAllowed($id)) {
 			return false;
 		}
 		if(!$this->isSingleBuildingAllowed($id)) {
 			return false;
 		}
+		if(!$this->meetsLevelRequirements($id)) {
+			return false;
+		}
 		switch($id) {
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 15:
-			case 16:
-			case 18:
-			case 31:
-			case 32:
-			case 33:
-			return true;
+			// Almacén, granero, gran almacén y gran granero admiten otro sólo cuando los
+			// que ya están llegaron al máximo.
+			case 10:
+			case 11:
+			return $this->canBuildAnotherOfType($id);
 			break;
 			case 23:
 			return !$this->hasQueuedType(23)
 				&& ($this->getTypeCount(23) == 0 || $this->getTypeLevel(23) >= 10);
 			break;
-			case 10:
-			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(10);
-			break;
-			case 11:
-			return $this->getTypeLevel(15) >= 1 && $this->canBuildAnotherOfType(11);
-			break;
-			// La unicidad de todos estos la resuelve isSingleBuildingAllowed() antes
-			// del switch; acá quedan sólo los requisitos propios de cada edificio.
-			case 5:
-			return $this->getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5;
-			break;
-			case 6:
-			return $this->getTypeLevel(2) >= 10 && $this->getTypeLevel(15) >= 5;
-			break;
-			case 7:
-			return $this->getTypeLevel(3) >= 10 && $this->getTypeLevel(15) >= 5;
-			break;
-			case 8:
-			return $this->getTypeLevel(4) >= 5 && $this->getTypeLevel(15) >= 5;
-			break;
-			case 9:
-			return $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5;
-			break;
-			case 12:
-			if($this->getTypeLevel(22) >= 1 && $this->getTypeLevel(15) >= 3) { return true; } else { return false; }
-			break;
-			case 14:
-			if($this->getTypeLevel(16) >= 15) { return true; } else { return false; }
-			break;
-			case 17:
-			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(10) >= 1 && $this->getTypeLevel(11) >= 1) { return true; } else { return false; }
-			break;
-			case 19:
-			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(16) >= 1) { return true; } else { return false; }
-			break;
-			case 20:
-			if($this->getTypeLevel(12) >= 3 && $this->getTypeLevel(22) >= 5) { return true; } else { return false; }
-			break;
-			case 21:
-			if($this->getTypeLevel(22) >= 10 && $this->getTypeLevel(15) >= 5) { return true; } else { return false; }
-			break;
-			case 22:
-			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(19) >= 3) { return true; } else { return false; }
-			break;
-			case 24:
-			if($this->getTypeLevel(22) >= 10 && $this->getTypeLevel(15) >= 10) { return true; } else { return false; }
-			break;
-			case 25:
 			// Residencia y palacio se excluyen entre sí, además de ser únicos: la
 			// aldea no puede tener uno si ya tiene el otro, ni construido ni en cola.
-			return $this->getTypeLevel(15) >= 5
-				&& $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26);
+			case 25:
+			return $this->getTypeCount(26) == 0 && !$this->hasQueuedType(26);
 			break;
 			case 26:
-			return $this->getTypeLevel(18) >= 1 && $this->getTypeLevel(15) >= 5
-				&& $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
+			return $this->getTypeCount(25) == 0 && !$this->hasQueuedType(25)
 				&& !$this->hasPalaceInAnotherVillage();
 			break;
-			case 27:
-			if($this->getTypeLevel(15) >= 10) { return true; } else { return false; }
-			break;
-			case 28:
-			return $this->getTypeLevel(17) == 20 && $this->getTypeLevel(20) >= 10;
-			break;
 			case 29:
-			if($this->getTypeLevel(19) == 20 && $village->capital == 0) { return true; } else { return false; }
-			break;
 			case 30:
-			if($this->getTypeLevel(20) == 20 && $village->capital == 0) { return true; } else { return false; }
+			case 42:
+			return (int)$village->capital === 0;
 			break;
 			case 34:
-			if($village->capital == 1 && $this->getTypeLevel(26) >= 3 && $this->getTypeLevel(15) >= 5 && $this->getTypeLevel(25) == 0) { return true; } else { return false; }
-			break;
-			case 35:
-			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20) { return true; } else { return false; }
+			return (int)$village->capital === 1 && $this->getTypeLevel(25) == 0;
 			break;
 			case 36:
-			if(!$this->hasQueuedType(36) && $this->getTypeLevel(16) >= 1 && ($this->getTypeCount(36) == 0 || $this->getTypeLevel(36) == 20)) { return true; } else { return false; }
+			return !$this->hasQueuedType(36)
+				&& ($this->getTypeCount(36) == 0 || $this->getTypeLevel(36) == 20);
 			break;
-			case 37:
-			if($this->getTypeLevel(15) >= 3 && $this->getTypeLevel(16) >= 1) { return true; } else { return false; }
+			case 38:
+			case 39:
+			return (int)$village->capital === 0
+				&& $this->hasStorageArtefact() && $this->canBuildAnotherOfType($id);
 			break;
-            case 38:
-            return $this->getTypeLevel(15) >= 10 && $village->capital == 0
-                && $this->hasStorageArtefact() && $this->canBuildAnotherOfType(38);
-            break;
-            case 39:
-            return $this->getTypeLevel(15) >= 10 && $village->capital == 0
-                && $this->hasStorageArtefact() && $this->canBuildAnotherOfType(39);
-            break;
 			case 40:
 			return false; //not implemented
 			break;
-			case 41:
-			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
+		}
+		return true;
+	}
+
+	/** ¿Están todos los edificios que este pide, en el nivel que pide? */
+	public function meetsLevelRequirements($tid) {
+		$requirements = buildingLevelRequirements($tid);
+		if($requirements === null) {
+			return false;
+		}
+		foreach($requirements as $required => $level) {
+			if($this->getTypeLevel($required) < $level) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * El bloque "Necesario:" de la lista de construcciones, armado con la misma tabla que
+	 * decide si se puede construir. Lo que no se cumple sale en rojo, como en el oficial:
+	 * la ficha no decía cuál de los requisitos era el que faltaba.
+	 */
+	public function requirementsHtml($tid) {
+		$tid = (int)$tid;
+		$requirements = buildingLevelRequirements($tid);
+		if($requirements === null) {
+			return '';
+		}
+		$parts = array();
+		foreach($requirements as $required => $level) {
+			$met = $this->getTypeLevel($required) >= $level;
+			$style = $met ? '' : ' style="color:#a10000"';
+			$parts[] = '<span class="buildingCondition"'.$style.'>'
+				.'<a href="#" onclick="return Travian.Game.iPopup('.(int)$required.',4, \'gid\');"'.$style.'>'
+				.buildingDisplayName($required).'</a> <span>Nivel '.(int)$level.'</span></span>';
+		}
+		foreach($this->requirementExtras($tid) as $extra) {
+			$style = $extra[1] ? '' : ' style="color:#a10000"';
+			$parts[] = '<span class="buildingCondition"'.$style.'>'.$extra[0].'</span>';
+		}
+		return implode(', ', $parts);
+	}
+
+	/**
+	 * Los requisitos que no son un nivel de edificio, en el orden en que los muestra la
+	 * ficha: cada uno es array(texto, cumplido).
+	 */
+	private function requirementExtras($tid) {
+		global $village;
+		$extras = array();
+		switch((int)$tid) {
+			case 25:
+			$extras[] = array('<strike>'.buildingDisplayName(26).'</strike>',$this->getTypeCount(26) == 0);
 			break;
+			case 26:
+			$extras[] = array('<strike>'.buildingDisplayName(25).'</strike>',$this->getTypeCount(25) == 0);
+			break;
+			case 29:
+			case 30:
 			case 42:
-			if($this->getTypeLevel(21) == 20 && $village->capital == 0) { return true; } else { return false; }
+			$extras[] = array('Aldea que no sea la capital',(int)$village->capital === 0);
+			break;
+			case 34:
+			$extras[] = array('Capital',(int)$village->capital === 1);
+			$extras[] = array('<strike>'.buildingDisplayName(25).'</strike>',$this->getTypeLevel(25) == 0);
+			break;
+			case 35:
+			$extras[] = array('Capital',(int)$village->capital === 1);
+			break;
+			case 38:
+			case 39:
+			$extras[] = array('Aldea que no sea la capital',(int)$village->capital === 0);
+			$extras[] = array('Plano de almacenamiento',$this->hasStorageArtefact());
 			break;
 		}
+		return $extras;
 	}
 
 	private function isTribeBuildingAllowed($tid) {

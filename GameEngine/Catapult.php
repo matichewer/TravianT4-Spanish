@@ -30,6 +30,66 @@ function buildingDisplayName($type, $fallback = 'Error') {
 }
 
 /**
+ * Qué edificios (y a qué nivel) pide cada edificio para poder construirse, con la tabla
+ * oficial de T4.
+ *
+ * Es la única definición: la usan el motor (`Building::meetsLevelRequirements()`, vía `meetRequirement()`), la lista de "construcciones disponibles" y el texto "Necesario:"
+ * de la lista de "próximamente". Antes cada uno de esos tres lugares llevaba su propia
+ * copia escrita a mano y ya habían divergido: la ficha del Ayuntamiento anunciaba
+ * "Edificio principal Nivel 3" cuando el motor pide 10, así que el jugador leía que
+ * cumplía los requisitos y el edificio no aparecía nunca en la lista.
+ *
+ * Sólo van acá los requisitos de nivel. Lo que depende del estado de la aldea o de la
+ * cuenta —capital o no, único por aldea, artefacto, Residencia y Palacio excluyéndose—
+ * vive en `Building::meetRequirement()` y se muestra con `Building::requirementsHtml()`.
+ */
+function buildingLevelRequirements($type) {
+    $requirements = array(
+        1 => array(), 2 => array(), 3 => array(), 4 => array(),
+        5  => array(1 => 10, 15 => 5),
+        6  => array(2 => 10, 15 => 5),
+        7  => array(3 => 10, 15 => 5),
+        8  => array(4 => 5, 15 => 5),
+        9  => array(4 => 10, 15 => 5, 8 => 5),
+        10 => array(15 => 1),
+        11 => array(15 => 1),
+        12 => array(22 => 3, 15 => 3),
+        14 => array(16 => 15),
+        15 => array(),
+        16 => array(),
+        17 => array(10 => 1, 11 => 1, 15 => 3),
+        // La Embajada pide Edificio principal 1 en el oficial, donde toda aldea nueva
+        // nace con el Edificio principal en 1. Acá nace sin él, así que el requisito
+        // dejaría a la aldea sin Embajada posible hasta construirlo: va sin requisitos.
+        18 => array(),
+        19 => array(16 => 1, 15 => 3),
+        20 => array(12 => 3, 22 => 5),
+        21 => array(22 => 10, 15 => 5),
+        22 => array(19 => 3, 15 => 3),
+        23 => array(),
+        24 => array(22 => 10, 15 => 10),
+        25 => array(15 => 5),
+        26 => array(18 => 1, 15 => 5),
+        27 => array(15 => 10),
+        28 => array(17 => 20, 20 => 10),
+        29 => array(19 => 20),
+        30 => array(20 => 20),
+        31 => array(), 32 => array(), 33 => array(),
+        34 => array(26 => 3, 15 => 5),
+        35 => array(11 => 20, 16 => 10),
+        36 => array(16 => 1),
+        37 => array(16 => 1, 15 => 3),
+        38 => array(15 => 10),
+        39 => array(15 => 10),
+        40 => array(),
+        41 => array(20 => 20, 16 => 10),
+        42 => array(21 => 20),
+    );
+    $type = (int)$type;
+    return isset($requirements[$type]) ? $requirements[$type] : null;
+}
+
+/**
  * Edificios cuyo nombre es femenino.
  *
  * Los mensajes del informe se arman pegándole un adjetivo al nombre ("Barrera

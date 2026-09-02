@@ -76,12 +76,15 @@ check($declarados === $esperados,
 	'la lista declara exactamente los edificios únicos ('.implode(',',array_diff($esperados,$declarados))
 		.' faltan / '.implode(',',array_diff($declarados,$esperados)).' sobran)');
 
+// La vista ya no repite la regla: pregunta lo mismo que decide el motor, y ahí la
+// unicidad la aplica isSingleBuildingAllowed() —construido o encolado, da igual—.
 foreach($unicos as $gid => $variable) {
-	check(strpos($availableSource,'$'.$variable.' == 0') !== false,
-		'avaliable.tpl ofrece el edificio '.$gid.' sólo cuando la aldea no lo tiene ($'.$variable.' == 0)');
-	check(strpos($availableSource,'getBuildList('.$gid.')') !== false,
-		'avaliable.tpl tampoco lo ofrece con un trabajo encolado (getBuildList('.$gid.'))');
+	check(preg_match('/if\(\$building->meetRequirement\('.$gid.'\)/',$availableSource) === 1,
+		'avaliable.tpl ofrece el edificio '.$gid.' si y sólo si el motor lo permite');
 }
+check(strpos($availableSource,'getBuildList(') === false
+	|| preg_match('/getBuildList\((1[06]|3[123])\)/',$availableSource) === 1,
+	'la lista sólo consulta la cola a mano para lo que va a un solar fijo');
 
 // ---------------------------------------------------------------------------
 section('B. Los repetibles quedan fuera y conservan su regla');
@@ -94,10 +97,8 @@ foreach($solarFijo as $gid) {
 	check(!in_array($gid,$declarados,true),
 		'el edificio '.$gid.' va a un solar fijo y no necesita la regla de unicidad');
 }
-check(strpos($buildingSource,'canBuildAnotherOfType(10)') !== false
-	&& strpos($buildingSource,'canBuildAnotherOfType(11)') !== false
-	&& strpos($buildingSource,'canBuildAnotherOfType(38)') !== false
-	&& strpos($buildingSource,'canBuildAnotherOfType(39)') !== false,
+check(preg_match('/case 10:\s*case 11:\s*return \$this->canBuildAnotherOfType\(\$id\);/s',$buildingSource) === 1
+	&& preg_match('/case 38:\s*case 39:.*?canBuildAnotherOfType\(\$id\)/s',$buildingSource) === 1,
 	'almacén, granero y sus versiones grandes siguen exigiendo el anterior al máximo');
 check(preg_match('/case 23:.*?getTypeCount\(23\) == 0 \|\| \$this->getTypeLevel\(23\) >= 10/s',$buildingSource) === 1,
 	'el escondite sigue admitiendo otro sólo a partir del nivel 10');
@@ -107,7 +108,7 @@ check(preg_match('/case 36:.*?getTypeCount\(36\) == 0 \|\| \$this->getTypeLevel\
 // ---------------------------------------------------------------------------
 section('C. meetRequirement aplica la unicidad antes del switch');
 // ---------------------------------------------------------------------------
-check(preg_match('/private function meetRequirement\(\$id\).*?isSingleBuildingAllowed\(\$id\).*?switch\(\$id\)/s',$buildingSource) === 1,
+check(preg_match('/public function meetRequirement\(\$id\).*?isSingleBuildingAllowed\(\$id\).*?switch\(\$id\)/s',$buildingSource) === 1,
 	'meetRequirement() corta por unicidad antes de evaluar los requisitos del edificio');
 check(preg_match('/function isSingleBuildingAllowed\(\$tid\).*?getTypeCount\(\$tid\) == 0 && !\$this->hasQueuedType\(\$tid\)/s',$buildingSource) === 1,
 	'la regla mira tanto lo construido como lo que hay en la cola');
@@ -123,29 +124,39 @@ check(preg_match('/case 26:.*?hasPalaceInAnotherVillage\(\)/s',$buildingSource) 
 // ---------------------------------------------------------------------------
 section('D. Los requisitos propios de cada edificio siguen en pie');
 // ---------------------------------------------------------------------------
+// Los requisitos de nivel viven en una sola tabla (tools/check_building_requirements.php
+// la compara entera contra la oficial); acá sólo se comprueba que la unicidad no se los
+// haya llevado puestos.
+require_once dirname(__DIR__).'/GameEngine/Catapult.php';
 $requisitos = array(
-	5  => 'getTypeLevel(1) >= 10 && $this->getTypeLevel(15) >= 5',
-	9  => 'getTypeLevel(15) >= 5 && $this->getTypeLevel(4) >= 10 && $this->getTypeLevel(8) >= 5',
-	12 => 'getTypeLevel(22) >= 1 && $this->getTypeLevel(15) >= 3',
-	14 => 'getTypeLevel(16) >= 15',
-	17 => 'getTypeLevel(15) >= 3 && $this->getTypeLevel(10) >= 1 && $this->getTypeLevel(11) >= 1',
-	20 => 'getTypeLevel(12) >= 3 && $this->getTypeLevel(22) >= 5',
-	24 => 'getTypeLevel(22) >= 10 && $this->getTypeLevel(15) >= 10',
-	28 => 'getTypeLevel(17) == 20 && $this->getTypeLevel(20) >= 10',
-	35 => 'getTypeLevel(16) >= 10 && $this->getTypeLevel(11) == 20',
-	41 => 'getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20',
-	42 => 'getTypeLevel(21) == 20 && $village->capital == 0'
+	5  => array(1 => 10, 15 => 5),
+	9  => array(4 => 10, 15 => 5, 8 => 5),
+	12 => array(22 => 3, 15 => 3),
+	14 => array(16 => 15),
+	17 => array(10 => 1, 11 => 1, 15 => 3),
+	20 => array(12 => 3, 22 => 5),
+	24 => array(22 => 10, 15 => 10),
+	28 => array(17 => 20, 20 => 10),
+	35 => array(11 => 20, 16 => 10),
+	41 => array(20 => 20, 16 => 10),
+	42 => array(21 => 20)
 );
-foreach($requisitos as $gid => $fragmento) {
-	check(strpos($buildingSource,$fragmento) !== false,
-		'el edificio '.$gid.' conserva sus requisitos de nivel');
+foreach($requisitos as $gid => $esperado) {
+	$tabla = buildingLevelRequirements($gid);
+	$igual = is_array($tabla) && count($tabla) === count($esperado);
+	if($igual) {
+		foreach($esperado as $req => $nivel) {
+			if(!isset($tabla[$req]) || (int)$tabla[$req] !== (int)$nivel) { $igual = false; }
+		}
+	}
+	check($igual,'el edificio '.$gid.' conserva sus requisitos de nivel');
 }
-check(preg_match('/case 34:.*?capital == 1 && \$this->getTypeLevel\(26\) >= 3/s',$buildingSource) === 1,
-	'el taller de cantería sigue pidiendo capital y palacio 3');
+check(preg_match('/case 34:.*?capital === 1 && \$this->getTypeLevel\(25\) == 0/s',$buildingSource) === 1,
+	'el taller de cantería sigue pidiendo capital y una aldea sin Residencia');
 
 check(strpos($availableSource,'$marketplace') === false,
 	'la lista no consulta $marketplace, que nunca se define (el nivel del Mercado está en $market)');
-check(strpos($availableSource,'if($market == 0 && ($mainbuilding < 3') !== false,
+check(strpos($availableSource,'if($market == 0 && !$building->meetsLevelRequirements(17))') !== false,
 	'el Mercado sólo se anuncia como "próximamente" si la aldea todavía no lo tiene');
 
 // ---------------------------------------------------------------------------

@@ -204,7 +204,7 @@ check($building->canBuild(22, 35) === 1,
 	'una Cervecería fuera de la capital no se puede mejorar (queda muerta)');
 
 // La vista tiene que ofrecer exactamente lo mismo que valida el servidor.
-check(strpos($availablePhp, '$session->tribe == 2 && $village->capital == 1 && !$database->getBuildList(35) && $brewery == 0 && $rallypoint >= 10 && $granary == 20') !== false,
+check(preg_match('/if\(\$building->meetRequirement\(35\)[^\n]*\n\s*include\("avaliable\/brewery\.tpl"\)/', $availablePhp) === 1,
 	'avaliable.tpl ofrece la Cervecería con los mismos requisitos que meetRequirement()');
 // La mitad "germana" vive en buildingTribeLock() (Catapult.php), que es la lista que
 // comparte con la conquista para decidir qué edificios se caen al cambiar de tribu la

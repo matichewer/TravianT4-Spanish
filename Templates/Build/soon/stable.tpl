@@ -30,8 +30,7 @@ $uprequire = $building->resourceRequired($id,$bid);
     </div></div>
 	<div class="contractLink">
     <div class="contractText">Necesario:</div>
-    <span class="buildingCondition">
-    <a href="#" onclick="return Travian.Game.iPopup(12,4, 'gid');">Herrería</a> <span>Nivel 3</span></span>, <span class="buildingCondition"><a href="#" onclick="return Travian.Game.iPopup(22,4, 'gid');">Academia</a> <span>Nivel 5</span></span>
+    <?php echo $building->requirementsHtml(20); ?>
     </div>
 	<div class="clear"></div>
 </div>
