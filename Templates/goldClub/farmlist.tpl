@@ -67,7 +67,9 @@ while($row = mysql_fetch_array($sql)){
 		<tbody>
 
 <?php
-$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid ORDER BY distance ASC");
+// `distance` es VARCHAR en el esquema legado: sin convertirla, MariaDB ordena
+// 10.3 antes que 3.2. El id deja estable el orden de objetivos equidistantes.
+$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid ORDER BY CAST(distance AS DECIMAL(10,2)) ASC, id ASC");
 $query2 = mysql_num_rows($sql2);
 if($query2 == 0) {
     echo '<td class="noData" colspan="7">No hay listas de saqueo.</td>';
