@@ -17,6 +17,10 @@ foreach($templates as $relativePath) {
 			'consulta los datos específicos del oasis'),
 		array(strpos($template, '$tileowner = (int)$odata[\'owner\'];') !== false,
 			'usa al propietario real del oasis'),
+		array(strpos($template, '$odata[\'conqured_name\']') !== false,
+			'resuelve la aldea a la que está anexado el oasis'),
+		array(strpos($template, '<br>Aldea: ".$oasisVillageName.') !== false,
+			'muestra la aldea anexadora en el tooltip'),
 		array(strpos($template, '$targetalliance = $database->getUserField($tileowner,"alliance",0);') !== false,
 			'resuelve la alianza desde el propietario seleccionado'),
 		array(strpos($template, '$tribe = $database->getUserField($tileowner,"tribe",0);') !== false,
@@ -34,6 +38,14 @@ foreach($templates as $relativePath) {
 		echo 'OK '.$relativePath.': '.$message."\n";
 	}
 }
+
+$databaseSource = file_get_contents($root.'/GameEngine/Database/db_MYSQLi.php');
+if(strpos($databaseSource, 'AS conqured_name') === false
+	|| strpos($databaseSource, 'odata.conqured LIMIT 1') === false) {
+	fwrite(STDERR, "FAIL getOMInfo: no trae el nombre de la aldea anexadora\n");
+	exit(1);
+}
+echo "OK getOMInfo: trae el nombre de la aldea anexadora en la consulta del oasis\n";
 
 // El bono del oasis se describe en un solo lugar: los dos mapas y el detalle de casilla
 // tenían cada uno su copia del switch de los 12 tipos, sin nada que los atara al reparto

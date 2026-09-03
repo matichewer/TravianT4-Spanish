@@ -89,6 +89,7 @@ for($i=0;$i<count($maparray);$i++) {
 	$tribe = 0;
 	$username = '';
 	$uinfo = '';
+	$oasisVillageName = '-';
 	$allyname = '-';
 	$tribename = '-';
 
@@ -97,6 +98,9 @@ for($i=0;$i<count($maparray);$i++) {
 	if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0) {
 		$odata = $database->getOMInfo($maparray[$index]['id']);
 		$tileowner = (int)$odata['owner'];
+		$oasisVillageName = isset($odata['conqured_name']) && $odata['conqured_name'] !== ''
+			? $odata['conqured_name']
+			: '-';
 	}
 	$targetalliance = $database->getUserField($tileowner,"alliance",0);
     $tribe = $database->getUserField($tileowner,"tribe",0);
@@ -197,7 +201,7 @@ break;
     if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0 && $maparray[$index]['occupied'] == 0) {
     $targettitle = "<font color='white'><b>Oasis desocupado</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."";
     }elseif($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0 && $maparray[$index]['occupied'] > 0) {
-    $targettitle = "<font color='white'><b>oasis ocupado</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."<br>Jugador: ".$uinfo."<br>Alianza: ".$allyname."<br>Tribu: ".$tribename."";
+    $targettitle = "<font color='white'><b>Oasis ocupado</b></font><br /> (".$maparray[$index]['x']."|".$maparray[$index]['y'].")<br />".$tt."<br>Aldea: ".$oasisVillageName."<br>Jugador: ".$uinfo."<br>Alianza: ".$allyname."<br>Tribu: ".$tribename."";
     }
 
 

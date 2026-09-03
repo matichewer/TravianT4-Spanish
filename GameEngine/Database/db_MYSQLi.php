@@ -1298,7 +1298,16 @@
         	}
 
         	function getOMInfo($id) {
-        		$q = "SELECT * FROM " . TB_PREFIX . "wdata left JOIN " . TB_PREFIX . "odata ON " . TB_PREFIX . "odata.wref = " . TB_PREFIX . "wdata.id where " . TB_PREFIX . "wdata.id = $id";
+				$id = (int)$id;
+				// El mapa necesita decir no sólo quién posee un oasis conquistado, sino
+				// también a qué aldea está anexado. Resolver el nombre acá evita una
+				// consulta adicional por cada oasis visible en las dos vistas del mapa.
+				$q = "SELECT " . TB_PREFIX . "wdata.*, " . TB_PREFIX . "odata.*, "
+					."(SELECT v.name FROM " . TB_PREFIX . "vdata v WHERE v.wref = "
+					.TB_PREFIX . "odata.conqured LIMIT 1) AS conqured_name "
+					."FROM " . TB_PREFIX . "wdata LEFT JOIN " . TB_PREFIX . "odata ON "
+					.TB_PREFIX . "odata.wref = " . TB_PREFIX . "wdata.id WHERE "
+					.TB_PREFIX . "wdata.id = $id";
         		$result = mysqli_query($this->connection,$q);
         		return mysqli_fetch_array($result);
         	}
