@@ -11,7 +11,7 @@
 (function () {
 	'use strict';
 
-	var TICK_MS = 1000;
+	var TICK_MS = 250;
 	var MS_PER_HOUR = 3600000;
 
 	/* El mercado (Templates/Build/17.tpl) lee la cantidad disponible de
