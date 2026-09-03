@@ -16,7 +16,7 @@ else {
 	foreach($hostedUnits as $unit) {
 			echo "<tr><td class=\"ico\"><a href=\"build.php?id=39\"><img class=\"unit u".$unit['id']."\" src=\"img/x.gif\" alt=\"".$unit['name']."\" title=\"".$unit['name']."\" /></a></td>
     ";	
-			echo "<td class=\"num\">".$unit['amt']."</td><td class=\"un\">".$unit['name']."</td></tr>";
+			echo "<td class=\"num\">".number_format((int)$unit['amt'],0,',','.')."</td><td class=\"un\">".$unit['name']."</td></tr>";
 	}
 }
 ?>

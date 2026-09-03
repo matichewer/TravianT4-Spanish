@@ -37,7 +37,7 @@ list($ownStart,$ownEnd) = $ownRange;
 // Una celda de tropas: el gpack pinta en gris las que están a cero (class "none").
 $troopCell = function($amount) {
 	$amount = (int)$amount;
-	return '<td class="'.($amount != 0 ? '' : 'none').'">'.$amount.'</td>';
+	return '<td class="'.($amount != 0 ? '' : 'none').'">'.number_format($amount,0,',','.').'</td>';
 };
 $unitIcons = function($start, $end, $hero = true) use ($technology) {
 	$html = '';

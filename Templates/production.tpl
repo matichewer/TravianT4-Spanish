@@ -66,7 +66,7 @@ $productionResources = array(
 		<tr>
 			<td class="ico"><img class="<?php echo $resourceInfo['class']; ?>" src="img/x.gif" alt="<?php echo $resourceInfo['label']; ?>" title="<?php echo $resourceInfo['label']; ?>" /></td>
 			<td class="res"><?php echo $resourceInfo['label']; ?>:</td>
-			<td class="num tooltip" title="<?php echo htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $total; ?></td>
+			<td class="num tooltip" title="<?php echo htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8'); ?>"><?php echo number_format((int)round($total),0,',','.'); ?></td>
 			<td class="per" style="text-align:right;width:32px;padding-left:4px;">
 				<?php if($resourceInfo['bonus'] == 1){ echo '<span class="bonus" style="color:#3a3;font-size:10px;" title="'.$resourceInfo['label'].' +25%">+25%</span>'; } ?>
 			</td>
