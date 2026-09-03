@@ -1,6 +1,6 @@
 /* Tablero de recursos del encabezado (Templates/res.tpl).
 
-   Cada 250 ms recalcula la cantidad a partir de la produccion por hora que mando
+   En cada cuadro de animacion recalcula la cantidad a partir de la produccion por hora que mando
    el servidor, mueve la barra y actualiza el reloj de "cuanto falta para llenar el
    deposito" que va adentro de la barra. Con produccion negativa (cereal en rojo)
    el reloj cuenta lo que falta para vaciarlo.
@@ -11,7 +11,6 @@
 (function () {
 	'use strict';
 
-	var TICK_MS = 250;
 	var MS_PER_HOUR = 3600000;
 
 	/* El mercado (Templates/Build/17.tpl) lee la cantidad disponible de
@@ -63,6 +62,7 @@
 				amount: entry.amount,
 				capacity: entry.capacity,
 				production: entry.production,
+				displayedAmount: null,
 				legacyId: LEGACY_IDS[entry.key],
 				value: value,
 				bar: document.getElementById('resBar_' + entry.key),
@@ -89,7 +89,11 @@
 				amount = 0;
 			}
 
-			res.value.innerHTML = formatAmount(amount);
+			var displayedAmount = Math.round(amount);
+			if (displayedAmount !== res.displayedAmount) {
+				res.value.innerHTML = formatAmount(displayedAmount);
+				res.displayedAmount = displayedAmount;
+			}
 
 			if (res.legacyId && window.resources) {
 				if (!window.resources[res.legacyId]) {
@@ -138,9 +142,11 @@
 		   el valor se recalcula igual al volver. */
 		var startedAt = Date.now();
 		update(tracked, startedAt);
-		window.setInterval(function () {
+		function animate() {
 			update(tracked, startedAt);
-		}, TICK_MS);
+			window.requestAnimationFrame(animate);
+		}
+		window.requestAnimationFrame(animate);
 	}
 
 	if (document.readyState === 'loading') {
