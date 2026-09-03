@@ -26,6 +26,9 @@ require_once(dirname(__FILE__).'/VillageOverview.php');
 // tienen que compartir la definición: las plantillas que arman la URL y los dos endpoints
 // que la contestan, que además sólo incluyen este archivo y no el motor entero.
 require_once(dirname(__FILE__).'/HeroImage.php');
+// La version de los archivos estaticos del `?v=`. Va acá porque la usa Templates/html.tpl,
+// que se incluye desde todas las páginas del juego, logueadas y públicas.
+require_once(dirname(__FILE__).'/AssetVersion.php');
 
 // Sólo queda el driver MySQLi. El de `mysql_*` (DB_TYPE 0) no podía correr en PHP 7
 // —la extensión no existe desde PHP 7.0— y sobrevivía como una copia paralela del

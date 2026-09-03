@@ -12,10 +12,15 @@
 		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd485" rel="stylesheet" type="text/css" />
         <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />										
 		<link href="img/travian_basics.css?v=59" rel="stylesheet" type="text/css" />
-		<script src="jquery-1.10.1.min.js" type="text/javascript"></script>
-		<script src="sandwich.js" type="text/javascript"></script>
+		<?php /* La version sale de filemtime(): la URL cambia cuando cambia el archivo y
+		     en ningun otro momento. crypt.js llevaba time() aca, o sea una URL nueva por
+		     segundo, y sus 427 KB se re-descargaban en cada carga de pagina. jquery y
+		     sandwich.js tenian el problema opuesto: sin version, un cambio quedaba
+		     invisible detras de la cache del navegador y de Cloudflare. */ ?>
+		<?php echo assetScriptTag('jquery-1.10.1.min.js'); ?>
+		<?php echo assetScriptTag('sandwich.js'); ?>
 		<script src="unx.js?v=2" type="text/javascript"></script>
-		<script src="crypt.js?<?php echo time(); ?>" type="text/javascript"></script>
+		<?php echo assetScriptTag('crypt.js'); ?>
 		<script src="resource-board.js?v=2" type="text/javascript"></script>
 		<?php if(isset($session) && $session->logged_in) { ?>
 		<script src="build-notifications.js?v=2" type="text/javascript"></script>
