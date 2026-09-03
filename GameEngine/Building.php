@@ -971,6 +971,20 @@ class Building {
 		return false;
 	}
 
+	/**
+	 * Nivel que contrataría ahora el enlace de mejora de un campo/edificio.
+	 * Si ya hay niveles en obra o pedidos al maestro constructor, la ficha debe
+	 * anunciar tanto el costo como el rendimiento de ese mismo nivel futuro.
+	 */
+	public function nextUpgradeLevel($id) {
+		global $database,$village;
+		$currentQueued = $this->isCurrent($id) ? 1 : 0;
+		$loopQueued = $currentQueued && $this->isLoop($id) ? 1 : 0;
+		$masterQueued = count($database->getMasterJobsByField($village->wid,$id));
+
+		return (int)$village->resarray['f'.$id] + 1 + $currentQueued + $loopQueued + $masterQueued;
+	}
+
 	public function canFinishAll() {
 		global $database,$village;
 

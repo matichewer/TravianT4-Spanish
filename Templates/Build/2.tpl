@@ -15,8 +15,9 @@
     if(!$building->isMax($village->resarray['f'.$id.'t'],$id)) {
     ?>
 	<tr>
-		<th><?php echo NEXT_PROD; echo $village->resarray['f'.$id]+1; ?>:</th>
-		<td><b><?php echo $bid2[$village->resarray['f'.$id]+1]['prod']* SPEED; ?></b> <?php echo PER_HR; ?></td>
+		<?php $upgradeLevel = $building->nextUpgradeLevel($id); ?>
+		<th><?php echo NEXT_PROD; echo $upgradeLevel; ?>:</th>
+		<td><b><?php echo $bid2[$upgradeLevel]['prod']* SPEED; ?></b> <?php echo PER_HR; ?></td>
 	</tr>
     <?php 
     }
@@ -26,4 +27,3 @@
 <?php 
 include("upgrade.tpl");
 ?></p></div>
-

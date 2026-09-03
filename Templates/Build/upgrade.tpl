@@ -18,6 +18,7 @@ if($bindicate == 1) {
             $doublebuild = 1;
         }
 	$master = count($database->getMasterJobsByField($village->wid,$id));
+	$upgradeLevel = $building->nextUpgradeLevel($id);
 	$uprequire = $building->resourceRequired($id,$village->resarray['f'.$id.'t'],($loopsame > 0 ? 2:1)+$doublebuild+$master);
 	// El pedido al constructor maestro cuesta oro, así que el enlace lleva el token
 	// de sesión: sin él, un enlace de afuera podía gastarlo desde el navegador del
@@ -25,7 +26,7 @@ if($bindicate == 1) {
 	$masterToken = urlencode((string)$session->mchecker);
 ?>
 <div id="contract" class="contractWrapper">
-<div class="contractText">Costo de mejora al nivel <?php echo $village->resarray['f'.$id]+($loopsame > 0 ? 2:1)+$doublebuild+$master; ?> </div>
+<div class="contractText">Costo de mejora al nivel <?php echo $upgradeLevel; ?> </div>
 <div class="contractCosts">
 <div class="showCosts">
 <span class="resources r1"><img class="r1" src="img/x.gif" title="Madera"><?php echo number_format($uprequire['wood'], 0, ',', '.'); ?></span>
