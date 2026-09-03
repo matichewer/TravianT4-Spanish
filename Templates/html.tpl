@@ -21,7 +21,7 @@
 		<?php echo assetScriptTag('sandwich.js'); ?>
 		<script src="unx.js?v=2" type="text/javascript"></script>
 		<?php echo assetScriptTag('crypt.js'); ?>
-		<script src="resource-board.js?v=2" type="text/javascript"></script>
+		<script src="resource-board.js?v=3" type="text/javascript"></script>
 		<?php if(isset($session) && $session->logged_in) { ?>
 		<script src="build-notifications.js?v=2" type="text/javascript"></script>
 		<script type="text/javascript">

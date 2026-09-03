@@ -1,6 +1,6 @@
 /* Tablero de recursos del encabezado (Templates/res.tpl).
 
-   Cada segundo recalcula la cantidad a partir de la produccion por hora que mando
+   Cada 250 ms recalcula la cantidad a partir de la produccion por hora que mando
    el servidor, mueve la barra y actualiza el reloj de "cuanto falta para llenar el
    deposito" que va adentro de la barra. Con produccion negativa (cereal en rojo)
    el reloj cuenta lo que falta para vaciarlo.
