@@ -151,7 +151,7 @@ include("Templates/hero.tpl");
 <div id="bodyOptions">
 	<div id="hero_body_container">
 		<div id="hero_body">
-			<img class="heroBody" src="hero_body.php?uid=<?php echo $session->uid; ?>&amp;size=inventory&<?php echo $hero['hash']; ?>">
+			<img class="heroBody" src="<?php echo htmlspecialchars(heroBodyUrl($session->uid, 'inventory'), ENT_QUOTES); ?>">
 			<div class="clear"></div>
 		</div>
 		<div id="hero_body_content">

@@ -286,7 +286,10 @@ $_POST['HeroBeard'] = rand(0.5);
 		element: 'heroEditor',
 		command: 'heroEditor',
 		time: '<?php echo time(); ?>',
-		urlHeroImage: 'hero_image.php?uid=<?php echo $session->uid; ?>&amp;size=sideinfo&amp;{time}',
+		<?php /* La huella de esta URL se calcula ANTES de guardar, o sea que ya nace vieja:
+		     el {time} que le agrega el editor es lo que fuerza el refetch despues del save.
+		     Va con & crudo porque adentro de un <script> el navegador no decodifica entidades. */ ?>
+		urlHeroImage: '<?php echo heroImageUrl($session->uid, 'sideinfo'); ?>&{time}',
 		attributes: {"headProfile":<?php echo $herodetail['face']; ?>,"hairColor":<?php echo $herodetail['color']; ?>,"hairStyle":<?php echo $herodetail['hair']; ?>,"ears":<?php echo $herodetail['ear']; ?>,"eyebrow":<?php echo $herodetail['eyebrow']; ?>,"eyes":<?php echo $herodetail['eye']; ?>,"nose":<?php echo $herodetail['nose']; ?>,"mouth":<?php echo $herodetail['mouth']; ?>,"beard":<?php echo $herodetail['beard']; ?>},
 		elementHeroImage: 'heroImage'
 	});

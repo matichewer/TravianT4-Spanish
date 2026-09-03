@@ -1,23 +1,29 @@
 <?php 
+// Keep GD/libpng warnings and accidental include output out of the binary PNG response.
 ob_start();
 include("GameEngine/Database.php");
-if(isset($_GET['uid'])){
-    $uid =  $_GET['uid'];
-} else {
-    $uid = "1";
-}
-if(isset($_GET['size'])){
-	if($_GET['size']=='profile'){
-    	$size =  '31x40';
-	}elseif($_GET['size']=='inventory'){
-    	$size =  '64x82';
-	}elseif($_GET['size']=='sideinfo'){
-    	$size =  '119x136';
-	}
-} else {
-    $size = "119x136";
-}
+
+// El uid entra a `HeroFace()`, que lo concatena crudo en el SQL, y esta pagina no pide
+// login: sin el cast era inyeccion SQL abierta. Un UNION devolvia un retrato distinto,
+// o sea que el atacante veia el resultado de su propia consulta dibujado.
+$uid = isset($_GET['uid']) ? (int)$_GET['uid'] : 1;
+
+// `?size=` desconocido dejaba $size sin definir y se pedia 'img/hero/head//face0.png':
+// 296 bytes que no son un PNG. heroImageNormalizeSize() elige el tamano por defecto.
+$sizeKey = heroImageNormalizeSize('head', isset($_GET['size']) ? $_GET['size'] : '');
+$medidas = array('profile' => '31x40', 'inventory' => '64x82', 'sideinfo' => '119x136');
+$size = $medidas[$sizeKey];
+
 $herodetail = $database->HeroFace($uid);
+
+// La huella sale de la fila que se acaba de leer, asi que la respuesta no puede anunciar
+// una version distinta de la que dibuja. Si el navegador ya la tiene, se contesta 304 sin
+// abrir un solo PNG: ahi esta la mitad grande del ahorro.
+if(heroImageCacheHeaders(heroImageFingerprint('head', $sizeKey, $herodetail))) {
+	ob_end_clean();
+	http_response_code(304);
+	exit;
+}
 if($herodetail['color']==0){
 	$color = "black";
 }
@@ -78,8 +84,14 @@ $database->imagecopymerge_alpha($body, $beard, 0, 0, 0, 0, imagesx($beard), imag
 ob_end_clean();
 
 // OUTPUT IMAGE:
-header("Content-Type: image/png"); 
-imagesavealpha($body, true); 
-imagepng($body); 
+// Se arma en memoria para poder mandar Content-Length: sin el la respuesta salia con
+// Transfer-Encoding: chunked y el navegador no sabia cuanto venia.
+imagesavealpha($body, true);
+ob_start();
+imagepng($body);
+$png = ob_get_clean();
+header("Content-Type: image/png");
+header("Content-Length: ".strlen($png));
+echo $png;
 
 ?>

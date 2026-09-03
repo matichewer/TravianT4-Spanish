@@ -19,7 +19,9 @@ foreach($varray as $vil) {
     if($_GET['uid']==2){
     echo '<img src="gpack/travian_Travian_4.0_41/img/t/t10_2.jpg" border="0">';
     } else {
-    echo '<img class="heroImage" style="width:160px;height:205px;" src="hero_body.php?uid='.$_GET['uid'].'&size=profile&'.md5($_GET['uid']).'" alt="hero">';
+    // El uid iba crudo al atributo src, o sea XSS reflejado; y el cache-buster era
+    // md5($_GET['uid']), que para un jugador dado es constante para siempre.
+    echo '<img class="heroImage" style="width:160px;height:205px;" src="'.htmlspecialchars(heroBodyUrl((int)$_GET['uid'], 'profile'), ENT_QUOTES).'" alt="hero">';
     }
 ?>
 <table cellpadding="1" cellspacing="1" id="details" class="transparent">

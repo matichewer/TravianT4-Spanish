@@ -2,29 +2,20 @@
 // Keep GD/libpng warnings and accidental include output out of the binary PNG response.
 ob_start();
 include("GameEngine/Database.php");
-if(isset($_GET['uid'])){
-    $uid =  $_GET['uid'];
-} else {
-    $uid = "1";
-}
-if(isset($_GET['size'])){
-	if($_GET['size']=='profile'){
-    	$size =  '160x205';
-		$fsize = '31x40';
-		$w = 79;
-		$h = 18;
-	}elseif($_GET['size']=='inventory'){
-    	$size =  '330x422';
-		$fsize = '64x82';
-		$w = 163;
-		$h = 37;
-	}
-} else {
-    $size = "330x422";
-	$fsize = '64x82';
-	$w = 163;
-	$h = 37;
-}
+// Mismo par de arreglos que hero_image.php, por el mismo motivo: el uid iba crudo al SQL
+// de `HeroFace()` en una pagina sin login, y un `?size=` desconocido dejaba $size sin
+// definir y producia rutas de arte invalidas.
+$uid = isset($_GET['uid']) ? (int)$_GET['uid'] : 1;
+$sizeKey = heroImageNormalizeSize('body', isset($_GET['size']) ? $_GET['size'] : '');
+$medidas = array(
+	'profile'   => array('size' => '160x205', 'fsize' => '31x40', 'w' => 79,  'h' => 18),
+	'inventory' => array('size' => '330x422', 'fsize' => '64x82', 'w' => 163, 'h' => 37),
+);
+$size  = $medidas[$sizeKey]['size'];
+$fsize = $medidas[$sizeKey]['fsize'];
+$w     = $medidas[$sizeKey]['w'];
+$h     = $medidas[$sizeKey]['h'];
+
 $herodetail = $database->HeroFace($uid);
 if($herodetail['color']==0){
 	$color = "black";
@@ -57,6 +48,14 @@ $getleftHand = $herodetail['leftHand'];
 $getrightHand = $herodetail['rightHand'];
 $heroInventory = $database->getHeroInventory($uid);
 $getbody = isset($heroInventory['body']) ? (int)$heroInventory['body'] : 0;
+
+// El cuerpo depende ademas de la armadura equipada, asi que la huella se calcula recien
+// aca, con $getbody ya resuelto, y antes de abrir la primera capa PNG.
+if(heroImageCacheHeaders(heroImageFingerprint('body', $sizeKey, $herodetail, $getbody))) {
+	ob_end_clean();
+	http_response_code(304);
+	exit;
+}
 $armor = false;
 if($getbody!=0){
 	$bodyItem = $database->getItemData($getbody);
@@ -216,8 +215,13 @@ if($gethelmet!=0){
 
 
 // OUTPUT IMAGE:
+// En memoria para poder mandar Content-Length, igual que hero_image.php.
 ob_end_clean();
+imagesavealpha($body, true);
+ob_start();
+imagepng($body, NULL);
+$png = ob_get_clean();
 header("Content-Type: image/png");
-imagesavealpha($body, true); 
-imagepng($body, NULL); 
+header("Content-Length: ".strlen($png));
+echo $png;
 ?>

@@ -13,7 +13,7 @@ $allianceinfo = $database->getAlliance($aid);
 
 <div id="side_info">
 	<div class="sideInfoHero">
-    <img id="heroImage" src="hero_image.php?uid=<?php echo $session->uid; ?>&size=sideinfo&<?php echo $hero['hash']; ?>" class="heroImage"/>
+    <img id="heroImage" src="<?php echo htmlspecialchars(heroImageUrl($session->uid, 'sideinfo'), ENT_QUOTES); ?>" class="heroImage"/>
 	<div class="heroImageBorder"></div> 
     <a id="heroProfile" href="hero_inventory.php" class="heroProfile"></a>
 	<?php if(is_array($hero) && (int)$hero['points'] > 0): ?>
