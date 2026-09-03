@@ -84,7 +84,7 @@ $prisonerVillageLink = function($wref) use ($database, $generator) {
 		return 'Aldea desconocida';
 	}
 	$name = htmlspecialchars($name,ENT_QUOTES,'UTF-8');
-	return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'">'.$name.'</a>';
+	return '<a href="karte.php?d='.$wref.'&amp;c='.$generator->getMapCheck($wref).'&amp;popup=1">'.$name.'</a>';
 };
 $captivesHere = $database->getPrisoners($village->wid);
 $ownCaptured = $database->getPrisoners3($village->wid);
@@ -147,7 +147,7 @@ if($units_walking >= 1){
         <table class="troop_details" cellpadding="1" cellspacing="1">
 	<thead>
 		<tr>
-			<td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td><td colspan="11">
+			<td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid)."&popup=1"; ?>"><?php echo $village->vname; ?></a></td><td colspan="11">
             <a href="spieler.php?uid=<?php echo $session->uid; ?>">Unidades en</a></td></tr></thead>
             <tbody class="units">
            <?php include("16_troops.tpl"); 
@@ -160,7 +160,7 @@ if($units_walking >= 1){
             foreach($village->enforcetome as $enforce) {
 			if($enforce['from'] != 0){
 				echo "<table class=\"troop_details\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">
-				<a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
+				<a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."&popup=1\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
                 if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
 				echo "<a href=\"spieler.php?uid=".$database->getVillageField($enforce['from'],"owner")."\">Unidades de ".$database->getUserField($database->getVillageField($enforce['from'],"owner"),"username",0)."</a>";
 				echo "</td></tr></thead><tbody class=\"units\">";
@@ -237,7 +237,7 @@ if($units_walking >= 1){
             echo "<h4 class=\"spacer\">Refuerzos</h4>";
             foreach($village->enforcetoyou as $enforce) {
                   echo "<table class=\"troop_details\" cellpadding=\"1\" cellspacing=\"1\"><thead><tr><td class=\"role\">
-                  <a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
+				  <a href=\"karte.php?d=".$enforce['from']."&c=".$generator->getMapCheck($enforce['from'])."&popup=1\">".$database->getVillageField($enforce['from'],"name")."</a></td>";
                   if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
                   // Un oasis no está en vdata: su nombre sale de odata. Mostramos sus
                   // coordenadas en el encabezado para distinguir varios oasis conquistados.
@@ -249,7 +249,7 @@ if($units_walking >= 1){
                   $reinforcedCoords = $reinforcedIsOasis && is_array($reinforcedCoor)
                         ? " (".(int)$reinforcedCoor['x']."|".(int)$reinforcedCoor['y'].")"
                         : "";
-                  echo "<a href=\"karte.php?d=".(int)$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."\">Refuerzo a ".htmlspecialchars($reinforcedName,ENT_QUOTES,'UTF-8').$reinforcedCoords."</a>";
+				  echo "<a href=\"karte.php?d=".(int)$enforce['vref']."&c=".$generator->getMapCheck($enforce['vref'])."&popup=1\">Refuerzo a ".htmlspecialchars($reinforcedName,ENT_QUOTES,'UTF-8').$reinforcedCoords."</a>";
                   echo "</td></tr></thead><tbody class=\"units\">";
                   $tribe = $database->getUserField($database->getVillageField($enforce['from'],"owner"),"tribe",0);
                   $start = ($tribe-1)*10+1;

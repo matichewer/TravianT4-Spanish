@@ -30,8 +30,8 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
 <table class="troop_details <?php echo $style; ?>" cellpadding="1" cellspacing="1">            
 	<thead>
 		<tr>
-			<td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-			<td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $to['wref']."&c=".$generator->getMapCheck($to['wref']); ?>"><?php echo $attack_type." ".$to['name']; ?></a>
+			<td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid)."&popup=1"; ?>"><?php echo $village->vname; ?></a></td>
+			<td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $to['wref']."&c=".$generator->getMapCheck($to['wref'])."&popup=1"; ?>"><?php echo $attack_type." ".$to['name']; ?></a>
             <?php
             $coor = $database->getCoor($to['wref']);
             
@@ -118,8 +118,8 @@ $timer += 1;
 <table class="troop_details inAttackOasis" cellpadding="1" cellspacing="1">            
     <thead>
         <tr>
-            <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-            <td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $adventures[$y]['to']."&c=".$generator->getMapCheck($adventures[$y]['to']); ?>">Ir a la aventura (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
+            <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid)."&popup=1"; ?>"><?php echo $village->vname; ?></a></td>
+            <td colspan="11" class="troopHeadline"><a href="karte.php?d=<?php echo $adventures[$y]['to']."&c=".$generator->getMapCheck($adventures[$y]['to'])."&popup=1"; ?>">Ir a la aventura (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
         </tr>
     </thead>
     <tbody class="units">
@@ -199,8 +199,8 @@ $timer += 1;
 <table class="troop_details" cellpadding="1" cellspacing="1">            
     <thead>
         <tr>
-            <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid); ?>"><?php echo $village->vname; ?></a></td>
-            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to']); ?>">Fundación de nueva aldea (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
+            <td class="role"><a href="karte.php?d=<?php echo $village->wid."&c=".$generator->getMapCheck($village->wid)."&popup=1"; ?>"><?php echo $village->vname; ?></a></td>
+            <td colspan="10" class="troopHeadline"><a href="karte.php?d=<?php echo $settlers[$y]['to']."&c=".$generator->getMapCheck($settlers[$y]['to'])."&popup=1"; ?>">Fundación de nueva aldea (<?php echo $coor['x']."|".$coor['y']; ?>)</a></td>
         </tr>
     </thead>
     <tbody class="units">

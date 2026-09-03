@@ -35,7 +35,7 @@ if ($units[$y]['sort_type']==3){
         	if($isNature){
         		echo TRIBE4;
         	}else{
-        		echo "<a href=\"karte.php?d=".$units[$y]['from']."&c=".$generator->getMapCheck($units[$y]['from'])."\">".$database->getVillageField($units[$y]['from'],"name")."</a>";
+				echo "<a href=\"karte.php?d=".$units[$y]['from']."&c=".$generator->getMapCheck($units[$y]['from'])."&popup=1\">".$database->getVillageField($units[$y]['from'],"name")."</a>";
         	}
         	echo "</td>
                   <td colspan=\"11\" class=\"troopHeadline\">";
@@ -135,9 +135,9 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
 <table class="troop_details inReturn" cellpadding="1" cellspacing="1">            
 	<thead>
 		<tr>
-			<td class="role"><a href="karte.php?d=<?php echo $originWref."&c=".$generator->getMapCheck($originWref); ?>"><?php echo $originName; ?></a></td>
+			<td class="role"><a href="karte.php?d=<?php echo $originWref."&c=".$generator->getMapCheck($originWref)."&popup=1"; ?>"><?php echo $originName; ?></a></td>
             <?php if($units[$y]['t11']!=0){ $colspan = '11'; }else{ $colspan = '10'; } ?>
-			<td colspan="<?php echo $colspan; ?>" class="troopHeadline"><a href="karte.php?d=<?php echo $destinationWref."&c=".$generator->getMapCheck($destinationWref); ?>"><?php echo $actionType ." ". $destinationName; ?></a></td>
+			<td colspan="<?php echo $colspan; ?>" class="troopHeadline"><a href="karte.php?d=<?php echo $destinationWref."&c=".$generator->getMapCheck($destinationWref)."&popup=1"; ?>"><?php echo $actionType ." ". $destinationName; ?></a></td>
 		</tr>
 	</thead>
 	<tbody class="units">
@@ -147,7 +147,7 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
                   $end = ($tribe*10);
                   $coor = $database->getCoor($originWref);
                   echo "<tr><th class=\"coords\">
-					<a class=\"movementOriginCoordinates\" href=\"karte.php?d=".$originWref."&amp;c=".$generator->getMapCheck($originWref)."\" title=\"Ver origen en el mapa\">
+					<a class=\"movementOriginCoordinates\" href=\"karte.php?d=".$originWref."&amp;c=".$generator->getMapCheck($originWref)."&amp;popup=1\" title=\"Ver origen en el mapa\">
 					<span class=\"coordinates coordinatesAligned\">
                     <span class=\"coordinateY\">(".$coor['x']."</span>
                     <span class=\"coordinatePipe\">|</span>
