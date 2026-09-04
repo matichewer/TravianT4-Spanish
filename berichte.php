@@ -177,6 +177,35 @@ if(isset($_GET['id'])) {
 			$type = 0;
 		}
 		include("Templates/Notice/".$type.".tpl");
+		?>
+		<script>
+		(function () {
+			'use strict';
+
+			function reportThousands(value) {
+				return value.replace(/\d{4,}/g, function (digits) {
+					return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+				});
+			}
+
+			document.querySelectorAll(
+				'#content.reports td.unit:not(.uniticon), ' +
+				'#content.reports .rArea, ' +
+				'#content.reports div.carry'
+			).forEach(function (element) {
+				element.childNodes.forEach(function (node) {
+					if (node.nodeType === 3) {
+						node.nodeValue = reportThousands(node.nodeValue);
+					}
+				});
+			});
+
+			document.querySelectorAll('#content.reports div.carry img[title]').forEach(function (image) {
+				image.title = reportThousands(image.title);
+			});
+		}());
+		</script>
+		<?php
 	}
 }
 elseif(isset($_GET['t'])) {
