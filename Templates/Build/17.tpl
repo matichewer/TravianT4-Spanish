@@ -417,8 +417,10 @@ echo "<h4>Mercaderes entrantes</h4>";
     $timer +=1;
     }
 }
-if(count($market->sending) > 0) {
+if(count($market->sending) > 0 || count($market->return) > 0) {
 	echo "<h4>Mercaderes en movimiento:</h4>";
+}
+if(count($market->sending) > 0) {
     foreach($market->sending as $send) {
         $ownerid = $database->getVillageField($send['to'],"owner");
         $ownername = $database->getUserField($ownerid,"username",0);
@@ -444,7 +446,6 @@ if(count($market->sending) > 0) {
     }
 }
 if(count($market->return) > 0) {
-	echo "<h4>Mercaderes en movimiento:</h4>";
     foreach($market->return as $return) {
         $villageowner = $database->getVillageField($return['from'],"owner");
         $ownername = $database->getUserField($villageowner,"username",0);
