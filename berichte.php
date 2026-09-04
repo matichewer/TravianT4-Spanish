@@ -188,10 +188,13 @@ if(isset($_GET['id'])) {
 				});
 			}
 
+			function reportCarry(value) {
+				return reportThousands(value).replace(/\s*\/\s*/g, ' / ');
+			}
+
 			document.querySelectorAll(
 				'#content.reports td.unit:not(.uniticon), ' +
-				'#content.reports .rArea, ' +
-				'#content.reports div.carry'
+				'#content.reports .rArea'
 			).forEach(function (element) {
 				element.childNodes.forEach(function (node) {
 					if (node.nodeType === 3) {
@@ -200,8 +203,16 @@ if(isset($_GET['id'])) {
 				});
 			});
 
+			document.querySelectorAll('#content.reports div.carry').forEach(function (element) {
+				element.childNodes.forEach(function (node) {
+					if (node.nodeType === 3) {
+						node.nodeValue = reportCarry(node.nodeValue);
+					}
+				});
+			});
+
 			document.querySelectorAll('#content.reports div.carry img[title]').forEach(function (image) {
-				image.title = reportThousands(image.title);
+				image.title = reportCarry(image.title);
 			});
 		}());
 		</script>
