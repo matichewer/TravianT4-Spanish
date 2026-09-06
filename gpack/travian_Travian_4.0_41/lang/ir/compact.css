@@ -1404,6 +1404,4 @@ div#map_details .boxes{float:right;}
 div#map_details{position:absolute;left:360px;top:68px;z-index:23;}
 #tileDetails div#map_details{float:right;width:217px;}
 .ie7 div#map_details{height:auto;}
-/* Destaca el bono individual del 50% en los oasis del perfil. */
-#villages .oases img.oasisBonus50{filter:drop-shadow(0 0 2px #ffd34d) drop-shadow(0 0 3px rgba(255,183,0,.85));}
 div.village1 div#map_details{position:absolute;left:457px;top:10px;width:245px;z-index:23;}

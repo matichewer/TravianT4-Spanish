@@ -317,8 +317,7 @@ function oasisResourceName($type) {
 function oasisBonusIcons($type) {
 	$icons = array();
 	foreach(oasisTypeBonuses($type) as $bonus) {
-		$highlight = $bonus['percent'] === 50 ? ' oasisBonus50' : '';
-		$icons[] = "<img class='r".$bonus['res'].$highlight."' src='img/x.gif' title='"
+		$icons[] = "<img class='r".$bonus['res']."' src='img/x.gif' title='"
 			.oasisResourceLabel($bonus['res'])." +".$bonus['percent']."%'>";
 	}
 	return implode(" ", $icons);
