@@ -1404,4 +1404,6 @@ div#map_details .boxes{float:right;}
 div#map_details{position:absolute;left:360px;top:68px;z-index:23;}
 #tileDetails div#map_details{float:right;width:217px;}
 .ie7 div#map_details{height:auto;}
+/* Brillo sobre los colores del icono, sin extenderse fuera de su silueta. */
+#villages .oases img.oasisBonus50{filter:brightness(1.3) saturate(1.25);}
 div.village1 div#map_details{position:absolute;left:457px;top:10px;width:245px;z-index:23;}
