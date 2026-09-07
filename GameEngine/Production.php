@@ -322,7 +322,7 @@ function oasisBonusIcons($type) {
 			.oasisResourceLabel($bonus['res'])." +".$bonus['percent']."%'>";
 		$icons[] = $highlight !== '' ? "<span class='oasisSparkle'>".$icon."</span>" : $icon;
 	}
-	return implode(" ", $icons);
+	return $icons ? "<span class='oasisBonusGroup'>".implode('', $icons)."</span>" : '';
 }
 
 /**
