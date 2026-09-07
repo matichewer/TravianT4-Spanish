@@ -36,7 +36,15 @@ if(isset($_GET['t']) && in_array((string)$_GET['t'], array('1', '2', '3', '4', '
 }
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];
-	header("Location: ".$_SERVER['PHP_SELF']);
+	// Conservar la vista, sin repetir acciones como borrar o archivar reportes.
+	$reportView = array();
+	foreach(array('id', 't', 'page', 'per_page') as $key) {
+		if(isset($_GET[$key]) && is_scalar($_GET[$key]) && ctype_digit((string)$_GET[$key])) {
+			$reportView[$key] = (string)$_GET[$key];
+		}
+	}
+	header("Location: berichte.php".(empty($reportView) ? '' : '?'.http_build_query($reportView)));
+	exit;
 }
 else {
 	$message->noticeType($_GET);

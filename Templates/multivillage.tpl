@@ -37,7 +37,15 @@
     	&& (int)$_GET['id'] >= 19 && (int)$_GET['id'] <= 40) {
     	$buildingGid = (int)$village->resarray['f'.(int)$_GET['id'].'t'];
     }
-    if($buildingGid > 0){
+    if(basename($_SERVER['PHP_SELF']) == 'berichte.php') {
+        $reportView = array();
+        foreach(array('id', 't', 'page', 'per_page') as $key) {
+            if(isset($_GET[$key]) && is_scalar($_GET[$key]) && ctype_digit((string)$_GET[$key])) {
+                $reportView[$key] = (string)$_GET[$key];
+            }
+        }
+        $vill = empty($reportView) ? '' : '&amp;'.http_build_query($reportView, '', '&amp;');
+    }else if($buildingGid > 0){
     	$vill = "&gid=".$buildingGid;
     	// El slot cambia de aldea en aldea (por eso se manda gid, no id), pero la
     	// pestaña (t=, ej. Rutas comerciales del Mercado) es la misma edificio a
