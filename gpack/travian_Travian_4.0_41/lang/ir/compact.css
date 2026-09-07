@@ -1405,9 +1405,10 @@ div#map_details{position:absolute;left:360px;top:68px;z-index:23;}
 #tileDetails div#map_details{float:right;width:217px;}
 .ie7 div#map_details{height:auto;}
 /* Cada oasis es un grupo: bonos juntos y separación entre oasis. */
-#villages .oasisBonusGroup{display:inline-flex;align-items:center;gap:1px;vertical-align:middle;white-space:nowrap;}
+#villages .oasisBonusGroup{display:inline-flex;align-items:center;gap:0;vertical-align:middle;white-space:nowrap;}
 #villages .oasisBonusGroup + .oasisBonusGroup{margin-left:8px;}
 #villages .oasisBonusGroup img{margin:0;}
+#villages .oasisBonusGroup > img + img{margin-left:-2px;}
 /* Los bonos del 50% conservan el color original; el brillo lo dan los destellos. */
 #villages .oases img.oasisBonus50{opacity:1;filter:none;}
 #villages .oases img:not(.oasisBonus50){opacity:1;filter:brightness(.95);}
