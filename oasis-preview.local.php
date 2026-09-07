@@ -3,7 +3,7 @@
 <html lang="es">
 <meta charset="utf-8">
 <title>Vista previa de oasis</title>
-<link rel="stylesheet" href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd497">
+<link rel="stylesheet" href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd498">
 <link rel="stylesheet" href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423">
 <link rel="stylesheet" href="img/travian_basics.css?v=59">
 <style>

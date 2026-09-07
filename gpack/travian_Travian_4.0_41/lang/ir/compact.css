@@ -1408,8 +1408,8 @@ div#map_details{position:absolute;left:360px;top:68px;z-index:23;}
 #villages .oasisBonusGroup{display:inline-flex;align-items:center;gap:1px;vertical-align:middle;white-space:nowrap;}
 #villages .oasisBonusGroup + .oasisBonusGroup{margin-left:8px;}
 #villages .oasisBonusGroup img{margin:0;}
-/* Brillo suave dentro del icono para los bonos individuales del 50%. */
-#villages .oases img.oasisBonus50{filter:brightness(1.08) saturate(1.05);}
+/* Los bonos del 50% conservan el color original; el brillo lo dan los destellos. */
+#villages .oases img.oasisBonus50{opacity:1;filter:none;}
 #villages .oases img:not(.oasisBonus50){opacity:1;filter:brightness(.95);}
 #villages .oasisSparkle{display:inline-flex;align-items:center;position:relative;}
 #villages .oasisSparkle::before,#villages .oasisSparkle::after{content:"";position:absolute;z-index:1;pointer-events:none;width:11px;height:11px;background:radial-gradient(circle,#fff 0 20%,#ffe16b 25% 45%,#b87900 70%);clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%);opacity:1;animation:oasisSparkle 1.8s ease-in-out infinite;}
