@@ -30,10 +30,10 @@
 					{
 						$title = medalCategoryLabel($medal['categorie'], $medal['points'], true);
 						$rank = $medal['plaats'];
-						if($rank == '0') { $rank = "<p>Bonus</p>"; } else { $rank = $rank; }
+						if($rank == '0') { $rank = "<p>Bonificación</p>"; } else { $rank = $rank; }
 						$week = $medal['week'];
 						$points = $medal['points'];
-						if($points == '') { $points = "<p>Bonus</p>"; } else { $points = $points; }
+						if($points == '') { $points = "<p>Bonificación</p>"; } else { $points = $points; }
 						
 						echo"
 							<tr>

@@ -13,19 +13,19 @@
 	<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 	
 	<br />
-	<h3>WW Village Troop Formula</h3>
-	<p>The actual troop numbers are randomly generated. The first text box in the column, is the low range of the random number and the second is the high range of the number.<br />
-	Then the random number is multiplied by the speed of the server.<br /><br />
-	If server speed is, 1x, 2x, or 3x, the troops are multiplied by the speed. Else the troops are multiplied 5 times.</p>
+	<h3>Guarnición de las Aldeas de la Maravilla</h3>
+	<p>La cantidad de tropas sale de un número al azar: la primera casilla de cada columna es el mínimo y la segunda el máximo.<br />
+	Después el número al azar se multiplica por la velocidad del servidor.<br /><br />
+	Con velocidad 1x, 2x o 3x se multiplica por la velocidad; con cualquier otra, por 5.</p>
 	
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="3">Add WW Villages</th>
+				<th colspan="3">Crear las Aldeas de la Maravilla</th>
 			</tr>
 			<tr>
-				<td class="on">Low Range</td>
-				<td class="on">High Range</td>
+				<td class="on">Desde</td>
+				<td class="on">Hasta</td>
 			</tr>
 		</thead>
 		<tbody>
@@ -60,7 +60,7 @@ if(isset($_GET['g']))
 {
 	if(isset($_GET['amt']))
 	{
-		echo ''.$_GET['amt'].' WW Villages Added';
+		echo ''.$_GET['amt'].' Aldeas de la Maravilla creadas';
 	}
 }
 ?>

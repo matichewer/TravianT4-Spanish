@@ -15,7 +15,7 @@ $result = $admin->search_alliance($_POST['s']);
 <table id="member">
   <thead>
     <tr>
-        <th class="dtbl"><a href="">1 «</a></th><th>Found alliances (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
+        <th class="dtbl"><a href="">1 «</a></th><th>Alianzas encontradas (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
     </tr>
   </thead> 
 
@@ -23,9 +23,9 @@ $result = $admin->search_alliance($_POST['s']);
 <table id="profile">    
     <tr>
         <td class="b">AID</td>
-        <td class="b">Name</td>
+        <td class="b">Nombre</td>
         <td class="b">Tag</td>
-        <td class="b">Founder</td>          
+        <td class="b">Fundador</td>          
     </tr>
 <?php      
 if($result){  

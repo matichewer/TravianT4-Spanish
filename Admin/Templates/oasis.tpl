@@ -13,7 +13,7 @@
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="2">Populate Oases</th>
+				<th colspan="2">Poblar los oasis</th>
 			</tr> 
 		</thead>
 		<tbody> 
@@ -27,6 +27,6 @@
 <?php
 if(isset($_GET['g']))
 {
-	echo '<font color="red">Oases Populated</font>';
+	echo '<font color="red">Oasis poblados</font>';
 }
 ?>

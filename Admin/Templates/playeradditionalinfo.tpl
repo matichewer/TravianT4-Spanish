@@ -1,21 +1,21 @@
 		<table id="member"> 
 			<thead>
 				<tr>
-					<th colspan="2">Additional Information</th>
+					<th colspan="2">Información adicional</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td>Access</td>
+					<td>Acceso</td>
 					<td>
 						<?php 
 							if($user['access'] == 0)
 							{
-								echo "Banned";
+								echo "Sancionado";
 							}
 							else if($user['access'] == 2)
 							{
-								echo "Normal user";
+								echo "Jugador normal";
 							}
 							else if($user['access'] == 8)
 							{
@@ -23,23 +23,23 @@
 							}
 							else if($user['access'] == 9)
 							{
-								echo "<b>Administrator</b>";
+								echo "<b>Administrador</b>";
 							}
 							if($_SESSION['access'] == ADMIN)
 					        {
-						        echo '&nbsp;<a href="admin.php?p=editAccess&uid='.$_GET['uid'].'"><img src="../img/admin/edit.gif" title="Edit Access"></a>';
+						        echo '&nbsp;<a href="admin.php?p=editAccess&uid='.$_GET['uid'].'"><img src="../img/admin/edit.gif" title="Cambiar el nivel de acceso"></a>';
 					        }
 						?> 
 					</td>
 				</tr>
 				<tr>
-					<td>Gold</td>
+					<td>Oro</td>
 					<td><img src="../img/admin/gold.gif"> 
 					<?php 
 					  echo $user['gold']; 
 					  if($_SESSION['access'] == ADMIN)
 					  {
-						echo '&nbsp;<a href="admin.php?p=player&uid='.$id.'&g"><img src="../img/admin/edit.gif" title="Give Gold"></a>';
+						echo '&nbsp;<a href="admin.php?p=player&uid='.$id.'&g"><img src="../img/admin/edit.gif" title="Dar oro"></a>';
 					  }
 					?>
 					</td>
@@ -59,11 +59,11 @@
 									<input type="hidden" name="id" value="<?php echo $id; ?>">
 									<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 									<tr>
-										<td>Give how much Gold?</td>
+										<td>¿Cuánto oro?</td>
 										<td>
 											<input class="give_gold" name="gold" value="0">
 											<input type="image" src="../gpack/travian_default/img/new/tick.png" value="submit">
-											<a href="admin.php?p=player&uid=<?php echo $id; ?>"><img src="../img/admin/del.gif" title="Cancel"></a></td>
+											<a href="admin.php?p=player&uid=<?php echo $id; ?>"><img src="../img/admin/del.gif" title="Cancelar"></a></td>
 									</tr>
 								</form><?php 
 							} 
@@ -75,8 +75,8 @@
 					<td></td>
 				</tr>
 				<tr>
-					<td>Sitter 1</td>
-					<td><a href="?p=editSitter&uid=<?php echo $user['id']; ?>"><img src="../img/admin/edit.gif" title="Edit Sitters"></a> 
+					<td>Suplente 1</td>
+					<td><a href="?p=editSitter&uid=<?php echo $user['id']; ?>"><img src="../img/admin/edit.gif" title="Editar los suplentes"></a> 
 						<?php
 							if($user['sit1'] >= 1)
 							{
@@ -84,14 +84,14 @@
 							} 
 							else if($user['sit1'] == 0)
 							{
-								echo 'No Sitter';
+								echo 'Sin suplente';
 							}
 						?>
 					</td>
 				</tr>
 				<tr>
-					<td>Sitter 2</td>
-					<td><a href="?p=editSitter&uid=<?php echo $user['id']; ?>"><img src="../img/admin/edit.gif" title="Edit Sitters"></a> 
+					<td>Suplente 2</td>
+					<td><a href="?p=editSitter&uid=<?php echo $user['id']; ?>"><img src="../img/admin/edit.gif" title="Editar los suplentes"></a> 
 						<?php
 							if($user['sit2'] >= 1)
 							{
@@ -99,7 +99,7 @@
 							} 
 							else if($user['sit2'] == 0)
 							{
-								echo 'No Sitter';
+								echo 'Sin suplente';
 							}
 						?>
 					</td>
@@ -109,7 +109,7 @@
 					<td></td>
 				</tr>
 				<tr>
-					<td>Beginners Protection</td>
+					<td>Protección de principiante</td>
 					<td>
 						<?php
 							$datetime = $user['protect'];
@@ -117,26 +117,26 @@
 							if($datetime ==0)
 							{
 								echo '<img src="../img/admin/del.gif">';
-								echo "<font color=\"red\"> No Protection</font>";
+								echo "<font color=\"red\"> Sin protección</font>";
 							}
 							else
 							{
 								if($datetime <= $now)
 								{
 									echo '<img src="../img/admin/del.gif">';
-									echo "<font color=\"red\"> No Protection</font>";
+									echo "<font color=\"red\"> Sin protección</font>";
 								}
 								else
 								{
 									$tsdiffact = $datetime - $now;
 									$timetoecho = $timeformat->getTimeFormat($tsdiffact);
-									echo '<img src="../gpack/travian_default/img/new/tick.png" title="Ends: '.date('d.m.Y H:i',$user['protect']+3600*2).'">';
+									echo '<img src="../gpack/travian_default/img/new/tick.png" title="Termina: '.date('d.m.Y H:i',$user['protect']+3600*2).'">';
 									echo "<font color=\"blue\"> $timetoecho</font>";
 								}
 							}
 							/*if(date('d.m.Y H:i',$user['protect']) == '01.01.1970 00:00')
 							{
-								echo "Not enabled!</tr></th>";
+								echo "Sin activar</tr></th>";
 							}
 							else
 							{
@@ -152,15 +152,15 @@
 								}
 							} */
 						?>
-					 <a href="admin.php?p=editProtection&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Give Player Protection"></a></td>
+					 <a href="admin.php?p=editProtection&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Dar protección al jugador"></a></td>
 				</tr>
 				<tr>
-					<td>Culture Points</td>
+					<td>Puntos de cultura</td>
 					<td>
 						<?php 
 							if($_SESSION['access'] == ADMIN)
 							{ 
-								echo '<a href="admin.php?p=player&uid='.$id.'&cp"><img src="../img/admin/edit.gif" title="Edit Culture Points"></a>&nbsp;';
+								echo '<a href="admin.php?p=player&uid='.$id.'&cp"><img src="../img/admin/edit.gif" title="Editar los puntos de cultura"></a>&nbsp;';
 							}
 							echo round($user['cp'], 0);
 						?>
@@ -181,11 +181,11 @@
 									<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 									<input type="hidden" name="id" value="<?php echo $id; ?>">
 									<tr>
-										<td>Add how many CP?</td>
+										<td>¿Cuántos puntos de cultura?</td>
 										<td>
 											<input class="give_gold" name="cp" value="0">
 											<input type="image" src="../gpack/travian_default/img/new/tick.png" value="submit">
-											<a href="admin.php?p=player&uid=<?php echo $id; ?>"><img src="../img/admin/del.gif" title="Cancel"></a>
+											<a href="admin.php?p=player&uid=<?php echo $id; ?>"><img src="../img/admin/del.gif" title="Cancelar"></a>
 										</td>
 									</tr>
 								</form><?php 
@@ -194,7 +194,7 @@
 					}
 				?>
 				<tr>
-					<td>Last Activity</td>
+					<td>Última actividad</td>
 					<td>
 						<?php 
 							echo ''.date('d.m.Y H:i',$user['timestamp']+3600*2).'';
@@ -206,24 +206,24 @@
 					<td></td>
 				</tr>
 				<tr>
-					<td>Attack Points ("This "Week")</td>
-					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Weekly Points"></a>
+					<td>Puntos de ataque (esta semana)</td>
+					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Editar los puntos de la semana"></a>
 						<?php
 							echo $user['ap'];
 						?>
 					</td>
 				</tr>
 				<tr>
-					<td>Defence Points ("This Week")</td>
-					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Weekly Points"></a>
+					<td>Puntos de defensa (esta semana)</td>
+					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Editar los puntos de la semana"></a>
 						<?php
 							echo $user['dp'];
 						?>
 					</td>
 				</tr>
 				<tr>
-					<td>Resources Raided ("This Week")</td>
-					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Weekly Points"></a>
+					<td>Recursos saqueados (esta semana)</td>
+					<td><a href="admin.php?p=editWeek&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Editar los puntos de la semana"></a>
 						<?php
 							echo $user['RR'];
 						?>
@@ -234,16 +234,16 @@
 					<td></td>
 				</tr>
 				<tr>
-					<td>Total Attack Points</td>
-					<td><a href="admin.php?p=editOverall&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Overall Points"></a>
+					<td>Puntos de ataque totales</td>
+					<td><a href="admin.php?p=editOverall&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Editar los puntos totales"></a>
 						<?php	
 							echo $user['apall'];
 						?>
 					</td>
 				</tr>
 				<tr>
-					<td>Total Defence Points</td>
-					<td><a href="admin.php?p=editOverall&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Overall Points"></a>
+					<td>Puntos de defensa totales</td>
+					<td><a href="admin.php?p=editOverall&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Editar los puntos totales"></a>
 						<?php
 							echo $user['dpall'];
 						?>

@@ -25,9 +25,9 @@ if(isset($id))
 		<input type="hidden" name="id" value="<?php echo $_GET['did']; ?>" />
 		<br />
 		
-		<a href="#" onclick="showStuff('instructions'); return false;">Show Instructions</a>
+		<a href="#" onclick="showStuff('instructions'); return false;">Ver la referencia de posiciones</a>
 		<span id="instructions" style="display: none;">
-			<h4>Building ID's (Position)</h4>
+			<h4>Posición de cada edificio dentro de la aldea</h4>
 			<div id="content" class="village1" style="min-height: 264px;">
 				<div id="village_map" class="f<?php echo $database->getVillageType($village['wref']); ?>" style="float: left;">
 					<?php
@@ -64,32 +64,36 @@ if(isset($id))
 			<table id="member">
 				<thead>
 					<tr>
-						<th colspan="2">Buildings</th>
+						<th colspan="2">Edificios</th>
 					</tr>
 					<tr>
 						<td>GID</td>
-						<td>Name</td>
+						<td>Nombre</td>
 					</tr>
 				</thead>
 				<tbody>
 					<?php
-						for($i =1; $i<=39; $i++)
+						// Hasta el 42 y sin excepciones escritas a mano: el Abrevadero (41) estaba
+						// puesto aparte con su nombre en inglés y el Gran taller (42) no figuraba.
+						// `procResType()` delega en buildingDisplayName(), que devuelve "Error"
+						// para los gid que no existen (el 13), así que basta con saltearlos.
+						for($i = 1; $i <= 42; $i++)
 						{
 							$bu = $funct->procResType($i);
+							if($bu === 'Error')
+							{
+								continue;
+							}
 							echo '
 							<tr>
 								<td class="on">'.$i.'.</td>
-								<td class="on">'.$bu.'</td>
+								<td class="on">'.htmlspecialchars($bu, ENT_QUOTES, 'UTF-8').'</td>
 							</tr>';
 						}
 					?>
-					<tr>
-						<td class="on">41.</td>
-						<td class="on">Horse Drinking Trough</td>
-					</tr>
 				</tbody>
 			</table>
-			<a href="#" onclick="hideStuff('instructions'); return false;">Hide Instructions</a>
+			<a href="#" onclick="hideStuff('instructions'); return false;">Ocultar la referencia</a>
 		</span>
 		
 		<br />
@@ -97,13 +101,13 @@ if(isset($id))
 		<table id="member" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="4">Modify Buildings</th>
+					<th colspan="4">Modificar los edificios</th>
 				</tr> 
 				<tr>
 					<td class="on">ID</td>
 					<td class="on">GID</td>
-					<td class="hab">Name</td>
-					<td class="on">Level</td>
+					<td class="hab">Nombre</td>
+					<td class="on">Nivel</td>
 				</tr>
 			</thead>
 			<tbody> 

@@ -79,20 +79,20 @@ if(isset($id))
 						<?php
 							if (!$village['capital']) {
 						?>
-						<form action="../GameEngine/Admin/mods/editVillageOwner.php" method="POST" accept-charset="UTF-8">
+						<form action="../GameEngine/Admin/Mods/editVillageOwner.php" method="POST" accept-charset="UTF-8">
 							<input type="hidden" name="did" value="<?php echo $_GET['did']; ?>">
 							<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
-							Owner(uid): <input class="text" type="text" name="newowner" value="<?php echo $user['id']; ?>">&nbsp;<input type="image" value="submit" src="../img/admin/edit.gif">
+							Dueño (uid): <input class="text" type="text" name="newowner" value="<?php echo $user['id']; ?>">&nbsp;<input type="image" value="submit" src="../img/admin/edit.gif">
 						</form>
 						<?php
 							} else {
-								echo 'Owner(uid): <input class="text" type="text" name="newowner" value="'.$user['id'].'" disabled>';
+								echo 'Dueño (uid): <input class="text" type="text" name="newowner" value="'.$user['id'].'" disabled>';
 							}
 						?>
 					</td>
 				<tr>
 					<td>Nombre de la aldea:</td>
-					<form action="../GameEngine/Admin/mods/renameVillage.php" method="POST" accept-charset="UTF-8">
+					<form action="../GameEngine/Admin/Mods/renameVillage.php" method="POST" accept-charset="UTF-8">
 						<input type="hidden" name="did" value="<?php echo $_GET['did']; ?>">
 						<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 						<td colspan="2">
@@ -105,7 +105,7 @@ if(isset($id))
 					<td colspan="2"><?php echo $village['pop'];?></td>
 				</tr>
 				<tr>
-					<td>Coordinates:</td>
+					<td>Coordenadas:</td>
 					<td colspan="2"><a href="<?php echo HOMEPAGE ?>karte.php?d=<?php echo $village['wref']; ?>&c=<?php echo $generator->getMapCheck($village['wref']); ?>" target="blank">(<?php echo $coor['x']; ?>|<?php echo $coor['y']; ?>)</a></td>
 				</tr>
 				<tr>
@@ -113,7 +113,7 @@ if(isset($id))
 					<td colspan="2"><?php echo $village['wref'];?></td>
 				</tr>
 				<tr>
-					<td>Field type</td>
+					<td>Tipo de casilla</td>
 					<td colspan="2">
 						<?php        
 							for ($i = 0; $i <= 3; $i++) 
@@ -140,8 +140,8 @@ if(isset($id))
 					<th colspan="8">Recursos</th>
 				</tr>
 				<tr>
-					<td>Resource</td>
-					<form action="../GameEngine/Admin/mods/recalcWH.php" method="POST" accept-charset="UTF-8">
+					<td>Recurso</td>
+					<form action="../GameEngine/Admin/Mods/recalcWH.php" method="POST" accept-charset="UTF-8">
 					<input type="hidden" name="did" value="<?php echo $_GET['did']; ?>">
 					<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 					<?php
@@ -150,7 +150,7 @@ if(isset($id))
 							$bu = "-";
 						}
 					?>
-					<td colspan="2">Warehouse <input type="image" src="<?php echo $refreshiconfrm; ?>" value="submit"></form></td>
+					<td colspan="2">Recalcular almacén <input type="image" src="<?php echo $refreshiconfrm; ?>" value="submit"></form></td>
 					<td>Production</td>
 					<td><a href="admin.php?p=editResources&did=<?php echo $_GET['did']; ?>"><img src="../img/admin/edit.gif" title="Editar recursos y capacidad"></a></td>
 				</tr>
@@ -194,8 +194,8 @@ if(isset($id))
 				</tr>
 				<tr>
 					<td class="hab">Aldea</td>
-					<td class="hab">Inhabitants</td>
-					<td class="hab">CP Production</td>
+					<td class="hab">Habitantes</td>
+					<td class="hab">Puntos de cultura/día</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -233,13 +233,13 @@ if(isset($id))
 		<table id="member" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="6">Oases</th>
+					<th colspan="6">Oasis</th>
 				</tr>  
 				<tr>
 					<td class="ra"></td>
-					<td class="hab">Name</td>
-					<td class="hab">Coordinates</td>  
-					<td class="hab">Loyalty</td>
+					<td class="hab">Nombre</td>
+					<td class="hab">Coordenadas</td>  
+					<td class="hab">Lealtad</td>
 					<td class="hab">Recursos</td>
 				</tr>                                     
 			</thead>
@@ -312,7 +312,7 @@ if(isset($id))
 					}
 					elseif($isthere ==0)
 					{
-						echo '<td colspan="5"><center>This village has no oases</center></td>';
+						echo '<td colspan="5"><center>Esta aldea no tiene ningún oasis</center></td>';
 					}
 				?>
 			</tbody>
@@ -424,8 +424,8 @@ if(isset($id))
 		</tr> 
 
 		<tr>
-			<td class="hab">Resource</td>
-			<td class="hab" colspan="2">Warehouse</td>  
+			<td class="hab">Recurso</td>
+			<td class="hab" colspan="2">Almacén</td>  
 		</tr>                                     
 	</thead>
 	<tbody> 
@@ -461,12 +461,12 @@ if(isset($id))
 <table id="member" cellpadding="1" cellspacing="1" >
 	<thead>
 		<tr>
-			<th colspan="5">Buildings</th>
+			<th colspan="5">Edificios</th>
 		</tr> 
 		<tr>
 			<td class="on">ID</td>
 			<td class="on">GID</td>
-			<td class="hab">Name</td>
+			<td class="hab">Nombre</td>
 			<td class="on">Nivel</td>
 			<td class="on">Editar</td>
 		</tr>

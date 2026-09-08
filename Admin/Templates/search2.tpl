@@ -59,7 +59,7 @@ foreach($varray as $vil)
 	{  ?> 
 		<div id="s_nav4">
 				<div align="left" style="font-size: 10pt;"><b>Aldea:</b> <a href="?p=village&did=<?php echo $village['wref'];?>"><?php echo $village['name'];?></a> (did: <?php echo $village['wref'];?>)</div>
-				<div align="left" style="font-size: 9pt;"><b>Coordinates:</b> (<?php echo $coor['x'];?>|<?php echo $coor['y'];?>) | <b>Inhabitants</b>: <?php echo $village['pop'];?>
+				<div align="left" style="font-size: 9pt;"><b>Coordenadas:</b> (<?php echo $coor['x'];?>|<?php echo $coor['y'];?>) | <b>Habitantes</b>: <?php echo $village['pop'];?>
 		</div><?php 
 	} ?>
 </center>

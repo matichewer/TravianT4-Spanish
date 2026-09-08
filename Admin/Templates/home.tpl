@@ -13,7 +13,7 @@
 <font size="3">
 	<b>
 		<center>
-			BIENVENIDO AL
+			BIENVENIDO AL PANEL DE
 				<?php 
 				if($_SESSION['access'] == MULTIHUNTER)
 				{
@@ -21,9 +21,8 @@
 				} 
 				else if($_SESSION['access'] == ADMIN)
 				{ 
-					echo 'ADMINISTRATOR'; 
-				} ?> 
-			PANEL DE CONTROL
+					echo 'ADMINISTRACIÓN'; 
+				} ?>
 		</center>
 	</b>
 </font>
@@ -32,14 +31,14 @@
 <br /><br /><br /><br />
 
 	Hola <b><?php echo $_SESSION['username']; ?></b>, has iniciado sesión como:
-	<b><?php if($_SESSION['access'] == MULTIHUNTER) { echo '<font color="Blue">Multihunter</font>'; } else if($_SESSION['access'] == ADMIN){ echo '<font color="Red">Administrator</font>'; } ?></b>
+	<b><?php if($_SESSION['access'] == MULTIHUNTER) { echo '<font color="Blue">Multihunter</font>'; } else if($_SESSION['access'] == ADMIN){ echo '<font color="Red">Administrador</font>'; } ?></b>
 	<br /><br /><br />
 	
 	<br /><br /><br /><br /><br />
 
 
 	<font color="#c5c5c5" size="1">
-		Credits: Akakori & Elmar<br />
-		Fixed, remade and new features added by <b>Dzoki</b><br />
-		Reworked by <b>aggenkeech</b>
+		Créditos: Akakori y Elmar<br />
+		Correcciones y funciones nuevas de <b>Dzoki</b><br />
+		Reelaborado por <b>aggenkeech</b>
 	</font>

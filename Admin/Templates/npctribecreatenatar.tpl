@@ -14,7 +14,7 @@
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="2">Create NPC Tribe Natar and Capital Village</th>
+				<th colspan="2">Crear la cuenta natar y su capital</th>
 			</tr> 
 		</thead>
 		<tbody> 
@@ -27,6 +27,6 @@
 <?php
 if(isset($_GET['g']))
 {
-	echo '<font color="red"><a href="admin.php?p=player&uid='.$_GET['uid'].'">Natar</a> account and <a href="admin.php?p=village&did='.$_GET['did'].'">Capital</a> Created</font>';
+	echo '<font color="red"><a href="admin.php?p=player&uid='.$_GET['uid'].'">cuenta natar</a> y su <a href="admin.php?p=village&did='.$_GET['did'].'">capital</a> creadas</font>';
 }
 ?>

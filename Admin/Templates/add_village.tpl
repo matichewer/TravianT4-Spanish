@@ -18,12 +18,12 @@
 	<table id="member" style="width: 125px;"> 
 		<thead>
 			<tr>
-				<th colspan="2">Add Village</th>
+				<th colspan="2">Crear una aldea</th>
 			</tr>
 		</thead>   
 		<tbody>
 			<tr>
-				<td colspan="2"><center>Coordinates (<b>X</b>|<b>Y</b>)</center></td>
+				<td colspan="2"><center>Coordenadas (<b>X</b>|<b>Y</b>)</center></td>
 			</tr>
 			<tr>
 				<td>X:</td>
@@ -34,7 +34,7 @@
 				<td><input name="y" class="fm" value="" type="input"></td>
 			</tr>
 			<tr>
-				<td colspan="2"><center><input type="image" src="../img/admin/b/ok1.gif" value="Add Village"></center></td>
+				<td colspan="2"><center><input type="image" src="../img/admin/b/ok1.gif" value="Crear la aldea"></center></td>
 			</tr>
 		</tbody>
 	</table>

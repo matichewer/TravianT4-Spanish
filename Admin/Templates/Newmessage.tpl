@@ -48,7 +48,7 @@ if(isset($id))
 			<div id="heading">
 				<input type="hidden" name="uid" value="<?php echo $id; ?>">
 				<div><a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></div>
-				<div><input type="text" value="Message From Admin" name="topic" id="subject" value="" maxlength="35" style="background-image: url('../gpack/travian_default/img/msg/underline.gif'); background-position: left -2px; background-repeat: repeat-x; outline: none; border: medium none; width: 267px; font-family: Verdana,Arial,Helvetica,sans-serif; font-size: 11px;"></div>
+				<div><input type="text" value="Mensaje de la administración" name="topic" id="subject" value="" maxlength="35" style="background-image: url('../gpack/travian_default/img/msg/underline.gif'); background-position: left -2px; background-repeat: repeat-x; outline: none; border: medium none; width: 267px; font-family: Verdana,Arial,Helvetica,sans-serif; font-size: 11px;"></div>
 			</div>
 			<div id="time">
 				<div><?php echo date('d.m.y'); ?></div>

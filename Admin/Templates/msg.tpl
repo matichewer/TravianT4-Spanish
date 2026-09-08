@@ -46,6 +46,6 @@ if($msg)
 }
 else
 {
-	echo "Message ID ".$_GET['nid']." doesn't exist!";
+	echo "ID del mensaje ".$_GET['nid']." doesn't exist!";
 }
 ?>

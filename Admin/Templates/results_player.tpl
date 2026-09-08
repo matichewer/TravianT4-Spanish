@@ -15,7 +15,7 @@ $result = $admin->search_player($_POST['s']);
 <table id="member">
   <thead>
     <tr>
-        <th class="dtbl"><a href="">1 «</a></th><th>Found player (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
+        <th class="dtbl"><a href="">1 «</a></th><th>Jugadores encontrados (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
     </tr>
   </thead> 
 

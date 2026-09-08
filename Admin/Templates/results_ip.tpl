@@ -28,7 +28,7 @@ for ($i = 0; $i <= count($arr)-1; $i++) {
 <table id="member">
   <thead>
     <tr>
-        <th class="dtbl"><a href="">1 «</a></th><th>Found IPs (<?php echo count($newArray);?>)</th><th class="dtbl"><a href="">» 100</a></th>
+        <th class="dtbl"><a href="">1 «</a></th><th>Direcciones IP encontradas (<?php echo count($newArray);?>)</th><th class="dtbl"><a href="">» 100</a></th>
     </tr>
   </thead> 
 
@@ -36,7 +36,7 @@ for ($i = 0; $i <= count($arr)-1; $i++) {
 <table id="profile">    
     <tr>
         <td class="b">IP</td>
-        <td class="b">Name</td>            
+        <td class="b">Nombre</td>            
     </tr>
 <?php      
 if($result){                       

@@ -28,17 +28,17 @@ if(isset($id))
 		<table id="member" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="4">Modify Resources</th>
+					<th colspan="4">Modificar recursos</th>
 				</tr> 
 				<tr>
-					<td class="on">Resource</td>
-					<td class="hab">Amount</td>
-					<td class="hab">Maximum Capacity</td>
+					<td class="on">Recurso</td>
+					<td class="hab">Cantidad</td>
+					<td class="hab">Capacidad máxima</td>
 				</tr>
 			</thead>
 			<tbody> 
 				<tr>
-					<td class="on"><img src="../img/admin/r/1.gif"> Wood</td>
+					<td class="on"><img src="../img/admin/r/1.gif"> Madera</td>
 					<td class="hab"><input class="fm" name="wood" value="<?php echo round($village['wood'], 0); ?>"></td>
 						<td rowspan="3" class="hab">
 							<input class="fm" name="maxstore" value="<?php echo round($village['maxstore'], 0); ?>">
@@ -46,19 +46,19 @@ if(isset($id))
 					</tr>
 				</tr>
 				<tr>
-					<td class="on"><img src="../img/admin/r/2.gif"> Clay</td>
+					<td class="on"><img src="../img/admin/r/2.gif"> Barro</td>
 					<td class="hab">
 						<input class="fm" name="clay" value="<?php echo round($village['clay'], 0); ?>">
 					</td>
 				</tr>
 				<tr>
-					<td class="on"><img src="../img/admin/r/3.gif"> Iron</td>
+					<td class="on"><img src="../img/admin/r/3.gif"> Hierro</td>
 					<td class="hab">
 						<input class="fm" name="iron" value="<?php echo round($village['iron'], 0); ?>">
 					</td>
 				</tr>
 				<tr>
-					<td class="on"><img src="../img/admin/r/4.gif"> Crop</td>
+					<td class="on"><img src="../img/admin/r/4.gif"> Cereal</td>
 					<td class="hab">
 						<input class="fm" name="crop" value="<?php echo round($village['crop'], 0); ?>">
 					</td>

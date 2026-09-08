@@ -1,17 +1,17 @@
 <table cellpadding="1" cellspacing="1" id="member">
 	<thead>
 		<tr>
-			<th colspan="10">Players Not Activated</th>
+			<th colspan="10">Jugadores sin activar</th>
 		</tr>
 		<tr>
 			<td class="on">#</td>
 			<td class="on">ID</td>
-			<td class="on">Username</td>
-			<td class="on">Email</td>
-			<td class="on">Tribe</td>
-			<td class="on">Activation Code</td>
-			<td class="on">Act 2??</td>
-			<td class="on">Time</td>
+			<td class="on">Usuario</td>
+			<td class="on">Correo</td>
+			<td class="on">Tribu</td>
+			<td class="on">Código de activación</td>
+			<td class="on">Código 2</td>
+			<td class="on">Fecha</td>
 		</tr>
 	</thead>
 	<tbody>  

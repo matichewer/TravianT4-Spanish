@@ -15,8 +15,8 @@
 			<th colspan="2">Mantenimiento del servidor</th>
 		</tr> 
 		<tr>
-			<td class="on">Description</td>
-			<td class="hab">Execute</td>
+			<td class="on">Acción</td>
+			<td class="hab">Ejecutar</td>
 		</tr>
 	</thead>
 	<tbody> 

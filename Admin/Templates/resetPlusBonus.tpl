@@ -9,7 +9,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 $id = $_SESSION['id']; ?>
 
 <form action="../GameEngine/Admin/Mods/mainteneceResetPlusBonus.php" method="POST">
@@ -17,7 +17,7 @@ $id = $_SESSION['id']; ?>
 	<table id="member" style="width:300px;">
 		<thead>
 			<tr>
-				<th colspan="2">Reset Everyone's Resource Bonuses</th>
+				<th colspan="2">Restablecer las bonificaciones de recursos de todos</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -35,6 +35,6 @@ $id = $_SESSION['id']; ?>
 <?php
     if(isset($_GET['g']))
 	{
-		echo '<br /><br /><font color="Red"><b>Plus Resource Bonuses For Everyone Reset</font></b>';
+		echo '<br /><br /><font color="Red"><b>Bonificaciones de recursos restablecidas en todas las cuentas</font></b>';
 	}
 ?>

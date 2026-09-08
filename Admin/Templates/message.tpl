@@ -16,15 +16,15 @@
 <table id="member" style="width:225px">
   <thead>
     <tr>
-        <th colspan="2">IGM/Reports</th>
+        <th colspan="2">Mensajes e informes</th>
     </tr>
   </thead> 
     <tr>
-        <td>IGM ID</td>
+        <td>ID del mensaje</td>
         <td><form action="" method="get"><input type="hidden" name="p" value="message"><input type="text" class="fm" name="nid" value="<?php echo $_GET['nid'];?>"> <input type="image" value="submit" src="../img/admin/b/ok1.gif"></form></td>
     </tr>
     <tr>
-        <td>Report ID</td>
+        <td>ID del informe</td>
         <td><form action="" method="get"><input type="hidden" name="p" value="message"><input type="text" class="fm" name="bid" value="<?php echo $_GET['bid'];?>"> <input type="image" value="submit" src="../img/admin/b/ok1.gif"></form></td>
     </tr>
 </table>
@@ -40,7 +40,7 @@ if (isset($_GET['nid']))
 	} 
 	else 
 	{
-		echo '<font color="red">Provided value is not numeric!</font>';
+		echo '<font color="red">El valor ingresado no es un número.</font>';
 	}
 } 
 else if (isset($_GET['bid'])) 
@@ -51,7 +51,7 @@ else if (isset($_GET['bid']))
 	} 
 	else 
 	{
-		echo '<font color="red">Provided value is not numeric!</font>';
+		echo '<font color="red">El valor ingresado no es un número.</font>';
 	}
 }
 ?>

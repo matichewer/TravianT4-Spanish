@@ -12,7 +12,7 @@ if(isset($id))
 			</tr>
 			<tr>
 				<td class="on">#</td>
-				<td>Event</td>
+				<td>Construcción</td>
 			</tr>
 		</thead>
 			<?php

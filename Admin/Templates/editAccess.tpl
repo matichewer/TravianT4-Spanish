@@ -9,7 +9,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 $id = $_SESSION['id']; 
 if(isset($_GET['uid']))
 {
@@ -24,7 +24,7 @@ if(isset($_GET['uid']))
 		<table id="member" style="width:300px;">
 			<thead>
 				<tr>
-					<th colspan="2">Edit <?php echo $player['username']; ?>'s access</th>
+					<th colspan="2">Nivel de acceso de <?php echo $player['username']; ?></th>
 				</tr>
 				<tr>
 					<td></td>
@@ -35,16 +35,16 @@ if(isset($_GET['uid']))
 				<tr>
 					<td>
 						<center>
-							<b>Change Access</b>
+							<b>Cambiar el nivel de acceso</b>
 						</center>
 					</td>
 					<td>
 						<center>
 							<select name="access" class="dropdown">
-								<option value="0" <?php if($curaccess == 0) { echo 'selected="selected"'; } else { echo ''; } ?>>Banned</option>
-								<option value="2" <?php if($curaccess == 2) { echo 'selected="selected"'; } else { echo ''; } ?>>Normal User</option>
+								<option value="0" <?php if($curaccess == 0) { echo 'selected="selected"'; } else { echo ''; } ?>>Sancionado</option>
+								<option value="2" <?php if($curaccess == 2) { echo 'selected="selected"'; } else { echo ''; } ?>>Jugador normal</option>
 								<option value="8" <?php if($curaccess == 8) { echo 'selected="selected"'; } else { echo ''; } ?>>Multihunter</option>
-								<option value="9" <?php if($curaccess == 9) { echo 'selected="selected"'; } else { echo ''; } ?>>Admin</option>
+								<option value="9" <?php if($curaccess == 9) { echo 'selected="selected"'; } else { echo ''; } ?>>Administrador</option>
 							</select>
 						</center>
 					</td>
@@ -52,7 +52,7 @@ if(isset($_GET['uid']))
 				<tr>
 					<td colspan="2">
 						<center>
-							<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Give Players Free Gold">
+							<input type="image" src="../img/admin/b/ok1.gif" value="submit" title="Guardar el nivel de acceso">
 						</center>
 					</td>
 				</tr>
@@ -61,7 +61,7 @@ if(isset($_GET['uid']))
 	</form><?php
     if(isset($_GET['g']))
 	{
-		echo '<br /><br /><font color="Red"><b>Players Access Changed</font></b>';
+		echo '<br /><br /><font color="Red"><b>Nivel de acceso actualizado</font></b>';
 	}
 }
 else

@@ -25,11 +25,11 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
          </thead>
          <tbody>
 			<tr>
-				<td>Registered players</td>
+				<td>Jugadores registrados</td>
 				<td><?php echo $users; ?></td>
 			</tr>	 
 			<tr>
-				<td>Active players</td>
+				<td>Jugadores activos</td>
 				<td><?php $result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."active"); $num_rows = mysql_num_rows($result); echo $num_rows; ?></td>
 			</tr>
 			<tr>
@@ -64,8 +64,8 @@ $users = mysql_num_rows(mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."users"
 	<table id="profile">
         <thead>
 			<tr><th colspan="3">Información de jugadores</th></tr>
-			<td class="b">Tribe</td>
-			<td class="b">Registered</td>
+			<td class="b">Tribu</td>
+			<td class="b">Registrados</td>
 			<td class="b">Percent</td>
 		</thead>
 		<tbody>

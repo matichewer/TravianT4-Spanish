@@ -149,38 +149,38 @@ foreach($medalRows as $name => $medalRow) {
   <table id="profile">  
   <tr>
         <td class="b">Variable</td>
-        <td class="b">Value</td> 
+        <td class="b">Valor</td> 
     </tr> 
     <tr>
-        <td>Log Build</td>
+        <td>Registrar construcciones</td>
         <td><?php if(LOG_BUILD == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_BUILD == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
     <tr>
-        <td>Log Technology</td>
+        <td>Registrar investigaciones</td>
         <td><?php if(LOG_TECH == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_TECH == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
     <tr>
-        <td>Log Login</td>
+        <td>Registrar accesos</td>
         <td><?php if(LOG_LOGIN == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_LOGIN == false){ echo "<b><font color='Red'>Disabled</font></b>";  } ?></td> 
     </tr>    
     <tr>
-        <td>Log Gold</td>
+        <td>Registrar movimientos de oro</td>
         <td><?php if(LOG_GOLD_FIN == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_GOLD_FIN == false) { echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
     <tr>
-        <td>Log Admin</td>
+        <td>Registrar acciones del administrador</td>
         <td><?php if(LOG_ADMIN == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_ADMIN == false){ echo "<b><font color='Red'>Disabled</font></b>";  } ?></td> 
     </tr>     
     <tr>
-        <td>Log War</td>
+        <td>Registrar combates</td>
         <td><?php if(LOG_WAR == true) {	echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_WAR == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>     
     <tr>
-        <td>Log Market</td>
+        <td>Registrar el mercado</td>
         <td><?php if(LOG_MARKET == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_MARKET == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>     
     <tr>
-        <td>Log Illegal</td>
+        <td>Registrar acciones ilegales</td>
         <td><?php if(LOG_ILLEGAL == true) { echo "<b><font color='Green'>Enabled</font></b>"; } else if(LOG_ILLEGAL == false){ echo "<b><font color='Red'>Disabled</font></b>";  } ?></td> 
     </tr>     
 </table>
@@ -196,30 +196,30 @@ foreach($medalRows as $name => $medalRow) {
 <table id="profile">  
 	<tr>
         <td class="b">Variable</td>
-        <td class="b">Value</td> 
+        <td class="b">Valor</td> 
     </tr> 
 	<tr>
-		<td>Newsbox 1</td>
+		<td>Aviso de portada 1</td>
 		<td><?php if(NEWSBOX1 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(NEWSBOX1 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>
 	</tr>
 	<tr>
-		<td>Newsbox 2</td>
+		<td>Aviso de portada 2</td>
 		<td><?php if(NEWSBOX2 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(NEWSBOX2 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>
 	</tr>
 	<tr>
-		<td>Newsbox 3</td>
+		<td>Aviso de portada 3</td>
 		<td><?php if(NEWSBOX3 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(NEWSBOX3 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>
 	</tr>
 	<tr>
-	<td>Home 1</td>
+	<td>Bloque de portada 1</td>
 		<td><?php if(HOME1 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(HOME1 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>
 	</tr>
 	<tr>
-	<td>Home 2</td>
+	<td>Bloque de portada 2</td>
 		<td><?php if(HOME2 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(HOME2 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>	
 	</tr>
 	<tr>
-	<td>Home 3</td>
+	<td>Bloque de portada 3</td>
 		<td><?php if(HOME3 == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(HOME3 == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?> </td>	
 	</tr>
 </table>
@@ -235,30 +235,30 @@ foreach($medalRows as $name => $medalRow) {
 <table id="profile">  
 	<tr>
         <td class="b">Variable</td>
-        <td class="b">Value</td> 
+        <td class="b">Valor</td> 
     </tr> 
     <tr>
-        <td>Hostname</td>
+        <td>Servidor de la base de datos</td>
         <td><?php echo SQL_SERVER;?></td> 
     </tr>    
 	<tr>
-        <td>DB Username</td>
+        <td>Usuario de la base de datos</td>
         <td><?php echo SQL_USER;?></td> 
     </tr>  
 	<tr>
-        <td>DB Password</td>
+        <td>Contraseña de la base de datos</td>
         <td>*********</td> 
     </tr>  
 	<tr>
-        <td>DB Name</td>
+        <td>Nombre de la base de datos</td>
         <td><?php echo SQL_DB;?></td> 
     </tr>  
 	<tr>
-        <td>Table Prefix</td>
+        <td>Prefijo de las tablas</td>
         <td><?php echo TB_PREFIX;?></td> 
     </tr> 
 	<tr>
-        <td>DB Type</td>
+        <td>Tipo de base de datos</td>
         <td><?php if(DB_TYPE == 0) { echo "MYSQL"; } else if(DB_TYPE == 1) { echo "MYSQLi"; } ?></td> 
     </tr> 
 </table>
@@ -274,18 +274,18 @@ foreach($medalRows as $name => $medalRow) {
 <table id="profile">  
 	<tr>
 		<td class="b">Variable</td>
-		<td class="b">Value</td> 
+		<td class="b">Valor</td> 
     </tr> 
     <tr>
-        <td>Limit Mailbox</td>
+        <td>Límite de la bandeja de mensajes</td>
         <td><?php if(LIMIT_MAILBOX == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(LIMIT_MAILBOX == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
 	<tr>
-        <td>Max number of mails</td>
-        <td><?php if(LIMIT_MAILBOX == true){ echo MAX_MAIL; } else if(LIMIT_MAILBOX == false){ echo "<font color='Gray'>Limit mailbox disabled</font>"; } ?></td> 
+        <td>Máximo de correos</td>
+        <td><?php if(LIMIT_MAILBOX == true){ echo MAX_MAIL; } else if(LIMIT_MAILBOX == false){ echo "<font color='Gray'>Bandeja de mensajes sin límite</font>"; } ?></td> 
     </tr>    
 	<tr>
-        <td>Include Admin in rank</td>
+        <td>Incluir al administrador en el ranking</td>
         <td><?php if(INCLUDE_ADMIN == true){ echo "<b><font color='Green'>Enabled</font></b>"; } else if(INCLUDE_ADMIN == false){ echo "<b><font color='Red'>Disabled</font></b>"; } ?></td> 
     </tr>    
 </table>
@@ -300,15 +300,15 @@ foreach($medalRows as $name => $medalRow) {
 <table id="profile">  
   <tr>
         <td class="b">Variable</td>
-        <td class="b">Value</td> 
+        <td class="b">Valor</td> 
     </tr> 
     <tr>
-        <td>Admin Email</td>
-        <td><?php if(ADMIN_EMAIL == ''){ echo "<b><font color='Red'>No admin email defined!</b></font>"; } else if(ADMIN_EMAIL != ''){ echo ADMIN_EMAIL; } ?></td> 
+        <td>Correo del administrador</td>
+        <td><?php if(ADMIN_EMAIL == ''){ echo "<b><font color='Red'>Sin correo de administrador definido</b></font>"; } else if(ADMIN_EMAIL != ''){ echo ADMIN_EMAIL; } ?></td> 
     </tr>  
 	<tr>
-        <td>Admin Name</td>
-        <td><?php if(ADMIN_NAME == ''){ echo "<b><font color='Red'>No admin name defined!</b></font>"; } else if(ADMIN_NAME != ''){ echo ADMIN_NAME; } ?></td> 
+        <td>Nombre del administrador</td>
+        <td><?php if(ADMIN_NAME == ''){ echo "<b><font color='Red'>Sin nombre de administrador definido</b></font>"; } else if(ADMIN_NAME != ''){ echo ADMIN_NAME; } ?></td> 
     </tr>  
 </table>	
 	

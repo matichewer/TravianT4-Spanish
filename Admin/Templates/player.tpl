@@ -32,6 +32,10 @@ if(isset($id))
 			$totalpop += $vil['pop'];
 		}
 		include('search2.tpl');
+		if(isset($_GET['e']) && $_GET['e'] === 'pass')
+		{
+			echo '<p style="color:#a00;"><b>No se cambió la contraseña:</b> el campo estaba vacío.</p>';
+		}
 		echo "<br />";
 		$deletion = false;
 		if($deletion)
@@ -63,13 +67,13 @@ if(isset($id))
 		<table id="member" cellpadding="1" cellspacing="1">
 			<thead>
 				<tr>
-					<th colspan="6">Ban History (<?php echo $numbans; ?>)</th>
+					<th colspan="6">Historial de sanciones (<?php echo $numbans; ?>)</th>
 				</tr>
 				<tr>
-					<td class="hab"><b>Start</b></td>
-					<td class="hab"><b>End</b></td>
-					<td class="hab"><b>Duration</b></td>
-					<td class="on"><b>Reason</b></td>
+					<td class="hab"><b>Desde</b></td>
+					<td class="hab"><b>Hasta</b></td>
+					<td class="hab"><b>Duración</b></td>
+					<td class="on"><b>Motivo</b></td>
 				</tr>
 			</thead>
 			<tbody>

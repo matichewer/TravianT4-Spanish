@@ -18,11 +18,11 @@ $bannedUsers = $admin->search_banned();
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="2">Open Server (Unban Players by Reason)</th>
+				<th colspan="2">Abrir el servidor (quitar sanciones por motivo)</th>
 			</tr> 
 			<tr>
-				<td class="on">Unban "Reason"</td>
-				<td class="hab">Action</td>
+				<td class="on">Motivo a levantar</td>
+				<td class="hab">Acción</td>
 			</tr>
 		</thead>
 		<tbody> 
@@ -37,12 +37,12 @@ $bannedUsers = $admin->search_banned();
 <table id="member" cellpadding="1" cellspacing="1">
     <thead>
 		<tr>
-			<th colspan="6">Bannned Players (<?php echo count($bannedUsers); ?>)</th>
+			<th colspan="6">Jugadores sancionados (<?php echo count($bannedUsers); ?>)</th>
 		</tr>
 		<tr>
-			<td><b>Username</b></td>
-			<td><b>Start Ban / End Ban</b></td>
-			<td><b>Reason</b></td>
+			<td><b>Jugador</b></td>
+			<td><b>Desde / hasta</b></td>
+			<td><b>Motivo</b></td>
 			<td></td>
 		</tr>
 		</thead>
@@ -78,13 +78,13 @@ $bannedUsers = $admin->search_banned();
 						<td>'.$link.'</td>
 						<td ><span class="f7">'.date("d.m.y H:i",$bannedUsers[$i]['time']).' - '.$end.'</td>
 						<td>'.$bannedUsers[$i]['reason'].'</td>
-						<td class="on"><a href="?action=delBan&uid='.$bannedUsers[$i]['uid'].'&id='.$bannedUsers[$i]['id'].'" onClick="return del(\'unban\',\''.$name.'\')"><img src="../img/Admin/del.gif" class="del" title="cancel" alt="cancel"></img></a></td>
+						<td class="on"><a href="?action=delBan&uid='.$bannedUsers[$i]['uid'].'&id='.$bannedUsers[$i]['id'].'" onClick="return del(\'unban\',\''.$name.'\')"><img src="../img/Admin/del.gif" class="del" title="Quitar la sanción" alt="Quitar la sanción"></img></a></td>
 					</tr>';
 				}
 			}
 			else
 			{
-				echo '<tr><td colspan="6" class="on">No Players are Banned</td></tr>';
+				echo '<tr><td colspan="6" class="on">No hay ningún jugador sancionado</td></tr>';
 			}
 		?>
     </tbody>

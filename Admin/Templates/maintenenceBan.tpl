@@ -15,11 +15,11 @@
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="2">Close Server (Ban Everyone)</th>
+				<th colspan="2">Cerrar el servidor (sancionar a todos)</th>
 			</tr> 
 			<tr>
-				<td class="on">Duration</td>
-				<td class="hab">Starting</td>
+				<td class="on">Duración</td>
+				<td class="hab">Empieza</td>
 			</tr>
 		</thead>
 		<tbody> 
@@ -28,11 +28,11 @@
 				<td class="hab"><input type="text" class="fm" name="start" value="<?php echo date('d-m-Y H:i:s', strtotime("now")); ?>"></td>
 			</tr>
 			<tr>
-				<td>Default: 1 Hour<br />Value: Hours (0.5) for 30 mins</td>
-				<td>Default: Now
+				<td>Por defecto: 1 hora<br />Se cuenta en horas: 0.5 son 30 minutos</td>
+				<td>Por defecto: ahora
 			</tr>
 			<tr>
-				<td class="hab" colspan="2"><center><input type="text" class="fm" name="reason" value="Server Downtime"></center></td>
+				<td class="hab" colspan="2"><center><input type="text" class="fm" name="reason" value="Mantenimiento del servidor"></center></td>
 			</tr>
 			<tr>
 				<td class="hab" colspan="2"><center><input type="image" src="../img/admin/b/ok1.gif" value="submit"></center></td>

@@ -45,7 +45,7 @@
 		echo '<div style="margin-top: 50px;" class="b"><center>';
 		if($_GET['msg'] == 'ursdel')
 		{
-			echo "User was deleted.";
+			echo "El jugador fue eliminado.";
 
 		}
 		echo '</center></div>';

@@ -18,15 +18,15 @@ error_reporting(0);
 <table id="member"> 
 	<thead>
 		<tr>
-			<th colspan="7">Inactive users</th>
+			<th colspan="7">Jugadores inactivos</th>
 		</tr>
 		<tr>
-			<td>Name [access]</td>
-			<td>Time</td>
-			<td>Tribe</td>
-			<td>Population</td>
-			<td>Villages</td>
-			<td>Gold</td>
+			<td>Jugador [acceso]</td>
+			<td>Última señal</td>
+			<td>Tribu</td>
+			<td>Población</td>
+			<td>Aldeas</td>
+			<td>Oro</td>
 			<td></td>
 		</tr>
 	</thead>
@@ -68,7 +68,7 @@ error_reporting(0);
 					<td><img src=\"../../gpack/travian_default/img/u/".$img."9.gif\" title=\"$tribe\" alt=\"$tribe\"></td>
 					<td>".$totalpop."</td>
 					<td>".count($varray)."</td>
-					<td><img src=\"../img/admin/gold.gif\" class=\"gold\" alt=\"Gold\" title=\"This user has: ".$active[$i]['gold']." gold\"/> ".$active[$i]['gold']."</td>
+					<td><img src=\"../img/admin/gold.gif\" class=\"gold\" alt=\"Oro\" title=\"Este jugador tiene ".$active[$i]['gold']." de oro\"/> ".$active[$i]['gold']."</td>
 					<td><img src=\"../gpack/travian_default/img/a/online1.gif\"></td>
 				</tr>"; 
 			} 

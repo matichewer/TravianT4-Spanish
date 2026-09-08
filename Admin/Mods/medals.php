@@ -14,7 +14,7 @@ include_once("../../Account.php");
 mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS);
 mysql_select_db(SQL_DB);
 
-if ($session->access < ADMIN) die("Access Denied: You are not Admin!");
+if ($session->access < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 
 $medalid = $_POST['medalid'];
 $uid = $_POST['uid'];

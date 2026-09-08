@@ -20,7 +20,7 @@ $sql = mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = ".$session."");
 $access = mysql_fetch_array($sql);
 $sessionaccess = $access['access'];
 
-if($sessionaccess != 9) die("<h1><font color=\"red\">Access Denied: You are not Admin!</font></h1>");
+if($sessionaccess != 9) die("<h1><font color=\"red\">Acceso denegado: esta pantalla es sólo para administradores.</font></h1>");
 
 function generateBase($kid, $uid, $username)
 {

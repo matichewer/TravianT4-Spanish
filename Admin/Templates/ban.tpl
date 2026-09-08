@@ -19,22 +19,22 @@
 	<table id="member" cellpadding="1" cellspacing="1">
 		<thead>
 			<tr>
-				<th colspan="6">Ban</th>
+				<th colspan="6">Sancionar</th>
 			</tr>                                       
 		</thead>
 		<tbody>
 			<tr>
-				<td>User ID</td>                                    
+				<td>ID del jugador</td>                                    
 				<td>                                                   
 					<input type="text" class="fm" name="uid" value="<?php echo $_GET['uid'];?>">
 				</td>      
 			</tr>
 			<tr>
-				<td>Reason</td>
+				<td>Motivo</td>
 				<td>
 					<select name="reason" class="fm">         
 						<?php     
-							$arr = array('Pushing','Cheat','Hack','Bug','Bad Name','Multi Account','Swearing');            
+							$arr = array('Pushing','Cheat','Hack','Bug','Nombre inválido','Multi Account','Swearing');            
 							foreach($arr as $r)
 							{
 								echo '<option value="'.$r.'">'.$r.'</option>';                         
@@ -44,21 +44,21 @@
 				</td>
 			</tr>       
 			<tr>
-				<td>Duration</td>
+				<td>Duración</td>
 				<td>
 					<select name="time" class="fm">
 						<?php
 							$arr = array(1,2,5,10,12);
 							foreach($arr as $r)
 							{
-								echo '<option value="'.($r*3600).'">'.$r.' hour/s</option>';
+								echo '<option value="'.($r*3600).'">'.$r.' hora(s)</option>';
 							}
 							$arr2 = array(1,2,5,10,30,50,90);
 							foreach($arr2 as $r)
 							{
-								echo '<option value="'.($r*3600*24).'">'.$r.' day/s</option>';
+								echo '<option value="'.($r*3600*24).'">'.$r.' día(s)</option>';
 							}
-							echo '<option value="">Forever</option>';
+							echo '<option value="">Para siempre</option>';
 						?>
 					</select>
 				</td>      
@@ -77,12 +77,12 @@ $bannedUsers = $admin->search_banned();
 <table id="member" cellpadding="1" cellspacing="1">
     <thead>
 		<tr>
-			<th colspan="6">Bannned Players (<?php echo count($bannedUsers); ?>)</th>
+			<th colspan="6">Jugadores sancionados (<?php echo count($bannedUsers); ?>)</th>
 		</tr>
 		<tr>
-			<td><b>Username</b></td>
-			<td><b>Length (from/to)</b></td>
-			<td><b>Reason</b></td>
+			<td><b>Jugador</b></td>
+			<td><b>Duración (desde/hasta)</b></td>
+			<td><b>Motivo</b></td>
 			<td></td>
 		</tr>
 		</thead>
@@ -115,13 +115,13 @@ $bannedUsers = $admin->search_banned();
 						<td>'.$link.'</td>
 						<td ><span class="f7">'.date("d.m.y H:i",$bannedUsers[$i]['time']).' - '.$end.'</td>
 						<td>'.$bannedUsers[$i]['reason'].'</td>
-						<td class="on"><a href="?action=delBan&uid='.$bannedUsers[$i]['uid'].'&id='.$bannedUsers[$i]['id'].'" onClick="return del(\'unban\',\''.$name.'\')"><img src="../img/Admin/del.gif" class="del" title="cancel" alt="cancel"></img></a></td>
+						<td class="on"><a href="?action=delBan&uid='.$bannedUsers[$i]['uid'].'&id='.$bannedUsers[$i]['id'].'" onClick="return del(\'unban\',\''.$name.'\')"><img src="../img/Admin/del.gif" class="del" title="Quitar la sanción" alt="Quitar la sanción"></img></a></td>
 					</tr>';
 				}
 			}
 			else
 			{
-				echo '<tr><td colspan="6" class="on">No Players are Banned</td></tr>';
+				echo '<tr><td colspan="6" class="on">No hay ningún jugador sancionado</td></tr>';
 			}
 		?>
     </tbody>

@@ -23,26 +23,26 @@ if(isset($id))
 			<table id="profile" cellpadding="0" cellspacing="0">
 				<thead>
 					<tr>
-						<th colspan="2">Edit Off, Def, Raid Points This Week For: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
+						<th colspan="2">Puntos de ataque, defensa y saqueo de esta semana de: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td>Edit Attack Points</td>
+						<td>Puntos de ataque</td>
 						<td>
-							<input class="fm" name="off" value="<?php echo $user['ap']; ?>" style="width: 60%;"> Points
+							<input class="fm" name="off" value="<?php echo $user['ap']; ?>" style="width: 60%;"> puntos
 						</td>
 					</tr>
 					<tr>
-						<td>Edit Defence Points</td>
+						<td>Puntos de defensa</td>
 						<td>
-							<input class="fm" name="def" value="<?php echo $user['dp']; ?>" style="width: 60%;"> Points
+							<input class="fm" name="def" value="<?php echo $user['dp']; ?>" style="width: 60%;"> puntos
 						</td>
 					</tr>
 					<tr>
-						<td>Edit Resources Raided</td>
+						<td>Recursos saqueados</td>
 						<td>
-							<input class="fm" name="res" value="<?php echo $user['RR']; ?>" style="width: 60%;"> Points
+							<input class="fm" name="res" value="<?php echo $user['RR']; ?>" style="width: 60%;"> puntos
 						</td>
 					</tr>
 				</tbody>

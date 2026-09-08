@@ -12,7 +12,7 @@ if(isset($id))
 			<tr>
 				<td>Offence</td>
 				<td>ID</td>
-				<td>Description</td>
+				<td>Descripción</td>
 			</tr>
 		</thead>
 		<tbody>  

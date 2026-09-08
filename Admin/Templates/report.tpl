@@ -16,7 +16,7 @@ if($rep)
 { 
 	$att = $database->getUserArray($rep['uid'],1);
 	?>
-	<h1>Under Construction</h1>
+	<h1>En construcción</h1>
 	<div id="content" class="reports" style="padding: 0;">
 	<?php
 		include("report/".$rep['ntype'].".tpl");
@@ -26,6 +26,6 @@ if($rep)
 }
 else
 {
-	echo "Report ID ".$_GET['bid']." doesn't exist!";
+	echo "No existe ningún informe con el ID ".(int)$_GET['bid'].".";
 }
 ?>

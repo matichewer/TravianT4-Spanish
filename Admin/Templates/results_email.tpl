@@ -15,7 +15,7 @@ $result = $admin->search_email($_POST['s']);
 <table id="member">
   <thead>
     <tr>
-        <th class="dtbl"><a href="">1 «</a></th><th>Found emails (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
+        <th class="dtbl"><a href="">1 «</a></th><th>Correos encontrados (<?php echo count($result);?>)</th><th class="dtbl"><a href="">» 100</a></th>
     </tr>
   </thead> 
 
@@ -23,8 +23,8 @@ $result = $admin->search_email($_POST['s']);
 <table id="profile">    
     <tr>
         <td class="b">UID</td>
-        <td class="b">Name</td>
-        <td class="b">Email</td>         
+        <td class="b">Nombre</td>
+        <td class="b">Correo</td>         
     </tr>
 <?php      
 if($result){  

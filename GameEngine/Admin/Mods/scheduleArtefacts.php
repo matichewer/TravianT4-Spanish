@@ -31,7 +31,7 @@ $access = $adminId > 0
     ? $database->query_return("SELECT access FROM ".TB_PREFIX."users WHERE id = ".$adminId)
     : array();
 if(!is_array($access) || !count($access) || (int)$access[0]['access'] !== 9) {
-    die("<h1><font color=\"red\">Acceso denegado: no eres administrador.</font></h1>");
+    die("<h1><font color=\"red\">Acceso denegado: esta pantalla es sólo para administradores.</font></h1>");
 }
 
 if(!$database->ensureArtefactReleaseColumns()) {

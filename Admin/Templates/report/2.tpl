@@ -24,8 +24,8 @@ $dataarray = explode(",",$rep['data']);
 				<table cellpadding="1" cellspacing="1" id="attacker">
 					<thead>
 						<tr>
-							<td class="role">Attacker</td>
-							<td colspan="10"><a href="admin.php?p=player&uid=<?php echo $database->getUserField($dataarray[0],"id",0); ?>"><?php echo $database->getUserField($dataarray[0],"username",0); ?></a> from the village <a href="admin.php?p=village&did=<?php echo $dataarray[1] ?>"><?php echo $database->getVillageField($dataarray[1],"name"); ?></a></td>
+							<td class="role">Atacante</td>
+							<td colspan="10"><a href="admin.php?p=player&uid=<?php echo $database->getUserField($dataarray[0],"id",0); ?>"><?php echo $database->getUserField($dataarray[0],"username",0); ?></a> desde la aldea <a href="admin.php?p=village&did=<?php echo $dataarray[1] ?>"><?php echo $database->getVillageField($dataarray[1],"name"); ?></a></td>
 						</tr>
 					</thead>
 					<tbody class="units">
@@ -37,7 +37,7 @@ $dataarray = explode(",",$rep['data']);
 							{
 								echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 							}
-							echo "</tr><tr><th>Troops</th>";
+							echo "</tr><tr><th>Tropas</th>";
 							for($i=3;$i<=12;$i++)
 							{
 								if($dataarray[$i] == 0)
@@ -49,7 +49,7 @@ $dataarray = explode(",",$rep['data']);
 									echo "<td>".$dataarray[$i]."</td>";
 								}
 							}
-							echo "<tr><th>Casualties</th>";
+							echo "<tr><th>Bajas</th>";
 							for($i=13;$i<=22;$i++)
 							{
 								if($dataarray[$i] == 0)
@@ -66,7 +66,7 @@ $dataarray = explode(",",$rep['data']);
 							{ //ram ?>
 								<tbody class="goods">
 									<tr>
-										<th>Information</th>
+										<th>Información</th>
 										<td colspan="10">
 											<img class="unit u<?php echo $dataarray[139]; ?>" src="img/x.gif" alt="Ram" title="Ram" />
 											<?php
@@ -80,9 +80,9 @@ $dataarray = explode(",",$rep['data']);
 							{ //cata ?>
 								<tbody class="goods">
 									<tr>
-										<th>Information</th>
+										<th>Información</th>
 										<td colspan="10">
-											<img class="unit u<?php echo $dataarray[141]; ?>" src="img/x.gif" alt="Catapult" title="Catapult" />
+											<img class="unit u<?php echo $dataarray[141]; ?>" src="img/x.gif" alt="Catapulta" title="Catapulta" />
 											<?php
 												echo $dataarray[142];
 											?>
@@ -94,9 +94,9 @@ $dataarray = explode(",",$rep['data']);
 							{ //chief ?>
 								<tbody class="goods">
 									<tr>
-										<th>Information</th>
+										<th>Información</th>
 										<td colspan="10">
-											<img class="unit u<?php echo $dataarray[143]; ?>" src="img/x.gif" alt="Chief" title="Chief" />
+											<img class="unit u<?php echo $dataarray[143]; ?>" src="img/x.gif" alt="Jefe" title="Jefe" />
 											<?php
 												echo $dataarray[144];
 											?>
@@ -108,7 +108,7 @@ $dataarray = explode(",",$rep['data']);
 							{ //spy ?>
 								<tbody class="goods">
 									<tr>
-										<th>Information</th>
+										<th>Información</th>
 										<td colspan="10">
 											<?php
 												echo $dataarray[146];
@@ -120,10 +120,10 @@ $dataarray = explode(",",$rep['data']);
 						?>
 					<tbody class="goods">
 						<tr>
-							<th>Bounty</th>
+							<th>Botín</th>
 								<td colspan="10">
 								<div class="res">
-									<img class="r1" src="img/x.gif" alt="Lumber" title="Lumber" /><?php echo $dataarray[23]; ?> | <img class="r2" src="img/x.gif" alt="Clay" title="Clay" /><?php echo $dataarray[24]; ?> | <img class="r3" src="img/x.gif" alt="Iron" title="Iron" /><?php echo $dataarray[25]; ?> | <img class="r4" src="img/x.gif" alt="Crop" title="Crop" /><?php echo $dataarray[26]; ?></div><div class="carry"><img class="car" src="img/x.gif" alt="carry" title="carry" /><?php echo ($dataarray[23]+$dataarray[24]+$dataarray[25]+$dataarray[26])."/".$dataarray[27]; ?>
+									<img class="r1" src="img/x.gif" alt="Madera" title="Madera" /><?php echo $dataarray[23]; ?> | <img class="r2" src="img/x.gif" alt="Barro" title="Barro" /><?php echo $dataarray[24]; ?> | <img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /><?php echo $dataarray[25]; ?> | <img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /><?php echo $dataarray[26]; ?></div><div class="carry"><img class="car" src="img/x.gif" alt="carry" title="carry" /><?php echo ($dataarray[23]+$dataarray[24]+$dataarray[25]+$dataarray[26])."/".$dataarray[27]; ?>
 								</div>
 							</td>
 						</tr>
@@ -137,8 +137,8 @@ $dataarray = explode(",",$rep['data']);
 						<table cellpadding="1" cellspacing="1" class="defender">
 							<thead>
 								<tr>
-									<td class="role">Defender</th>
-									<td colspan="10"><?php if($targettribe=='1'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> from the village <a href="admin.php?p=village$did='.$dataarray[29].'"'.stripslashes($dataarray[30]).'</a>'; } else { echo"Reinforcement"; } ?></td>
+									<td class="role">Defensor</th>
+									<td colspan="10"><?php if($targettribe=='1'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> desde la aldea <a href="admin.php?p=village$did='.$dataarray[29].'"'.stripslashes($dataarray[30]).'</a>'; } else { echo"Refuerzos"; } ?></td>
 								</tr>
 							</thead>
 							<tbody class="units">
@@ -149,7 +149,7 @@ $dataarray = explode(",",$rep['data']);
 										{
 											echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 										}
-										echo "</tr><tr><th>Troops</th>";
+										echo "</tr><tr><th>Tropas</th>";
 										for($i=35;$i<=44;$i++)
 										{
 											if($dataarray[$i] == 0)
@@ -161,7 +161,7 @@ $dataarray = explode(",",$rep['data']);
 												echo "<td>".$dataarray[$i]."</td>";
 											}
 										}
-										echo "<tr><th>Casualties</th>";
+										echo "<tr><th>Bajas</th>";
 										for($i=45;$i<=54;$i++)
 										{
 											if($dataarray[$i] == 0)
@@ -184,8 +184,8 @@ $dataarray = explode(",",$rep['data']);
 						<table cellpadding="1" cellspacing="1" class="defender">
 							<thead>
 								<tr>
-									<td class="role">Defender</th>
-									<td colspan="10"><?php if($targettribe=='2'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> from the village <a href="admin.php?p=village?did='.$dataarray[29].'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Reinforcement"; } ?></td>
+									<td class="role">Defensor</th>
+									<td colspan="10"><?php if($targettribe=='2'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> desde la aldea <a href="admin.php?p=village?did='.$dataarray[29].'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Refuerzos"; } ?></td>
 								</tr>
 							</thead>
 							<tbody class="units">
@@ -196,7 +196,7 @@ $dataarray = explode(",",$rep['data']);
 										{
 											echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 										}
-										echo "</tr><tr><th>Troops</th>";
+										echo "</tr><tr><th>Tropas</th>";
 										for($i=56;$i<=65;$i++)
 										{
 											if($dataarray[$i] == 0)
@@ -208,7 +208,7 @@ $dataarray = explode(",",$rep['data']);
 												echo "<td>".$dataarray[$i]."</td>";
 											}
 										}
-										echo "<tr><th>Casualties</th>";
+										echo "<tr><th>Bajas</th>";
 										for($i=66;$i<=75;$i++)
 										{
 											if($dataarray[$i] == 0)
@@ -231,8 +231,8 @@ $dataarray = explode(",",$rep['data']);
 							<table cellpadding="1" cellspacing="1" class="defender">
 								<thead>
 									<tr>
-										<td class="role">Defender</th>
-										<td colspan="10"><?php if($targettribe=='3'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> from the village <a href="admin.php?p=village&did='.$dataarray[29].'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Reinforcement"; } ?></td>
+										<td class="role">Defensor</th>
+										<td colspan="10"><?php if($targettribe=='3'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> desde la aldea <a href="admin.php?p=village&did='.$dataarray[29].'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Refuerzos"; } ?></td>
 									</tr>
 								</thead>
 								<tbody class="units">
@@ -243,7 +243,7 @@ $dataarray = explode(",",$rep['data']);
 											{
 												echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 											}
-											echo "</tr><tr><th>Troops</th>";
+											echo "</tr><tr><th>Tropas</th>";
 											for($i=77;$i<=86;$i++)
 											{
 												if($dataarray[$i] == 0)
@@ -255,7 +255,7 @@ $dataarray = explode(",",$rep['data']);
 													echo "<td>".$dataarray[$i]."</td>";
 												}
 											}
-											echo "<tr><th>Casualties</th>";
+											echo "<tr><th>Bajas</th>";
 											for($i=87;$i<=96;$i++)
 											{
 												if($dataarray[$i] == 0)
@@ -278,8 +278,8 @@ $dataarray = explode(",",$rep['data']);
 							<table cellpadding="1" cellspacing="1" class="defender">
 								<thead>
 									<tr>
-										<td class="role">Defender</th>
-										<td colspan="10"><?php if($targettribe=='4'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> from the village <a href="admin.php?p=player&did='.$dataarray[29].'&amp;c='.$generator->getMapCheck($dataarray[29]).'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Reinforcement"; } ?></td>
+										<td class="role">Defensor</th>
+										<td colspan="10"><?php if($targettribe=='4'){ echo'<a href="admin.php?p=player&uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> desde la aldea <a href="admin.php?p=player&did='.$dataarray[29].'&amp;c='.$generator->getMapCheck($dataarray[29]).'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Refuerzos"; } ?></td>
 									</tr>
 								</thead>
 								<tbody class="units">
@@ -290,7 +290,7 @@ $dataarray = explode(",",$rep['data']);
 											{
 												echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 											}
-											echo "</tr><tr><th>Troops</th>";
+											echo "</tr><tr><th>Tropas</th>";
 											for($i=98;$i<=107;$i++)
 											{
 												if($dataarray[$i] == 0)
@@ -302,7 +302,7 @@ $dataarray = explode(",",$rep['data']);
 													echo "<td>".$dataarray[$i]."</td>";
 												}
 											}
-											echo "<tr><th>Casualties</th>";
+											echo "<tr><th>Bajas</th>";
 											for($i=108;$i<=117;$i++)
 											{
 												if($dataarray[$i] == 0)
@@ -325,8 +325,8 @@ $dataarray = explode(",",$rep['data']);
 								<table cellpadding="1" cellspacing="1" class="defender">
 									<thead>
 										<tr>
-											<td class="role">Defender</th>
-											<td colspan="10"><?php if($targettribe=='5'){ echo'<a href="spieler.php?uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> from the village <a href="karte.php?d='.$dataarray[29].'&amp;c='.$generator->getMapCheck($dataarray[29]).'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Reinforcement"; } ?></td>
+											<td class="role">Defensor</th>
+											<td colspan="10"><?php if($targettribe=='5'){ echo'<a href="spieler.php?uid='.$database->getUserField($dataarray[28],"id",0).'">'.$database->getUserField($dataarray[28],"username",0).'</a> desde la aldea <a href="karte.php?d='.$dataarray[29].'&amp;c='.$generator->getMapCheck($dataarray[29]).'">'.stripslashes($dataarray[30]).'</a>'; } else { echo"Refuerzos"; } ?></td>
 										</tr>
 									</thead>
 									<tbody class="units">
@@ -337,7 +337,7 @@ $dataarray = explode(",",$rep['data']);
 												{
 													echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" /></td>";
 												}
-												echo "</tr><tr><th>Troops</th>";
+												echo "</tr><tr><th>Tropas</th>";
 												for($i=119;$i<=128;$i++)
 												{
 													if($dataarray[$i] == 0)
@@ -349,7 +349,7 @@ $dataarray = explode(",",$rep['data']);
 														echo "<td>".$dataarray[$i]."</td>";
 													}
 												}
-												echo "<tr><th>Casualties</th>";
+												echo "<tr><th>Bajas</th>";
 												for($i=129;$i<=138;$i++)
 												{
 													if($dataarray[$i] == 0)

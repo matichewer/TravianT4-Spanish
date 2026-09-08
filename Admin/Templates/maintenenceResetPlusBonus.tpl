@@ -14,7 +14,7 @@
 	<table id="member" cellpadding="1" cellspacing="1" >
 		<thead>
 			<tr>
-				<th colspan="2">Reset All Players Resource Bonus</th>
+				<th colspan="2">Restablecer las bonificaciones de recursos de todos</th>
 			</tr> 
 		</thead>
 		<tbody> 
@@ -27,6 +27,6 @@
 <?php
 if(isset($_GET['g']))
 {
-	echo '<font color="red">All Players Plus Resource Bonus Reset</font>';
+	echo '<font color="red">Bonificaciones de recursos restablecidas en todas las cuentas</font>';
 }
 ?>

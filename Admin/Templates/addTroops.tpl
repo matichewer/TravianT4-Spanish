@@ -12,7 +12,7 @@
 
 include("../GameEngine/Lang/".LANG.".php");
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 $id = $_GET['did'];
 if(isset($id))
 {
@@ -29,7 +29,7 @@ if(isset($id))
 <table id="member">
     <thead>
     <tr>
-        <th colspan="2">Edit troops</th>
+        <th colspan="2">Editar las tropas</th>
 		<?php if($user['tribe'] == 1){ ?>
     </tr></thead><tbody> 
     <tr>
@@ -296,5 +296,5 @@ if(isset($id))
 	<div align="right"><input type="image" border="0" src="../img/admin/b/ok1.gif">
 	</form>
 	<?php } ?>
-	<br /><br /><div align="right"><?php if(isset($_GET['d'])) { echo '<font color="Red"><b>Troops edited</font></b>';
+	<br /><br /><div align="right"><?php if(isset($_GET['d'])) { echo '<font color="Red"><b>Tropas actualizadas</font></b>';
 	} ?>

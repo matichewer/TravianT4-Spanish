@@ -12,7 +12,7 @@
 include_once("../../Account.php");
 mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS);
 mysql_select_db(SQL_DB);
-if ($session->access < ADMIN) die("Access Denied: You are not Admin!");
+if ($session->access < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 
 $id = $_POST['id'];
 $admid = $_POST['admid'];

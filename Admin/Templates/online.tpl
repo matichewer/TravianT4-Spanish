@@ -19,16 +19,16 @@ $active = $admin->getUserActive();
 <table id="member"> 
   <thead>
     <tr>
-        <th colspan="6">Online users (<?php echo count($active);?>)</th>
+        <th colspan="6">Jugadores conectados (<?php echo count($active);?>)</th>
     </tr>
   </thead>    
     <tr>
-        <td>Name [access]</td>
-        <td>Time</td>
-        <td>Tribe</td> 
-        <td>Pop</td> 
-        <td>Villages</td> 
-        <td>Gold</td>  
+        <td>Jugador [acceso]</td>
+        <td>Última señal</td>
+        <td>Tribu</td> 
+        <td>Población</td> 
+        <td>Aldeas</td> 
+        <td>Oro</td>  
     </tr>
 <?php 
 if($active){         
@@ -53,12 +53,12 @@ echo '
         <td>'.$tribe.'</td>
         <td>'.$totalpop.'</td>
         <td>'.count($varray).'</td>
-        <td><img src="../img/admin/gold.gif" class="gold" alt="Gold" title="This user has: '.$active[$i]['gold'].' gold"/> '.$active[$i]['gold'].'</td>
+        <td><img src="../img/admin/gold.gif" class="gold" alt="Oro" title="Este jugador tiene '.$active[$i]['gold'].' de oro"/> '.$active[$i]['gold'].'</td>
     </tr>  
 '; 
 } 
 }else{
-echo '<tr><td  colspan="6" class="hab">No online users</td></tr>';
+echo '<tr><td  colspan="6" class="hab">No hay nadie conectado</td></tr>';
 
 } 
 

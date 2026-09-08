@@ -30,24 +30,24 @@ if($_GET['uid'])
 			<table id="member">    
 				<thead>
 					<tr>
-						<th colspan="4">Delete player</th>
+						<th colspan="4">Eliminar jugador</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td>Name:</td>
+						<td>Nombre:</td>
 						<td><a href="?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></td>
-						<td>Gold:</td>
+						<td>Oro:</td>
 						<td><?php echo $user['gold'];?></td>
 					</tr>
 					<tr>
-						<td>Rank:</td>
+						<td>Puesto:</td>
 						<td>???.</td>
-						<td>Population:</td>
+						<td>Población:</td>
 						<td><?php echo $totalpop;?></td>
 					</tr>
 					<tr>
-						<td>Villages:</td>
+						<td>Aldeas:</td>
 						<td>
 							<?php
 								$result = mysql_query("SELECT SQL_CACHE * FROM ".TB_PREFIX."vdata WHERE owner = ".$user['id']."");
@@ -64,29 +64,29 @@ if($_GET['uid'])
 						</td>
 					</tr> 
 					<tr>
-						<td>Alliance:</td>
+						<td>Alianza:</td>
 						<td><?php echo $database->getAllianceName($user['alliance']);?></td>
-						<td>Status:</td>
+						<td>Estado:</td>
 						<td>-</td>
 					</tr>
 					<tr>
 						<td colspan="4" class="empty"></td>
 					</tr>
 					<tr>
-						<td>Password:</td>
+						<td>Contraseña:</td>
 						<td><input type="password" name="pass"></td>
-						<td colspan="2"><input type="submit" class="c5" value="Delete player"></td>
+						<td colspan="2"><input type="submit" class="c5" value="Eliminar jugador"></td>
 					</tr>
 				</tbody>
 			</table>
-			<br /><br /><font color="Red"><b>NOTICE: DELETE ALL PLAYER VILLAGES BELLOW BEFORE DELETING PLAYER!</font></b><br /><br />
+			<br /><br /><font color="Red"><b>AVISO: hay que borrar todas las aldeas de la lista de abajo ANTES de eliminar al jugador.</font></b><br /><br />
 		
 			<table id="profile">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Population</th>
-						<th>Coordinates</th>
+						<th>Nombre</th>
+						<th>Población</th>
+						<th>Coordenadas</th>
 						<th></th>
 					</tr>
 					<?php         
@@ -95,7 +95,7 @@ if($_GET['uid'])
 							$coorproc = $database->getCoor($varray[$i]['wref']);
 							if($varray[$i]['capital'])
 							{
-								$capital = '<span class="c">(Capital)</span>';
+								$capital = '<span class="c">(capital)</span>';
 								$delLink = '<a href="#"><img src="../img/Admin/x.gif" class="del"></a>';
 							}
 							else
@@ -105,7 +105,7 @@ if($_GET['uid'])
 							} echo '
 							<tr>
 								<td><a href="?p=village&did='.$varray[$i]['wref'].'">'.$varray[$i]['name'].'</a> '.$capital.'</td>
-								<td>'.$varray[$i]['pop'].' <a href="?action=recountPop&did='.$varray[$i]['wref'].'">Check<a/></td>
+								<td>'.$varray[$i]['pop'].' <a href="?action=recountPop&did='.$varray[$i]['wref'].'">Recontar<a/></td>
 								<td>('.$coorproc['x'].'|'.$coorproc['y'].')</td>
 								<td>'.$delLink.' </td>
 							</tr>'; 

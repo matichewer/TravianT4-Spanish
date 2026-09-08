@@ -15,7 +15,7 @@
  * If user is not administrator, access is denied! 
  */ 
     if($session->access < ADMIN) 
-        die("Access Denied: You are not Admin!"); 
+        die("Acceso denegado: esta pantalla es sólo para administradores."); 
 
 
 /** 

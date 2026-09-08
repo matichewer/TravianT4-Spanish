@@ -9,7 +9,7 @@
 ##  Improved:      aggenkeech                                                  ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!");
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 include("../config/config.php");
 $id = $_SESSION['id'];
 

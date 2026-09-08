@@ -9,18 +9,18 @@ if(isset($_GET['uid']))
 		<table id="profile" cellpadding="1" cellspacing="1" >
 			<thead>
 				<tr>
-					<th colspan="2">Player <a href="admin.php?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></th>
+					<th colspan="2">Jugador <a href="admin.php?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></th>
 				</tr>                                       
 				<tr>
 					<td></td>
-					<td>New Password</td>
+					<td>Contraseña nueva</td>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<th>Password</th>
+					<th>Contraseña</th>
 					<td>
-						<input type="text" style="width: 80%;" class="fm" name="newpw" value="new password">
+						<input type="text" style="width: 80%;" class="fm" name="newpw" value="">
 					</td>
 				</tr>
 				<tr>
@@ -30,7 +30,7 @@ if(isset($_GET['uid']))
 				<tr>
 					<td colspan="2">
 						<center>
-							<input type="image" value="submit" src="../img/admin/b/ok1.gif" title="Edit Location">
+							<input type="image" value="submit" src="../img/admin/b/ok1.gif" title="Cambiar la contraseña">
 						</center>
 					</td>
 				</tr>

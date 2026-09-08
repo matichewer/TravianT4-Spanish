@@ -2,7 +2,7 @@
 
   <center>
 
-    <h1>404 - File not found</h1>
+    <h1>404 - No se encontró la página</h1>
 
     This system is not finished yet or page does not exist.<br>
 

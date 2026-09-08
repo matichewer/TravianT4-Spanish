@@ -19,7 +19,7 @@
 include_once("../../Account.php");
 mysql_connect(SQL_SERVER, SQL_USER, SQL_PASS);
 mysql_select_db(SQL_DB);
-if ($session->access < ADMIN) die("Access Denied: You aren't Admin!");
+if ($session->access < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores.");
 $id = $_POST['id'];
 $silver = $_POST['silver'];
 $q = "UPDATE ".TB_PREFIX."users SET silver = silver + ".$_POST['silver']." WHERE id != '0'";

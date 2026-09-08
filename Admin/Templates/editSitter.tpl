@@ -20,24 +20,24 @@ if(isset($id))
 		<input type="hidden" name="uid" value="<?php echo $uid; ?>" />
 		<input type="hidden" name="id" value="<?php echo $id; ?>" />
 			<br />
-			<p>To change sitters, you must use their "uid" you can find this using the search. Delete a sitter, put 0 as sitter.</p>
+			<p>Los suplentes se indican con su «uid», que se consigue con el buscador. Para quitar un suplente hay que poner 0.</p>
 			<br />
 			<table id="profile" cellpadding="0" cellspacing="0">
 				<thead>
 					<tr>
-						<th colspan="2">Edit Sitters For: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
+						<th colspan="2">Suplentes de: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td>Sitter 1</td>
+						<td>Suplente 1</td>
 						<td>
 							<input class="fm" name="sitter1" value="<?php echo $user['sit1']; ?>"><br />
 							<?php
 								$sitter1 = $database->getUserArray($user['sit1'], 1);
 								if($user['sit1'] ==0)
 								{
-									echo 'No Sitter';
+									echo 'Sin suplente';
 								}
 								else
 								{
@@ -47,14 +47,14 @@ if(isset($id))
 						</td>
 					</tr>
 					<tr>
-						<td>Sitter 2</td>
+						<td>Suplente 2</td>
 						<td>
 							<input class="fm" name="sitter2" value="<?php echo $user['sit2']; ?>"><br />
 							<?php
 								$sitter2 = $database->getUserArray($user['sit2'], 1);
 								if($user['sit2'] ==0)
 								{
-									echo 'No Sitter';
+									echo 'Sin suplente';
 								}
 								else
 								{

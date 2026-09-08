@@ -23,12 +23,12 @@ if(isset($id))
 			<table id="profile" cellpadding="0" cellspacing="0">
 				<thead>
 					<tr>
-						<th colspan="2">Edit Protection For: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
+						<th colspan="2">Protección de principiante de: <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td>Give Protection For</td>
+						<td>Días de protección</td>
 						<td>
 							<input class="fm" name="protect" value="0" style="width: 60%;"> Days
 						</td>

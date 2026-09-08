@@ -33,11 +33,11 @@ if(isset($id))
 		<table id="profile" cellpadding="1" cellspacing="1">
 			<thead>
 			<tr>
-				<th colspan="2">Player <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
+				<th colspan="2">Jugador <a href="admin.php?p=player&uid=<?php echo $user['id']; ?>"><?php echo $user['username']; ?></a></th>
 			</tr>                                       
 			<tr>
-				<td>Details</td>
-				<td>Description</td>
+				<td>Dato</td>
+				<td>Valor</td>
 			</tr>
 			</thead>
 			<tbody>
@@ -49,7 +49,7 @@ if(isset($id))
 				<td class="details">
 					<table cellpadding="0" cellspacing="0">
 						<tr>
-							<th>Tribe</th>
+							<th>Tribu</th>
 							<td>
 								<select name="tribe" class="dropdown">
 									<option value="1" <?php if($user['tribe'] == 1) { echo "selected='selected'"; } else {} ?>>Roman</option>
@@ -66,14 +66,14 @@ if(isset($id))
 						</tr>
 						
 						<tr>
-							<th>Location</th>
+							<th>Ubicación</th>
 							<td><input class="fm" name="location" value="<?php echo $user['location']; ?>"></td>
 						</tr>
 						<tr>
 							<th>E-mail</th><td><input class="fm" name="email" value="<?php echo $user['email']; ?>"></td></tr>
 						<tr>
 						<tr>
-							<th>Quest</th><td><input class="fm" name="quest" value="<?php echo $user['quest']; ?>"></td></tr>
+							<th>Misión</th><td><input class="fm" name="quest" value="<?php echo $user['quest']; ?>"></td></tr>
 						<tr>
 							<td colspan="2" class="empty"></td>
 						</tr>
@@ -126,7 +126,7 @@ if(isset($id))
 				} 
 			?>
 			<tr>
-				<td>Beginners Protection</td>
+				<td>Protección de principiante</td>
 				<td></td>
 				<td></td>
 				<td>[#0]</td>
@@ -152,6 +152,6 @@ if(isset($id))
 }
 else
 {
-	echo "<br /><br />Not found. <a href=\"javascript: history.go(-1)\"> Go Back</a>";
+	echo "<br /><br />No se encontró. <a href=\"javascript: history.go(-1)\"> Volver</a>";
 } 
 ?>

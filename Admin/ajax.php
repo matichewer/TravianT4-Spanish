@@ -29,6 +29,6 @@ if($funct->CheckLogin()){
 		}
 	}
 }else{
-	echo '<h2>Error: You are not Admin!</h2>';
+	echo '<h2>Error: esta acción es sólo para administradores.</h2>';
 }
 ?>

@@ -24,7 +24,7 @@ $active = $admin->getUserActive();
 	<table id="member" style="width: 200px;">
 		<thead>
 			<tr>
-				<th colspan="2">Punish Player</th>
+				<th colspan="2">Sancionar al jugador</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -60,7 +60,7 @@ $active = $admin->getUserActive();
 				<input name="uid" type="hidden" value="<?php echo $user['id'];?>">
 				<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 				<td colspan="1" style="text-align: center;">
-					<input type="checkbox" name="del_troop" value="1"> <strike>Delete Troops</strike>
+					<input type="checkbox" name="del_troop" value="1"> <strike>Eliminar las tropas</strike>
 				</td>
 			</tr>
 			<tr>
@@ -77,7 +77,7 @@ $active = $admin->getUserActive();
 				<input name="uid" type="hidden" value="<?php echo $user['id'];?>">
 				<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 				<td colspan="1" style="text-align: center;">
-					<input type="checkbox" name="clean_ware" value="1"> Empty Warehouses 
+					<input type="checkbox" name="clean_ware" value="1"> Vaciar los almacenes 
 				</td>
 			</tr>
 			<tr>

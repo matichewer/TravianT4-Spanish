@@ -20,7 +20,7 @@ $id = $_SESSION['id']; ?>
 				<th colspan="2">Dar bonificación de recursos a todos</th>
 			</tr>
 			<tr>
-				<td class="hab">Resource Bonus</td>
+				<td class="hab">Bonificación de recursos</td>
 				<td>Duración</td>
 			</tr>
 		</thead>

@@ -22,16 +22,16 @@
 </table>
 <table id="profile">    
     <tr>
-        <td>Name</td>
+        <td>Nombre</td>
         <td>Población</td>
-        <td>Coordinates</td>
+        <td>Coordenadas</td>
 		<td></td>
     </tr>
 <?php         
 for ($i = 0; $i <= count($varray)-1; $i++) {
 $coorproc = $database->getCoor($varray[$i]['wref']);
 if($varray[$i]['capital']){
-$capital = '<span class="c">(Capital)</span>';
+$capital = '<span class="c">(capital)</span>';
 $delLink = '<a href="#"><img src="../img/Admin/x.gif" class="del"></a>'; 
 }else{
 $capital = '';

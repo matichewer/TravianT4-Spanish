@@ -178,10 +178,20 @@ La huella se deriva de la **fila entera** de `heroface` más el ítem de armadur
 `.tpl` files are **plain PHP includes**, not a template engine — they mix HTML and `<?php ?>` and read the same globals. Edit them like PHP.
 
 ### Localization
-`GameEngine/Lang/{es,en,de,ru,fa}.php` each define UI text as `define()` constants plus a `$lang` array. `es.php` (Spanish) is the active target locale; translation from the English original is an **ongoing effort** — player-facing pages are done, the Admin panel is the main remaining English area. Use neutral/LatAm Spanish, not peninsular terms.
+`GameEngine/Lang/{es,en,de,ru,fa}.php` each define UI text as `define()` constants plus a `$lang` array. `es.php` (Spanish) is the active target locale; the player-facing pages and the Admin panel are both translated. Use neutral/LatAm Spanish, not peninsular terms. The house style is **tuteo** ("puedes", not "podés"): it is what the 105 occurrences in the player pages use, and mixing the two inside one screen reads worse than either. Regression cover for the panel: `tools/check_admin_spanish.php`.
 
 ### Admin panel
-The **live** admin panel is `Admin/admin.php` → `Admin/Templates/`. The old duplicate entry points (`Admin/index.php`, `Admin/tpl/`, `Templates/Admin/`, …) were removed; if you find another copy, it is dead.
+The **live** admin panel is `Admin/admin.php` → `Admin/Templates/` (plus `Admin/Templates/report/` and the action endpoints in `Admin/Mods/` and `GameEngine/Admin/Mods/`). The old duplicate entry points (`Admin/index.php`, `Admin/tpl/`, `Templates/Admin/`, …) were removed; if you find another copy, it is dead.
+
+**Nine files under `Admin/` are still dead and nothing reaches them**: `home.php` (a CMS dashboard whose eleven links all point at files that do not exist), `Users.php`, `Onlines.php`, `ManageNews.php`, `news.php`, `top.php`, `jdf.php`, `404.php` and `login.php` — that last one posts to `Admin/index.php`, which was removed, so its form goes nowhere. The whole `Admin/Templates/backup/` directory is dead too. `tools/check_admin_spanish.php` skips all of them on purpose: translating or pinning a screen nobody can open is work thrown away.
+
+**Traducir el panel destapó tres cosas que no eran de idioma** y que el checker ahora cuida:
+
+- **`funct::procResType()` era una cuarta copia de la lista de nombres de edificio** (después de las tres que ya se habían unificado en `buildingDisplayName()`), y como toda copia había derivado: en inglés salvo el 34, sin el gid 42 —el Gran taller salía como "Error"— y diciendo "Treasury" donde el juego dice Tesoro. Ahora delega, como el resto.
+- **`Admin/Templates/renameVillage.tpl` era un error de sintaxis**: abría `if(isset($id)) {` y el archivo terminaba en `</table>` sin cerrarlo, así que la pantalla salía en blanco. Un `.tpl` de este panel es PHP y `php -l` lo dice en un segundo, que es lo que ahora se hace con los 70.
+- **Tres formularios de `village.tpl` apuntaban a `GameEngine/Admin/mods/` con eme minúscula** y el directorio es `Mods`: en Linux eso es un 404, así que cambiar el dueño de una aldea, renombrarla y recalcular su almacén **no funcionaron nunca** desde el panel. El checker resuelve cada `action=` contra `Admin/` —que es desde donde se emite el HTML, no desde el `.tpl`— y exige que el archivo exista.
+
+Y una que sí era de idioma pero mordía: el campo de contraseña nueva de un jugador abría relleno con el literal `new password`, así que apretar Enter sin escribir nada se la ponía de contraseña. Ahora abre vacío y `GameEngine/Admin/Mods/editPassword.php` rechaza la vacía en vez de dejar la cuenta con `md5('')`.
 
 ## Conventions & gotchas
 

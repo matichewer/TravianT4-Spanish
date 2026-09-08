@@ -3,7 +3,7 @@
 
   <link REL="shortcut icon" HREF="favicon.ico"/>
 
-	<title><?php if($_SESSION['access'] == ADMIN){ echo 'Admin Control Panel - TravianX'; } else if($_SESSION['access'] == MULTIHUNTER){ echo 'Multihunter Control Panel - TravianX'; } ?></title>    
+	<title><?php if($_SESSION['access'] == ADMIN){ echo 'Panel de administración'; } else if($_SESSION['access'] == MULTIHUNTER){ echo 'Panel de Multihunter'; } ?></title>    
 
 	<link rel=stylesheet type="text/css" href="../img/admin/admin.css">
 
@@ -33,7 +33,7 @@
 ##                                                                             ##
 #################################################################################
 
-if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!"); ?>
+if($_SESSION['access'] < ADMIN) die("Acceso denegado: esta pantalla es sólo para administradores."); ?>
 
 <?php
 		
@@ -42,14 +42,14 @@ if($_SESSION['access'] < ADMIN) die("Access Denied: You are not Admin!"); ?>
 		for($i=0;$i<$no;$i++) {
 		$admid = $log[$i]['user']?>
 		------------------------------------<br>
-		<b>Log ID:</b> <?php echo $log[$i]['id']; ?><br />
-		<b>Admin:</b> <?php $user = $database->getUserField($admid,"username",0);
+		<b>ID del registro:</b> <?php echo $log[$i]['id']; ?><br />
+		<b>Administrador:</b> <?php $user = $database->getUserField($admid,"username",0);
 		if($user == 'Multihunter') {
 		echo '<b>CONTROL PANEL</b>';
 		} else { echo '<a href="admin.php?p=player&uid='.$admid.'">'.$user.'</a>'; }
 			?><br />
-		<b>Log:</b> <?php echo $log[$i]['log']; ?><br />
-		<b>Date:</b> <?php echo date("d.m.Y H:i:s",$log[$i]['time']+3600*2); ?><br />
+		<b>Acción:</b> <?php echo $log[$i]['log']; ?><br />
+		<b>Fecha:</b> <?php echo date("d.m.Y H:i:s",$log[$i]['time']+3600*2); ?><br />
 	
 	
 	<?php }  ?>

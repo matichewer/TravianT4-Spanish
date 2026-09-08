@@ -25,11 +25,11 @@ if($_GET['aid'])
 		<table id="profile" cellpadding="1" cellspacing="1">
 			<thead>
 				<tr>
-					<th colspan="2">Alliance <a href="?p=alliance&aid=<?php echo $alidata['id'];?>"><?php echo $alidata['name'];?></a></th>
+					<th colspan="2">Alianza <a href="?p=alliance&aid=<?php echo $alidata['id'];?>"><?php echo $alidata['name'];?></a></th>
 				</tr>
 				<tr>
-					<td>Details</td>
-					<td>Description</td>
+					<td>Detalle</td>
+					<td>Descripción</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -46,33 +46,33 @@ if($_GET['aid'])
 									<td><?php echo $alidata['tag']; ?></td>
 								</tr>
 								<tr>
-									<th>Name</th>
+									<th>Nombre</th>
 									<td><?php echo $alidata['name']; ?></td>
 								</tr>
 								<tr>
 									<td colspan="2" class="empty"></td>
 								</tr>
 								<tr>
-									<th>Rank</th>
+									<th>Puesto</th>
 									<td>???</td>
 								</tr>
 								<tr>
-									<th>Points</th>
+									<th>Puntos</th>
 									<td><?php echo $totalpop; ?></td>
 								</tr>
 								<tr>
-									<th>Members</th>
+									<th>Miembros</th>
 									<td><?php echo count($aliusers); ?></td>
 								</tr>
 								<tr>
 									<td colspan="2" class="empty"></td>  
 								</tr>
 								<tr>
-									<th>Alliance Founder</th>
+									<th>Fundador</th>
 									<td><a href="?p=player&uid=<?php echo $alidata['leader']; ?>"><?php echo $database->getUserField($alidata['leader'],"username",0); ?></a></td>
 								</tr>
 								<tr>
-									<td colspan="2"><b>Alliance Positions</b></td>
+									<td colspan="2"><b>Cargos de la alianza</b></td>
 								</tr>
 								
 								<?php
@@ -82,21 +82,21 @@ if($_GET['aid'])
 									while($row = mysql_fetch_assoc($result))
 									{
 										$player = mysql_fetch_assoc(mysql_query("SELECT * FROM ".TB_PREFIX."users WHERE id = ".$row['uid'].""));
-										if($row['opt1'] == 1) { $position1 = "Assign To Position"; } else { $position1 = "No Assigning Positions"; }
-										if($row['opt2'] == 1) { $position2 = "Kick Players"; } else { $position2 = "No Kicking Players"; }
-										if($row['opt3'] == 1) { $position3 = "Change Alliance Description"; } else { $position3 = "No Changing Description"; }
-										if($row['opt4'] == 1) { $position4 = "Invite Players"; } else { $position4 = "No Invitations"; }
-										if($row['opt5'] == 1) { $position5 = "Manage Forums"; } else { $position5 = "No Forum Management"; }
-										if($row['opt6'] == 1) { $position6 = "Alliance Diplomacy"; } else { $position6 = "No Diplomacy"; }
-										if($row['opt7'] == 1) { $position7 = "Mass IGMs (MMs)"; } else { $position7 = "No MMs"; }
+										if($row['opt1'] == 1) { $position1 = "Asignar cargos"; } else { $position1 = "No puede asignar cargos"; }
+										if($row['opt2'] == 1) { $position2 = "Expulsar jugadores"; } else { $position2 = "No puede expulsar"; }
+										if($row['opt3'] == 1) { $position3 = "Cambiar la descripción"; } else { $position3 = "No puede cambiar la descripción"; }
+										if($row['opt4'] == 1) { $position4 = "Invitar jugadores"; } else { $position4 = "No puede invitar"; }
+										if($row['opt5'] == 1) { $position5 = "Administrar el foro"; } else { $position5 = "No puede administrar el foro"; }
+										if($row['opt6'] == 1) { $position6 = "Diplomacia"; } else { $position6 = "Sin diplomacia"; }
+										if($row['opt7'] == 1) { $position7 = "Circulares a toda la alianza"; } else { $position7 = "No puede enviar circulares"; }
 										if($row['opt8'] == 1) { $position8 = "???"; } else { $position8 = "No ???"; }
 										
 										echo '
 										<tr>
-											<td>Position:</td>
+											<td>Cargo:</td>
 											<td><a href="admin.php?p=player&uid='.$row['uid'].'">'.$player['username'].'</a><br /><b>'.$row['rank'].'</b><br />
 												<select>
-													<option>Permissions</option>
+													<option>Permisos</option>
 													<option>'.$position1.'</option>
 													<option>'.$position2.'</option>
 													<option>'.$position3.'</option>
@@ -113,7 +113,7 @@ if($_GET['aid'])
 								?>
 								
 								<tr>
-									<th>Capacity</th>
+									<th>Cupo</th>
 									<td>
 										<?php
 											$now = count($aliusers);
@@ -134,10 +134,10 @@ if($_GET['aid'])
 									<td colspan="2" class="empty"></td>
 								</tr>
 								<tr>
-									<td colspan="2"><a href="?p=editAli&aid=<?php echo $alidata['id'];?>">» Edit Alliance</a></td>
+									<td colspan="2"><a href="?p=editAli&aid=<?php echo $alidata['id'];?>">» Editar la alianza</a></td>
 								</tr>
 								<tr>
-									<td colspan="2"><a href="?p=DelAli&aid=<?php echo $alidata['id'];?>">» Delete Alliance</a></td>
+									<td colspan="2"><a href="?p=DelAli&aid=<?php echo $alidata['id'];?>">» Eliminar la alianza</a></td>
 								</tr>
 								<tr>
 									<td colspan="2" class="empty"></td>
@@ -173,9 +173,9 @@ if($_GET['aid'])
 			<thead>
 				<tr>
 					<th>&nbsp;</th>
-					<th>Player</th>
-					<th>Population</th>
-					<th>Villages</th>
+					<th>Jugador</th>
+					<th>Población</th>
+					<th>Aldeas</th>
 					<th>&nbsp;</th>
 				</tr>
 			</thead>
@@ -227,11 +227,11 @@ if($_GET['aid'])
 		<table id="profile">
 			<thead>
 				<tr>
-					<th colspan="3">Alliance News</th>
+					<th colspan="3">Circulares de la alianza</th>
 				</tr>
 				<tr>
-					<td>Event</td>
-					<td>Time</td>
+					<td>Circular</td>
+					<td>Fecha</td>
 				</tr>
 			</thead>
 				<?php
@@ -250,17 +250,17 @@ if($_GET['aid'])
 		</table>
 		<br /><br />
 		
-		<h3>Not Sure this Diplomacy is correct, but I think it is</h3>
+		
 		<br />
 		<table id="profile">
 			<thead>
 				<tr>
-					<th colspan="3">Alliance Diplomacy Sent</th>
+					<th colspan="3">Diplomacia enviada</th>
 				</tr>
 				<tr>
-					<td>Recipient Alliance</td>
-					<td>Type</td>
-					<td>Accepted</td>
+					<td>Alianza destinataria</td>
+					<td>Tipo</td>
+					<td>Aceptada</td>
 				</tr>
 			</thead>
 				<?php
@@ -290,12 +290,12 @@ if($_GET['aid'])
 		<table id="profile">
 			<thead>
 				<tr>
-					<th colspan="3">Alliance Diplomacy Recieved</th>
+					<th colspan="3">Diplomacia recibida</th>
 				</tr>
 				<tr>
-					<td>From Alliance</td>
-					<td>Type</td>
-					<td>Accepted</td>
+					<td>Alianza remitente</td>
+					<td>Tipo</td>
+					<td>Aceptada</td>
 				</tr>
 			</thead>
 				<?php
@@ -326,11 +326,11 @@ if($_GET['aid'])
 		<table id="profile">
 			<thead>
 				<tr>
-					<th colspan="3">Alliance Relationships</th>
+					<th colspan="3">Relaciones de la alianza</th>
 				</tr>
 				<tr>
-					<td>Alliance</td>
-					<td>Type</td>
+					<td>Alianza</td>
+					<td>Tipo</td>
 					<td></td>
 				</tr>
 			</thead>
@@ -365,7 +365,7 @@ if($_GET['aid'])
 	}
 	else
 	{
-		echo "Not found...<a href=\"javascript: history.go(-1)\">Back</a>";
+		echo "No se encontró la alianza. <a href=\"javascript: history.go(-1)\">Volver</a>";
 	}
 }
 ?>

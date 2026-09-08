@@ -4,8 +4,8 @@
 					<th colspan="2">Jugador <a href="admin.php?p=player&uid=<?php echo $user['id'];?>"><?php echo $user['username'];?></a></th>
 				</tr>                                       
 				<tr>
-					<td>Details</td>
-					<td>Description</td>
+					<td>Dato</td>
+					<td>Valor</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -20,7 +20,7 @@
 								<td>????<?php /* echo $ranking->searchRank($user['id'], "rank");*/ ?></td>
 							</tr>
 							<tr>
-								<th>Tribe</th>
+								<th>Tribu</th>
 								<td>
 									<?php
 										if($user['tribe'] == 1) 
@@ -108,15 +108,15 @@
 									<form action="../GameEngine/Admin/Mods/editUsername.php" method="POST">
 										<input type="hidden" name="admid" id="admid" value="<?php echo $_SESSION['id']; ?>">
 										<input type="hidden" name="uid" id="uid" value="<?php echo $_GET['uid']; ?>">
-										<input type="text" style="width: 80%;" class="fm" name="username" value="<?php echo $user['username']; ?>"> <input type="image" value="submit" src="../img/admin/edit.gif" title="Edit Username"></a>
+										<input type="text" style="width: 80%;" class="fm" name="username" value="<?php echo $user['username']; ?>"> <input type="image" value="submit" src="../img/admin/edit.gif" title="Cambiar el nombre de usuario"></a>
 									</form>
 								</td>
 							</tr>
 							
 							<tr>
-								<th>Location</th>
+								<th>Ubicación</th>
 								<td>
-									<input type="text" style="width: 80%;" disabled="disabled" class="fm" name="location" value="<?php echo $user['location']; ?>">  <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Location"></a>
+									<input type="text" style="width: 80%;" disabled="disabled" class="fm" name="location" value="<?php echo $user['location']; ?>">  <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Cambiar la ubicación"></a>
 								</td>
 							</tr>
 							
@@ -130,9 +130,9 @@
 							<tr>
 								<?php include("playerplusbonus.tpl"); ?>
 							<tr>
-								<th>Email</th>
+								<th>Correo</th>
 								<td>
-									<input disabled="disabled" style="width: 80%;" class="fm" name="email" value="<?php echo $user['email']; ?>"> <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Email"></a>
+									<input disabled="disabled" style="width: 80%;" class="fm" name="email" value="<?php echo $user['email']; ?>"> <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Cambiar el correo"></a>
 								</td>
 							</tr>
 							<?php /*
@@ -146,7 +146,7 @@
 								</td>
 							</tr> */ ?>
 							<tr>
-								<th>Quest</td>
+								<th>Misión</td>
 								<td>
 									<?php
 										## not sure if this is correct
@@ -181,7 +181,7 @@
 										$quesst = $quest +1;
 										$questinfo = "$quesst - $questname";
 									?>
-								<input disabled="disabled" style="width: 80%;" class="fm" name="quest" value="<?php echo $questinfo; ?>"> <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Edit Quest"></a></td>
+								<input disabled="disabled" style="width: 80%;" class="fm" name="quest" value="<?php echo $questinfo; ?>"> <a href="admin.php?p=editUser&uid=<?php echo $id; ?>"><img src="../img/admin/edit.gif" title="Cambiar la misión"></a></td>
 							</tr>
 							<tr>
 								<td colspan="2" class="empty"></td>
