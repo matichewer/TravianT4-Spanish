@@ -51,14 +51,15 @@ require_once __DIR__.'/GreyZone.php';
 function artefactReleaseDefaults() {
     return array(
         // Cuántas aldeas por tipo de artefacto y tamaño.
-        'count_small'      => 6,
-        'count_large'      => 4,
+        // CALIBRADO para este mundo: ver artefactReleaseOfficialValues().
+        'count_small'      => 2,
+        'count_large'      => 1,
         'count_unique'     => 1,
 
         // De dónde sale la defensa.
         'defence_mode'     => 'world',
         'defence_sample'   => 100,    // "top 100 offensive armies", oficial
-        'defence_factor'   => 100,    // % sobre esa referencia
+        'defence_factor'   => 35,     // CALIBRADO: el oficial equivale al 100%
         'defence_manual'   => 50000,  // puntos de defensa del PEQUEÑO, si el modo es manual
         'defence_floor'    => 50000,  // piso: un mundo sin ejércitos no puede dar 0
 
@@ -72,11 +73,53 @@ function artefactReleaseDefaults() {
         'ring_small_min'   => 20,  'ring_small_max'  => 55,
 
         // La aldea.
-        'treasury'         => 20,   // oficial: 20 en todas las aldeas de artefacto
+        'treasury'         => 10,   // CALIBRADO: el oficial es 20 (unas 55 catapultas)
         'fields'           => 10,   // nivel de los 18 campos de recurso
         'cranny'           => 10,   // escondite
         'wall'             => 0     // oficial: 0, y los natars sólo llegan a 1
     );
+}
+
+/**
+ * Los valores oficiales, donde el oficial dice algo.
+ *
+ * Existe para que la divergencia entre lo que abre el formulario y lo que hace el Travian
+ * original esté **declarada y sea comprobable**, en vez de vivir en la memoria de alguien.
+ * `artefactReleaseDefaults()` abre calibrado para un mundo chico —de nada sirve un botón que
+ * hay que corregir a mano cada vez— y todo lo que se aparta figura acá con su valor real.
+ *
+ * Las tres divergencias y por qué:
+ *
+ *   - `count_*`: el oficial no publica cuántos artefactos suelta. Los 6/4/1 que había eran
+ *     una constante heredada, y en un mundo de cuatro jugadores dan 87 aldeas natar nuevas.
+ *   - `defence_factor`: al 100% la aldea más chica pide un ejército entero de los mejores
+ *     del servidor y no queda nada para las otras dos oleadas del robo. Al 35% cuesta un
+ *     tercio, que es lo que hace la carrera jugable con pocos jugadores.
+ *   - `treasury`: el oficial pone 20 en todas las aldeas de artefacto, que son unas 55
+ *     catapultas sólo para abrir el Tesoro. Con 10 el robo entra en el alcance de un
+ *     jugador solo.
+ *
+ * Lo que NO se aparta y no debería apartarse: el modo derivado del mundo, la muestra de 100
+ * ejércitos, las proporciones entre tamaños y los anillos del mapa.
+ */
+function artefactReleaseOfficialValues() {
+    return array(
+        'defence_mode'     => 'world',
+        'defence_sample'   => 100,
+        'defence_factor'   => 100,
+        'tier_large'       => 1.5384,
+        'tier_unique'      => 1.5,
+        'ring_unique_min'  => 0,   'ring_unique_max' => 13,
+        'ring_large_min'   => 10,  'ring_large_max'  => 30,
+        'ring_small_min'   => 20,  'ring_small_max'  => 55,
+        'treasury'         => 20,
+        'wall'             => 0
+    );
+}
+
+/** Las claves donde este mundo se aparta del oficial a propósito. */
+function artefactReleaseDeliberateDivergences() {
+    return array('defence_factor', 'treasury');
 }
 
 /** Los tres tamaños, con la clave de configuración de cada uno. */
@@ -520,4 +563,124 @@ function artefactReleaseExecute($database, $plan, $natarId) {
         }
     }
     return array('created' => $created, 'failed' => $failed);
+}
+
+/**
+ * Deshacer una liberación: borra los artefactos y las aldeas natar que los guardaban.
+ *
+ * Por qué hace falta. Sembrar no se podía deshacer, y el sembrado tiene una docena de
+ * perillas que hay que calibrar mirando la vista previa: sin una forma de volver atrás, el
+ * primer intento con los números mal deja el mapa lleno de aldeas natar que ya no se pueden
+ * sacar. Un botón de "probar" sin botón de "descartar" no es un botón de probar.
+ *
+ * Qué borra y qué NO, que es la parte delicada:
+ *
+ *   - **Sí**: las aldeas natar que guardan un artefacto, con todas sus filas y liberando su
+ *     casilla del mapa.
+ *   - **No**: las Aldeas de la Maravilla (`f99t = 40`) ni la capital natar. Están en el mapa
+ *     desde el día uno, no las creó el sembrado, y son el final de partida entero.
+ *   - **No**: la aldea de un JUGADOR que capturó el artefacto. Ahí se borra la fila del
+ *     artefacto y nada más — arrasarle la aldea a alguien por limpiar un sembrado sería
+ *     bastante peor que el problema que esto resuelve.
+ *   - **No**: las aldeas natar independientes (`npckind` vivo) que no guarden artefactos.
+ *
+ * `$apply` a false devuelve el mismo informe sin escribir nada, que es como corre por
+ * defecto la herramienta de línea de comandos.
+ */
+function artefactReleaseWipe($database, $apply = false) {
+    $report = array(
+        'artefacts' => 0,
+        'villages' => array(),
+        'player_held' => array(),
+        'protected' => array()
+    );
+    if(!is_object($database) || !method_exists($database, 'query_return')) {
+        return $report;
+    }
+
+    $rows = $database->query_return(
+        'SELECT a.`id`, a.`vref`, a.`type`, a.`size`, a.`owner` AS holder, '
+        .'v.`owner` AS village_owner, v.`capital`, f.`f99t` '
+        .'FROM '.TB_PREFIX.'artefacts a '
+        .'LEFT JOIN '.TB_PREFIX.'vdata v ON v.`wref` = a.`vref` '
+        .'LEFT JOIN '.TB_PREFIX.'fdata f ON f.`vref` = a.`vref`'
+    );
+    if(!is_array($rows)) {
+        return $report;
+    }
+
+    $natarId = natarsAccountId();
+    foreach($rows as $row) {
+        $report['artefacts']++;
+        $wref = (int)$row['vref'];
+        $name = artefactDisplayName((int)$row['type'], (int)$row['size']);
+
+        if($row['village_owner'] === null) {
+            // El artefacto apunta a una aldea que ya no existe: sólo se va la fila.
+            continue;
+        }
+        if((int)$row['village_owner'] !== $natarId) {
+            $report['player_held'][] = array('wref' => $wref, 'name' => $name);
+            continue;
+        }
+        if((int)$row['f99t'] === 40 || (int)$row['capital'] === 1) {
+            // Una Maravilla o la capital natar con un artefacto adentro: se le saca el
+            // artefacto y la aldea queda donde está.
+            $report['protected'][] = array('wref' => $wref, 'name' => $name);
+            continue;
+        }
+        $report['villages'][] = array('wref' => $wref, 'name' => $name);
+    }
+
+    if(!$apply) {
+        return $report;
+    }
+
+    foreach($report['villages'] as $village) {
+        artefactReleaseDeleteVillage($database, (int)$village['wref']);
+    }
+    $database->query('DELETE FROM '.TB_PREFIX.'artefacts');
+    if(method_exists($database, 'flushArtefactCache')) {
+        $database->flushArtefactCache();
+    }
+    return $report;
+}
+
+/**
+ * Borra una aldea natar de artefacto y todo lo que colgaba de ella.
+ *
+ * La lista de tablas es la misma que usa `Automation::destroyCatapultedVillage()`, y cada
+ * una con SU columna: `bdata` es `wid` y el resto `vref`, que es el error que ya dejó 88
+ * filas huérfanas en este mundo. `movement` y `enforcement` se filtran por `from` y por
+ * `to`/`vref` con backticks, porque son palabras reservadas y sin ellas el DELETE ni
+ * siquiera compila.
+ *
+ * No se usa `destroyCatapultedVillage()` a propósito: esa función se niega —con razón— a
+ * arrasar una aldea que guarda un artefacto, que es justo lo que acá hay que hacer.
+ */
+function artefactReleaseDeleteVillage($database, $wref) {
+    $wref = (int)$wref;
+    if($wref <= 0) {
+        return false;
+    }
+    $P = TB_PREFIX;
+
+    // Los movimientos que entran o salen, y las filas de tropas a las que apuntan.
+    $database->query('DELETE a FROM '.$P.'attacks a '
+        .'INNER JOIN '.$P.'movement m ON m.`ref` = a.`id` '
+        .'WHERE m.`to` = '.$wref.' OR m.`from` = '.$wref);
+    $database->query('DELETE FROM '.$P.'movement WHERE `from` = '.$wref.' OR `to` = '.$wref);
+    $database->query('DELETE FROM '.$P.'enforcement WHERE `vref` = '.$wref.' OR `from` = '.$wref);
+
+    foreach(array('abdata' => 'vref', 'bdata' => 'wid', 'fdata' => 'vref', 'market' => 'vref',
+        'research' => 'vref', 'tdata' => 'vref', 'training' => 'vref', 'units' => 'vref') as $table => $column) {
+        $database->query('DELETE FROM '.$P.$table.' WHERE `'.$column.'` = '.$wref);
+    }
+    // Las entradas de listas de granjeo de OTROS jugadores que apuntaban acá.
+    $database->query('DELETE FROM '.$P.'raidlist WHERE `towref` = '.$wref);
+    $database->query('DELETE FROM '.$P.'farmlist WHERE `wref` = '.$wref);
+
+    $database->query('DELETE FROM '.$P.'vdata WHERE `wref` = '.$wref);
+    $database->query('UPDATE '.$P.'wdata SET `occupied` = 0 WHERE `id` = '.$wref);
+    return true;
 }

@@ -228,6 +228,39 @@ if($existingCount > 0) {
 			style="font-weight:bold;">Sembrar <?php echo (int)$plan['total_villages']; ?> aldeas</button>
 	</p>
 </form>
+
+<?php
+// El "deshacer" del sembrado. Va en su propio formulario y no en el de arriba porque pide
+// otra confirmación: mezclarlos haría que la casilla de "sí, duplicá los artefactos" sirviera
+// también para borrarlos, que es exactamente el accidente que esto viene a evitar.
+if($existingCount > 0) {
+	$wipe = artefactReleaseWipe($database, false);
+?>
+<hr style="margin:20px 0;">
+<h3>Borrar todo y empezar de nuevo</h3>
+<div style="border:2px solid #a00;background:#ffe8e8;padding:10px;margin:10px 0;">
+	<p>Esto borra <b><?php echo (int)$wipe['artefacts']; ?> artefacto(s)</b> y arrasa
+	<b><?php echo count($wipe['villages']); ?> aldea(s) natar</b>, liberando sus casillas del mapa.
+	Sirve para volver a sembrar con otros números.</p>
+	<p><b>No toca</b> las Aldeas de la Maravilla, la capital natar, ni la aldea de ningún jugador.
+<?php if($wipe['player_held']) { ?>
+	Hay <b><?php echo count($wipe['player_held']); ?></b> artefacto(s) ya capturados por jugadores:
+	a esos se les saca el artefacto y su aldea queda intacta.
+<?php } ?>
+<?php if($wipe['protected']) { ?>
+	Hay <b><?php echo count($wipe['protected']); ?></b> en una Maravilla o en la capital natar:
+	esas aldeas tampoco se borran.
+<?php } ?>
+	</p>
+	<p><b>No se puede deshacer.</b> Si algún jugador ya capturó un artefacto, se lo estás sacando.</p>
+	<form action="../GameEngine/Admin/Mods/wipeArtefacts.php" method="POST">
+		<input type="hidden" name="admid" value="<?php echo (int)$_SESSION['id']; ?>">
+		<p><label><input type="checkbox" name="confirmar_borrado" value="si">
+		Entiendo que voy a <b>borrar todos los artefactos</b> del servidor y quiero hacerlo.</label></p>
+		<button type="submit">Borrar los <?php echo (int)$wipe['artefacts']; ?> artefactos</button>
+	</form>
+</div>
+<?php } ?>
 <?php
 if(isset($_GET['g'])) {
 	echo '<p><b>Artefactos creados: '.(int)$_GET['g'].' aldeas.</b></p>';
@@ -242,5 +275,17 @@ if(isset($_GET['e']) && $_GET['e'] === 'confirmar') {
 }
 if(isset($_GET['e']) && $_GET['e'] === 'vacio') {
 	echo '<p style="color:#a00;"><b>No se sembró nada:</b> con esos conteos el plan queda vacío.</p>';
+}
+if(isset($_GET['e']) && $_GET['e'] === 'confirmarborrado') {
+	echo '<p style="color:#a00;"><b>No se borró nada:</b> no marcaste la casilla de confirmación.</p>';
+}
+if(isset($_GET['borrados'])) {
+	echo '<p><b>Borrados '.(int)$_GET['borrados'].' artefacto(s) y '.(int)$_GET['aldeas']
+		.' aldea(s) natar.</b>';
+	if(isset($_GET['dejugadores'])) {
+		echo ' '.(int)$_GET['dejugadores'].' estaban en manos de jugadores: se les quitó el artefacto'
+			.' y su aldea quedó intacta.';
+	}
+	echo '</p>';
 }
 ?>

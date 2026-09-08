@@ -83,18 +83,53 @@ function scalar($sql) {
 section('A. Los valores por defecto son los oficiales');
 // =====================================================================================
 $defaults = artefactReleaseDefaults();
-check(abs($defaults['tier_large'] - 1.5384) < 0.0001,
+$official = artefactReleaseOfficialValues();
+$divergences = artefactReleaseDeliberateDivergences();
+
+// El formulario abre CALIBRADO para un mundo chico, no en los valores oficiales: un botón
+// que hay que corregir a mano cada vez es un botón que algún día se aprieta sin corregir.
+// Lo que este bloque exige es que cada apartamiento esté DECLARADO, no que no exista.
+foreach($official as $key => $value) {
+    if(in_array($key, $divergences, true)) {
+        check($defaults[$key] != $value,
+            $key.' figura como divergencia deliberada, así que tiene que diferir del oficial');
+        continue;
+    }
+    if(is_float($value)) {
+        check(abs($defaults[$key] - $value) < 0.0001,
+            $key.': sigue el oficial ('.$value.') y vale '.$defaults[$key]);
+    } else {
+        check($defaults[$key] == $value,
+            $key.': sigue el oficial ('.$value.') y vale '.$defaults[$key]);
+    }
+}
+foreach($divergences as $key) {
+    check(isset($official[$key]),
+        'la divergencia declarada "'.$key.'" nombra su valor oficial, para poder volver');
+}
+check(abs($official['tier_large'] - 1.5384) < 0.0001,
     'el grande vale 1,5384 veces el pequeño');
-check(abs($defaults['tier_unique'] - 1.5) < 0.0001,
+check(abs($official['tier_unique'] - 1.5) < 0.0001,
     'y el único 1,5 veces el grande');
-check((int)$defaults['defence_sample'] === 100,
+check((int)$official['defence_sample'] === 100,
     'la referencia son los 100 mejores ejércitos ofensivos');
 check($defaults['defence_mode'] === 'world',
     'por defecto la defensa se deriva del mundo, no de un número fijo');
-check((int)$defaults['treasury'] === 20,
-    'las aldeas de artefacto llevan Tesoro 20, como en el oficial');
+check((int)$official['treasury'] === 20,
+    'el oficial pone Tesoro 20 en las aldeas de artefacto');
 check((int)$defaults['wall'] === 0,
     'y nacen sin muralla: el ariete no tiene nada que hacer ahí');
+
+// Los valores calibrados tienen que ser jugables en un mundo chico, que es su razón de ser.
+$calibrated = artefactReleasePlan($defaults, 0);
+check($calibrated['total_villages'] > 0 && $calibrated['total_villages'] <= 40,
+    'con los valores de fábrica salen '.$calibrated['total_villages']
+        .' aldeas, un número que un mundo chico puede pelear');
+check($calibrated['summary'][ARTEFACT_SIZE_SMALL]['stats']['troops'] < 3000,
+    'y la aldea más chica queda en '
+        .number_format($calibrated['summary'][ARTEFACT_SIZE_SMALL]['stats']['troops']).' tropas');
+check((int)$defaults['treasury'] >= 10,
+    'el Tesoro nunca baja de 10, que es el mínimo para guardar un artefacto pequeño');
 // Los anillos oficiales sobre el mapa de ±200 son 0-25, 20-60 y 40-110, o sea 13%, 30% y 55%.
 check($defaults['ring_unique_max'] < $defaults['ring_large_max']
     && $defaults['ring_large_max'] < $defaults['ring_small_max'],
@@ -234,8 +269,15 @@ $hugePlan = artefactReleasePlan($default, 8000000);
 $hugeSmall = $hugePlan['summary'][ARTEFACT_SIZE_SMALL]['stats'];
 check($hugeSmall['troops'] > $tinySmall['troops'] * 20,
     'y en un mundo grande sube sola a '.number_format($hugeSmall['troops']).' tropas');
-check($hugeSmall['infantry'] >= 8000000 * 0.99,
-    'la defensa acompaña a la ofensiva del mundo, que es la regla oficial');
+// La defensa acompaña a la ofensiva del mundo: es la regla oficial. El número exacto sale
+// del factor configurado, así que se compara contra él y no contra la referencia cruda —
+// con el factor de fábrica calibrado al 35%, exigir el 100% sería exigir otra cosa.
+$expectedHuge = 8000000 * ((float)$default['defence_factor'] / 100);
+check(abs($hugeSmall['infantry'] - $expectedHuge) / $expectedHuge < 0.01,
+    'la defensa acompaña a la ofensiva del mundo: se esperaba '.number_format($expectedHuge)
+        .' y da '.number_format($hugeSmall['infantry']));
+check($hugeSmall['infantry'] > $tinySmall['infantry'],
+    'y siempre por encima de lo que da un mundo vacío');
 
 // La proporción entre tamaños no depende del tamaño del mundo.
 foreach(array($tinyPlan, $hugePlan) as $label => $plan) {
@@ -464,7 +506,85 @@ check($first > 0 && $second > 0 && $first !== $second,
     'la segunda búsqueda no devuelve la casilla que la primera ya apartó');
 
 // =====================================================================================
-section('H. El panel y el mod usan el mismo plan');
+section('H. Deshacer el sembrado');
+// =====================================================================================
+//
+// Sembrar sin poder deshacer es un disparo de una sola bala, y el sembrado tiene una docena
+// de perillas que hay que calibrar probando. Lo delicado del borrado no es borrar: es lo que
+// NO tiene que tocar.
+
+// Se parte del mundo que quedó del bloque G: 23 aldeas de artefacto ya creadas.
+$beforeVillages = (int)scalar("SELECT COUNT(*) FROM {$P}vdata");
+$beforeFree = (int)scalar("SELECT COUNT(*) FROM {$P}wdata WHERE occupied = 0");
+$seeded = $outcome['created'];
+
+// Un artefacto en manos de un JUGADOR: su aldea no se puede tocar.
+q("INSERT INTO {$P}vdata (wref,owner,capital,pop,cp,loyalty,created,lastupdate,maxstore,maxcrop) "
+    ."VALUES (698000,9601,0,100,0,100,$now,$now,800,800)");
+q("INSERT INTO {$P}wdata (id,fieldtype,oasistype,x,y,occupied,image) VALUES (698000,3,0,60,60,1,0)");
+q("INSERT INTO {$P}artefacts (id,vref,owner,type,size,conquered,name,`desc`,effect,img) "
+    ."VALUES (0,698000,9601,".ARTEFACT_BOOTS.",1,1,'x','x','x','x')");
+
+// Una Aldea de la Maravilla con un artefacto adentro: tampoco.
+q("INSERT INTO {$P}vdata (wref,owner,capital,pop,cp,loyalty,created,lastupdate,maxstore,maxcrop) "
+    ."VALUES (698001,".UID_NATARS.",0,100,0,100,$now,$now,800,800)");
+q("INSERT INTO {$P}wdata (id,fieldtype,oasistype,x,y,occupied,image) VALUES (698001,3,0,61,61,1,0)");
+q("INSERT INTO {$P}fdata (vref,f99t,f99) VALUES (698001,40,5)");
+q("INSERT INTO {$P}artefacts (id,vref,owner,type,size,conquered,name,`desc`,effect,img) "
+    ."VALUES (0,698001,".UID_NATARS.",".ARTEFACT_EAGLE.",1,1,'x','x','x','x')");
+
+$database->flushArtefactCache();
+
+// En seco: informa y no escribe nada.
+$dry = artefactReleaseWipe($database, false);
+check($dry['artefacts'] === count($seeded) + 2,
+    'el informe cuenta los '.($dry['artefacts']).' artefactos que hay');
+check(count($dry['villages']) === count($seeded),
+    'y marca para borrar sólo las '.count($dry['villages']).' aldeas natar de artefacto');
+check(count($dry['player_held']) === 1, 'reconoce el que está en manos de un jugador');
+check(count($dry['protected']) === 1, 'y el que está en una Aldea de la Maravilla');
+check((int)scalar("SELECT COUNT(*) FROM {$P}artefacts") === $dry['artefacts'],
+    'la simulación no borró ni un artefacto');
+check((int)scalar("SELECT COUNT(*) FROM {$P}vdata") === $beforeVillages + 2,
+    'ni una aldea');
+
+// Y ahora de verdad.
+$wiped = artefactReleaseWipe($database, true);
+check((int)scalar("SELECT COUNT(*) FROM {$P}artefacts") === 0,
+    'no queda ningún artefacto');
+check((int)scalar("SELECT COUNT(*) FROM {$P}vdata WHERE wref = 698000") === 1,
+    'la aldea del JUGADOR sigue en pie: se le sacó el artefacto, no la aldea');
+check((int)scalar("SELECT COUNT(*) FROM {$P}vdata WHERE wref = 698001") === 1,
+    'y la Aldea de la Maravilla también');
+foreach($seeded as $wref) {
+    check((int)scalar("SELECT COUNT(*) FROM {$P}vdata WHERE wref = $wref") === 0,
+        $wref.': la aldea de artefacto se borró');
+    check((int)scalar("SELECT occupied FROM {$P}wdata WHERE id = $wref") === 0,
+        $wref.': y su casilla volvió a quedar libre');
+    foreach(array('fdata' => 'vref', 'units' => 'vref', 'abdata' => 'vref', 'tdata' => 'vref') as $table => $column) {
+        check((int)scalar("SELECT COUNT(*) FROM {$P}{$table} WHERE `$column` = $wref") === 0,
+            $wref.': no sobrevive ninguna fila de '.$table);
+    }
+}
+check((int)scalar("SELECT COUNT(*) FROM {$P}wdata WHERE occupied = 0") === $beforeFree + count($seeded),
+    'se liberaron exactamente las casillas de las aldeas borradas');
+
+// Borrar dos veces no puede romper nada ni borrar de más.
+$again = artefactReleaseWipe($database, true);
+check($again['artefacts'] === 0 && count($again['villages']) === 0,
+    'borrar de nuevo sobre un mundo ya limpio no encuentra nada');
+check((int)scalar("SELECT COUNT(*) FROM {$P}vdata WHERE wref IN (698000,698001)") === 2,
+    'y las dos aldeas protegidas siguen ahí');
+
+// Después de borrar se puede volver a sembrar: es el ciclo que esto viene a habilitar.
+$database->flushArtefactCache();
+$reseed = artefactReleaseExecute($database, artefactReleasePlan($seedConfig, $reference), UID_NATARS);
+check(count($reseed['created']) === $seedPlan['total_villages'] && $reseed['failed'] === 0,
+    'y se puede sembrar otra vez sobre el mundo limpio');
+artefactReleaseWipe($database, true);
+
+// =====================================================================================
+section('I. El panel y el mod usan el mismo plan');
 // =====================================================================================
 $mod = file_get_contents($root.'/GameEngine/Admin/Mods/addArtefacts.php');
 $form = file_get_contents($root.'/Admin/Templates/addArtefacts.tpl');
@@ -486,6 +606,21 @@ check(strpos($mod, 'mysql_query(') === false,
     'el mod ya no escribe SQL propio: sólo ejecuta el plan');
 check(strpos($form, 'artefactReleaseLimits()') !== false,
     'el formulario dibuja los rangos desde la misma tabla de límites que valida el servidor');
+
+// El borrado: mismo camino, y con su propia confirmación.
+$wipeMod = file_get_contents($root.'/GameEngine/Admin/Mods/wipeArtefacts.php');
+check(strpos($wipeMod, 'artefactReleaseWipe($database, true)') !== false,
+    'el mod de borrado usa la misma función que la herramienta de línea de comandos');
+check(strpos($wipeMod, "\$_POST['confirmar_borrado']") !== false,
+    'y exige su propia confirmación del lado del servidor');
+check(strpos($wipeMod, 'confirmar_borrado') !== false && strpos($mod, 'confirmar_borrado') === false,
+    'la confirmación de borrar es distinta de la de sembrar: una casilla no puede servir para las dos');
+check(strpos($form, 'wipeArtefacts.php') !== false,
+    'el formulario ofrece el borrado');
+check(is_file($root.'/tools/wipe_artefacts.php'),
+    'y existe la herramienta de línea de comandos, que corre en seco por defecto');
+check(strpos(file_get_contents($root.'/tools/wipe_artefacts.php'), "in_array('--aplicar', \$argv, true)") !== false,
+    'que no escribe sin --aplicar');
 
 echo PHP_EOL.(count($failures)
     ? count($failures).' FALLA(S) sobre '.$checks.' comprobaciones'
