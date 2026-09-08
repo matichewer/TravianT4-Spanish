@@ -35,7 +35,8 @@ include "Templates/html.tpl";
 	<div class="helpHeadLine">Enlaces útiles</div>
 	<div class="helpText">
 		<a class="helpUsefulLink" href="troop_stats.php">Estadísticas de tropas</a><br />
-		<a class="helpUsefulLink" href="building_stats.php">Edificios</a>
+		<a class="helpUsefulLink" href="building_stats.php">Edificios</a><br />
+		<a class="helpUsefulLink" href="endgame.php">El final de la partida: artefactos, Tesoro y Maravilla</a>
 	</div>
 </div>
 <div class="helpInfoBlock helpInfoLinkLess helpCredits">
