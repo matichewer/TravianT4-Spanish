@@ -13,7 +13,13 @@
 include("GameEngine/Village.php");
 
 $endgameDelayHours = round(artefactActivationDelay(SPEED) / 3600);
-$endgameCatalog = artefactTypeCatalog();
+// Los OCHO artefactos de efecto. El plano de construcción está en el catálogo entero pero
+// no en esta tabla: no tiene valor por tamaño (hay uno solo) ni un bono que mostrar, y su
+// sección propia lo explica mejor de lo que lo haría una fila con tres rayas.
+$endgameCatalog = artefactEffectTypeCatalog();
+$endgamePlanInfo = artefactTypeCatalog();
+$endgamePlanInfo = $endgamePlanInfo[ARTEFACT_PLAN];
+$endgamePlanTreasury = artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL, ARTEFACT_PLAN);
 $endgameSizes = array(
     ARTEFACT_SIZE_SMALL  => 'Pequeño',
     ARTEFACT_SIZE_LARGE  => 'Grande',
@@ -228,7 +234,34 @@ include "Templates/html.tpl";
 								<h2>Los planos</h2>
 								<p>La palabra "plano" se usa para dos cosas distintas y conviene no confundirlas.</p>
 								<p><b>El plano de almacenamiento</b> es uno de los <?php echo count($endgameCatalog); ?> artefactos, y es el único que no te da un bono sino que te <b>desbloquea dos edificios</b>: el Gran almacén y el Gran granero. Sin él no existen, ni siquiera aparecen en la lista de construcción. Funciona como cualquier otro artefacto: tiene que estar activo, y si se te cae del podio de <?php echo ARTEFACT_MAX_ACTIVE; ?> dejás de poder ampliarlos (lo que ya construiste se queda).</p>
-								<p><b>Los planos de construcción de la Maravilla</b> son otra cosa, y en <b><?php echo SERVER_NAME; ?></b> <b>no existen</b>. En el Travian original hacen falta para levantar la Maravilla; acá no: alcanza con conquistar una Aldea de la Maravilla. Es una diferencia a propósito de este servidor.</p>
+								<p><b>El plano de construcción de la Maravilla</b> es otra cosa completamente distinta: no te da ningún bono, no mejora ninguna aldea, y aun así es <b>el objeto más importante del servidor</b>. Sin uno, tu alianza no puede levantar la Maravilla del Mundo. Con eso alcanza para describirlo: es la llave del final.</p>
+								<div class="troopStatsTableWrapper">
+									<table class="troopStatsTable" cellpadding="1" cellspacing="1">
+										<thead><tr><th>Cosa</th><th>Cómo es</th></tr></thead>
+										<tbody>
+											<tr><td>Dónde se guarda</td><td style="text-align:left;">En un <b>Tesoro de nivel <?php echo (int) $endgamePlanTreasury; ?></b>, no 20. Es más barato de guardar que un artefacto grande.</td></tr>
+											<tr><td>¿Ocupa un hueco?</td><td style="text-align:left;"><b>No.</b> Tener un plano no te cuesta ninguno de tus <?php echo ARTEFACT_MAX_ACTIVE; ?> artefactos activos.</td></tr>
+											<tr><td>Tamaños</td><td style="text-align:left;">No tiene. Hay un solo modelo de plano; lo que importa es cuántos junta tu alianza.</td></tr>
+											<tr><td>Cómo se consigue</td><td style="text-align:left;">Igual que cualquier artefacto: robándolo con el héroe o conquistando la aldea que lo guarda.</td></tr>
+											<tr><td>Se puede robar</td><td style="text-align:left;"><b>Sí</b>, y es el objetivo número uno de cualquier alianza rival. En la aldea de la Maravilla <b>no se puede construir Tesoro</b>, así que el plano siempre está en otra aldea, y esa aldea hay que defenderla.</td></tr>
+										</tbody>
+									</table>
+								</div>
+								<p>Cuánto hace falta:</p>
+								<div class="troopStatsTableWrapper">
+									<table class="troopStatsTable" cellpadding="1" cellspacing="1">
+										<thead><tr><th>Niveles de la Maravilla</th><th>Planos necesarios</th></tr></thead>
+										<tbody>
+											<tr><td>1 &ndash; <?php echo (int) WONDER_PLAN_SOLO_MAX_LEVEL; ?></td><td style="text-align:left;"><b>Uno</b>, y puede ser de cualquier miembro de tu alianza. No hace falta que sea tuyo.</td></tr>
+											<tr><td><?php echo (int) WONDER_PLAN_SOLO_MAX_LEVEL + 1; ?> &ndash; <?php echo (int) $endgameWonderMaxLevel; ?></td><td style="text-align:left;"><b>Dos</b>: uno tuyo —del dueño de la Maravilla— y otro de <b>otro</b> jugador de tu alianza.</td></tr>
+										</tbody>
+									</table>
+								</div>
+								<p>Si te falta el plano, la Maravilla simplemente no sube: la pantalla de construcción te dice cuántos tenés y cuántos te faltan, en vez de dejarte el botón muerto sin explicación.</p>
+								<div class="helpInfoBlock helpInfoLinkLess">
+									<div class="helpHeadLine">Por qué el segundo plano cambia todo</div>
+									<div class="helpText">Hasta el nivel <?php echo (int) WONDER_PLAN_SOLO_MAX_LEVEL; ?> alcanza con que <b>alguien</b> de la alianza tenga un plano. Del <?php echo (int) WONDER_PLAN_SOLO_MAX_LEVEL + 1; ?> en adelante hacen falta dos <b>en manos de dos jugadores distintos</b>, y eso es deliberado: obliga a que la Maravilla sea un proyecto de alianza y no de una sola cuenta. Si a tu compañero le roban el suyo, tu Maravilla se frena en seco.</div>
+								</div>
 							</section>
 
 							<section class="buildingStatsSection" id="maravilla">
@@ -241,8 +274,21 @@ include "Templates/html.tpl";
 										<tbody>
 											<tr><td>1</td><td style="text-align:left;">Encontrás una Aldea de la Maravilla en el mapa (llevan ese nombre y su coordenada).</td></tr>
 											<tr><td>2</td><td style="text-align:left;">Le derribás las defensas y la <b>conquistás con administradores</b>. No tienen residencia, así que no hace falta bajarles nada primero.</td></tr>
-											<tr><td>3</td><td style="text-align:left;">Construís la Maravilla y la vas subiendo de nivel. Cada nivel cuesta cientos de miles de recursos, y del <?php echo (int) $endgameWonderMaxLevel; ?> hacia atrás cada vez más.</td></tr>
-											<tr><td>4</td><td style="text-align:left;">Llegás al nivel <b><?php echo (int) $endgameWonderMaxLevel; ?></b> y ganás el servidor.</td></tr>
+											<tr><td>3</td><td style="text-align:left;">Tu alianza consigue un <b><a href="#planos">plano de construcción</a></b> y lo guarda en un Tesoro de nivel <?php echo (int) $endgamePlanTreasury; ?>. <b>Sin plano la Maravilla no sube ni un nivel.</b></td></tr>
+											<tr><td>4</td><td style="text-align:left;">Construís la Maravilla y la vas subiendo de nivel. Cada nivel cuesta cientos de miles de recursos, y del <?php echo (int) $endgameWonderMaxLevel; ?> hacia atrás cada vez más.</td></tr>
+											<tr><td>5</td><td style="text-align:left;">Al llegar al <?php echo (int) WONDER_PLAN_SOLO_MAX_LEVEL; ?> te hace falta un <b>segundo plano</b>, en manos de otro jugador de tu alianza, para poder seguir.</td></tr>
+											<tr><td>6</td><td style="text-align:left;">Llegás al nivel <b><?php echo (int) $endgameWonderMaxLevel; ?></b> y ganás el servidor.</td></tr>
+										</tbody>
+									</table>
+								</div>
+								<p><b>La aldea de la Maravilla no funciona como las demás</b>, y conviene saberlo antes de conquistarla:</p>
+								<div class="troopStatsTableWrapper">
+									<table class="troopStatsTable" cellpadding="1" cellspacing="1">
+										<thead><tr><th>Qué</th><th>Por qué</th></tr></thead>
+										<tbody>
+											<tr><td>No se puede construir <b>Tesoro</b></td><td style="text-align:left;">Por eso el plano vive en otra aldea tuya, y por eso se puede robar. Si pudiera estar acá, defender una cosa defendería las dos.</td></tr>
+											<tr><td>No funciona el <b>mercader NPC</b></td><td style="text-align:left;">Nada de convertir el cereal sobrante en madera con oro. Los recursos que necesita la Maravilla llegan en carros, de tus aldeas y de las de tus aliados.</td></tr>
+											<tr><td>No funciona <b>terminar con oro</b> ni el <b>constructor maestro</b></td><td style="text-align:left;">La Maravilla se construye con tiempo real. No hay atajo que se compre.</td></tr>
 										</tbody>
 									</table>
 								</div>

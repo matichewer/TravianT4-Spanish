@@ -168,8 +168,20 @@ $flipped = artefactReleaseNormalizeConfig(array('ring_small_min' => 80, 'ring_sm
 check((int)$flipped['config']['ring_small_min'] === 10 && (int)$flipped['config']['ring_small_max'] === 80,
     'un anillo invertido se da vuelta en vez de quedarse sin casillas donde colocar');
 
-$empty = artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0, 'count_unique' => 0));
+$empty = artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0,
+    'count_unique' => 0, 'count_plans' => 0));
 check(count($empty['warnings']) > 0, 'sembrar cero de todo avisa antes de no hacer nada');
+// Con los tres tamaños en cero pero planos pedidos SÍ se siembra algo, así que no hay aviso:
+// es una liberación de sólo planos, que es un escenario legítimo (soltar los artefactos
+// primero y los planos semanas después, como hace el oficial).
+$onlyPlans = artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0,
+    'count_unique' => 0, 'count_plans' => 4));
+check(count($onlyPlans['warnings']) === 0,
+    'sembrar sólo planos no se avisa como plan vacío');
+
+$flippedPlan = artefactReleaseNormalizeConfig(array('ring_plan_min' => 90, 'ring_plan_max' => 5));
+check((int)$flippedPlan['config']['ring_plan_min'] === 5 && (int)$flippedPlan['config']['ring_plan_max'] === 90,
+    'el anillo del plano también se da vuelta si viene invertido');
 
 check(artefactReleaseNormalizeConfig(null)['config'] === $defaults,
     'una entrada que no es array devuelve los valores por defecto');
@@ -294,19 +306,40 @@ check($tinyPlan['total_villages'] === $hugePlan['total_villages'],
 
 // Y los conteos hacen lo que dicen.
 $counted = artefactReleasePlan(
-    artefactReleaseNormalizeConfig(array('count_small' => 2, 'count_large' => 1, 'count_unique' => 1))['config'],
+    artefactReleaseNormalizeConfig(array('count_small' => 2, 'count_large' => 1, 'count_unique' => 1,
+        'count_plans' => 4))['config'],
     0
 );
 check($counted['summary'][ARTEFACT_SIZE_SMALL]['villages'] === 16, '2 pequeños por cada uno de los 8 tipos = 16');
 check($counted['summary'][ARTEFACT_SIZE_LARGE]['villages'] === 8, '1 grande por tipo = 8');
 check($counted['summary'][ARTEFACT_SIZE_UNIQUE]['villages'] === 7,
     'y 7 únicos: el plano de almacenamiento no tiene versión única');
-check($counted['total_villages'] === 31, 'total 31 aldeas');
+// El plano NO se multiplica por los ocho tipos: hay un solo plano de construcción y se
+// siembran tantas copias como pida el conteo. Multiplicarlo era el error fácil, porque el
+// tipo 9 vive en el mismo catálogo que los otros ocho.
+check($counted['plans']['villages'] === 4, '4 planos, no 4 por tipo');
+check($counted['total_villages'] === 35, 'total 31 aldeas de artefacto + 4 de plano = 35');
+$planVillages = 0;
+foreach($counted['villages'] as $village) {
+    if($village['type'] === ARTEFACT_PLAN) {
+        $planVillages++;
+        check($village['size'] === ARTEFACT_SIZE_SMALL,
+            'el plano se guarda con tamaño pequeño, que es el que pide Tesoro 10');
+    }
+}
+check($planVillages === 4, 'y en la lista de aldeas hay exactamente 4 planos');
 
 $none = artefactReleasePlan(
-    artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0, 'count_unique' => 0))['config'], 0);
+    artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0, 'count_unique' => 0,
+        'count_plans' => 0))['config'], 0);
 check($none['total_villages'] === 0 && $none['villages'] === array(),
-    'con los tres conteos en cero el plan queda vacío y no crea nada');
+    'con los cuatro conteos en cero el plan queda vacío y no crea nada');
+
+$onlyPlanPlan = artefactReleasePlan(
+    artefactReleaseNormalizeConfig(array('count_small' => 0, 'count_large' => 0, 'count_unique' => 0,
+        'count_plans' => 3))['config'], 0);
+check($onlyPlanPlan['total_villages'] === 3,
+    'una liberación de sólo planos crea sólo las aldeas de plano');
 
 // Ningún plan puede incluir un único del plano de almacenamiento.
 foreach($counted['villages'] as $village) {
@@ -319,7 +352,8 @@ foreach($counted['villages'] as $village) {
     $seenTypes[$village['type']] = true;
 }
 check(count($seenTypes) === count(artefactTypeCatalog()),
-    'los ocho tipos de artefacto entran en el plan');
+    'los nueve tipos del catálogo, plano incluido, entran en el plan');
+check(isset($seenTypes[ARTEFACT_PLAN]), 'y uno de ellos es el plano de construcción');
 
 // =====================================================================================
 section('F. Los anillos del mapa');
@@ -407,7 +441,7 @@ q("DELETE FROM {$P}wdata WHERE id = 699999");
 
 // Ahora el sembrado, con un plan chico para que entre en el tablero.
 $seedConfig = artefactReleaseNormalizeConfig(array(
-    'count_small' => 1, 'count_large' => 1, 'count_unique' => 1,
+    'count_small' => 1, 'count_large' => 1, 'count_unique' => 1, 'count_plans' => 2,
     'defence_factor' => 100, 'defence_floor' => 0,
     'treasury' => 20, 'fields' => 10, 'cranny' => 10, 'wall' => 0
 ))['config'];
@@ -432,7 +466,11 @@ foreach($database->getAllArtefacts() as $artefact) {
 ksort($expected);
 ksort($actual);
 check($expected === $actual, 'están exactamente los tipos y tamaños que pedía el plan');
-check(count($actual) === 23, 'o sea 8 pequeños + 8 grandes + 7 únicos = 23');
+// Los dos planos comparten tipo y tamaño, así que colapsan en una sola clave: 23 clases de
+// artefacto + la del plano = 24.
+check(count($actual) === 24, 'o sea 8 pequeños + 8 grandes + 7 únicos + el plano = 24 clases');
+check((int)scalar("SELECT COUNT(*) FROM {$P}artefacts WHERE type = ".ARTEFACT_PLAN) === 2,
+    'y los dos planos de construcción están sembrados');
 
 // Cada aldea creada tiene que ser una aldea natar de verdad.
 foreach($outcome['created'] as $wref) {

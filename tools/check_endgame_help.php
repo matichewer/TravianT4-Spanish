@@ -32,6 +32,8 @@ include "config/connection.php";
 include "config/config.php";
 include "Database.php";
 include "Data/buidata.php";
+require_once $root.'/GameEngine/Artefact.php';
+require_once $root.'/GameEngine/Wonder.php';
 
 $failures = 0;
 $checks = 0;
@@ -73,7 +75,8 @@ section('B. Los números salen del motor, no del texto');
 // actualice la ayuda sola.
 $derived = array(
     'artefactActivationDelay(SPEED)'   => 'el retardo de activación',
-    'artefactTypeCatalog()'            => 'la lista de artefactos y qué hace cada uno',
+    'artefactEffectTypeCatalog()'      => 'la lista de artefactos y qué hace cada uno',
+    'WONDER_PLAN_SOLO_MAX_LEVEL'       => 'hasta qué nivel llega la Maravilla con un solo plano',
     'artefactEffectValueLabel('        => 'los valores de cada tamaño',
     'artefactTreasuryRequirement('     => 'los niveles de Tesoro que pide cada tamaño',
     'ARTEFACT_MAX_ACTIVE'              => 'cuántos artefactos pueden estar activos',
@@ -113,7 +116,10 @@ section('C. Lo que la página afirma sigue siendo cierto');
 $delayHours = round(artefactActivationDelay(SPEED) / 3600);
 check($delayHours > 0 && $delayHours <= 24,
     'el retardo de este mundo son '.$delayHours.' horas, un número que se puede anunciar');
-check(count(artefactTypeCatalog()) === 8, 'la página dice "8 clases" y el catálogo tiene 8');
+check(count(artefactEffectTypeCatalog()) === 8,
+    'la página dice "8 clases" y hay 8 artefactos de efecto (el plano de construcción va aparte)');
+check(count(artefactTypeCatalog()) === 9,
+    'el catálogo entero tiene 9: los 8 de efecto más el plano de construcción');
 check(ARTEFACT_MAX_ACTIVE === 3 && ARTEFACT_MAX_ACTIVE_ACCOUNT === 1,
     'el podio que describe la página es de 3 activos y 1 de cuenta');
 check(artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL) === 10
@@ -156,13 +162,42 @@ section('D. Las dos divergencias con el oficial están dichas');
 // Un jugador que viene de otro servidor va a dar por sentado lo contrario en las dos, así
 // que callarlas es peor que no tener la página.
 $building = file_get_contents($root.'/GameEngine/Building.php');
-check(preg_match('/case 40:\s*return false;/', $building) === 1,
+check(strpos($building, 'case 40:') !== false && strpos($building, 'wonderVillage') !== false,
     'la Maravilla no se puede levantar desde cero: se conquista una aldea natar que ya la tiene');
-check(strpos($page, 'no existen') !== false && strpos($page, 'planos de construcción') !== false,
-    'la página avisa que los planos de construcción de la Maravilla no existen en este servidor');
-check(strpos($page, 'conquistar una Aldea de la Maravilla') !== false
-    || strpos($page, 'conquistar una <b>Aldea de la Maravilla</b>') !== false,
+check(strpos($page, 'conquistás con administradores') !== false,
     'y explica cuál es el camino que sí funciona acá');
+
+// El plano de construcción SÍ existe ahora, y la página tiene que decir las dos mitades de
+// la regla oficial: uno hasta el 49, dos —de dos jugadores distintos— de ahí en adelante.
+check(strpos($page, 'plano de construcción') !== false,
+    'la página explica el plano de construcción de la Maravilla');
+// La frase vieja era "los planos de construcción de la Maravilla ... no existen". Se busca
+// esa vecindad y no un "no existen" suelto, porque la sección del plano de almacenamiento
+// dice —con razón— que sin él el gran almacén y el gran granero no existen.
+check(preg_match('/planos? de construcción[^.]{0,200}no existen/ui', $page) !== 1,
+    'y ya no dice que los planos de construcción no existen, que es lo que decía antes');
+check(strpos($page, 'WONDER_PLAN_SOLO_MAX_LEVEL') !== false,
+    'el nivel a partir del cual hacen falta dos planos sale de la constante, no del texto');
+$wonder = file_get_contents($root.'/GameEngine/Wonder.php');
+$solo = wonderPlanRequirement(WONDER_PLAN_SOLO_MAX_LEVEL);
+$duo = wonderPlanRequirement(WONDER_PLAN_SOLO_MAX_LEVEL + 1);
+check($solo['own'] === 0 && $solo['alliance'] === 1,
+    'hasta el '.WONDER_PLAN_SOLO_MAX_LEVEL.' alcanza un plano de cualquiera de la alianza, como dice la página');
+check($duo['own'] === 1 && $duo['alliance'] === 2,
+    'del '.(WONDER_PLAN_SOLO_MAX_LEVEL + 1).' en adelante hacen falta dos, uno propio: la página lo dice así');
+check(artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL, ARTEFACT_PLAN) === 10,
+    'el Tesoro 10 que la página anuncia para el plano es el que el motor exige');
+
+// Y las tres cosas que no funcionan en la aldea de la Maravilla, que la página lista.
+$market = file_get_contents($root.'/GameEngine/Market.php');
+check(strpos($market, 'wonderVillage($village->resarray)') !== false,
+    'el mercader NPC está bloqueado en la aldea de la Maravilla, como dice la página');
+check(strpos($page, 'mercader NPC') !== false,
+    'y la página lo avisa');
+check(strpos($building, 'case 27:') !== false,
+    'el Tesoro está bloqueado en la aldea de la Maravilla');
+check(preg_match('/no se puede construir (<b>)?Tesoro/ui', $page) === 1,
+    'y la página lo avisa, que es lo que explica por qué el plano se puede robar');
 
 // La otra: las aldeas de artefacto no reponen tropas, al revés que una aldea de jugador.
 check(strpos($page, 'no se repone nunca') !== false,

@@ -202,6 +202,28 @@ if(is_array($wonder) && count($wonder)) {
     echo '[--] no hay ninguna aldea con Tesoro para probar contra datos reales'.PHP_EOL;
 }
 check($database->canClaimArtifact(0, 1) === false, 'una aldea inexistente no puede reclamar');
+
+// El plano de construcción pide Tesoro 10 por ser plano, no por su tamaño. Se guarda con
+// tamaño pequeño, así que hoy las dos formas coinciden; el tipo se pasa igual para que un
+// plano guardado como grande —un mundo viejo, un sembrado a mano— siga pidiendo 10.
+check(artefactTreasuryRequirement(ARTEFACT_SIZE_LARGE, ARTEFACT_PLAN) === 10,
+    'un plano guardado como grande sigue pidiendo Tesoro 10');
+$planTheft = artefactTheftOutcome(
+    array('type' => 3, 'hero_sent' => 1, 'hero_dead' => 0),
+    array('artefact' => true, 'size' => ARTEFACT_SIZE_LARGE, 'type' => ARTEFACT_PLAN, 'treasury' => 0),
+    array('treasury' => 10, 'artefact' => false)
+);
+check($planTheft['status'] === 'claimed',
+    'y por eso un Tesoro 10 alcanza para robarlo');
+$largeTheft = artefactTheftOutcome(
+    array('type' => 3, 'hero_sent' => 1, 'hero_dead' => 0),
+    array('artefact' => true, 'size' => ARTEFACT_SIZE_LARGE, 'type' => ARTEFACT_ARCHITECT, 'treasury' => 0),
+    array('treasury' => 10, 'artefact' => false)
+);
+check($largeTheft['status'] === 'attacker_treasury_low',
+    'mientras que un artefacto grande de verdad con Tesoro 10 sigue rebotando');
+check($database->canClaimArtifact(0, 2, ARTEFACT_PLAN) === false,
+    'y la mitad "en casa" acepta el tipo sin romperse');
 check($database->villageHoldsArtefact(0) === false, 'ni guarda un artefacto');
 
 // El código no puede volver a preguntar por la aldea equivocada. El fallo original:

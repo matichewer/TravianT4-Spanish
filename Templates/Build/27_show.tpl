@@ -75,7 +75,13 @@ if(is_file($artefactImage)) {
                     </tr>
                     <tr>
                         <th>Alcance</th>
-                        <td><?php echo htmlspecialchars(artefactSizeName($size), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php
+                            // El plano se guarda con tamaño "pequeño" —el que pide Tesoro 10—
+                            // pero su alcance no es la aldea sino la alianza entera.
+                            echo htmlspecialchars($type === ARTEFACT_PLAN
+                                ? 'Toda tu alianza'
+                                : artefactSizeName($size), ENT_QUOTES, 'UTF-8');
+                        ?></td>
                     </tr>
                     <tr>
                         <th>Efecto</th>
@@ -83,7 +89,7 @@ if(is_file($artefactImage)) {
                     </tr>
                     <tr>
                         <th>Tesoro necesario</th>
-                        <td>Nivel <b><?php echo artefactTreasuryRequirement($size); ?></b></td>
+                        <td>Nivel <b><?php echo artefactTreasuryRequirement($size, $type); ?></b></td>
                     </tr>
                     <tr>
                         <th>Capturado</th>
@@ -106,6 +112,6 @@ if(is_file($artefactImage)) {
                 </tbody>
             </table>
             <p class="none">Para llevarte un artefacto necesitas un Tesoro de nivel
-            <?php echo artefactTreasuryRequirement($size); ?> vacío en la aldea desde la que atacas,
+            <?php echo artefactTreasuryRequirement($size, $type); ?> vacío en la aldea desde la que atacas,
             derribar el Tesoro de la aldea que lo guarda y ganar un ataque normal (no un asalto)
             con tu héroe, que además tiene que sobrevivir.</p>

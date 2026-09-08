@@ -95,7 +95,16 @@ check(artefactEffectValue(art(1, ARTEFACT_DIET, 1), ARTEFACT_BOOTS) === 1.0,
 // -------------------------------------------------------------------------------------
 section('B. Los ocho tipos tienen nombre, alcance y requisito');
 
-foreach(artefactTypeCatalog() as $type => $info) {
+// El catálogo tiene nueve entradas y el plano de construcción es la novena, pero no es un
+// artefacto de efecto: no escala con el tamaño (las tres versiones se llaman igual a
+// propósito, porque hay una sola) y no aparece en la tabla de valores. Se comprueba aparte,
+// más abajo.
+check(count(artefactTypeCatalog()) === count(artefactEffectTypeCatalog()) + 1,
+    'el catálogo entero tiene exactamente un tipo más que el de efectos: el plano');
+check(!isset(artefactEffectTypeCatalog()[ARTEFACT_PLAN]),
+    'el plano de construcción no está entre los artefactos de efecto');
+
+foreach(artefactEffectTypeCatalog() as $type => $info) {
     check(trim($info['name']) !== '', 'el tipo '.$type.' tiene nombre');
     check(trim($info['effect']) !== '', 'el tipo '.$type.' explica su efecto');
     foreach(array(1, 2, 3) as $size) {
@@ -108,6 +117,26 @@ foreach(artefactTypeCatalog() as $type => $info) {
     check(artefactDisplayName($type, 1) !== artefactDisplayName($type, 2),
         'el tipo '.$type.': el pequeño y el grande no pueden llamarse igual');
 }
+// El plano de construcción: mismo nombre en los tres tamaños, Tesoro 10 aunque su alcance
+// sea la alianza entera, y fuera del podio de tres activos.
+$planInfo = artefactTypeCatalog();
+check(isset($planInfo[ARTEFACT_PLAN]), 'el plano de construcción está en el catálogo');
+check(trim($planInfo[ARTEFACT_PLAN]['effect']) !== '', 'el plano explica para qué sirve');
+check(artefactDisplayName(ARTEFACT_PLAN, 1) === artefactDisplayName(ARTEFACT_PLAN, 2),
+    'el plano se llama igual en todos los tamaños: hay uno solo');
+check(artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL, ARTEFACT_PLAN) === 10,
+    'el plano pide Tesoro 10');
+check(artefactTreasuryRequirement(ARTEFACT_SIZE_LARGE, ARTEFACT_PLAN) === 10,
+    'el plano pide Tesoro 10 aunque esté guardado como grande: manda el tipo, no el tamaño');
+$planRow = array('id' => 1, 'type' => ARTEFACT_PLAN, 'size' => ARTEFACT_SIZE_SMALL, 'conquered' => 0);
+check(count(artefactActiveRows(array($planRow))) === 0,
+    'el plano no entra en el podio de tres activos');
+$planState = artefactActivationState($planRow, array());
+check($planState['state'] === 'active',
+    'un plano maduro se muestra activo aunque no esté en el podio');
+check(!in_array(ARTEFACT_PLAN, artefactFoolCandidateTypes(), true),
+    'el necio no puede imitar al plano de construcción');
+
 check(artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL) === 10, 'el pequeño pide Tesoro 10');
 check(artefactTreasuryRequirement(ARTEFACT_SIZE_LARGE) === 20, 'el grande pide Tesoro 20');
 check(artefactTreasuryRequirement(ARTEFACT_SIZE_UNIQUE) === 20, 'el único pide Tesoro 20');

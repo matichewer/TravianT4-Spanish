@@ -2275,6 +2275,91 @@
 			}
 
 			/**
+			 * Las tres columnas de la liberacion programada de artefactos, en `config`.
+			 *
+			 * Mismo patron que ensureNpcVillageColumns(): un mundo sin migrar no revienta,
+			 * simplemente no tiene liberacion programada y el panel lo dice. La alternativa
+			 * —asumir que estan— es la que hace que un write falle en silencio y el panel
+			 * anuncie que programo algo que nunca se guardo.
+			 *
+			 * `artefact_release_at`     cuando tiene que soltarse (unix, 0 = sin programar)
+			 * `artefact_release_done`   cuando se solto de verdad (unix, 0 = todavia no)
+			 * `artefact_release_config` el plan congelado al programarlo, en JSON
+			 */
+			function ensureArtefactReleaseColumns() {
+				static $available = null;
+				if($available !== null) {
+					return $available;
+				}
+				$table = TB_PREFIX . "config";
+				$result = mysqli_query($this->connection,"SHOW COLUMNS FROM `$table` LIKE 'artefact_release_at'");
+				if($result && mysqli_num_rows($result) > 0) {
+					$available = true;
+					return $available;
+				}
+				$available = (bool)mysqli_query(
+					$this->connection,
+					"ALTER TABLE `$table` "
+					."ADD COLUMN IF NOT EXISTS `artefact_release_at` int(11) unsigned NOT NULL DEFAULT 0, "
+					."ADD COLUMN IF NOT EXISTS `artefact_release_done` int(11) unsigned NOT NULL DEFAULT 0, "
+					."ADD COLUMN IF NOT EXISTS `artefact_release_config` text DEFAULT NULL"
+				);
+				return $available;
+			}
+
+			/** La fila de programacion, o null si el mundo no tiene las columnas. */
+			function getArtefactReleaseSchedule() {
+				if(!$this->ensureArtefactReleaseColumns()) {
+					return null;
+				}
+				$result = mysqli_query($this->connection,
+					"SELECT `artefact_release_at`, `artefact_release_done`, `artefact_release_config` "
+					."FROM " . TB_PREFIX . "config LIMIT 1");
+				$row = $result ? mysqli_fetch_assoc($result) : null;
+				if(!is_array($row)) {
+					return null;
+				}
+				return array(
+					'at' => (int)$row['artefact_release_at'],
+					'done' => (int)$row['artefact_release_done'],
+					'config' => (string)$row['artefact_release_config']
+				);
+			}
+
+			/** Programa (o desprograma, con $at = 0) la liberacion. Devuelve si se escribio. */
+			function setArtefactReleaseSchedule($at, $configJson) {
+				if(!$this->ensureArtefactReleaseColumns()) {
+					return false;
+				}
+				$at = max(0, (int)$at);
+				$configJson = mysql_real_escape_string((string)$configJson);
+				// `done` vuelve a 0: reprogramar es pedir otra liberacion, no repetir la ya hecha.
+				return (bool)mysqli_query($this->connection,
+					"UPDATE " . TB_PREFIX . "config SET `artefact_release_at` = $at, "
+					."`artefact_release_done` = 0, `artefact_release_config` = '$configJson'");
+			}
+
+			/**
+			 * Toma el turno de soltar los artefactos, si toca y si nadie lo tomo antes.
+			 *
+			 * Es un compare-and-swap sobre `artefact_release_done`, igual que `npcupdate` en
+			 * las aldeas natar vivas: cualquier request que pase por Automation puede ser la
+			 * que dispare, y dos a la vez sembrarian el mundo dos veces. Gana la que consigue
+			 * el UPDATE; la otra ve 0 filas afectadas y sigue de largo.
+			 */
+			function claimArtefactRelease($now) {
+				if(!$this->ensureArtefactReleaseColumns()) {
+					return false;
+				}
+				$now = (int)$now;
+				$result = mysqli_query($this->connection,
+					"UPDATE " . TB_PREFIX . "config SET `artefact_release_done` = $now "
+					."WHERE `artefact_release_done` = 0 AND `artefact_release_at` > 0 "
+					."AND `artefact_release_at` <= $now");
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
+			/**
 			 * Clase NPC de una aldea, o null si la columna todavia no existe.
 			 */
 			function getVillageNpcKind($wref) {
@@ -6685,7 +6770,7 @@ break;
 			 * dos no puedan divergir. Se conserva como función propia porque
 			 * `tools/check_artifact_claim.php` la prueba contra el mundo real.
 			 */
-			public function canClaimArtifact($attackerVillage, $size) {
+			public function canClaimArtifact($attackerVillage, $size, $artefactType = 0) {
 				$attackerVillage = (int)$attackerVillage;
 				$size = (int)$size;
 				if($attackerVillage <= 0 || !in_array($size, array(1,2,3), true)) {
@@ -6693,7 +6778,10 @@ break;
 				}
 				$outcome = artefactTheftOutcome(
 					array('type' => 3, 'hero_sent' => 1, 'hero_dead' => 0),
-					array('artefact' => true, 'size' => $size, 'treasury' => 0),
+					// `type` acá adentro es el TIPO DE ARTEFACTO, no el tipo de ataque: el 3
+					// del array de arriba es "ataque normal" y no tienen nada que ver.
+					array('artefact' => true, 'size' => $size,
+						'type' => (int)$artefactType, 'treasury' => 0),
 					array(
 						'treasury' => $this->getVillageTreasuryLevel($attackerVillage),
 						'artefact' => $this->villageHoldsArtefact($attackerVillage)

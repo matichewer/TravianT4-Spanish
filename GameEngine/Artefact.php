@@ -43,9 +43,11 @@
  * incompatible —ahí el 1 era el plano de la Maravilla— y por eso se borró: sembrar
  * artefactos desde ahí daba artefactos cuyo nombre no tenía nada que ver con su efecto.
  *
- * El plano de construcción de la Maravilla del Mundo **no está implementado** en este
- * mundo (la Maravilla no se puede levantar desde cero, ver `Building::meetRequirement`),
- * así que no tiene tipo asignado. El 9 queda libre para cuando se implemente.
+ * El tipo 9 es el **plano de construcción de la Maravilla del Mundo**, y es el raro de la
+ * familia: no tiene un efecto que se aplique a una aldea sino que habilita a la ALIANZA a
+ * levantar la Maravilla, pide un Tesoro de nivel 10 aunque su alcance sea de cuenta, y no
+ * compite por los tres huecos de artefacto activo. Sus reglas de uso están en
+ * GameEngine/Wonder.php; acá sólo vive su ficha.
  */
 
 if(!defined('ARTEFACT_ARCHITECT')) {
@@ -57,6 +59,7 @@ if(!defined('ARTEFACT_ARCHITECT')) {
     define('ARTEFACT_STORAGE',   6);   // plano: habilita gran almacén y gran granero
     define('ARTEFACT_CONFUSION', 7);   // escondites enormes y catapultas enemigas al azar
     define('ARTEFACT_FOOL',      8);   // un efecto distinto cada 24 h
+    define('ARTEFACT_PLAN',      9);   // plano de construcción de la Maravilla del Mundo
 }
 
 if(!defined('ARTEFACT_SIZE_SMALL')) {
@@ -77,7 +80,18 @@ if(!defined('ARTEFACT_FOOL_WINDOW')) {
 }
 
 /**
- * Los ocho tipos, con el nombre que ve el jugador y la línea de efecto.
+ * Hasta qué nivel llega la Maravilla con un solo plano de construcción.
+ *
+ * Oficial: "Levels 1-49: 1 construction plan held within your alliance. Levels 50-100:
+ * 2 construction plans, one held by the WW owner and one by a co-ally". La regla completa
+ * y las consultas viven en GameEngine/Wonder.php.
+ */
+if(!defined('WONDER_PLAN_SOLO_MAX_LEVEL')) {
+    define('WONDER_PLAN_SOLO_MAX_LEVEL', 49);
+}
+
+/**
+ * Los nueve tipos, con el nombre que ve el jugador y la línea de efecto.
  *
  * El nombre no sale de `artefacts.name`: esa columna guarda lo que escribió quien sembró
  * el artefacto y por eso ya había artefactos con nombre de un efecto y número de otro.
@@ -117,8 +131,31 @@ function artefactTypeCatalog() {
         ARTEFACT_FOOL => array(
             'name' => 'Artefacto del necio',
             'sizes' => array(1 => 'Pequeño artefacto del necio', 2 => 'Gran artefacto del necio', 3 => 'Artefacto único del necio'),
-            'effect' => 'Cada 24 horas toma al azar el efecto de otro artefacto, para bien o para mal.')
+            'effect' => 'Cada 24 horas toma al azar el efecto de otro artefacto, para bien o para mal.'),
+        ARTEFACT_PLAN => array(
+            'name' => 'Plano de construcción',
+            'sizes' => array(1 => 'Plano de construcción antiguo', 2 => 'Plano de construcción antiguo', 3 => 'Plano de construcción antiguo'),
+            'effect' => 'Permite a tu alianza levantar la Maravilla del Mundo. Con uno se llega al nivel '
+                .WONDER_PLAN_SOLO_MAX_LEVEL.'; del '.(WONDER_PLAN_SOLO_MAX_LEVEL + 1)
+                .' en adelante hacen falta dos, uno tuyo y otro de un aliado.')
     );
+}
+
+/**
+ * Los ocho artefactos que tienen un efecto de juego, sin el plano de construcción.
+ *
+ * El plano está en el catálogo porque el jugador tiene que verlo en el Tesoro y en el
+ * mapa con nombre propio, pero no es un artefacto como los otros siete: no aplica ningún
+ * efecto a ninguna aldea, no compite por los tres huecos activos y no se siembra por
+ * tamaño. Todo lo que recorra "los artefactos" para hablar de efectos —la vista previa
+ * del sembrado, la ficha del Tesoro, la página de ayuda— tiene que recorrer ESTA lista,
+ * o termina anunciando un noveno artefacto que no hace nada y sembrando tres copias del
+ * plano, una por tamaño.
+ */
+function artefactEffectTypeCatalog() {
+    $catalog = artefactTypeCatalog();
+    unset($catalog[ARTEFACT_PLAN]);
+    return $catalog;
 }
 
 function artefactTypeName($type) {
@@ -167,7 +204,13 @@ function artefactSizeName($size) {
  * para que la pantalla del edificio no tenga su propia copia (tenía dos, y una decía 10
  * para cualquier tamaño).
  */
-function artefactTreasuryRequirement($size) {
+function artefactTreasuryRequirement($size, $type = 0) {
+    // El plano de construcción es la excepción oficial: vive en un Tesoro de nivel 10
+    // aunque su efecto alcance a toda la alianza. Todos los demás artefactos siguen la
+    // regla del tamaño.
+    if((int)$type === ARTEFACT_PLAN) {
+        return 10;
+    }
     return (int)$size === ARTEFACT_SIZE_SMALL ? 10 : 20;
 }
 
@@ -231,6 +274,15 @@ function artefactActiveRows($rows, $now = null, $speed = null) {
     $mature = array();
     foreach($rows as $row) {
         if(!is_array($row) || !isset($row['size'])) {
+            continue;
+        }
+        // El plano de construcción no entra en el podio: no tiene un efecto que pueda
+        // pisarse con otro, y hacerle ocupar uno de los tres huecos dejaría al dueño de la
+        // Maravilla eligiendo entre construirla y tener artefactos de combate. El oficial
+        // habla del límite hablando de artefactos y lista los planos aparte; no hay una
+        // fuente que diga explícitamente que cuentan, así que esto es una lectura, no una
+        // cita. Lo que sí comparten es el retardo de activación.
+        if((int)$row['type'] === ARTEFACT_PLAN) {
             continue;
         }
         if(artefactIsMature($row, $now, $speed)) {
@@ -404,7 +456,9 @@ function artefactValueTable() {
         // el plano es binario: no escala con el tamaño
         ARTEFACT_STORAGE   => array(1 => 1.0,   2 => 1.0,   3 => 1.0),
         // multiplicador de capacidad del escondite
-        ARTEFACT_CONFUSION => array(1 => 200.0, 2 => 100.0, 3 => 500.0)
+        ARTEFACT_CONFUSION => array(1 => 200.0, 2 => 100.0, 3 => 500.0),
+        // el plano de la Maravilla es binario: se tiene o no se tiene
+        ARTEFACT_PLAN      => array(1 => 1.0,   2 => 1.0,   3 => 1.0)
     );
 }
 
@@ -535,7 +589,9 @@ function artefactTheftOutcome($attack, $target, $attacker) {
         return $status('defender_treasury_standing',
             array('treasury' => (int)$target['treasury']));
     }
-    $required = artefactTreasuryRequirement($size);
+    // Por tipo y por tamaño: el plano de construcción pide Tesoro 10 aunque su alcance sea
+    // la alianza entera, y esa excepción vive en artefactTreasuryRequirement(), no acá.
+    $required = artefactTreasuryRequirement($size, isset($target['type']) ? (int)$target['type'] : 0);
     if((int)(isset($attacker['treasury']) ? $attacker['treasury'] : 0) < $required) {
         return $status('attacker_treasury_low', array('needed' => $required));
     }
@@ -631,6 +687,12 @@ function artefactActivationState($row, $activeRows, $now = null, $speed = null) 
     if($pending > 0) {
         return array('state' => 'pending', 'seconds' => $pending);
     }
+    // El plano de construcción no entra en el podio de tres, así que preguntarle a
+    // `$activeRows` si está adentro siempre daría que no y la pantalla diría "Inactivo"
+    // sobre un plano que sí sirve. Pasado el retardo, un plano está en uso y punto.
+    if(isset($row['type']) && (int)$row['type'] === ARTEFACT_PLAN) {
+        return array('state' => 'active', 'seconds' => 0);
+    }
     return array(
         'state' => artefactRowInList($row, (array)$activeRows) ? 'active' : 'displaced',
         'seconds' => 0
@@ -657,6 +719,9 @@ function artefactEffectValueLabel($row, $now = null) {
     $type = artefactEffectiveType($row, $now);
     if($type === ARTEFACT_STORAGE) {
         return 'Gran almacén y gran granero';
+    }
+    if($type === ARTEFACT_PLAN) {
+        return 'Maravilla del Mundo';
     }
     $value = artefactEffectValue($row, $type, $now);
     if($value <= 0) {

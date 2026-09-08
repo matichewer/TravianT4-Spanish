@@ -14,7 +14,10 @@
 					<div class="background-end">&nbsp;</div>
 					<div class="content"><a href="build.php?id=<?php echo $id; ?>&amp;t=2"><span class="tabItem">Vender</span></a></div>
 				</div>
-                <?php if($session->userinfo['gold'] >= 3) { ?>
+                <?php // El mercader NPC no trabaja en la aldea de la Maravilla (oficial), asi que
+                      // la pestana no se dibuja ahi: el motor igual lo rechaza, pero una pestana que
+                      // solo sabe decir que no es peor que no tenerla.
+                if($session->userinfo['gold'] >= 3 && !wonderVillage($village->resarray)) { ?>
                 <div <?php if(isset($_GET['t']) && $_GET['t'] == 3) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>>
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>

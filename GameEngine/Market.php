@@ -8,6 +8,12 @@
 ##  Copyright:     TravianX (c) 2010-2011. All rights reserved.                ## 
 ##                                                                             ## 
 ################################################################################# 
+
+// El mercader NPC esta prohibido en la aldea de la Maravilla, asi que el Mercado
+// necesita saber cual es. Se pide explicito y no por la cadena de Village.php porque
+// el worker de rutas comerciales entra por otro lado y ahi Building.php no esta.
+require_once __DIR__.'/Wonder.php';
+
 class Market {
 
     // Tope de horarios que se pueden declarar en un solo guardado de ruta comercial:
@@ -462,6 +468,8 @@ class Market {
                 return 'El reparto pide más recursos de los que hay en el almacén.';
             case 'gold':
                 return 'No se pudo hacer el cambio: hacen falta 3 de oro.';
+            case 'wonder':
+                return 'El mercader NPC no trabaja en la aldea de la Maravilla del Mundo.';
             case 'failed':
                 return 'No se pudo completar la operación. Intentalo de nuevo.';
             case 'invalid':
@@ -882,6 +890,14 @@ class Market {
 	    private function tradeResource($post) {
 	        global $session,$database,$village;
 	        $id = isset($post['id']) ? $post['id'] : 0;
+	        // Oficial: el mercader NPC no funciona en la aldea de la Maravilla del Mundo,
+	        // igual que el fin de obra con oro y el constructor maestro, que ya estaban
+	        // bloqueados. Sin esto, 3 de oro convertían el cereal sobrante de la Maravilla
+	        // en los recursos que le faltaban, que es justo el atajo que el oficial le
+	        // cierra a la carrera final.
+	        if(wonderVillage($village->resarray)) {
+	            $this->marketFailure('wonder',$id,3);
+	        }
 	        $values = isset($post['m2']) && is_array($post['m2']) ? array_values($post['m2']) : array();
 	        if(count($values) !== 4) {
 	            $this->marketFailure('invalid',$id,3);

@@ -415,3 +415,16 @@ ALTER TABLE s1_odata
 UPDATE s1_odata
 SET conquered_at = lastupdated2
 WHERE conqured <> 0 AND conquered_at = 0;
+
+-- 2026-09-08 - Liberacion programada de artefactos
+-- En el Travian oficial los artefactos no los suelta nadie a mano: aparecen en una fecha
+-- anunciada de antemano, y esa fecha es la que arranca la carrera final. Este servidor solo
+-- tenia el boton del panel, asi que la liberacion era una sorpresa para todos menos para el
+-- administrador, que ademas tenia que estar despierto a la hora que quisiera.
+-- `artefact_release_config` guarda el plan CONGELADO al programarlo: la guarnicion se deriva
+-- de los mejores ejercitos del mundo y entre programar y disparar el mundo cambia, asi que
+-- recalcular al disparar sembraria algo distinto de lo que se aprobo en la vista previa.
+ALTER TABLE s1_config
+  ADD COLUMN IF NOT EXISTS artefact_release_at int(11) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS artefact_release_done int(11) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS artefact_release_config text DEFAULT NULL;

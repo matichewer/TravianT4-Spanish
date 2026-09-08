@@ -15,6 +15,8 @@ require_once __DIR__.'/Catapult.php';
 // Los artefactos. Se declara acá además de en Database.php por lo mismo que Accounts.php:
 // hay checkers que cargan Automation con un doble de la capa de datos.
 require_once __DIR__.'/Artefact.php';
+// La liberacion programada de artefactos se dispara desde el barrido de Automation, sin cron.
+require_once __DIR__.'/ArtefactRelease.php';
 
 class Automation {
 
@@ -619,6 +621,9 @@ class Automation {
         }
         if(!file_exists("GameEngine/Prevention/natarsettlement.txt") or time() - filemtime("GameEngine/Prevention/natarsettlement.txt") > 50) {
             $this->natarSettlements();
+        }
+        if(!file_exists("GameEngine/Prevention/artefactrelease.txt") or time() - filemtime("GameEngine/Prevention/artefactrelease.txt") > 50) {
+            $this->artefactRelease();
         }
         $buildSweepDue = !file_exists("GameEngine/Prevention/build.txt")
             || time() - filemtime("GameEngine/Prevention/build.txt") > 50;
@@ -4094,6 +4099,10 @@ class Automation {
                                 array(
                                     'artefact' => true,
                                     'size' => (int)$artifact['size'],
+                                    // El tipo va junto con el tamaño porque el plano de
+                                    // construcción pide Tesoro 10 por ser plano, no por su
+                                    // tamaño: sin esto un plano guardado como grande pediría 20.
+                                    'type' => isset($artifact['type']) ? (int)$artifact['type'] : 0,
                                     'treasury' => $database->getVillageTreasuryLevel((int)$data['to'])
                                 ),
                                 array(
@@ -6058,6 +6067,48 @@ class Automation {
             natarSettlementBringUpToDate((int)$settlement['wref'], $now, $accrue);
         }
         natarSettlementSpawn($now);
+    }
+
+    /**
+     * Suelta los artefactos cuando llega la fecha programada desde el panel.
+     *
+     * En el oficial la liberación es un evento con fecha anunciada, no un botón: todo el
+     * mundo sabe cuándo arranca la carrera final y se prepara. Acá el barrido hace de reloj,
+     * como con las aventuras y las aldeas natar vivas, así que no hace falta cron ni que el
+     * administrador esté despierto a las tres de la mañana.
+     *
+     * El turno se toma con un compare-and-swap en la base (`claimArtefactRelease()`), que es
+     * lo que impide que dos requests simultáneas siembren el mundo dos veces. La marca de
+     * `Prevention/` sólo evita consultar la fila de config en cada request; no es el candado.
+     */
+    private function artefactRelease() {
+        global $database;
+        if(file_exists("GameEngine/Prevention/artefactrelease.txt")) {
+            @unlink("GameEngine/Prevention/artefactrelease.txt");
+        }
+        $ourFileHandle = @fopen("GameEngine/Prevention/artefactrelease.txt", 'w');
+        @fclose($ourFileHandle);
+
+        $result = artefactReleaseRunScheduled($database);
+        if(is_array($result)) {
+            $this->logArtefactRelease($result);
+        }
+    }
+
+    /**
+     * Deja constancia de una liberación automática.
+     *
+     * Va al log de Apache y no a una tabla porque es un evento único en la vida del mundo
+     * que además puede fallar a medias: `docker compose logs web` es donde ya se miran los
+     * `[SQL FALLIDO]`, y una liberación que soltó 12 de 31 aldeas tiene que dejar rastro en
+     * algún lado o el administrador se entera mirando el mapa.
+     */
+    private function logArtefactRelease($result) {
+        $created = isset($result['created']) ? count($result['created']) : 0;
+        $failed = isset($result['failed']) ? (int)$result['failed'] : 0;
+        error_log('[ARTEFACTOS] Liberación programada: '.$created.' aldeas creadas'
+            .($failed > 0 ? ', '.$failed.' sin sitio en el mapa' : '')
+            .(isset($result['error']) ? ' — '.$result['error'] : ''));
     }
 
     private function addAdventures() {

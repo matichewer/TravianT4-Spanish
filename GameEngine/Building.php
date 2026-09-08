@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__.'/Catapult.php';
+// La Maravilla del Mundo y los planos de construcción que la habilitan.
+require_once __DIR__.'/Wonder.php';
 
 class Building {	
 
@@ -65,6 +67,14 @@ class Building {
 		}
 		$demolition = $database->getDemolition($village->wid);
 		if(!empty($demolition) && (int)$demolition[0]['buildnumber'] === $id) { return 11; }
+		// La Maravilla pide planos de construcción, y eso NO se puede comprobar en
+		// meetRequirement(): esa función sólo corre cuando el campo está vacío, y la
+		// Maravilla nunca se construye desde cero — ya viene levantada en la aldea natar
+		// que se conquista. Por eso el requisito vive acá, en el camino de la mejora, que
+		// es por donde el nivel 100 se alcanzaba gratis.
+		if($tid === WONDER_BUILDING_TYPE && !$this->wonderPlansAllowNextLevel($id)) {
+			return 12;
+		}
 		if($this->isMax($tid,$id)) {
 			return 1;
 		} else if($this->isMax($tid,$id,1) && ($this->isLoop($id) || $this->isCurrent($id))) {
@@ -565,11 +575,46 @@ class Building {
 			return (int)$village->capital === 0
 				&& $this->hasStorageArtefact() && $this->canBuildAnotherOfType($id);
 			break;
+			// Oficial: en la aldea de la Maravilla no se puede levantar un Tesoro. Es lo
+			// que obliga a guardar el plano de construcción en OTRA aldea, y por lo tanto
+			// lo que lo vuelve robable: si pudiera vivir en la aldea de la Maravilla,
+			// defender una cosa defendería las dos.
+			case 27:
+			return !wonderVillage($village->resarray);
+			break;
 			case 40:
-			return false; //not implemented
+			// La Maravilla no se construye desde cero en ningún lado: se conquista la
+			// aldea natar que ya la tiene levantada. Lo que gatea subirla de nivel son los
+			// planos de construcción, y eso se comprueba en canBuild().
+			return false;
 			break;
 		}
 		return true;
+	}
+
+	/**
+	 * ¿Los planos de construcción alcanzan para el próximo nivel de la Maravilla?
+	 *
+	 * El nivel que se mira es al que se llegaría, no el actual: el salto que importa es el
+	 * que cruza WONDER_PLAN_SOLO_MAX_LEVEL, y con la cola de construcción el próximo nivel
+	 * no siempre es el actual + 1.
+	 */
+	public function wonderPlansAllowNextLevel($field) {
+		global $database, $session, $village;
+		if(!is_object($database) || !method_exists($database, 'query_return')) {
+			return true;
+		}
+		return !empty($this->wonderPlanStatusForVillage($field)['allowed']);
+	}
+
+	/** El estado de los planos para la Maravilla de esta aldea, para que la pantalla lo explique. */
+	public function wonderPlanStatusForVillage($field) {
+		global $database, $session, $village;
+		$field = (int)$field;
+		$current = isset($village->resarray['f'.$field]) ? (int)$village->resarray['f'.$field] : 0;
+		$queued = count($database->getBuildingByField($village->wid, $field));
+		$alliance = (int)$database->getUserField((int)$session->uid, 'alliance', 0);
+		return wonderPlanStatus($database, (int)$session->uid, $alliance, $current + 1 + $queued);
 	}
 
 	/** ¿Están todos los edificios que este pide, en el nivel que pide? */

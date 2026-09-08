@@ -24,6 +24,7 @@ $plan = artefactReleasePlan($config, $config['defence_mode'] === 'world' ? $refe
 
 $existing = $database->getAllArtefacts();
 $existingCount = count($existing);
+$schedule = artefactReleaseScheduleStatus($database);
 $delayHours = round(artefactActivationDelay(SPEED) / 3600);
 
 /** Un campo numérico con su rango a la vista, para que el formulario y el servidor digan lo mismo. */
@@ -92,6 +93,19 @@ foreach($plan['summary'] as $size => $row) {
 		.'<td class="hab">'.round($row['ring'][0]).' &ndash; '.round($row['ring'][1]).'</td>'
 		.'</tr>';
 }
+// El plano va en su propia fila y no en el bucle de tamaños porque no es un tamaño: hay un
+// solo plano de construcción y se siembran tantas copias como pida la configuración.
+$planRow = $plan['plans'];
+$totalTroops += $planRow['stats']['troops'] * $planRow['villages'];
+echo '<tr style="background:#f3efe0;">'
+	.'<td>'.htmlspecialchars($planRow['label'], ENT_QUOTES, 'UTF-8').'</td>'
+	.'<td class="hab">'.(int)$planRow['villages'].'<br><span style="color:#666;">no es un tamaño</span></td>'
+	.'<td class="hab">'.n($planRow['stats']['troops']).'</td>'
+	.'<td class="hab">'.n($planRow['stats']['infantry']).'</td>'
+	.'<td class="hab">'.n($planRow['stats']['cavalry']).'</td>'
+	.'<td class="hab">'.n($planRow['stats']['upkeep']).'/h</td>'
+	.'<td class="hab">'.round($planRow['ring'][0]).' &ndash; '.round($planRow['ring'][1]).'</td>'
+	.'</tr>';
 ?>
 		</tbody>
 		<tfoot>
@@ -107,8 +121,16 @@ foreach($plan['summary'] as $size => $row) {
 <?php
 releaseField('count_small',  'Aldeas por tipo — pequeño', '8 tipos');
 releaseField('count_large',  'Aldeas por tipo — grande', '8 tipos');
-releaseField('count_unique', 'Aldeas por tipo — único', '7 tipos: el plano no tiene único');
+releaseField('count_unique', 'Aldeas por tipo — único', '7 tipos: el plano de almacenamiento no tiene único');
+releaseField('count_plans',  'Planos de construcción', 'no se multiplica por tipos: es uno solo');
 ?>
+	<tr><td colspan="3" style="text-align:left;color:#666;">
+		El <b>plano de construcción</b> es lo que habilita la Maravilla del Mundo: uno en la
+		alianza llega al nivel <?php echo (int)WONDER_PLAN_SOLO_MAX_LEVEL; ?>, y del
+		<?php echo (int)WONDER_PLAN_SOLO_MAX_LEVEL + 1; ?> en adelante hacen falta dos, uno del
+		dueño de la Maravilla y otro de un aliado. Con menos de dos nadie termina la partida;
+		con dos por alianza, cada alianza puede.
+	</td></tr>
 	</tbody></table>
 
 	<h3>Qué tan duras</h3>
@@ -133,6 +155,7 @@ releaseField('defence_manual', 'Defensa del pequeño (modo manual)', 'puntos de 
 releaseField('defence_floor',  'Piso de defensa', 'manda si el mundo da menos');
 releaseField('tier_large',     'El grande vale, sobre el pequeño', 'oficial: 1.5384');
 releaseField('tier_unique',    'El único vale, sobre el grande', 'oficial: 1.5');
+releaseField('tier_plan',      'El plano vale, sobre el pequeño', 'el oficial no publica un número');
 ?>
 	</tbody></table>
 
@@ -148,6 +171,8 @@ releaseField('ring_large_min',  'Grande — desde (%)');
 releaseField('ring_large_max',  'Grande — hasta (%)');
 releaseField('ring_small_min',  'Pequeño — desde (%)');
 releaseField('ring_small_max',  'Pequeño — hasta (%)');
+releaseField('ring_plan_min',   'Plano — desde (%)');
+releaseField('ring_plan_max',   'Plano — hasta (%)');
 ?>
 	</tbody></table>
 
@@ -166,7 +191,7 @@ releaseField('wall',     'Nivel de la muralla', 'oficial 0: los natars sólo lle
 		<thead><tr><td>Artefacto</td><td>Pequeño</td><td>Grande</td><td>Único</td><td>Efecto</td></tr></thead>
 		<tbody>
 <?php
-foreach(artefactTypeCatalog() as $type => $info) {
+foreach(artefactEffectTypeCatalog() as $type => $info) {
 	$values = array();
 	foreach(array(ARTEFACT_SIZE_SMALL, ARTEFACT_SIZE_LARGE, ARTEFACT_SIZE_UNIQUE) as $size) {
 		if($type === ARTEFACT_STORAGE && $size === ARTEFACT_SIZE_UNIQUE) {
@@ -181,8 +206,22 @@ foreach(artefactTypeCatalog() as $type => $info) {
 		.'<td style="text-align:left;">'.htmlspecialchars($info['effect'], ENT_QUOTES, 'UTF-8').'</td></tr>';
 }
 ?>
+<?php
+$planInfo = artefactTypeCatalog();
+$planInfo = $planInfo[ARTEFACT_PLAN];
+echo '<tr style="background:#f3efe0;"><td style="text-align:left;">'
+	.htmlspecialchars($planInfo['name'], ENT_QUOTES, 'UTF-8').'</td>'
+	.'<td class="hab" colspan="3">no escala con el tamaño</td>'
+	.'<td style="text-align:left;">'.htmlspecialchars($planInfo['effect'], ENT_QUOTES, 'UTF-8').'</td></tr>';
+?>
 		</tbody>
 	</table>
+
+	<p>El plano de construcción se guarda en un <b>Tesoro de nivel
+	<?php echo (int)artefactTreasuryRequirement(ARTEFACT_SIZE_SMALL, ARTEFACT_PLAN); ?></b>, no 20 como
+	los artefactos de cuenta, y <b>no ocupa</b> ninguno de los tres huecos de artefacto activo.
+	En la aldea de la Maravilla no se puede construir un Tesoro, así que el plano siempre vive
+	en otra aldea &mdash; que es lo que lo vuelve robable.</p>
 
 	<p>En este mundo (velocidad <?php echo SPEED; ?>x) un artefacto capturado tarda
 	<b><?php echo $delayHours; ?> horas</b> en hacer efecto, y una cuenta sólo puede tener
@@ -221,11 +260,52 @@ if($existingCount > 0) {
 }
 ?>
 
+	<h3>Cuándo</h3>
+<?php
+if(!$schedule['available']) {
+	echo '<p style="color:#a00;">Este mundo todavía no tiene las columnas de la liberación '
+		.'programada. Aplicá <code>tools/migrations.sql</code> y volvé a entrar.</p>';
+} else {
+	if($schedule['scheduled']) {
+		echo '<div style="border:2px solid #084;background:#eaf7ee;padding:10px;margin:10px 0;">'
+			.'<p><b>Hay una liberación programada para el '
+			.date('d/m/Y \a \l\a\s H:i', $schedule['at']).'</b> '
+			.'(faltan '.floor($schedule['seconds'] / 3600).' h '
+			.floor(($schedule['seconds'] % 3600) / 60).' min).</p>'
+			.'<p>Va a sembrar el plan tal como se guardó ese día, no el que estés viendo ahora: '
+			.'volvé a apretar <b>Programar</b> si querés que use estos números.</p></div>';
+	} else if($schedule['done'] > 0) {
+		echo '<p>La última liberación programada se disparó el '
+			.date('d/m/Y H:i', $schedule['done']).'.</p>';
+	} else {
+		echo '<p>No hay ninguna liberación programada. El servidor no va a soltar nada solo.</p>';
+	}
+?>
+	<p>En el Travian oficial los artefactos aparecen solos en una fecha anunciada de antemano,
+	y esa fecha es la que arranca la carrera final. Programala y avisales a los jugadores: no
+	hace falta que estés conectado, lo dispara el primer jugador que entre después de la hora.</p>
+	<p>
+		<label>Fecha y hora (<?php echo date_default_timezone_get(); ?>):
+			<input type="datetime-local" name="release_at" class="fm" style="width:220px;"
+				value="<?php echo $schedule['scheduled']
+					? date('Y-m-d\TH:i', $schedule['at'])
+					: date('Y-m-d\TH:i', time() + 7 * 86400); ?>"></label>
+		&nbsp;&nbsp;
+		<button type="submit" formaction="../GameEngine/Admin/Mods/scheduleArtefacts.php">
+			Programar con estos números</button>
+<?php if($schedule['scheduled']) { ?>
+		&nbsp;&nbsp;
+		<button type="submit" name="cancelar" value="si"
+			formaction="../GameEngine/Admin/Mods/scheduleArtefacts.php">Cancelar la programación</button>
+<?php } ?>
+	</p>
+<?php } ?>
+
 	<p>
 		<button type="submit">Recalcular vista previa</button>
 		&nbsp;&nbsp;&nbsp;
 		<button type="submit" formaction="../GameEngine/Admin/Mods/addArtefacts.php"
-			style="font-weight:bold;">Sembrar <?php echo (int)$plan['total_villages']; ?> aldeas</button>
+			style="font-weight:bold;">Sembrar <?php echo (int)$plan['total_villages']; ?> aldeas ahora</button>
 	</p>
 </form>
 
@@ -287,5 +367,24 @@ if(isset($_GET['borrados'])) {
 			.' y su aldea quedó intacta.';
 	}
 	echo '</p>';
+}
+if(isset($_GET['programado'])) {
+	echo '<p><b>Liberación programada para el '
+		.date('d/m/Y H:i', (int)$_GET['programado']).'.</b> El plan quedó congelado tal como '
+		.'estaba en la vista previa.</p>';
+}
+if(isset($_GET['cancelado'])) {
+	echo '<p><b>Programación cancelada.</b> El servidor no va a soltar nada solo.</p>';
+}
+if(isset($_GET['e']) && $_GET['e'] === 'fecha') {
+	echo '<p style="color:#a00;"><b>No se programó nada:</b> esa fecha no se entiende.</p>';
+}
+if(isset($_GET['e']) && $_GET['e'] === 'pasado') {
+	echo '<p style="color:#a00;"><b>No se programó nada:</b> esa fecha ya pasó, así que se '
+		.'dispararía enseguida. Si querés sembrar ahora usá el botón de sembrar.</p>';
+}
+if(isset($_GET['e']) && $_GET['e'] === 'sinmigracion') {
+	echo '<p style="color:#a00;"><b>No se programó nada:</b> a esta base le falta la migración '
+		.'de <code>artefact_release_at</code>. Aplicá <code>tools/migrations.sql</code>.</p>';
 }
 ?>

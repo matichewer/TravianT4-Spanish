@@ -11,6 +11,14 @@ if($bindicate == 1) {
 	echo "<p><span class=\"none\"><b>El último nivel de ".$building->procResType($village->resarray['f'.$id.'t'])." está en construcción</b></span></p>";
 } else if($bindicate == 11) {
 	echo "<p><span class=\"none\"><b>".$building->procResType($village->resarray['f'.$id.'t'])." ha sido demolido</b></span></p>";
+} else if($bindicate == 12) {
+	// La Maravilla sin los planos que pide el próximo nivel. Se dice QUÉ falta y no sólo
+	// que no se puede: un "no" sin motivo es lo que hacía que un jugador con todo en regla
+	// no entendiera por qué no le aparecía el botón.
+	$wonderStatus = $building->wonderPlanStatusForVillage($id);
+	echo "<p><span class=\"none\"><b>".htmlspecialchars(wonderPlanMessage($wonderStatus), ENT_QUOTES, 'UTF-8')."</b></span></p>";
+	echo "<p class=\"none\">Planos activos: ".(int)$wonderStatus['own']." tuyo(s) y "
+		.(int)$wonderStatus['allies']." de tu alianza.</p>";
 } else {
 	$loopsame = $building->isCurrent($id)?1:0;
         $doublebuild = 0;

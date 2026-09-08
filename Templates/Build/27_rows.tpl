@@ -26,7 +26,12 @@ if(!function_exists('treasuryArtefactIcon')) {
 		$type = (int)$row['type'];
 		$size = (int)$row['size'];
 		$name = htmlspecialchars(artefactDisplayName($type, $size), ENT_QUOTES, 'UTF-8');
-		$scope = htmlspecialchars(artefactSizeName($size), ENT_QUOTES, 'UTF-8');
+		// El plano se guarda con tamaño "pequeño" —es el que pide Tesoro 10, igual que él—
+		// pero su alcance no es la aldea sino la alianza entera, así que no puede anunciar
+		// el alcance del tamaño con el que está guardado.
+		$scope = $type === ARTEFACT_PLAN
+			? 'alianza'
+			: htmlspecialchars(artefactSizeName($size), ENT_QUOTES, 'UTF-8');
 		$effect = artefactTypeEffectText($type);
 		if($type === ARTEFACT_FOOL) {
 			$roll = artefactFoolRoll($row);
@@ -34,7 +39,7 @@ if(!function_exists('treasuryArtefactIcon')) {
 				.($roll['penalty'] ? ', y en contra.' : '.');
 		}
 		return '<td class="nam"><a href="build.php?id='.(int)$buildingId.'&amp;show='.(int)$row['id'].'">'.$name.'</a>'
-			.'<div class="info">Tesoro <b>'.artefactTreasuryRequirement($size).'</b>, alcance <b>'.$scope.'</b><br>'
+			.'<div class="info">Tesoro <b>'.artefactTreasuryRequirement($size, $type).'</b>, alcance <b>'.$scope.'</b><br>'
 			.htmlspecialchars($effect, ENT_QUOTES, 'UTF-8').'</div></td>';
 	}
 

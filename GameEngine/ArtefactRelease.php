@@ -56,6 +56,12 @@ function artefactReleaseDefaults() {
         'count_large'      => 1,
         'count_unique'     => 1,
 
+        // Planos de construcción de la Maravilla. No son un tamaño: son su propia clase
+        // (ver ARTEFACT_PLAN). Con dos alianzas peleando la Maravilla hacen falta al menos
+        // cuatro para que las dos puedan pasar del nivel 49, que es donde el oficial pide
+        // el segundo plano.
+        'count_plans'      => 4,
+
         // De dónde sale la defensa.
         'defence_mode'     => 'world',
         'defence_sample'   => 100,    // "top 100 offensive armies", oficial
@@ -66,11 +72,15 @@ function artefactReleaseDefaults() {
         // La proporción entre tamaños es oficial y no se toca a la ligera.
         'tier_large'       => 1.5384, // el grande, sobre el pequeño
         'tier_unique'      => 1.5,    // el único, sobre el grande
+        'tier_plan'        => 1.5384, // el plano, sobre el pequeño (igual que el grande)
 
         // Anillos, como fracción de WORLD_MAX. Oficial sobre un mapa de ±200.
         'ring_unique_min'  => 0,   'ring_unique_max' => 13,
         'ring_large_min'   => 10,  'ring_large_max'  => 30,
         'ring_small_min'   => 20,  'ring_small_max'  => 55,
+        // El plano va en la periferia como el pequeño: es lo primero que se sale a buscar
+        // y ponerlo en el centro lo dejaría al alcance de quien ya tiene la Maravilla.
+        'ring_plan_min'    => 20,  'ring_plan_max'   => 55,
 
         // La aldea.
         'treasury'         => 10,   // CALIBRADO: el oficial es 20 (unas 55 catapultas)
@@ -92,6 +102,10 @@ function artefactReleaseDefaults() {
  *
  *   - `count_*`: el oficial no publica cuántos artefactos suelta. Los 6/4/1 que había eran
  *     una constante heredada, y en un mundo de cuatro jugadores dan 87 aldeas natar nuevas.
+ *     Lo mismo vale para `count_plans`, `tier_plan` y la banda `ring_plan_*`: el oficial
+ *     tampoco publica cuántos planos de construcción libera ni con qué defensa, así que no
+ *     figuran acá — no se apartan de un valor oficial, es que no hay ninguno del que
+ *     apartarse.
  *   - `defence_factor`: al 100% la aldea más chica pide un ejército entero de los mejores
  *     del servidor y no queda nada para las otras dos oleadas del robo. Al 35% cuesta un
  *     tercio, que es lo que hace la carrera jugable con pocos jugadores.
@@ -135,6 +149,21 @@ function artefactReleaseSizes() {
 }
 
 /**
+ * Todas las bandas de anillo que hay que validar: los tres tamaños y el plano.
+ *
+ * El plano no es un tamaño y por eso no sale de `artefactReleaseSizes()`, pero su banda
+ * se valida igual que las otras tres. Devuelve `array(etiqueta => array(claveMin, claveMax))`.
+ */
+function artefactReleaseRingBands() {
+    $bands = array();
+    foreach(artefactReleaseSizes() as $meta) {
+        $bands[$meta['label']] = $meta['ring'];
+    }
+    $bands['Plano de construcción'] = array('ring_plan_min', 'ring_plan_max');
+    return $bands;
+}
+
+/**
  * Los límites de cada campo: mínimo, máximo y si admite decimales.
  *
  * Vive como tabla porque la validación del POST y la ayuda del formulario tienen que decir
@@ -146,18 +175,22 @@ function artefactReleaseLimits() {
         'count_small'     => array(0, 50, false),
         'count_large'     => array(0, 50, false),
         'count_unique'    => array(0, 10, false),
+        'count_plans'     => array(0, 50, false),
         'defence_sample'  => array(1, 1000, false),
         'defence_factor'  => array(1, 1000, false),
         'defence_manual'  => array(0, 500000000, false),
         'defence_floor'   => array(0, 500000000, false),
         'tier_large'      => array(1, 20, true),
         'tier_unique'     => array(1, 20, true),
+        'tier_plan'       => array(1, 20, true),
         'ring_unique_min' => array(0, 100, false),
         'ring_unique_max' => array(0, 100, false),
         'ring_large_min'  => array(0, 100, false),
         'ring_large_max'  => array(0, 100, false),
         'ring_small_min'  => array(0, 100, false),
         'ring_small_max'  => array(0, 100, false),
+        'ring_plan_min'   => array(0, 100, false),
+        'ring_plan_max'   => array(0, 100, false),
         'treasury'        => array(1, 20, false),
         'fields'          => array(0, 20, false),
         'cranny'          => array(0, 20, false),
@@ -209,11 +242,12 @@ function artefactReleaseNormalizeConfig($input) {
     $config['defence_mode'] = $mode;
 
     // Un anillo invertido no puede contener ninguna casilla: se da vuelta en vez de dejar
-    // el plan sin sitio donde colocar nada.
-    foreach(artefactReleaseSizes() as $size => $meta) {
-        list($minKey, $maxKey) = $meta['ring'];
+    // el plan sin sitio donde colocar nada. El plano tiene su propia banda y entra en la
+    // misma vuelta, o sería el único campo del formulario sin esta red.
+    foreach(artefactReleaseRingBands() as $label => $keys) {
+        list($minKey, $maxKey) = $keys;
         if($config[$minKey] > $config[$maxKey]) {
-            $warnings[] = $meta['label'].': el anillo iba de '.$config[$minKey].'% a '
+            $warnings[] = $label.': el anillo iba de '.$config[$minKey].'% a '
                 .$config[$maxKey].'%, se da vuelta';
             $swap = $config[$minKey];
             $config[$minKey] = $config[$maxKey];
@@ -221,8 +255,9 @@ function artefactReleaseNormalizeConfig($input) {
         }
     }
 
-    if($config['count_small'] + $config['count_large'] + $config['count_unique'] === 0) {
-        $warnings[] = 'los tres conteos están en cero: no se sembraría nada';
+    if($config['count_small'] + $config['count_large'] + $config['count_unique']
+        + $config['count_plans'] === 0) {
+        $warnings[] = 'los cuatro conteos están en cero: no se sembraría nada';
     }
 
     return array('config' => $config, 'warnings' => $warnings);
@@ -302,6 +337,19 @@ function artefactReleaseDefenceTarget($config, $reference, $size) {
 }
 
 /**
+ * Los puntos de defensa de una aldea con un plano de construcción.
+ *
+ * El oficial no publica un número para esto. Se le da el mismo peso que al artefacto
+ * grande porque es lo que vale: un plano no mejora ninguna aldea, pero sin él la carrera
+ * por la Maravilla no arranca, así que tiene que costar tanto como un artefacto de cuenta.
+ */
+function artefactReleasePlanDefenceTarget($config, $reference) {
+    $config = is_array($config) ? $config : artefactReleaseDefaults();
+    $base = artefactReleaseDefenceTarget($config, $reference, ARTEFACT_SIZE_SMALL);
+    return $base * (float)$config['tier_plan'];
+}
+
+/**
  * La composición de referencia de una guarnición natar, en proporción.
  *
  * Sale de `natarWonderGarrison()` para no inventar un segundo ejército natar: si mañana se
@@ -376,6 +424,16 @@ function artefactReleaseRing($config, $size) {
     );
 }
 
+/** La banda de distancia al centro, en casillas, de una aldea con un plano. */
+function artefactReleasePlanRing($config) {
+    $config = is_array($config) ? $config : artefactReleaseDefaults();
+    $span = (float)WORLD_MAX;
+    return array(
+        $span * ((float)$config['ring_plan_min'] / 100),
+        $span * ((float)$config['ring_plan_max'] / 100)
+    );
+}
+
 /**
  * El plan completo: qué aldeas hay que crear, con qué adentro.
  *
@@ -396,7 +454,10 @@ function artefactReleasePlan($config, $reference) {
         $ring = artefactReleaseRing($config, $size);
 
         $types = array();
-        foreach(array_keys(artefactTypeCatalog()) as $type) {
+        // `artefactEffectTypeCatalog()` y no el catálogo entero: el plano de construcción
+        // no se siembra por tamaño, tiene su propia vuelta más abajo. Recorriendo los nueve
+        // se sembraban tres planos por cada uno pedido, uno por cada tamaño.
+        foreach(array_keys(artefactEffectTypeCatalog()) as $type) {
             // El plano de almacenamiento no tiene versión única, igual que en el original.
             if($type === ARTEFACT_STORAGE && $size === ARTEFACT_SIZE_UNIQUE) {
                 continue;
@@ -431,15 +492,53 @@ function artefactReleasePlan($config, $reference) {
         }
     }
 
+    // Los planos de construcción, que no son un tamaño sino su propia clase. Van en una
+    // vuelta aparte porque no se multiplican por los ocho tipos: hay UN plano y se siembran
+    // tantas copias como pida la configuración. Se guardan con tamaño "pequeño" a propósito,
+    // que es el que pide un Tesoro de nivel 10 — el mismo que pide el plano por regla
+    // oficial, así que las dos formas de calcularlo coinciden en vez de contradecirse.
+    $planCount = (int)$config['count_plans'];
+    $planDefence = artefactReleasePlanDefenceTarget($config, $reference);
+    $planGarrison = artefactReleaseGarrison($planDefence);
+    $planStats = artefactReleaseGarrisonStats($planGarrison);
+    $planRing = artefactReleasePlanRing($config);
+
+    $plan = array(
+        'label' => 'Plano de construcción',
+        'per_type' => $planCount,
+        'types' => 1,
+        'villages' => $planCount,
+        'defence_target' => (int)round($planDefence),
+        'ring' => $planRing,
+        'garrison' => $planGarrison,
+        'stats' => $planStats
+    );
+
+    for($i = 0; $i < $planCount; $i++) {
+        $villages[] = array(
+            'type' => ARTEFACT_PLAN,
+            'size' => ARTEFACT_SIZE_SMALL,
+            'garrison' => $planGarrison,
+            'ring' => $planRing,
+            'treasury' => (int)$config['treasury'],
+            'fields' => (int)$config['fields'],
+            'cranny' => (int)$config['cranny'],
+            'wall' => (int)$config['wall']
+        );
+    }
+
+    $totalTroops = array_sum(array_map(function ($row) {
+        return $row['stats']['troops'] * $row['villages'];
+    }, $summary)) + $planStats['troops'] * $planCount;
+
     return array(
         'config' => $config,
         'reference' => (int)$reference,
         'summary' => $summary,
+        'plans' => $plan,
         'villages' => $villages,
         'total_villages' => count($villages),
-        'total_troops' => array_sum(array_map(function ($row) {
-            return $row['stats']['troops'] * $row['villages'];
-        }, $summary))
+        'total_troops' => $totalTroops
     );
 }
 
@@ -683,4 +782,115 @@ function artefactReleaseDeleteVillage($database, $wref) {
     $database->query('DELETE FROM '.$P.'vdata WHERE `wref` = '.$wref);
     $database->query('UPDATE '.$P.'wdata SET `occupied` = 0 WHERE `id` = '.$wref);
     return true;
+}
+
+/* ------------------------------------------------------------------------------------
+ * LA LIBERACIÓN PROGRAMADA
+ *
+ * En el Travian oficial los artefactos no los suelta nadie a mano: aparecen solos en una
+ * fecha anunciada de antemano, y esa fecha es la que arranca la carrera final —todo el
+ * mundo sabe cuándo empieza y se prepara. Este servidor sólo tenía el botón del panel, así
+ * que la liberación era una sorpresa para todos menos para el administrador, que además
+ * tenía que estar despierto a la hora que quisiera.
+ *
+ * Cómo funciona: el panel guarda la fecha y el plan CONGELADO en JSON. Cualquier request
+ * que pase por `Automation` mira si la fecha ya pasó y, si toca, toma el turno con un
+ * compare-and-swap sobre `artefact_release_done` y siembra. No hay cron: es el mismo patrón
+ * que las aldeas natar vivas y las aventuras.
+ *
+ * Por qué se congela el plan y no se recalcula al disparar. La guarnición se deriva de los
+ * mejores ejércitos del mundo, y entre programar y disparar el mundo cambia: si se
+ * recalculara, el administrador estaría aprobando una vista previa y el servidor sembraría
+ * otra cosa. Lo que se ve es lo que se siembra, aunque pasen dos semanas.
+ *
+ * Lo que sí se recalcula al disparar es DÓNDE va cada aldea: `artefactReleaseExecute()`
+ * busca casillas libres en el momento, porque una casilla libre hoy puede tener una aldea
+ * mañana.
+ * ------------------------------------------------------------------------------------ */
+
+/**
+ * La programación actual, normalizada.
+ *
+ * `available` es false en un mundo al que todavía no le llegó la migración: ahí no hay
+ * liberación programada y el panel lo dice en vez de fingir que la guardó.
+ */
+function artefactReleaseScheduleStatus($database, $now = null) {
+    $now = $now === null ? time() : (int)$now;
+    $status = array(
+        'available' => false,
+        'at' => 0,
+        'done' => 0,
+        'config' => artefactReleaseDefaults(),
+        'scheduled' => false,
+        'due' => false,
+        'seconds' => 0
+    );
+    if(!is_object($database) || !method_exists($database, 'getArtefactReleaseSchedule')) {
+        return $status;
+    }
+    $row = $database->getArtefactReleaseSchedule();
+    if(!is_array($row)) {
+        return $status;
+    }
+    $status['available'] = true;
+    $status['at'] = (int)$row['at'];
+    $status['done'] = (int)$row['done'];
+
+    $decoded = $row['config'] !== '' ? json_decode($row['config'], true) : null;
+    // Un JSON corrupto o de una versión anterior del formulario no puede dejar el sembrado
+    // sin configuración: se vuelve a normalizar contra los límites de hoy, que es lo mismo
+    // que hace el POST del panel.
+    $normalized = artefactReleaseNormalizeConfig(is_array($decoded) ? $decoded : array());
+    $status['config'] = $normalized['config'];
+    $status['config_warnings'] = $normalized['warnings'];
+
+    $status['scheduled'] = $status['at'] > 0 && $status['done'] === 0;
+    $status['due'] = $status['scheduled'] && $status['at'] <= $now;
+    $status['seconds'] = $status['scheduled'] ? max(0, $status['at'] - $now) : 0;
+    return $status;
+}
+
+/** Guarda la fecha y el plan congelado. `$at = 0` cancela la programación. */
+function artefactReleaseSchedule($database, $at, $config) {
+    if(!is_object($database) || !method_exists($database, 'setArtefactReleaseSchedule')) {
+        return false;
+    }
+    $normalized = artefactReleaseNormalizeConfig($config);
+    $json = json_encode($normalized['config']);
+    return $database->setArtefactReleaseSchedule($at, $json === false ? '' : $json);
+}
+
+/**
+ * Dispara la liberación si toca. Devuelve el informe, o null si no había nada que hacer.
+ *
+ * El turno se toma ANTES de sembrar, no después: si se tomara después, dos requests
+ * simultáneas sembrarían las dos y recién entonces se pelearían por marcar el turno. Y si
+ * el sembrado se cae a la mitad, el turno queda tomado igual — es lo correcto: mejor media
+ * liberación que dos enteras, y el panel muestra lo que hay.
+ */
+function artefactReleaseRunScheduled($database, $now = null) {
+    $now = $now === null ? time() : (int)$now;
+    $status = artefactReleaseScheduleStatus($database, $now);
+    if(!$status['available'] || !$status['due']) {
+        return null;
+    }
+    if(!method_exists($database, 'claimArtefactRelease') || !$database->claimArtefactRelease($now)) {
+        return null;
+    }
+
+    $config = $status['config'];
+    $reference = $config['defence_mode'] === 'world'
+        ? artefactReleaseReferenceOffence($database, $config['defence_sample'])
+        : 0;
+    $plan = artefactReleasePlan($config, $reference);
+    $natarId = natarsAccountId();
+    if($natarId <= 0) {
+        // Sin cuenta natar no hay a quién ponerle las aldeas. El turno ya está tomado, así
+        // que esto no se reintenta solo: es un mundo mal instalado y hay que mirarlo.
+        return array('created' => array(), 'failed' => $plan['total_villages'],
+            'error' => 'no existe la cuenta Natars');
+    }
+    $result = artefactReleaseExecute($database, $plan, $natarId);
+    $result['plan'] = $plan;
+    return $result;
 }
