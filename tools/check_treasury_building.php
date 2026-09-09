@@ -192,6 +192,84 @@ check(strpos($screenCode, '"Inactive"') === false && strpos($screenCode, '"Activ
 check(strpos($screenCode, 'artefact.image-') === false,
     'la clase de la ilustración no puede llevar un punto literal: era una clase inexistente');
 
+// -------------------------------------------------------------------------------------
+// Los íconos: el arte del gpack NO está en la numeración de este repo.
+//
+// El sprite del pack activo trae las ranuras 1, 2, 4, 5, 6, 8, 9, 10 y "fool" —la
+// numeración del Travian original— y las bandas 3 y 7 están **vacías**. Pidiendo
+// `artefact_icon_<tipo>` a secas, los ojos del águila (3) y la confusión del rival (7)
+// salían sin ícono en el Tesoro, y casi todos los demás quedaban cruzados: la sandalia
+// alada vive en la ranura 4, así que ilustraba el control de dieta mientras las botas de
+// los titanes se dibujaban con una columna. `artefactArtSlot()` es la traducción.
+//
+// La comprobación que importa no es que la clase exista en el CSS —existían las once— sino
+// que la banda del sprite tenga algo dibujado. Se abre el GIF y se cuentan los colores.
+require_once $root.'/GameEngine/Artefact.php';
+
+$pack = $root.'/gpack/travian_Travian_4.0_41';
+$sprite = $pack.'/img/misc/artefacts.gif';
+$css = (string)file_get_contents($pack.'/lang/ir/compact1.css');
+check(is_file($sprite), 'el sprite de íconos del pack activo está en su lugar');
+
+/** Los píxeles pintados de una banda del sprite, para distinguir un ícono de un hueco. */
+function treasurySpriteColours($image, $offset) {
+    if(!$image) {
+        return 0;
+    }
+    $colours = array();
+    $height = imagesy($image);
+    for($y = $offset; $y < min($offset + 16, $height); $y++) {
+        for($x = 0; $x < imagesx($image); $x++) {
+            $colour = imagecolorat($image, $x, $y);
+            if((($colour >> 24) & 0x7F) < 100) {
+                $colours[$colour] = true;
+            }
+        }
+    }
+    return count($colours);
+}
+
+$sprite = is_file($sprite) && function_exists('imagecreatefromgif')
+    ? @imagecreatefromgif($sprite) : null;
+$slotsSeen = array();
+foreach(array_keys(artefactTypeCatalog()) as $type) {
+    $name = artefactTypeName($type);
+    $slot = artefactArtSlot($type);
+
+    // 1. Ningún tipo comparte dibujo con otro.
+    check(!isset($slotsSeen[$slot]),
+        $name.': su dibujo ('.$slot.') no está usado por otro artefacto');
+    $slotsSeen[$slot] = $type;
+
+    // 2. La clase existe en el CSS del pack activo.
+    check(strpos($css, 'img.'.artefactIconClass($type).'{') !== false,
+        $name.': la clase '.artefactIconClass($type).' existe en el pack activo');
+
+    // 3. Y la banda del sprite tiene algo dibujado, que es lo que fallaba.
+    if($sprite && preg_match('/img\.'.preg_quote(artefactIconClass($type), '/').'\{background-position:0 (-?\d+)px/', $css, $m)) {
+        $colours = treasurySpriteColours($sprite, abs((int)$m[1]));
+        check($colours > 3,
+            $name.': su ícono no es una banda vacía del sprite ('.$colours.' colores)');
+    }
+
+    // 4. La ilustración grande existe y su clase también.
+    check(is_file($root.'/'.artefactImageFile($type)),
+        $name.': la ilustración '.basename(artefactImageFile($type)).' existe');
+    check(strpos($css, 'img.artefact.'.artefactImageClass($type).' {') !== false
+        || strpos($css, 'img.artefact.'.artefactImageClass($type).'{') !== false,
+        $name.': la clase '.artefactImageClass($type).' existe en el pack activo');
+}
+check(count($slotsSeen) === count(artefactTypeCatalog()),
+    'los nueve tipos tienen un dibujo distinto cada uno');
+
+// Y que las pantallas pidan la traducción en vez de armar la clase con el tipo crudo.
+check(strpos($templates['27_rows'], 'artefactIconClass(') !== false,
+    'la lista del Tesoro pide la clase a artefactIconClass()');
+check(strpos($templates['27_rows'], "'artefact_icon_'.\$type") === false,
+    'y no la arma pegando el número del tipo, que es de donde salían los huecos');
+check(strpos($screenCode, 'artefactImageFile(') !== false,
+    'la ficha pide el archivo de la ilustración a artefactImageFile()');
+
 // Los nombres y efectos salen del catálogo, no de las columnas del INSERT.
 check(strpos($templates['27_rows'], 'artefactDisplayName(') !== false,
     'el nombre del artefacto sale del catálogo');

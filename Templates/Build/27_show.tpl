@@ -39,13 +39,15 @@ if($type === ARTEFACT_FOOL) {
 }
 ?>
 <?php
-// La ilustración grande. El gpack sólo trae `img/artefact/type-N.jpg` para algunos
-// tipos, así que se dibuja sólo si el archivo existe: antes la clase estaba escrita
-// como "artefact.image-6" —con un punto literal, o sea una sola clase inexistente— y
-// además fija en 6, así que no se dibujaba nunca ninguna.
-$artefactImage = 'gpack/travian_Travian_4.0_41/img/artefact/type-'.$type.'.jpg';
+// La ilustración grande. La clase estaba escrita como "artefact.image-6" —con un punto
+// literal, o sea una sola clase inexistente— y además fija en 6, así que no se dibujaba
+// nunca ninguna. El archivo y la clase salen ahora de `artefactImageFile()` /
+// `artefactImageClass()`, que traducen a la numeración del arte: pidiendo `type-<tipo>.jpg`
+// el águila y la confusión no tenían archivo y el necio usaba la ilustración de otro.
+// El `is_file()` queda de red por si algún día se cambia de gpack.
+$artefactImage = artefactImageFile($type);
 if(is_file($artefactImage)) {
-	echo '<img class="artefact image-'.$type.'" src="img/x.gif" alt="">';
+	echo '<img class="artefact '.artefactImageClass($type).'" src="img/x.gif" alt="">';
 }
 ?>
         <h4 class="round"><?php echo htmlspecialchars(artefactDisplayName($type, $size), ENT_QUOTES, 'UTF-8'); ?></h4>

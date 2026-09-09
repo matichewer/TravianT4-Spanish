@@ -158,6 +158,67 @@ function artefactEffectTypeCatalog() {
     return $catalog;
 }
 
+/**
+ * En qué dibujo del gpack se apoya cada tipo de artefacto.
+ *
+ * El arte del pack activo NO está en la numeración de este repo: viene con la del Travian
+ * original, que tenía los tipos 1, 2, 4, 5, 6, 8, 9, 10 y "fool". Al renumerar los tipos a
+ * 1..9 quedaron dos apuntando a ranuras **vacías** del sprite —el águila (3) y la confusión
+ * (7) salían sin ícono en el Tesoro— y casi todos los demás quedaron cruzados: el más
+ * visible era la sandalia alada, que vive en la ranura 4 y por lo tanto ilustraba el
+ * *control de dieta* mientras las *botas de los titanes* se dibujaban con una columna.
+ *
+ * Es exactamente el problema que `buildingIconClass()` resuelve para los edificios, y se
+ * arregla igual: una sola tabla que traduce de la numeración del repo a la del arte. No
+ * hizo falta tocar el CSS ni el sprite — las nueve clases `artefact_icon_*` y las nueve
+ * `image-*` ya existían con su posición correcta; lo único que estaba mal era cuál se pedía.
+ *
+ * El reparto sigue lo que el dibujo REPRESENTA, que se ve mirando las ilustraciones grandes
+ * de `img/artefact/type-*.jpg` (los íconos de 16x16 son los mismos objetos en chico):
+ *
+ *   columna         -> arquitecto            (los edificios aguantan más)
+ *   sandalia alada  -> botas de los titanes  (velocidad)
+ *   catalejo        -> ojos del águila       (ver lejos)
+ *   cornucopia      -> control de dieta      (comida)
+ *   reloj de bolsillo -> talento del entrenador (tiempo)
+ *   carpa           -> plano de almacenamiento (habilita dos edificios)
+ *   corneta         -> confusión del rival   (la falsa alarma)
+ *   marioneta       -> artefacto del necio
+ *   pergamino       -> plano de construcción (el plano de la Maravilla)
+ *
+ * Devuelve la clave del arte como STRING, porque una de ellas es "fool" y no un número.
+ */
+function artefactArtSlot($type) {
+    $slots = array(
+        ARTEFACT_ARCHITECT => '2',
+        ARTEFACT_BOOTS     => '4',
+        ARTEFACT_EAGLE     => '5',
+        ARTEFACT_DIET      => '6',
+        ARTEFACT_TRAINER   => '10',
+        ARTEFACT_STORAGE   => '9',
+        ARTEFACT_CONFUSION => '8',
+        ARTEFACT_FOOL      => 'fool',
+        ARTEFACT_PLAN      => '1'
+    );
+    $type = (int)$type;
+    return isset($slots[$type]) ? $slots[$type] : 'fool';
+}
+
+/** La clase del ícono de 16x16 del Tesoro. */
+function artefactIconClass($type) {
+    return 'artefact_icon_'.artefactArtSlot($type);
+}
+
+/** La clase de la ilustración grande de la ficha del artefacto. */
+function artefactImageClass($type) {
+    return 'image-'.artefactArtSlot($type);
+}
+
+/** El archivo de esa ilustración, relativo a la raíz del sitio. */
+function artefactImageFile($type) {
+    return 'gpack/travian_Travian_4.0_41/img/artefact/type-'.artefactArtSlot($type).'.jpg';
+}
+
 function artefactTypeName($type) {
     $catalog = artefactTypeCatalog();
     $type = (int)$type;

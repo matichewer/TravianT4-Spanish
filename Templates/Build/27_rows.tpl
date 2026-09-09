@@ -9,11 +9,16 @@
  */
 if(!function_exists('treasuryArtefactIcon')) {
 
-	/** El ícono de 16x16. El necio tiene el suyo propio, no el del efecto que imita. */
+	/**
+	 * El ícono de 16x16. La clase sale de `artefactIconClass()`, que traduce de la
+	 * numeración de este repo a la del arte del gpack: pedirle `artefact_icon_<tipo>`
+	 * dejaba al águila y a la confusión apuntando a ranuras vacías del sprite, y cruzaba
+	 * casi todos los demás. El necio sigue teniendo el suyo propio, no el del efecto que
+	 * imita — la tabla se lo asigna igual que a los otros ocho.
+	 */
 	function treasuryArtefactIcon($row) {
 		$type = (int)$row['type'];
-		$class = $type === ARTEFACT_FOOL ? 'artefact_icon_fool' : 'artefact_icon_'.$type;
-		return '<img class="'.$class.'" src="img/x.gif" alt="" title="'
+		return '<img class="'.artefactIconClass($type).'" src="img/x.gif" alt="" title="'
 			.htmlspecialchars(artefactTypeName($type), ENT_QUOTES, 'UTF-8').'">';
 	}
 
