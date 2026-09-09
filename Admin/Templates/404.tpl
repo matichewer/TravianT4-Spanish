@@ -12,7 +12,7 @@
 <div style="margin-top: 50px;">
 	<center>
 		<h1>404 - Archivo no encontrado</h1>
-		<img src="../../gpack/travian_default/img/misc/404.gif" title="No encontrado" alt="No encontrado"><br />
+		<img src="../gpack/travian_default/img/misc/404.gif" title="No encontrado" alt="No encontrado"><br />
 		<p>Buscamos 404 veces, pero no encontramos nada.</p>
 		<p>Esta sección todavía no está completa o la página no existe.</p><br>
 	</center>

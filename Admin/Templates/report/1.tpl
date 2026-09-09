@@ -31,7 +31,7 @@ $dataarray = explode(",",$rep['data']);
 <?php
 $start = $dataarray[2] == 1? 1 : (($dataarray[2] == 2)? 11 : (($dataarray[2] == 3)? 21 : 31));
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=3;$i<=12;$i++) {
@@ -56,21 +56,21 @@ echo "</tr></tbody>";
 if ($dataarray[139]!='' and $dataarray[140]!=''){ //ram
 ?>
 	<tbody class="goods"><tr><th>Información</th><td colspan="10">
-	<img class="unit u<?php echo $dataarray[139]; ?>" src="img/x.gif" alt="Ram" title="Ram" />
+	<img class="unit u<?php echo $dataarray[139]; ?>" src="../img/x.gif" alt="Ram" title="Ram" />
 	<?php echo $dataarray[140]; ?>
     </td></tr></tbody>
 <?php } 
 if ($dataarray[141]!='' and $dataarray[142]!=''){ //cata
 ?>
 	<tbody class="goods"><tr><th>Información</th><td colspan="10">
-	<img class="unit u<?php echo $dataarray[141]; ?>" src="img/x.gif" alt="Catapulta" title="Catapulta" />
+	<img class="unit u<?php echo $dataarray[141]; ?>" src="../img/x.gif" alt="Catapulta" title="Catapulta" />
 	<?php echo $dataarray[142]; ?>
     </td></tr></tbody>
 <?php }
 if ($dataarray[143]!='' and $dataarray[144]!=''){ //chief
 ?>
 	<tbody class="goods"><tr><th>Información</th><td colspan="10">
-	<img class="unit u<?php echo $dataarray[143]; ?>" src="img/x.gif" alt="Jefe" title="Jefe" />
+	<img class="unit u<?php echo $dataarray[143]; ?>" src="../img/x.gif" alt="Jefe" title="Jefe" />
 	<?php echo $dataarray[144]; ?>
     </td></tr></tbody>
 <?php } ?>
@@ -82,7 +82,7 @@ if ($dataarray[143]!='' and $dataarray[144]!=''){ //chief
     </td></tr></tbody>
 <?php } ?>
 	<tbody class="goods"><tr><th>Botín</th><td colspan="10">
-	<div class="res"><img class="r1" src="img/x.gif" alt="Madera" title="Madera" /><?php echo $dataarray[23]; ?> | <img class="r2" src="img/x.gif" alt="Barro" title="Barro" /><?php echo $dataarray[24]; ?> | <img class="r3" src="img/x.gif" alt="Hierro" title="Hierro" /><?php echo $dataarray[25]; ?> | <img class="r4" src="img/x.gif" alt="Cereal" title="Cereal" /><?php echo $dataarray[26]; ?></div><div class="carry"><img class="car" src="img/x.gif" alt="carry" title="carry" /><?php echo ($dataarray[23]+$dataarray[24]+$dataarray[25]+$dataarray[26])."/".$dataarray[27]; ?></div>
+	<div class="res"><img class="r1" src="../img/x.gif" alt="Madera" title="Madera" /><?php echo $dataarray[23]; ?> | <img class="r2" src="../img/x.gif" alt="Barro" title="Barro" /><?php echo $dataarray[24]; ?> | <img class="r3" src="../img/x.gif" alt="Hierro" title="Hierro" /><?php echo $dataarray[25]; ?> | <img class="r4" src="../img/x.gif" alt="Cereal" title="Cereal" /><?php echo $dataarray[26]; ?></div><div class="carry"><img class="car" src="../img/x.gif" alt="carry" title="carry" /><?php echo ($dataarray[23]+$dataarray[24]+$dataarray[25]+$dataarray[26])."/".$dataarray[27]; ?></div>
     </td></tr></tbody></table>
 	
 <?php
@@ -104,7 +104,7 @@ $start=1; ?>
 	
 	<?php
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=35;$i<=44;$i++) {
@@ -143,7 +143,7 @@ $start=11;?>
 	
 <?php
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=56;$i<=65;$i++) {
@@ -181,7 +181,7 @@ $start=21; ?>
 	
 	<?php
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=77;$i<=86;$i++) {
@@ -220,7 +220,7 @@ $start=31; ?>
 	
 	<?php
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=98;$i<=107;$i++) {
@@ -259,7 +259,7 @@ $start=41; ?>
 	
 	<?php
 for($i=$start;$i<=($start+9);$i++) {
-	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\"  /></td>";
+	echo "<td><img src=\"../img/x.gif\" class=\"unit u$i\"  /></td>";
 }
 echo "</tr><tr><th>Tropas</th>";
 for($i=119;$i<=128;$i++) {

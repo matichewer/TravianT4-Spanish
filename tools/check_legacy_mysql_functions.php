@@ -30,7 +30,6 @@ $legacyDeadFiles = array(
     'Admin/Mods/medals.php',
     'Admin/Mods/renameVillage.php',
     'Admin/Mods/sendMessage.php',
-    'Admin/Onlines.php',
     'Admin/Templates/village.tpl',
     'GameEngine/Admin/Mods/delallymedalbyaid.php',
     'GameEngine/Admin/Mods/delallymedalbyweek.php',

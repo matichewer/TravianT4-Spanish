@@ -12,7 +12,7 @@
 
 comming soon
 <div>
-<img style="border: 1px solid blue;" src="img/x.gif" usemap="#mymap" alt="imagemap" border="0" height="525 width="525">
+<img style="border: 1px solid blue;" src="../img/x.gif" usemap="#mymap" alt="imagemap" border="0" height="525 width="525">
 </div>
 
 <map name="mymap">

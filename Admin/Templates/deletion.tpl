@@ -96,12 +96,12 @@ if($_GET['uid'])
 							if($varray[$i]['capital'])
 							{
 								$capital = '<span class="c">(capital)</span>';
-								$delLink = '<a href="#"><img src="../img/Admin/x.gif" class="del"></a>';
+								$delLink = '<a href="#"><img src="../img/admin/x.gif" class="del"></a>';
 							}
 							else
 							{
 								$capital = '';
-								$delLink = '<a href="?action=delVil&did='.$varray[$i]['wref'].'" onClick="return del(\'did\','.$varray[$i]['wref'].');"><img src="../img/Admin/del.gif" class="del"></a>';
+								$delLink = '<a href="?action=delVil&did='.$varray[$i]['wref'].'" onClick="return del(\'did\','.$varray[$i]['wref'].');"><img src="../img/admin/del.gif" class="del"></a>';
 							} echo '
 							<tr>
 								<td><a href="?p=village&did='.$varray[$i]['wref'].'">'.$varray[$i]['name'].'</a> '.$capital.'</td>

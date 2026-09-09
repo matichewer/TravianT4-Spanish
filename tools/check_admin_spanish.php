@@ -18,11 +18,12 @@
  *     es una traducción pendiente.
  *   - Una línea con acentos o signos de apertura se da por traducida. Es una heurística, y
  *     alcanza: en la práctica no hay frase en español de este panel sin uno.
- *   - `Admin/Templates/backup/` está EXCLUIDO porque está muerto: no lo incluye nadie. Lo
- *     mismo `Admin/home.php`, `Users.php`, `Onlines.php`, `ManageNews.php`, `news.php`,
- *     `top.php`, `jdf.php` y `login.php`, que son entradas viejas que ya no se alcanzan
- *     desde ningún lado (ver la nota del panel en AGENTS.md). Traducir código muerto sería
- *     trabajo tirado, y pinearlo haría fallar el checker por pantallas que nadie ve.
+ *   - No hay exclusiones: todo lo que queda bajo `Admin/` está vivo. Las nueve entradas
+ *     viejas que no alcanzaba nadie (`home.php`, `Users.php`, `Onlines.php`, `ManageNews.php`,
+ *     `news.php`, `top.php`, `jdf.php`, `404.php` y `login.php`), sus assets huérfanos
+ *     (`img.php`, `login.css`, `loading.gif` y las 63 imágenes de `Admin/images/`) y el
+ *     directorio `Admin/Templates/backup/` se borraron en vez de traducirse. Si alguna
+ *     vuelve a aparecer, este checker la va a tratar como pantalla viva, que es lo correcto.
  *
  * La excepción declarada: la cita textual del oficial sobre la defensa de los artefactos,
  * que va en inglés a propósito porque es una cita.
@@ -217,7 +218,7 @@ foreach(adminLiveFiles($root) as $file) {
 }
 
 // =====================================================================================
-section('E. Los formularios apuntan a un archivo que existe');
+section('E. Los formularios y las imágenes apuntan a un archivo que existe');
 // =====================================================================================
 //
 // Tres formularios de `village.tpl` —cambiar el dueño de una aldea, renombrarla y recalcular
@@ -246,6 +247,34 @@ foreach(adminLiveFiles($root) as $file) {
     }
 }
 check($formTargets > 0, 'se revisó el destino de los formularios del panel ('.$formTargets.')');
+
+// Lo mismo con las imágenes y las hojas de estilo, que estaban peor que los formularios.
+// Ocho `<img>` de cinco pantallas pedían `../img/Admin/del.gif` con A mayúscula y el
+// directorio es `img/admin`, así que los iconos de borrar una aldea y de levantar una
+// sanción salían rotos. Otras 30 —las 28 de los informes de batalla, que son una copia de
+// las del juego— pedían `img/x.gif` sin el `../`, y las rutas se resuelven desde `Admin/`,
+// no desde la raíz: los informes del panel no dibujaban una sola unidad. Y seis plantillas
+// cargaban `gpack/travian_default/lang/**en**/compact.css`, un idioma que ese pack no trae.
+// Se miran sólo las rutas literales —sin PHP adentro— porque una ruta armada en tiempo de
+// ejecución no se puede resolver acá.
+$imageTargets = 0;
+foreach(adminLiveFiles($root) as $file) {
+    $relative = substr($file, strlen($root) + 1);
+    $directory = strpos($relative, 'Admin/') === 0 ? $root.'/Admin' : dirname($file);
+    if(!preg_match_all('~(?:src|href)\s*=\s*\\\\?["\']([^"\'<>$]+\.(?:gif|png|jpg|jpeg|css|js))~', (string)file_get_contents($file), $m)) {
+        continue;
+    }
+    foreach($m[1] as $target) {
+        $target = trim($target);
+        if($target === '' || $target[0] === '/' || strpos($target, '://') !== false) {
+            continue;
+        }
+        $imageTargets++;
+        check(is_file($directory.'/'.$target),
+            $relative.': el recurso "'.$target.'" no existe (¿le falta un ../, o son mayúsculas?)');
+    }
+}
+check($imageTargets > 0, 'se revisaron las imágenes y hojas de estilo del panel ('.$imageTargets.')');
 
 echo PHP_EOL.($failures
     ? $failures.' FALLA(S) sobre '.$checks.' comprobaciones'

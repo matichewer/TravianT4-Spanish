@@ -19,7 +19,7 @@ if(isset($id))
 	$varray = $database->getProfileVillages($id);
 	$varmedal = $database->getProfileMedal($id); ?>
 
-	<link href="../gpack/travian_default/lang/en/compact.css?f4b7c" rel="stylesheet" type="text/css">
+	<link href="../gpack/travian_default/lang/ir/compact.css?f4b7c" rel="stylesheet" type="text/css">
 	<style type="text/css">
 		input.dynamic_img, img.dynamic_img 
 		{
@@ -29,7 +29,7 @@ if(isset($id))
 		input#btn_send 
 		{
 			width: 97px;
-			background-image: url(../gpack/travian_default/lang/en/b/send.gif);
+			background-image: url(../gpack/travian_default/lang/ir/b/send.gif);
 		}
 		div.messages div#write_content #heading input 
 		{
@@ -43,7 +43,7 @@ if(isset($id))
 	<div id="content" class="messages">
 		<div id="read_head" class="msg_head"></div>
 		<div id="read_content" class="msg_content">
-			<img src="../../gpack/travian_default/lang/en/msg/block_bg24b.gif" id="label" class="read" alt="">
+			<img src="../gpack/travian_default/lang/ir/msg/block_bg24b.gif" id="label" class="read" alt="">
 			
 			<div id="heading">
 				<input type="hidden" name="uid" value="<?php echo $id; ?>">

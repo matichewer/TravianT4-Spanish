@@ -9,9 +9,9 @@
 
 	<link rel=stylesheet type="text/css" href="../img/admin/acp.css">
 
-	<link rel=stylesheet type="text/css" href="../img/../img.css">
+	<link rel=stylesheet type="text/css" href="../img/img.css">
 
-		<script src="mt-full.js?423cb"  type="text/javascript"></script>
+		<script src="/mt-full.js?423cb"  type="text/javascript"></script>
 
 	<script src="ajax.js" type="text/javascript"></script>
 

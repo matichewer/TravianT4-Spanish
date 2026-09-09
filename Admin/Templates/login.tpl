@@ -14,7 +14,7 @@
 	<img src="../img/admin/admin.gif" width="468" height="60" border="0">
 </div>
 
-<img src="../gpack/travian_default/lang/en/t1/login.gif">
+<img src="../gpack/travian_default/lang/ir/t1/login.gif">
 
 <form method="post" action="admin.php">
 	<input type="hidden" name="action" value="login">
