@@ -725,10 +725,16 @@ foreach(array(38 => 'Gran almacén', 39 => 'Gran granero') as $tid => $label) {
     $stub = (new StorageVillageStub())->place(19, 15, 10);
     check(requirementFor($buildingObj, $tid, $stub) === true,
         $label.": con edificio principal nivel 10 fuera de la capital debe permitirse");
+    // Y en la capital TAMBIÉN. El T4 oficial no prohíbe estos dos ahí —su requisito
+    // publicado es Edificio principal 10 más el plano de almacenamiento, y nada más—; el
+    // `capital == 0` venía del TravianX original, copiado del Gran cuartel y del Gran
+    // establo, donde sí es oficial. Con la regla de más, el artefacto no servía justo en
+    // la aldea donde más rinde: la capital es la única que sube los campos por encima de 10.
+    // La regla buena se sigue pineando en tools/check_building_requirements.php, sección F.
     $stub = (new StorageVillageStub())->place(19, 15, 10);
     $stub->capital = 1;
-    check(requirementFor($buildingObj, $tid, $stub) === false,
-        $label.": en la capital debe rechazarse");
+    check(requirementFor($buildingObj, $tid, $stub) === true,
+        $label.": en la capital también debe permitirse");
     $stub = (new StorageVillageStub())->place(19, 15, 10)->place(20, $tid, 19);
     check(requirementFor($buildingObj, $tid, $stub) === false,
         $label.": con uno a nivel 19 no se debe permitir otro");

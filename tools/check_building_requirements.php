@@ -178,7 +178,9 @@ class RequirementsDatabase {
     public function getDemolition($wid) { return array(); }
     public function getMasterJobs($wid) { return array(); }
     public function hasPalace($uid,$exclude = 0) { return false; }
-    public function hasActiveArtefactEffect($wid,$uid,$type) { return false; }
+    /** Se puede encender para probar el camino del plano de almacenamiento. */
+    public $storageArtefact = false;
+    public function hasActiveArtefactEffect($wid,$uid,$type) { return $this->storageArtefact; }
 }
 class RequirementsVillage {
     public $wid = 1;
@@ -237,6 +239,50 @@ check($building->meetRequirement(12),'con Academia 3 sí');
 // Un gid que no existe no se construye ni por accidente.
 requirementsVillage(array(15 => 20));
 check(!$building->meetRequirement(13),'el gid 13 no es construible');
+
+// ---------------------------------------------------------------------------
+section('F. Qué edificio se prohíbe en la capital, y cuál no');
+// ---------------------------------------------------------------------------
+//
+// El T4 oficial prohíbe en la capital el Gran cuartel, el Gran establo y —por el mismo
+// patrón— el Gran taller. NO prohíbe el Gran almacén ni el Gran granero: su requisito
+// publicado es Edificio principal 10 más el plano de almacenamiento (o estar en una aldea
+// de la Maravilla), y nada más. El TravianX original les copiaba igual el `capital == 0`,
+// así que el artefacto de almacenamiento no servía justo en la aldea donde más rinde: la
+// capital, la única que puede tener los campos por encima del nivel 10.
+
+// Sin el plano no hay gran almacén en ningún lado, capital o no.
+$database->storageArtefact = false;
+$village->capital = 0;
+requirementsVillage(array(15 => 10));
+check(!$building->meetRequirement(38),'sin plano de almacenamiento no hay Gran almacén');
+check(!$building->meetRequirement(39),'ni Gran granero');
+
+// Con el plano, en una aldea normal.
+$database->storageArtefact = true;
+check($building->meetRequirement(38),'con el plano, el Gran almacén se puede en una aldea normal');
+check($building->meetRequirement(39),'y el Gran granero también');
+
+// Y en la CAPITAL igual: es la línea que se sacó.
+$village->capital = 1;
+check($building->meetRequirement(38),'y en la capital TAMBIÉN, que es lo que el fork prohibía de más');
+check($building->meetRequirement(39),'lo mismo el Gran granero');
+$html = $building->requirementsHtml(38);
+check(stripos($html,'capital') === false,
+    'y la ficha ya no anuncia un requisito de capital que no existe');
+
+// Lo que sí sigue prohibido en la capital, para no habernos llevado puesta la regla buena.
+requirementsVillage(array(15 => 10, 19 => 20, 20 => 20, 21 => 20));
+$village->capital = 1;
+foreach(array(29 => 'Gran cuartel', 30 => 'Gran establo', 42 => 'Gran taller') as $gid => $nombre) {
+    check(!$building->meetRequirement($gid), $nombre.' sigue prohibido en la capital');
+}
+$village->capital = 0;
+foreach(array(29 => 'Gran cuartel', 30 => 'Gran establo', 42 => 'Gran taller') as $gid => $nombre) {
+    check($building->meetRequirement($gid), 'y fuera de la capital, '.$nombre.' se puede');
+}
+$database->storageArtefact = false;
+$village->capital = 0;
 
 echo "\n";
 if(count($GLOBALS['fails']) > 0) {

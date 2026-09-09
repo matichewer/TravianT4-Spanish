@@ -570,10 +570,16 @@ class Building {
 			return !$this->hasQueuedType(36)
 				&& ($this->getTypeCount(36) == 0 || $this->getTypeLevel(36) == 20);
 			break;
+			// El gran almacén y el gran granero piden el plano de almacenamiento (o estar en
+			// una aldea de la Maravilla) y nada más. **En la capital también se pueden**:
+			// el TravianX original les copiaba el `capital == 0` del gran cuartel y del gran
+			// establo, que ahí sí es oficial, y ninguna fuente del T4 lo pide para estos dos
+			// — el requisito publicado es Edificio principal 10 más el artefacto. Con la
+			// regla de más, el artefacto de almacenamiento no servía justo en la aldea donde
+			// más rinde: la capital, que es la única con los campos por encima de 10.
 			case 38:
 			case 39:
-			return (int)$village->capital === 0
-				&& $this->hasStorageArtefact() && $this->canBuildAnotherOfType($id);
+			return $this->hasStorageArtefact() && $this->canBuildAnotherOfType($id);
 			break;
 			// Oficial: en la aldea de la Maravilla no se puede levantar un Tesoro. Es lo
 			// que obliga a guardar el plano de construcción en OTRA aldea, y por lo tanto
@@ -685,7 +691,6 @@ class Building {
 			break;
 			case 38:
 			case 39:
-			$extras[] = array('Aldea que no sea la capital',(int)$village->capital === 0);
 			$extras[] = array('Plano de almacenamiento',$this->hasStorageArtefact());
 			break;
 		}
