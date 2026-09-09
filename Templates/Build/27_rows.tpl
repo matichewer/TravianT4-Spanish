@@ -43,9 +43,17 @@ if(!function_exists('treasuryArtefactIcon')) {
 			$effect = 'Ahora mismo imita a '.artefactTypeName($roll['type'])
 				.($roll['penalty'] ? ', y en contra.' : '.');
 		}
+		// El VALOR del efecto es lo único que distingue un grande de un único: los dos son
+		// de cuenta y los dos piden Tesoro 20, así que sin este número las dos filas se leen
+		// idénticas. Se omite en los dos planos, donde el efecto no es una cifra sino una
+		// habilitación y el texto de abajo ya lo dice.
+		$value = ($type === ARTEFACT_STORAGE || $type === ARTEFACT_PLAN)
+			? ''
+			: artefactEffectValueLabel($row);
 		return '<td class="nam"><a href="build.php?id='.(int)$buildingId.'&amp;show='.(int)$row['id'].'">'.$name.'</a>'
-			.'<div class="info">Tesoro <b>'.artefactTreasuryRequirement($size, $type).'</b>, alcance <b>'.$scope.'</b><br>'
-			.htmlspecialchars($effect, ENT_QUOTES, 'UTF-8').'</div></td>';
+			.'<div class="info">Tesoro <b>'.artefactTreasuryRequirement($size, $type).'</b>, alcance <b>'.$scope.'</b>'
+			.($value !== '' ? ', efecto <b>'.htmlspecialchars($value, ENT_QUOTES, 'UTF-8').'</b>' : '')
+			.'<br>'.htmlspecialchars($effect, ENT_QUOTES, 'UTF-8').'</div></td>';
 	}
 
 	/** El jugador dueño, enlazado a su perfil. */

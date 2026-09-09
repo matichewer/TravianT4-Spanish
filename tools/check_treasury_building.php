@@ -270,6 +270,33 @@ check(strpos($templates['27_rows'], "'artefact_icon_'.\$type") === false,
 check(strpos($screenCode, 'artefactImageFile(') !== false,
     'la ficha pide el archivo de la ilustración a artefactImageFile()');
 
+// -------------------------------------------------------------------------------------
+// La fila muestra el VALOR del efecto, que es lo único que separa un grande de un único.
+//
+// Los dos son de alcance cuenta y los dos piden Tesoro 20, así que sin la cifra las dos
+// filas se leen idénticas y no hay forma de saber cuál conviene robar. En los dos planos se
+// omite a propósito: su efecto es una habilitación, no un número, y el texto ya lo dice.
+check(strpos($templates['27_rows'], 'artefactEffectValueLabel(') !== false,
+    'la fila del Tesoro anuncia el valor del efecto');
+foreach(array(ARTEFACT_ARCHITECT => array('x4', 'x3', 'x5'),
+              ARTEFACT_EAGLE     => array('x5', 'x3', 'x10'),
+              ARTEFACT_DIET      => array('1/2', '3/4', '1/2')) as $type => $esperado) {
+    foreach(array(ARTEFACT_SIZE_SMALL, ARTEFACT_SIZE_LARGE, ARTEFACT_SIZE_UNIQUE) as $index => $size) {
+        $row = array('id' => 1, 'type' => $type, 'size' => $size, 'conquered' => 0);
+        check(artefactEffectValueLabel($row) === $esperado[$index],
+            artefactDisplayName($type, $size).': la fila anuncia '.$esperado[$index]);
+    }
+}
+// Y el grande NO puede leerse igual que el único, que es el caso que motivó la columna.
+foreach(array(ARTEFACT_ARCHITECT, ARTEFACT_EAGLE, ARTEFACT_CONFUSION) as $type) {
+    $grande = artefactEffectValueLabel(array('id' => 1, 'type' => $type, 'size' => ARTEFACT_SIZE_LARGE, 'conquered' => 0));
+    $unico  = artefactEffectValueLabel(array('id' => 1, 'type' => $type, 'size' => ARTEFACT_SIZE_UNIQUE, 'conquered' => 0));
+    check($grande !== $unico,
+        artefactTypeName($type).': el grande y el único se distinguen en la lista ('.$grande.' vs '.$unico.')');
+}
+check(strpos($templates['27_rows'], 'ARTEFACT_STORAGE || $type === ARTEFACT_PLAN') !== false,
+    'y los dos planos no anuncian una cifra que no tienen');
+
 // Los nombres y efectos salen del catálogo, no de las columnas del INSERT.
 check(strpos($templates['27_rows'], 'artefactDisplayName(') !== false,
     'el nombre del artefacto sale del catálogo');
