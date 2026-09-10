@@ -19,7 +19,7 @@
  *
  *   Al conquistarla: la lealtad queda en 0 y sólo la levanta una residencia nueva (2/3 del
  *   nivel por hora); desaparece **un** administrador, y sólo si la conquista se concreta;
- *   las tropas que lo acompañaban se quedan de guarnición; desaparecen todas las tropas de
+ *   en este servidor los supervivientes vuelven al origen; desaparecen todas las tropas de
  *   la aldea, estén donde estén; se reinician academia y herrería; se cae el muro siempre
  *   y los edificios de tribu sólo si cambia la tribu; los oasis anexados quedan libres; el
  *   héroe muere si esa era su aldea natal; y los cupos de expansión que la aldea ya había
@@ -530,29 +530,6 @@ $hero = row("SELECT * FROM {$P}hero WHERE uid = ".U_DEF);
 check((int)$hero['dead'] === 0 && (int)scalar("SELECT hero FROM {$P}units WHERE vref = ".V_DEF2) === 1,
     'si la aldea tomada no era la natal, el héroe sigue vivo donde estaba');
 
-// F.4 Las tropas que acompañaron al administrador se quedan de guarnición.
-resetWorld();
-q("UPDATE {$P}attacks SET t1 = 250, t2 = 30, t9 = 0, t11 = 1 WHERE id = 77001"); // lo que sobrevivió, sin el jefe gastado
-q("INSERT INTO {$P}hero (heroid,uid,wref,home,level,speed,dead,health) VALUES (0,".U_ATT.",".V_ATT.",".V_ATT.",5,7,0,100)");
-$database->applyConquestLoyalty(V_ATT, V_TARGET, U_ATT, U_DEF, 77001, 100);
-$invoke('stationConqueringArmy', array(array('ref' => 77001), V_ATT, V_TARGET, 1));
-$garrison = row("SELECT * FROM {$P}enforcement WHERE `from` = ".V_ATT." AND vref = ".V_TARGET);
-check(is_array($garrison), 'el ejército que conquistó se queda estacionado en la aldea tomada');
-check(is_array($garrison) && (int)$garrison['u1'] === 250 && (int)$garrison['u2'] === 30,
-    'con las unidades que sobrevivieron, en los huecos absolutos de su tribu');
-check((int)scalar("SELECT hero FROM {$P}units WHERE vref = ".V_TARGET) === 1
-    && (int)scalar("SELECT wref FROM {$P}hero WHERE uid = ".U_ATT) === V_TARGET,
-    'y el héroe se queda con ellas');
-
-// Sumar sobre un refuerzo que ya existía no crea una segunda fila.
-resetWorld();
-q("UPDATE {$P}attacks SET t1 = 100, t9 = 0, t11 = 0 WHERE id = 77001");
-q("INSERT INTO {$P}enforcement (id,u1,`from`,vref) VALUES (0,7,".V_ATT.",".V_TARGET.")");
-$invoke('stationConqueringArmy', array(array('ref' => 77001), V_ATT, V_TARGET, 1));
-check((int)scalar("SELECT COUNT(*) FROM {$P}enforcement WHERE `from` = ".V_ATT." AND vref = ".V_TARGET) === 1
-    && (int)scalar("SELECT u1 FROM {$P}enforcement WHERE `from` = ".V_ATT." AND vref = ".V_TARGET) === 107,
-    'si ya había un refuerzo de esa aldea, se suma en la misma fila');
-
 // =====================================================================================
 section('G. Las reglas que viven en el camino del ataque');
 // =====================================================================================
@@ -562,17 +539,15 @@ check(preg_match('/\$survivingChiefs = max\(0, \(int\)\$data\[.t9.\] - \(int\)\$
     'sólo cuentan los administradores que sobrevivieron y no quedaron en una trampa');
 check(preg_match('/if\(!\$catapultDestroyedVillage && \(int\)\$type === 3 && \$survivingChiefs > 0\)/', $automationSource) === 1,
     'la conquista sólo corre en ataque normal (type 3) y si la aldea no quedó arrasada');
-check(strpos($automationSource, '$conquestGarrisonStays = false;') !== false,
-    'la marca de "las tropas se quedan" se reinicia en cada ataque del barrido');
-check(preg_match('/\} elseif\(\$conquestGarrisonStays\) \{.*?stationConqueringArmy.*?removeAttack/s', $automationSource) === 1,
-    'al conquistar no se crea el movimiento de regreso: las tropas se quedan');
+check(strpos($automationSource, 'stationConqueringArmy') === false,
+    'la conquista no tiene un camino que estacione al ejército');
 check(preg_match('/completeVillageConquest\(\$data\[.to.\], \$attackerOwner, \$defenderOwner\)/', $automationSource) === 1,
     'la conquista dispara la limpieza del motor');
 check(strpos($automationSource, 'reassignHeroHomeVillage($database, $defenderOwner)') !== false,
     'y la reasignación de la aldea natal del héroe sigue en pie');
 
 // El bloque del héroe no puede pisar el aviso de la conquista.
-check(preg_match('/\} elseif\(!\$conquestGarrisonStays\) \{\s*\/\/ Robar un artefacto\./s', $automationSource) === 1,
+check(preg_match('/\} elseif\(!\$villageConquered\) \{\s*\/\/ Robar un artefacto\./s', $automationSource) === 1,
     'reclamar el artefacto con el héroe no corre sobre una aldea recién conquistada');
 
 // El bloqueo por una conquista simultánea y el cerrojo de expansión.
@@ -651,7 +626,8 @@ $session->tribe = 1;
 q("UPDATE {$P}vdata SET wood = 1000, clay = 1000, iron = 1000, crop = 1000 WHERE wref = ".V_TARGET);
 // Cinco senadores: entre 100 y 150 puntos de persuasión, así que la lealtad llega a 0 en
 // una sola oleada.
-q("UPDATE {$P}attacks SET t1 = 120, t9 = 5 WHERE id = 77001");
+q("UPDATE {$P}attacks SET t1 = 120, t9 = 5, t11 = 1 WHERE id = 77001");
+q("INSERT INTO {$P}hero (uid,wref,home,level,speed,dead,health,power) VALUES (".U_ATT.",".V_ATT.",".V_ATT.",1,7,0,100,100)");
 q("INSERT INTO {$P}movement (moveid,sort_type,`from`,`to`,ref,ref2,`data`,endtime,proc) "
     ."VALUES (0,3,".V_ATT.",".V_TARGET.",77001,0,'0',".(time() - 30).",0)");
 
@@ -667,17 +643,16 @@ check((int)scalar("SELECT loyalty FROM {$P}vdata WHERE wref = ".V_TARGET) === 0,
 check((int)scalar("SELECT exp1 FROM {$P}vdata WHERE wref = ".V_ATT) === V_TARGET,
     'ocupando un cupo de expansión de la aldea que atacó');
 
-$garrison = row("SELECT * FROM {$P}enforcement WHERE `from` = ".V_ATT." AND vref = ".V_TARGET);
-check(is_array($garrison) && (int)$garrison['u1'] === 120,
-    'las tropas que acompañaron al administrador se quedan de guarnición');
-check(is_array($garrison) && (int)$garrison['u9'] === 4,
-    'y con ellas los cuatro administradores que no se gastaron');
-check((int)scalar("SELECT COUNT(*) FROM {$P}movement WHERE sort_type = 4 AND `to` = ".V_ATT) === 0,
-    'no vuelve nadie a la aldea de origen');
-check((int)scalar("SELECT COUNT(*) FROM {$P}attacks WHERE id = 77001") === 0,
-    'y la fila de tropas del ataque se borra: ya no la referencia ningún movimiento');
-check((int)scalar("SELECT proc FROM {$P}movement WHERE ref = 77001") === 1,
-    'el movimiento queda marcado como resuelto');
+$return = row("SELECT * FROM {$P}movement WHERE sort_type = 4 AND `from` = ".V_TARGET." AND `to` = ".V_ATT);
+$survivors = row("SELECT * FROM {$P}attacks WHERE id = 77001");
+check(is_array($return) && (int)$return['ref'] === 77001 && (int)$return['proc'] === 0,
+    'los supervivientes regresan al origen con el movimiento normal');
+check(is_array($survivors) && (int)$survivors['t1'] === 120 && (int)$survivors['t9'] === 4,
+    'regresan las tropas y cuatro administradores: sólo se consume uno');
+check((int)scalar("SELECT COUNT(*) FROM {$P}enforcement WHERE `from` = ".V_ATT." AND vref = ".V_TARGET) === 0,
+    'la conquista no deja refuerzos en la aldea tomada');
+check((int)scalar("SELECT proc FROM {$P}movement WHERE ref = 77001 AND sort_type = 3") === 1,
+    'el movimiento de ida queda marcado como resuelto');
 check((int)scalar("SELECT COUNT(*) FROM {$P}ndata WHERE uid = ".U_ATT) >= 1
     && (int)scalar("SELECT COUNT(*) FROM {$P}ndata WHERE uid = ".U_DEF) >= 1,
     'los dos jugadores reciben su informe');
@@ -686,6 +661,25 @@ check(is_string($report) && strpos($report, 'La aldea fue conquistada') !== fals
     'y el aviso de la conquista está redactado para los dos lados, no sólo para el que ganó');
 check(is_string($report) && strpos($report, 'Conquistaste') === false,
     'el que perdió la aldea no lee "¡Conquistaste la aldea!" en su propio informe');
+
+// El héroe viaja con los supervivientes; no queda disponible en el destino.
+check((int)$survivors['t11'] === 1
+    && (int)scalar("SELECT SUM(hero) FROM {$P}units") === 0,
+    'el héroe queda únicamente en el movimiento de regreso');
+check((int)scalar("SELECT home FROM {$P}hero WHERE uid = ".U_ATT) === V_ATT,
+    'conquistar no cambia la aldea natal del héroe');
+q("UPDATE {$P}movement SET endtime = ".(time() - 1)." WHERE sort_type IN (4,6)");
+$invoke('returnunitsComplete', array());
+check((int)scalar("SELECT u1 FROM {$P}units WHERE vref = ".V_ATT) === 120
+    && (int)scalar("SELECT u9 FROM {$P}units WHERE vref = ".V_ATT) === 4
+    && (int)scalar("SELECT hero FROM {$P}units WHERE vref = ".V_ATT) === 1,
+    'al llegar se acreditan las tropas, los jefes restantes y el héroe en el origen');
+check((int)scalar("SELECT wref FROM {$P}hero WHERE uid = ".U_ATT) === V_ATT,
+    'la ubicación del héroe sigue siendo la aldea de origen');
+$invoke('returnunitsComplete', array());
+check((int)scalar("SELECT hero FROM {$P}units WHERE vref = ".V_ATT) === 1
+    && (int)scalar("SELECT u1 FROM {$P}units WHERE vref = ".V_ATT) === 120,
+    'un segundo barrido no duplica los supervivientes');
 
 // Un asalto (type 4) con los mismos jefes no conquista nada: el administrador no llega a
 // hablar con nadie.
@@ -703,6 +697,28 @@ check((int)scalar("SELECT loyalty FROM {$P}vdata WHERE wref = ".V_TARGET) === 10
     'y ni siquiera le baja la lealtad');
 check((int)scalar("SELECT COUNT(*) FROM {$P}movement WHERE sort_type = 4 AND `to` = ".V_ATT) === 1,
     'las tropas del asalto vuelven a casa como siempre');
+
+// Refuerzo de héroe: sólo se puede utilizar localmente si esa es su aldea natal.
+section('J. Refuerzos del héroe y mudanza explícita');
+foreach(array('propia' => V_ATT2, 'ajena' => V_TARGET, 'natal' => V_ATT, 'mudanza' => V_ATT2) as $scenario => $destination) {
+    resetWorld();
+    $sethome = $scenario === 'mudanza' ? 1 : 0;
+    $origin = $scenario === 'natal' ? V_ATT2 : V_ATT;
+    q("INSERT INTO {$P}hero (uid,wref,home,level,speed,dead,health) VALUES (".U_ATT.",".V_ATT.",".V_ATT.",1,7,0,100)");
+    q("UPDATE {$P}attacks SET vref = $origin, t1 = 12, t9 = 0, t11 = 1, attack_type = 2, sethome = $sethome WHERE id = 77001");
+    q("INSERT INTO {$P}movement (moveid,sort_type,`from`,`to`,ref,ref2,`data`,endtime,proc) "
+        ."VALUES (0,3,$origin,$destination,77001,0,'0',".(time() - 1).",0)");
+    $invoke('sendreinfunitsComplete', array());
+    $local = $scenario === 'natal' || $scenario === 'mudanza';
+    check((int)scalar("SELECT hero FROM {$P}units WHERE vref = $destination") === ($local ? 1 : 0),
+        "$scenario: sólo el héroe en su aldea natal pasa a unidad local");
+    check((int)scalar("SELECT SUM(hero) FROM {$P}enforcement WHERE `from` = $origin AND vref = $destination") === ($local ? 0 : 1),
+        "$scenario: el héroe refuerzo queda visible y retirable, sin duplicarse");
+    check((int)scalar("SELECT home FROM {$P}hero WHERE uid = ".U_ATT) === ($sethome ? $destination : V_ATT),
+        "$scenario: la aldea natal sólo cambia con autorización explícita");
+    check((int)scalar("SELECT u1 FROM {$P}enforcement WHERE `from` = $origin AND vref = $destination") === 12,
+        "$scenario: se conservan las tropas que acompañaron al héroe");
+}
 
 echo PHP_EOL;
 if($failures) {

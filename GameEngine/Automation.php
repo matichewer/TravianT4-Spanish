@@ -1167,71 +1167,6 @@ class Automation {
         return true;
     }
 
-    /**
-     * Deja en la aldea recién conquistada lo que sobrevivió del ataque.
-     *
-     * Regla oficial: al llegar la lealtad a 0 el administrador desaparece y "las tropas
-     * que viajaban con él se quedan en la aldea como defensa". Quedan como refuerzo de la
-     * aldea que atacó (`enforcement.from` = la de origen), que es donde este juego guarda
-     * las tropas de una aldea propia estacionadas en otra: así siguen pagando su cereal
-     * en la aldea de origen, aparecen en la pestaña de tropas del resumen y el dueño las
-     * puede mandar de vuelta desde la plaza de reuniones.
-     *
-     * La fila de `attacks` ya trae descontadas las bajas, las que siguen atrapadas y el
-     * administrador que se gastó en la conquista: es exactamente lo que iba a volver. Sus
-     * columnas son los diez huecos de la tribu del atacante; las de `enforcement` son ids
-     * absolutos de unidad.
-     */
-    private function stationConqueringArmy($data, $fromWref, $toWref, $ownTribe) {
-        global $database;
-        $fromWref = (int)$fromWref;
-        $toWref = (int)$toWref;
-        $ownTribe = (int)$ownTribe;
-        if($fromWref <= 0 || $toWref <= 0 || $ownTribe < 1 || $ownTribe > 5) {
-            return false;
-        }
-        $survivors = $database->getAttack($data['ref']);
-        if(!is_array($survivors)) {
-            return false;
-        }
-
-        $troops = array();
-        $total = 0;
-        for($slot = 1; $slot <= 10; $slot++) {
-            $amount = max(0, (int)$survivors['t'.$slot]);
-            $troops[$slot] = $amount;
-            $total += $amount;
-        }
-        if($total > 0) {
-            $existing = $database->getEnforce($toWref, $fromWref);
-            if(isset($existing['id'])) {
-                for($slot = 1; $slot <= 10; $slot++) {
-                    if($troops[$slot] > 0) {
-                        $database->modifyEnforce($existing['id'], ($ownTribe - 1) * 10 + $slot, $troops[$slot], 1);
-                    }
-                }
-            } else {
-                $payload = array('to' => $toWref, 'from' => $fromWref);
-                for($slot = 1; $slot <= 10; $slot++) {
-                    $payload['t'.$slot] = $troops[$slot];
-                }
-                $database->addEnforce($payload);
-            }
-        }
-
-        // El héroe también se queda. La aldea ya es del atacante, así que vale la misma
-        // convención que un refuerzo a aldea propia: vive en `units` y `hero.wref` lo
-        // sigue. La aldea natal no se toca.
-        if(max(0, (int)$survivors['t11']) > 0) {
-            $attackerOwner = (int)$database->getVillageField($fromWref, 'owner');
-            if($attackerOwner > 0) {
-                $database->modifyUnit($toWref, 'hero', 1, 1);
-                $database->modifyHero2('wref', $toWref, $attackerOwner, 0);
-            }
-        }
-        return true;
-    }
-
     private function loyaltyRegeneration() {
         if(file_exists("GameEngine/Prevention/loyalty.txt")) {
             @unlink("GameEngine/Prevention/loyalty.txt");
@@ -2692,9 +2627,9 @@ class Automation {
             // el de la siguiente.
             $wallgid = $wallid = 0;
             $breweryActive = false;
-            // Se reinicia por ataque como todo lo demás: el foreach comparte el scope y una
-            // conquista dejaba a la siguiente aldea atacada quedándose con el ejército.
-            $conquestGarrisonStays = false;
+            // Se reinicia por ataque: una conquista anterior no debe bloquear
+            // la captura de artefactos en el siguiente ataque del barrido.
+            $villageConquered = false;
             $herosend_att = (int)$data['t11'];
             $cage = array('id' => 0, 'type' => 0);
             // Se reinicia por ataque: el foreach comparte el scope y si no, el oasis
@@ -3923,9 +3858,8 @@ class Automation {
                                 // también en el informe del que la perdió.
                                 $info_chief = "".$chief_pic.", La aldea fue conquistada.";
                                 $this->completeVillageConquest($data['to'], $attackerOwner, $defenderOwner);
-                                // Y lo que sobrevivió del ataque se queda de guarnición en la
-                                // aldea tomada en vez de volver a casa, como en el oficial.
-                                $conquestGarrisonStays = true;
+                                // Evita reclamar un artefacto sobre la aldea recién conquistada.
+                                $villageConquered = true;
                             } else {
                                 $conquestMessages = array(
                                     'same_owner' => 'No puedes conquistar una aldea propia.',
@@ -4071,7 +4005,7 @@ class Automation {
                                     break;
                             }
                         }
-                    } elseif(!$conquestGarrisonStays) {
+                    } elseif(!$villageConquered) {
                         // Robar un artefacto. Si la aldea acaba de caer, su artefacto ya
                         // cambió de dueño con ella y se queda donde está: volver a
                         // "reclamarlo" con el héroe lo mudaba a la aldea atacante —o
@@ -4292,14 +4226,9 @@ class Automation {
                         // camino normal la deja para que la reutilice el movimiento de
                         // vuelta, y acá ese movimiento no existe.
                         $database->removeAttack($data['ref']);
-                    } elseif($conquestGarrisonStays) {
-                        // Regla oficial: al conquistar, el administrador desaparece y las
-                        // tropas que lo acompañaban se quedan en la aldea tomada haciendo de
-                        // defensa. No vuelven, así que tampoco hay movimiento de regreso ni
-                        // fila de `attacks` que reutilizar.
-                        $this->stationConqueringArmy($data, $from['wref'], $to['wref'], $owntribe);
-                        $database->removeAttack($data['ref']);
                     } else {
+                        // Regla de este servidor: conquistar también devuelve a los
+                        // supervivientes (héroe incluido) por el camino normal del ataque.
                         $database->addMovement(4, $to['wref'], $from['wref'], $data['ref'], $datar, $endtime);
                     }
 
@@ -4842,15 +4771,17 @@ class Automation {
                     $targettribe = $database->getUserField($database->getVillageField($data['to'], "owner"), "tribe", 0);
                 }
                 $oasisTopicSuffix = $targetIsOasis ? ' ('.$to['x'].'|'.$to['y'].')' : '';
-                // El héroe se guarda en un único sitio: en aldea propia vive en `units`,
-                // en aldea ajena vive en la fila de refuerzo. Escribirlo en los dos lados
-                // lo duplicaba (aparecía dos veces en el informe de batalla y defendía doble).
+                // Sólo la aldea natal puede utilizar al héroe como unidad local.
+                // Sin mudanza explícita, incluso en aldea propia es un refuerzo retirable.
                 if($data['t11'] != 0) {
+                    $heroOwner = (int)$from['owner'];
+                    $arrivingHero = $database->getHeroData($heroOwner);
                     // En un oasis el héroe siempre vive en la fila de refuerzo: el oasis
                     // tiene fila en `units`, así que sin este guarda el héroe se escribiría
                     // ahí y quedaría fuera del alcance de su dueño.
                     if(!$targetIsOasis
-                        && $database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")) {
+                        && $database->getVillageField($data['from'], "owner") == $database->getVillageField($data['to'], "owner")
+                        && (!empty($data['sethome']) || heroHomeVillage($arrivingHero) === (int)$data['to'])) {
                         //don't reinforce, addunit instead
                         $heroOwner = $database->getVillageField($data['from'], "owner");
                         $database->modifyUnit($data['to'], 'hero', 1, 1);
