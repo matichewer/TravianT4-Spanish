@@ -7,25 +7,25 @@
 					<tr>
 						<td class="role">
 						</td><td>
-								<img src="img/x.gif" class="unit u31" alt="Rata">
+								<img src="img/x.gif" class="unit u31" title="Rata" alt="Rata">
 							</td><td>
-								<img src="img/x.gif" class="unit u32" alt="Araña">
+								<img src="img/x.gif" class="unit u32" title="Araña" alt="Araña">
 							</td><td>
-								<img src="img/x.gif" class="unit u33" alt="Serpiente">
+								<img src="img/x.gif" class="unit u33" title="Serpiente" alt="Serpiente">
 							</td><td>
-								<img src="img/x.gif" class="unit u34" alt="Murciélago">
+								<img src="img/x.gif" class="unit u34" title="Murciélago" alt="Murciélago">
 							</td><td>
-								<img src="img/x.gif" class="unit u35" alt="Jabalí">
+								<img src="img/x.gif" class="unit u35" title="Jabalí" alt="Jabalí">
 							</td><td>
-								<img src="img/x.gif" class="unit u36" alt="Lobo">
+								<img src="img/x.gif" class="unit u36" title="Lobo" alt="Lobo">
 							</td><td>
-								<img src="img/x.gif" class="unit u37" alt="Oso">
+								<img src="img/x.gif" class="unit u37" title="Oso" alt="Oso">
 							</td><td>
-								<img src="img/x.gif" class="unit u38" alt="Cocodrilo">
+								<img src="img/x.gif" class="unit u38" title="Cocodrilo" alt="Cocodrilo">
 							</td><td>
-								<img src="img/x.gif" class="unit u39" alt="Tigre">
+								<img src="img/x.gif" class="unit u39" title="Tigre" alt="Tigre">
 							</td><td>
-								<img src="img/x.gif" class="unit u40" alt="Elefante">
+								<img src="img/x.gif" class="unit u40" title="Elefante" alt="Elefante">
 							</td></tr>
 				</thead>
 				<tbody>

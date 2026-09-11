@@ -19,13 +19,13 @@
 
 $routeFormResourceLabels = array(1=>'Madera',2=>'Barro',3=>'Hierro',4=>'Cereal');
 
-// Aldeas propias primero; las aliadas incluyen el jugador para distinguirlas.
+// Aldeas propias primero; jugador antes de la aldea, como en el envio de recursos y tropas.
 $routeFormTargetOptions = array();
 foreach(tradeRouteDestinations($session->uid, $village->wid) as $destination) {
     $candidateWid = (int)$destination['wref'];
     $coor = $database->getCoor($candidateWid);
-    $label = $destination['name'].' ('.(int)$coor['x'].'|'.(int)$coor['y'].')';
-    $label .= (int)$destination['owner'] === (int)$session->uid ? ' — Propia' : ' — '.$destination['username'];
+    $label = $destination['username'].': '.$destination['name'].' ('.(int)$coor['x'].'|'.(int)$coor['y'].')';
+    $label .= (int)$destination['owner'] === (int)$session->uid ? ' — Propia' : '';
     $routeFormTargetOptions[$candidateWid] = htmlspecialchars($label,ENT_QUOTES,'UTF-8');
 }
 // Sin destino confirmado todavia (creacion): preseleccionar la primera aldea disponible,

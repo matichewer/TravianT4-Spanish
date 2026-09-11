@@ -7,25 +7,25 @@
 					<tr>
 						<td class="role">
 						</td><td>
-								<img src="img/x.gif" class="unit u11" alt="Luchador de porra">
+								<img src="img/x.gif" class="unit u11" title="Luchador de porra" alt="Luchador de porra">
 							</td><td>
-								<img src="img/x.gif" class="unit u12" alt="Lancero">
+								<img src="img/x.gif" class="unit u12" title="Lancero" alt="Lancero">
 							</td><td>
-								<img src="img/x.gif" class="unit u13" alt="Guerrero de hacha">
+								<img src="img/x.gif" class="unit u13" title="Guerrero de hacha" alt="Guerrero de hacha">
 							</td><td>
-								<img src="img/x.gif" class="unit u14" alt="Emisario">
+								<img src="img/x.gif" class="unit u14" title="Emisario" alt="Emisario">
 							</td><td>
-								<img src="img/x.gif" class="unit u15" alt="Paladín">
+								<img src="img/x.gif" class="unit u15" title="Paladín" alt="Paladín">
 							</td><td>
-								<img src="img/x.gif" class="unit u16" alt="Caballero germano">
+								<img src="img/x.gif" class="unit u16" title="Caballero germano" alt="Caballero germano">
 							</td><td>
-								<img src="img/x.gif" class="unit u17" alt="Ariete">
+								<img src="img/x.gif" class="unit u17" title="Ariete" alt="Ariete">
 							</td><td>
-								<img src="img/x.gif" class="unit u18" alt="Catapulta">
+								<img src="img/x.gif" class="unit u18" title="Catapulta" alt="Catapulta">
 							</td><td>
-								<img src="img/x.gif" class="unit u19" alt="Cabecilla">
+								<img src="img/x.gif" class="unit u19" title="Cabecilla" alt="Cabecilla">
 							</td><td>
-								<img src="img/x.gif" class="unit u20" alt="Colono">
+								<img src="img/x.gif" class="unit u20" title="Colono" alt="Colono">
 							</td></tr>
 				</thead>
 				<tbody>

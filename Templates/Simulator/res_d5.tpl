@@ -7,7 +7,7 @@
 					<tr>
 						<td class="role">
 						</td><?php for($i = 41; $i <= 50; $i++) { ?><td>
-								<img src="img/x.gif" class="unit u<?php echo $i; ?>" alt="<?php echo $technology->unarray[$i]; ?>">
+								<img src="img/x.gif" class="unit u<?php echo $i; ?>" title="<?php echo $technology->unarray[$i]; ?>" alt="<?php echo $technology->unarray[$i]; ?>">
 							</td><?php } ?></tr>
 				</thead>
 				<tbody>

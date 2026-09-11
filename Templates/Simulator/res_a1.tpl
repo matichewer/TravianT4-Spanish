@@ -7,25 +7,25 @@
 					<tr>
 						<td class="role">
 						</td><td>
-								<img src="img/x.gif" class="unit u1" alt="Legionario">
+								<img src="img/x.gif" class="unit u1" title="Legionario" alt="Legionario">
 							</td><td>
-								<img src="img/x.gif" class="unit u2" alt="Pretoriano">
+								<img src="img/x.gif" class="unit u2" title="Pretoriano" alt="Pretoriano">
 							</td><td>
-								<img src="img/x.gif" class="unit u3" alt="Espadachín">
+								<img src="img/x.gif" class="unit u3" title="Espadachín" alt="Espadachín">
 							</td><td>
-								<img src="img/x.gif" class="unit u4" alt="Equites Legati">
+								<img src="img/x.gif" class="unit u4" title="Equites Legati" alt="Equites Legati">
 							</td><td>
-								<img src="img/x.gif" class="unit u5" alt="Equites Imperatoris">
+								<img src="img/x.gif" class="unit u5" title="Equites Imperatoris" alt="Equites Imperatoris">
 							</td><td>
-								<img src="img/x.gif" class="unit u6" alt="Equites Caesaris">
+								<img src="img/x.gif" class="unit u6" title="Equites Caesaris" alt="Equites Caesaris">
 							</td><td>
-								<img src="img/x.gif" class="unit u7" alt="Ariete">
+								<img src="img/x.gif" class="unit u7" title="Ariete" alt="Ariete">
 							</td><td>
-								<img src="img/x.gif" class="unit u8" alt="Catapulta de fuego">
+								<img src="img/x.gif" class="unit u8" title="Catapulta de fuego" alt="Catapulta de fuego">
 							</td><td>
-								<img src="img/x.gif" class="unit u9" alt="Senador">
+								<img src="img/x.gif" class="unit u9" title="Senador" alt="Senador">
 							</td><td>
-								<img src="img/x.gif" class="unit u10" alt="Colono">
+								<img src="img/x.gif" class="unit u10" title="Colono" alt="Colono">
 							</td></tr>
 				</thead>
 				<tbody>

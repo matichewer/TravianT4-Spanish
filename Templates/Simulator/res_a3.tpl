@@ -7,25 +7,25 @@
 					<tr>
 						<td class="role">
 						</td><td>
-								<img src="img/x.gif" class="unit u21" alt="Falange">
+								<img src="img/x.gif" class="unit u21" title="Falange" alt="Falange">
 							</td><td>
-								<img src="img/x.gif" class="unit u22" alt="Espadachín">
+								<img src="img/x.gif" class="unit u22" title="Espadachín" alt="Espadachín">
 							</td><td>
-								<img src="img/x.gif" class="unit u23" alt="Buscador de senderos">
+								<img src="img/x.gif" class="unit u23" title="Buscador de senderos" alt="Buscador de senderos">
 							</td><td>
-								<img src="img/x.gif" class="unit u24" alt="Rayo de Teutates">
+								<img src="img/x.gif" class="unit u24" title="Rayo de Teutates" alt="Rayo de Teutates">
 							</td><td>
-								<img src="img/x.gif" class="unit u25" alt="Jinete druida">
+								<img src="img/x.gif" class="unit u25" title="Jinete druida" alt="Jinete druida">
 							</td><td>
-								<img src="img/x.gif" class="unit u26" alt="Jinete Eduo">
+								<img src="img/x.gif" class="unit u26" title="Jinete Eduo" alt="Jinete Eduo">
 							</td><td>
-								<img src="img/x.gif" class="unit u27" alt="Ariete">
+								<img src="img/x.gif" class="unit u27" title="Ariete" alt="Ariete">
 							</td><td>
-								<img src="img/x.gif" class="unit u28" alt="Catapulta">
+								<img src="img/x.gif" class="unit u28" title="Catapulta" alt="Catapulta">
 							</td><td>
-								<img src="img/x.gif" class="unit u29" alt="Cacique">
+								<img src="img/x.gif" class="unit u29" title="Cacique" alt="Cacique">
 							</td><td>
-								<img src="img/x.gif" class="unit u30" alt="Colono">
+								<img src="img/x.gif" class="unit u30" title="Colono" alt="Colono">
 							</td></tr>
 				</thead>
 				<tbody>
