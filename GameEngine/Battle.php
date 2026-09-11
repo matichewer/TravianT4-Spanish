@@ -418,6 +418,16 @@ class Battle {
 		// planifica nada: en ese caso el atacante se precarga con el ejército de la
 		// aldea actual, igual que hace el enlace de saqueo de oasis.
 		$useOwnArmy = $reportFighters <= 0;
+		if($useOwnArmy) {
+			// Las tropas de la aldea activa usan la tribu del lector, aunque el
+			// espionaje compartido lo haya enviado un aliado de otra tribu.
+			if($sessionTribe < 1 || $sessionTribe > 3) {
+				return false;
+			}
+			$attackerTribe = $sessionTribe;
+			$input['a1_v'] = $attackerTribe;
+			$attackerStart = ($attackerTribe - 1) * 10 + 1;
+		}
 		$villageId = isset($village->wid) ? (int)$village->wid : 0;
 		$ownUnits = $useOwnArmy && $villageId > 0 ? $database->getUnit($villageId) : false;
 		$upgrades = $attackerTribe === $sessionTribe && $villageId > 0 ? $database->getABTech($villageId) : false;

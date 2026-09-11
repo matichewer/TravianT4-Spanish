@@ -155,6 +155,32 @@ warsimReportAssert(
 warsimReportAssert($input['f1_1'] === 5 && $input['f1_4'] === 12 && $input['f1_8'] === 3, 'precarga la herrería propia');
 warsimReportAssert($input['a1_hero'] === 1, 'incluye al héroe');
 
+// -------------------------------------- espionaje compartido de otra tribu
+
+$sharedScout = $scoutReport;
+$sharedScout['attacker_uid'] = 18;
+$sharedScout['attacker_tribe'] = 1;
+$sharedScout['attacker_units'] = array(4 => 9990);
+$database->notices[38] = array('data' => warsimReportData($sharedScout));
+$session->tribe = 2;
+$village->wid = 101;
+$database->units[101] = array('u11' => 1234, 'u14' => 70, 'u15' => 456, 'u17' => 23);
+$database->upgrades[101] = array('b1' => 9, 'b5' => 17);
+$sharedInput = $battle->getReportSimulationInput(38);
+warsimReportAssert($sharedInput['a1_v'] === 2, 'espionaje romano compartido precarga al lector germano');
+warsimReportAssert(
+	$sharedInput['a1_1'] === 1234 && $sharedInput['a1_5'] === 456 && $sharedInput['a1_7'] === 23
+		&& $sharedInput['a1_4'] === 0,
+	'usa las tropas germanas de la aldea activa y excluye sus exploradores'
+);
+warsimReportAssert($sharedInput['f1_1'] === 9 && $sharedInput['f1_5'] === 17, 'usa la herrería de la aldea activa del lector');
+warsimReportAssert($sharedInput['a2_41'] === 940 && $sharedInput['a2_village'] === 5, 'conserva los defensores natares del informe compartido');
+$_POST = array();
+$battle->procSim($sharedInput);
+warsimReportAssert($_POST['mytribe'] === 2 && $form->valuearray['a1_1'] === 1234, 'el simulador recibe la tribu y el ejército del lector');
+$session->tribe = 3;
+$village->wid = 100;
+
 // --------------------------------------------------- informe de ataque de verdad
 
 $attackReport = $scoutReport;
