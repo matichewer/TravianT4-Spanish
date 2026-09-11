@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__.'/TradeRoutes.php';
 require_once __DIR__.'/CombatRanking.php';
 // La frontera entre cuentas del sistema y de jugadores. Se declara acá y no sólo en
 // Database.php porque hay checkers que cargan Automation con un doble de la capa de
@@ -2332,8 +2333,8 @@ class Automation {
             }
             $fromOwner = (int)$database->getVillageField($data['from'], "owner");
             $toOwner = (int)$database->getVillageField($data['wid'], "owner");
-            if($fromOwner !== (int)$data['uid'] || $toOwner !== (int)$data['uid']) {
-                // Aldea origen o destino ya no existe o cambio de dueno (conquista/abandono): la ruta quedo huerfana.
+            if($fromOwner !== (int)$data['uid'] || !tradeRouteOwnersAllowed($fromOwner, $toOwner)) {
+                // Origen perdido o destino que ya no es propio ni de la misma alianza.
                 $database->deleteTradeRoute($data['id']);
                 continue;
             }
@@ -2518,6 +2519,10 @@ class Automation {
         // el viaje del mercader anterior — mismo patron que ya usan los cambios de nivel
         // de campo/edificio y la anexion de oasis (ver accrueProductionBeforeChange).
         $this->accrueProductionBeforeChange($from, null);
+        if($isTradeRoute && ((int)$from === (int)$to || !tradeRouteOwnersAllowed(
+            $database->getVillageField($from, 'owner'), $database->getVillageField($to, 'owner')))) {
+            return self::SEND_FAILED;
+        }
         // Lo pedido, antes de recortarlo por lo disponible: es lo que viaja con la cadena.
         $requested = array((int)$wtrans, (int)$ctrans, (int)$itrans, (int)$crtrans);
         // si no alcanza para el envio completo, se manda lo que haya disponible

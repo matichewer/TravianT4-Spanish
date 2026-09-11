@@ -24,7 +24,7 @@
 					<div class="content"><a href="build.php?id=<?php echo $id; ?>&amp;t=3"><span class="tabItem">Mercader NPC</span></a></div>
 				</div>
                 <?php } ?>
-				<?php if($session->goldclub == 1 && count($database->getProfileVillages($session->uid)) > 1) {
+				<?php if($session->goldclub == 1) {
 				?>
 				<div <?php if(isset($_GET['t']) && $_GET['t'] == 4) { echo "class=\"container active\""; } else { echo "class=\"container normal\""; } ?>>
 					<div class="background-start">&nbsp;</div>

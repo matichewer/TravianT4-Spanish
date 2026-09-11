@@ -19,16 +19,14 @@
 
 $routeFormResourceLabels = array(1=>'Madera',2=>'Barro',3=>'Hierro',4=>'Cereal');
 
-// Mismo listado de aldeas propias que ya armaba 17_create.tpl (todas menos la actual),
-// reutilizado ahora tambien al editar para poder cambiar el destino.
+// Aldeas propias primero; las aliadas incluyen el jugador para distinguirlas.
 $routeFormTargetOptions = array();
-foreach($session->villages as $candidateWid) {
-    if((int)$candidateWid === (int)$village->wid) {
-        continue;
-    }
+foreach(tradeRouteDestinations($session->uid, $village->wid) as $destination) {
+    $candidateWid = (int)$destination['wref'];
     $coor = $database->getCoor($candidateWid);
-    $targetName = htmlspecialchars((string)$database->getVillageField($candidateWid,'name'),ENT_QUOTES,'UTF-8');
-    $routeFormTargetOptions[(int)$candidateWid] = $targetName.' ('.(int)$coor['x'].'|'.(int)$coor['y'].')';
+    $label = $destination['name'].' ('.(int)$coor['x'].'|'.(int)$coor['y'].')';
+    $label .= (int)$destination['owner'] === (int)$session->uid ? ' — Propia' : ' — '.$destination['username'];
+    $routeFormTargetOptions[$candidateWid] = htmlspecialchars($label,ENT_QUOTES,'UTF-8');
 }
 // Sin destino confirmado todavia (creacion): preseleccionar la primera aldea disponible,
 // igual que antes.
@@ -64,8 +62,9 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
 
             <div class="routeFormSideCol">
                 <div class="routeFormField">
-                    <label for="routeFormTarget">Aldea de destino</label>
-                    <select id="routeFormTarget" name="tvillage">
+                    <label for="routeFormTarget">Aldea de destino (propia o de tu alianza)</label>
+                    <select id="routeFormTarget" name="tvillage" required>
+                        <?php if(empty($routeFormTargetOptions)) { ?><option value="">No hay aldeas propias o aliadas disponibles</option><?php } ?>
                         <?php foreach($routeFormTargetOptions as $optionValue => $optionLabel) { ?>
                         <option value="<?php echo (int)$optionValue; ?>"<?php echo ((int)$optionValue === (int)$routeFormTarget) ? ' selected="selected"' : ''; ?>><?php echo $optionLabel; ?></option>
                         <?php } ?>

@@ -472,6 +472,28 @@ check(strpos($automationSource,'protected function accrueProductionBeforeChange(
 
 // ---------------------------------------------------------------------------
 echo "\n";
+section('N. Destinos propios y de la misma alianza');
+$database = new class {
+    public $alliances = array(101 => 7, 102 => 7, 103 => 8, 104 => 0, 105 => 0);
+    function getUserField($uid, $field, $mode) { return $this->alliances[$uid] ?? 0; }
+};
+check(tradeRouteOwnersAllowed(101, 101), 'permite aldeas propias');
+check(tradeRouteOwnersAllowed(101, 102), 'permite miembros de la misma alianza');
+check(!tradeRouteOwnersAllowed(101, 103), 'rechaza otra alianza');
+check(!tradeRouteOwnersAllowed(104, 105), 'sin alianza no significa aliados');
+check(tradeRouteOwnersAllowed(104, 104), 'propias sin alianza siguen permitidas');
+check(!tradeRouteOwnersAllowed(101, 0), 'rechaza destino inexistente');
+check(!tradeRouteOwnersAllowed(0, 101), 'rechaza origen inexistente');
+$database->alliances[102] = 0;
+check(!tradeRouteOwnersAllowed(101, 102), 'salir de la alianza revoca permiso sin cache');
+$database->alliances[102] = 8;
+check(!tradeRouteOwnersAllowed(101, 102), 'cambiar de alianza revoca permiso');
+check(strpos($marketSource, 'tradeRouteOwnersAllowed($session->uid,') !== false, 'guardar valida aliado actual');
+check(strpos($tradeRouteBody, 'tradeRouteOwnersAllowed($fromOwner, $toOwner)') !== false, 'worker valida aliado actual');
+$sendBody = substr($automationSource, strpos($automationSource, 'private function sendResource2('));
+check(strpos($sendBody, 'if($isTradeRoute &&') < strpos($sendBody, '$requested ='), 'las repeticiones validan antes de enviar recursos');
+check(strpos($routeFormTpl, 'tradeRouteDestinations($session->uid, $village->wid)') !== false, 'crear y editar ofrecen destinos aliados');
+
 if(empty($GLOBALS['fails'])) {
 	echo "Trade route checks passed (".$GLOBALS['checks']." comprobaciones).\n";
 	exit(0);

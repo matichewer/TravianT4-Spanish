@@ -1,4 +1,4 @@
-<?php if($session->goldclub == 1 && count($database->getProfileVillages($session->uid)) > 1) { ?>
+<?php if($session->goldclub == 1) { ?>
 <h1 class="titleInHeader">Mercado <span class="level"> Nivel <?php echo $village->resarray['f'.$id]; ?></span></h1>
 <div id="build" class="gid17">
 <div class="build_desc">
@@ -30,7 +30,7 @@ if(!empty($market->routeError['code'])){
 				.(isset($routeErrorParams['free']) ? (int)$routeErrorParams['free'] : 0).' en total.';
 			break;
 		case 'target':
-			$routeErrorText = 'La aldea de destino no es válida.';
+			$routeErrorText = 'El destino debe ser otra aldea tuya o de un miembro de tu alianza.';
 			break;
 		case 'invalid':
 			$routeErrorText = 'Revisá los valores ingresados.';

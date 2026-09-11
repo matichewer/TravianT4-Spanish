@@ -9,9 +9,9 @@ foreach($database->getOwnVillagesWithCoor($session->uid) as $quickTargetVillage)
 	$quickTargetOwnById[(int)$quickTargetVillage['wref']] = $quickTargetVillage;
 }
 // La barra lateral es la referencia del orden de aldeas de la cuenta. Recorremos
-// exactamente el mismo arreglo para que el mercado y la plaza de reuniones no
+// la misma consulta por fundación para que el mercado y la plaza de reuniones no
 // vuelvan a ordenar los destinos por poblacion.
-foreach($session->villages as $quickTargetVillageId) {
+foreach($database->getVillagesIDByFoundation($session->uid) as $quickTargetVillageId) {
 	$quickTargetVillageId = (int)$quickTargetVillageId;
 	if(!isset($quickTargetOwnById[$quickTargetVillageId])) {
 		continue;

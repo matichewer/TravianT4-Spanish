@@ -13,6 +13,7 @@
 // necesita saber cual es. Se pide explicito y no por la cadena de Village.php porque
 // el worker de rutas comerciales entra por otro lado y ahi Building.php no esta.
 require_once __DIR__.'/Wonder.php';
+require_once __DIR__.'/TradeRoutes.php';
 
 class Market {
 
@@ -104,7 +105,7 @@ class Market {
             header("Location: banned.php");
             exit;
         }
-        if(!$session->goldclub || count($session->villages) <= 1) {
+        if(!$session->goldclub) {
             $this->redirectToMarket(0,4);
         }
 
@@ -184,7 +185,7 @@ class Market {
         $reqMerc = $this->requiredMerchants(array_sum($resource));
 
         $target = $this->positiveInteger(isset($post['tvillage']) ? $post['tvillage'] : null);
-        if(!$target || $target === (int)$village->wid || (int)$database->getVillageField($target,'owner') !== (int)$session->uid) {
+        if(!$target || $target === (int)$village->wid || !tradeRouteOwnersAllowed($session->uid, $database->getVillageField($target,'owner'))) {
             $this->tradeRouteFailure('target',array(),$backToForm);
         }
 
