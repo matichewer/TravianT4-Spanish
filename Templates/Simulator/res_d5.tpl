@@ -16,14 +16,14 @@
 							Tropas
 						</th><?php for($i = 41; $i <= 50; $i++) {
 							$troops = (int)$form->getValue('a2_'.$i);
-							echo '<td'.($troops ? '>'.$troops : ' class="none">0').'</td>';
+							echo '<td'.($troops ? '>'.number_format($troops, 0, ",", ".") : ' class="none">0').'</td>';
 						} ?></tr>
 					<tr>
 						<th>
 							Bajas
 						</th><?php for($i = 41; $i <= 50; $i++) {
 							$troops = (int)$form->getValue('a2_'.$i);
-							echo '<td'.($troops ? '>'.round($troops * $_POST['result'][2]) : ' class="none">0').'</td>';
+							echo '<td'.($troops ? '>'.number_format(round($troops * $_POST['result'][2]), 0, ",", ".") : ' class="none">0').'</td>';
 						} ?></tr>
 				</tbody>
 			</table>

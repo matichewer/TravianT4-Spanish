@@ -277,7 +277,7 @@ warsimNatarAssert(strpos($defenderForm, 'class="unit u43"') !== false, 'def_5.tp
 
 $_POST['result'] = array(1 => 0.1, 2 => 0.25);
 $defenderResult = warsimNatarRender('res_d5.tpl', array('technology' => $technology, 'form' => $form));
-warsimNatarAssert(strpos($defenderResult, '<td>1000</td>') !== false, 'res_d5.tpl muestra las tropas natares');
+warsimNatarAssert(strpos($defenderResult, '<td>1.000</td>') !== false, 'res_d5.tpl muestra las tropas natares con separador de miles');
 warsimNatarAssert(strpos($defenderResult, '<td>250</td>') !== false, 'res_d5.tpl reparte las bajas natares');
 
 $others = warsimNatarRender('def_end.tpl', array('target' => array(5), 'form' => $form));
