@@ -261,6 +261,9 @@ if($canMoveHome){
                     <?php }?>
 
                     <span class="info">(será atacado por catapulta(s))</span>
+                    <?php if((int)$session->tribe === 2 && $database->getBreweryCelebrationEnd($session->uid) > time()) { ?>
+                        <p class="error" role="alert"><strong>Celebración de hidromiel activa.</strong> Si sigue activa cuando llegue el ataque, las catapultas dispararán al azar e ignorarán los objetivos seleccionados, incluido el Tesoro.</p>
+                    <?php } ?>
                      </td>
                 </tr>
             </tbody><?PHP  
