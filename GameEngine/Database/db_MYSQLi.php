@@ -5275,11 +5275,12 @@ break;
 			 * artefacto propio es la forma oficial de mandarlo al fondo de la cola. Antes
 			 * este UPDATE sólo movía `vref` y `owner`.
 			 */
-			function claimArtefact($vref, $ovref, $id) {
+			function claimArtefact($vref, $ovref, $id, $arrivalTime) {
 				$vref = (int)$vref;
 				$ovref = (int)$ovref;
 				$id = (int)$id;
-				$time = time();
+				// El barrido puede llegar horas tarde: la captura ocurrió al llegar el ataque.
+				$time = (int)$arrivalTime;
 				$q = "UPDATE " . TB_PREFIX . "artefacts SET vref = $vref, owner = $id, conquered = $time WHERE vref = $ovref";
 				$ok = mysqli_query($this->connection,$q);
 				$this->flushArtefactCache();

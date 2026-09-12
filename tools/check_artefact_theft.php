@@ -353,6 +353,22 @@ check((int)scalar("SELECT conquered FROM ".TB_PREFIX."artefacts LIMIT 1") > 1,
 check(strpos(lastAttackerReport(), 'artefacto') !== false,
     'y el informe del atacante lo cuenta');
 
+// Un barrido tardío no debe iniciar el retardo desde la hora de procesamiento.
+foreach(array(6 * 3600, artefactActivationDelay() + 3600) as $lag) {
+    resetTheftWorld(10, 0, 1, 3);
+    $arrival = time() - $lag;
+    q("UPDATE {$P}movement SET endtime = $arrival WHERE ref = ".ATTACK_ID);
+    runTheft();
+    $captured = (int)scalar("SELECT conquered FROM {$P}artefacts LIMIT 1");
+    $reportTime = (int)scalar("SELECT time FROM {$P}ndata WHERE uid = ".U_ATT." ORDER BY id DESC LIMIT 1");
+    check($captured === $arrival && $captured === $reportTime,
+        "captura e informe conservan la llegada aunque el barrido tarde $lag segundos");
+    $now = time();
+    check(artefactSecondsUntilActive(array('conquered' => $captured), $now)
+        === max(0, $arrival + artefactActivationDelay() - $now),
+        'la activación cuenta desde la llegada, incluso si la espera ya terminó');
+}
+
 // --- El agujero grande: el Tesoro del defensor en pie --------------------------------
 resetTheftWorld(10, 10, 1, 3);
 runTheft();

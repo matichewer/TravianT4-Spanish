@@ -4051,7 +4051,7 @@ class Automation {
                             );
                             if($theft['status'] === 'claimed') {
                                 $attackerOwnerId = (int)$database->getVillageField($attackerVillage, "owner");
-                                if(!$database->claimArtefact($attackerVillage, (int)$data['to'], $attackerOwnerId)) {
+                                if(!$database->claimArtefact($attackerVillage, (int)$data['to'], $attackerOwnerId, $AttackArrivalTime)) {
                                     $theft = array('status' => 'database_error');
                                 }
                             }
