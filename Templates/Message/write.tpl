@@ -33,14 +33,9 @@
 			</div>
 			<div id="subject">
 				<div class="header label">Asunto</div>
-				<div class="header text"><input tabindex="2" class="text" name="be" id="subject" type="text" value="<?php if(isset($message->reply['topic']))
-{
-   if (preg_match("/re([0-9]+)/i",$message->reply['topic'],$c))
-   {
-       $c = $c[1]+1;
-       echo $message->reply['topic'] = preg_replace("/re[0-9]+/i","re".($c),$message->reply['topic']);
-}else{
-echo "RE:".$message->reply['topic']; }} ?>" name="be" onkeyup="copyElement('subject')"></div>
+				<div class="header text"><input tabindex="2" class="text" name="be" id="subject" type="text" value="<?php if(isset($message->reply['topic'])) {
+    echo htmlspecialchars('RE:'.preg_replace('/^(?:RE\s*:\s*)+/i', '', $message->reply['topic']), ENT_QUOTES, 'UTF-8');
+} ?>" name="be" onkeyup="copyElement('subject')"></div>
 				<div class="clear"></div>
 			</div>
             			<div id="bbEditor">
@@ -58,8 +53,8 @@ echo "RE:".$message->reply['topic']; }} ?>" name="be" onkeyup="copyElement('subj
 				</div>
 				<div class="line bbLine"></div>
                 <textarea id="message" name="message" class="messageEditor" tabindex="3" cols="1" rows="1" onkeyup="copyElement('body')"  ><?php if(isset($message->reply['message'])) { echo " \n_________________________
-Reply:
-\n".$message->reply['message']; } ?></textarea>
+Mensaje anterior:
+\n".htmlspecialchars($message->reply['message'], ENT_QUOTES, 'UTF-8'); } ?></textarea>
 				<div id="message_preview" class="messageEditor preview" style="display: none; "></div>
 			</div>
 

@@ -123,7 +123,10 @@
         	}
 
 			public function quoteMessage($id) {
-				foreach($this->inbox as $message) {
+				global $session;
+				// Continue sent messages with the other participant, preserving the full quote.
+				$messages = array_merge($this->inbox, $this->sent, $session->plus ? $this->archived : array());
+				foreach($messages as $message) {
 					if($message['id'] == $id) {
 					$message = preg_replace('/\[message\]/', '', $message);
 					$message = preg_replace('/\[\/message\]/', '', $message);
@@ -144,7 +147,9 @@
 					$message = preg_replace('/\[\/report'.$i.'\]/', '[/report0]', $message);
 					}
 						$this->reply = $_SESSION['reply'] = $message;
-						header("Location: nachrichten.php?t=1&id=" . $message['owner']);
+						$recipient = (int)$message['owner'] === (int)$session->uid ? $message['target'] : $message['owner'];
+						header("Location: nachrichten.php?t=1&id=" . (int)$recipient);
+						return (int)$recipient;
 					}
 				}
 			}
