@@ -260,7 +260,7 @@ foreach(array(10 => 'Almacén', 11 => 'Granero', 38 => 'Gran almacén', 39 => 'G
     check(count($data) === 20, $label." (bid$tid): debe tener 20 niveles, tiene ".count($data));
     check(array_keys($data) === range(1, 20), $label." (bid$tid): las claves deben ser 1..20");
 
-    $factor = ($tid === 38 || $tid === 39) ? 30 : 1;
+    $factor = ($tid === 38 || $tid === 39) ? 3 : 1;
     for($lvl = 1; $lvl <= 20; $lvl++) {
         $expected = $officialCapacity[$lvl] * $factor;
         check((int)$data[$lvl]['attri'] === $expected,
@@ -311,7 +311,7 @@ foreach(array(10 => 'Almacén', 11 => 'Granero', 38 => 'Gran almacén', 39 => 'G
     }
 }
 
-// Almacén y granero comparten capacidad; el gran almacén/granero es 30x.
+// Almacén y granero comparten capacidad; el gran almacén/granero es 3x (oficial T4).
 for($lvl = 1; $lvl <= 20; $lvl++) {
     check($bid10[$lvl]['attri'] === $bid11[$lvl]['attri'],
         "Nivel $lvl: almacén y granero deben tener la misma capacidad");
@@ -373,16 +373,16 @@ $row = emptyFields(1);
 $row['f19'] = 20; $row['f19t'] = 38;
 $row['f20'] = 20; $row['f20t'] = 39;
 $out = runUpdateStore($automation, array($row));
-check($out[1][0] == 2400000 * STORAGE_MULTIPLIER, "Gran almacén nivel 20: maxstore esperado 2400000, obtenido ".$out[1][0]);
-check($out[1][1] == 2400000 * STORAGE_MULTIPLIER, "Gran granero nivel 20: maxcrop esperado 2400000, obtenido ".$out[1][1]);
+check($out[1][0] == 240000 * STORAGE_MULTIPLIER, "Gran almacén nivel 20: maxstore esperado 240000, obtenido ".$out[1][0]);
+check($out[1][1] == 240000 * STORAGE_MULTIPLIER, "Gran granero nivel 20: maxcrop esperado 240000, obtenido ".$out[1][1]);
 
 // Mezcla de almacén normal y gran almacén.
 $row = emptyFields(1);
 $row['f19'] = 20; $row['f19t'] = 10;
 $row['f20'] = 5;  $row['f20t'] = 38;
 $out = runUpdateStore($automation, array($row));
-check($out[1][0] == (80000 + 120000) * STORAGE_MULTIPLIER,
-    "Almacén 20 + gran almacén 5: maxstore esperado 200000, obtenido ".$out[1][0]);
+check($out[1][0] == (80000 + 12000) * STORAGE_MULTIPLIER,
+    "Almacén 20 + gran almacén 5: maxstore esperado 92000, obtenido ".$out[1][0]);
 
 // Los slots 19..38 son los válidos para edificios; ninguno debe quedar fuera del recálculo.
 for($slot = 19; $slot <= 38; $slot++) {

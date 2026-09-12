@@ -6,8 +6,14 @@
  * un `WHERE id = ...`: era una inyección SQL de libro, comprobada con un UNION desde el
  * navegador. Hoy la consulta castea a entero y acá se valida además que exista.
  */
-$artefactId = isset($_GET['show']) && ctype_digit((string)$_GET['show']) ? (int)$_GET['show'] : 0;
+$artefactId = isset($_GET['show']) && is_scalar($_GET['show']) && ctype_digit((string)$_GET['show']) ? (int)$_GET['show'] : 0;
 $artefact = $artefactId > 0 ? $database->getArtefactDetails($artefactId) : array();
+
+if(isset($_SESSION['artefact_abandon_result'])) {
+	require_once 'GameEngine/ArtefactAbandonment.php';
+	echo '<p class="info">'.htmlspecialchars(artefactAbandonMessage($_SESSION['artefact_abandon_result']), ENT_QUOTES, 'UTF-8').'</p>';
+	unset($_SESSION['artefact_abandon_result']);
+}
 
 if(!is_array($artefact) || empty($artefact['id'])) {
 	echo '<h4 class="round">Artefacto</h4><p class="none">Ese artefacto no existe.</p>';
@@ -117,3 +123,22 @@ if(is_file($artefactImage)) {
             <?php echo artefactTreasuryRequirement($size, $type); ?> vacío en la aldea desde la que atacas,
             derribar el Tesoro de la aldea que lo guarda y ganar un ataque normal (no un asalto)
             con tu héroe, que además tiene que sobrevivir.</p>
+<?php if($isMine && empty($session->is_sitter)) { ?>
+            <h4 class="round">Abandonar artefacto</h4>
+            <p>El artefacto dejará de pertenecer a tu cuenta y liberará su espacio en el Tesoro.
+            Reaparecerá en una nueva aldea natar con defensas, disponible para que cualquiera lo capture.
+            Para recuperarlo tendrás que conquistarlo de nuevo.</p>
+<?php if($type === ARTEFACT_PLAN) { ?>
+            <p>Al abandonar este plano, tu alianza podría perder los requisitos para seguir ampliando la Maravilla.</p>
+<?php } ?>
+            <form method="post" action="build.php?gid=27&amp;show=<?php echo $artefactId; ?>">
+                <input type="hidden" name="action" value="abandonArtefact">
+                <input type="hidden" name="artefact_id" value="<?php echo $artefactId; ?>">
+                <input type="hidden" name="vref" value="<?php echo (int)$artefact['vref']; ?>">
+                <input type="hidden" name="conquered" value="<?php echo (int)$artefact['conquered']; ?>">
+                <input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker, ENT_QUOTES, 'UTF-8'); ?>">
+                <p><label><input type="checkbox" name="confirm" value="1" required>
+                Confirmo que quiero abandonar este artefacto.</label></p>
+                <button type="submit" class="green"><div class="button-container addHoverClick"><div class="button-background"><div class="buttonStart"><div class="buttonEnd"><div class="buttonMiddle"></div></div></div></div><div class="button-content">Abandonar artefacto</div></div></button>
+            </form>
+<?php } ?>

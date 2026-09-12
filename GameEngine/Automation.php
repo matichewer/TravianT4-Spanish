@@ -5264,6 +5264,15 @@ class Automation {
         $this->bountyprocessProduction($bountywid, $until);
     }
 
+    /** Cierra el tramo con los efectos viejos antes de cambiar el podio de artefactos. */
+    public function accrueAccountProductionBeforeArtefactChange($owner, $until) {
+        global $database;
+        $database->flushArtefactCache();
+        foreach($database->getVillagesID((int)$owner) as $villageId) {
+            $this->accrueProductionBeforeChange((int)$villageId, (int)$until);
+        }
+    }
+
     /**
      * Cierra el tramo de producción de una aldea justo antes de que cambie algo que
      * altera su producción: el nivel de un campo o de un edificio de bonus, o el

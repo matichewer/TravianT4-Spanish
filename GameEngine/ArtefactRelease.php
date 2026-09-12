@@ -609,8 +609,15 @@ function artefactReleaseCreateVillage($database, $village, $natarId, &$taken) {
     $taken[$wref] = true;
 
     $database->setFieldTaken($wref);
+    artefactReleasePopulateVillage($database, $village, $natarId, $wref);
+    $database->addArtefact($wref, $natarId, $village['type'], $village['size']);
+    return $wref;
+}
+
+/** Provisiona la casilla ya reservada; el llamador crea o traslada el artefacto. */
+function artefactReleasePopulateVillage($database, $village, $natarId, $wref, $syncPopulation = true) {
     $name = natarArtefactVillageName($village['type'], $village['size'], $wref);
-    $database->addVillage($wref, $natarId, $name, '0');
+    $database->addVillage($wref, $natarId, $name, '0', $syncPopulation);
     $database->addResourceFields($wref, $database->getVillageType($wref));
     $database->addUnits($wref);
     $database->addTech($wref);
@@ -632,9 +639,6 @@ function artefactReleaseCreateVillage($database, $village, $natarId, &$taken) {
     // Aprovisiona campos, almacén y granero, y recalcula la población desde `fdata`: sin
     // esto la aldea queda con 800 de almacén y nunca hay nada que saquear.
     natarProvisionVillage($wref, $village['fields']);
-
-    $database->addArtefact($wref, $natarId, $village['type'], $village['size']);
-    return $wref;
 }
 
 /**

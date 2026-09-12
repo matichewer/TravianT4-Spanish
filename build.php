@@ -28,6 +28,16 @@ if(isset($_GET['id']) && is_scalar($_GET['id']) && (string)$_GET['id'] === '99' 
 			}
 		}
 $start = $generator->pageLoadTimeStart();
+if(isset($_POST['action']) && $_POST['action'] === 'abandonArtefact') {
+	require_once 'GameEngine/ArtefactAbandonment.php';
+	$abandonResult = artefactAbandonRequest($database, $session, $_POST, $_SERVER['REQUEST_METHOD'],
+		array($automation, 'accrueAccountProductionBeforeArtefactChange'));
+	$_SESSION['artefact_abandon_result'] = $abandonResult['status'];
+	$abandonId = isset($_POST['artefact_id']) && is_scalar($_POST['artefact_id'])
+		? (int)$_POST['artefact_id'] : 0;
+	header('Location: build.php?gid=27&show='.$abandonId, true, 303);
+	exit;
+}
 if(isset($_POST['action']) && $_POST['action'] === 'cancelTroopMovement') {
 	$units->cancelTroopMovement($_POST);
 }

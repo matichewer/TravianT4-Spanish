@@ -99,6 +99,10 @@ include "Templates/html.tpl";
 									</table>
 								</div>
 								<p><b>Cada Tesoro guarda un solo artefacto.</b> Si querés tener varios, necesitás varias aldeas con Tesoro. Y ojo: mientras el Tesoro tenga un artefacto adentro está ocupado, así que no podés traer otro a esa misma aldea.</p>
+								<p>Si ya no quieres un artefacto, abre su ficha en el Tesoro y elige <b>Abandonar artefacto</b>.
+								Debes confirmar la decisión: dejará de pertenecer a tu cuenta y reaparecerá en una nueva aldea natar defendida,
+								disponible para que cualquiera lo capture. Esto libera su espacio en el Tesoro. Si es un plano de construcción,
+								tu alianza podría perder los requisitos para seguir ampliando la Maravilla. Solo el titular puede abandonarlo.</p>
 								<?php if ($endgameTreasuryCost) { ?>
 								<p class="troopStatsIntro">Para que te hagas una idea del costo: llevar un Tesoro del nivel 9 al 10 cuesta
 									<?php echo number_format($endgameTreasuryCost['wood'], 0, ',', '.'); ?> de madera,

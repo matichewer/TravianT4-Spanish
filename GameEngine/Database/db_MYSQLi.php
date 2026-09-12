@@ -1006,7 +1006,7 @@
 					return $result && mysqli_affected_rows($this->connection) === 1;
 				}
 
-			function addVillage($wid, $uid, $username, $capital) {
+			function addVillage($wid, $uid, $username, $capital, $syncPopulation = true) {
 			$total = count($this->getVillagesID($uid));
 			if($total >= 1) {
 				$vname = "Aldea de " . $username . " " . ($total + 1);
@@ -1021,7 +1021,7 @@
         		$q = "INSERT IGNORE into " . TB_PREFIX . "vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values
         ('$wid', '$uid', '$vname', '$capital', 2, 2, 0, 780, 780, 780, 800, 780, 800, '$time', '$time')";
 			$result = mysqli_query($this->connection,$q);
-			if($result) {
+			if($result && $syncPopulation) {
 				$this->syncClimberPopulation((int)$uid);
 			}
 			return $result;
