@@ -103,7 +103,7 @@ if(is_file($artefactImage)) {
                         <td><?php
                             echo htmlspecialchars(artefactActivationStateLabel($state), ENT_QUOTES, 'UTF-8');
                             if($state['state'] === 'pending') {
-                                echo ' '.$generator->getTimeFormat($state['seconds']);
+                                echo ' '.date('d/m/Y H:i:s', (int)$artefact['conquered'] + artefactActivationDelay());
                             } elseif($state['state'] === 'displaced') {
                                 echo ' &mdash; sólo pueden estar activos '.ARTEFACT_MAX_ACTIVE
                                     .' artefactos a la vez, y uno solo de cuenta';

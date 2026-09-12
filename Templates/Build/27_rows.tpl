@@ -109,11 +109,10 @@ if(!function_exists('treasuryArtefactIcon')) {
 	 * existía en el CSS y ninguna plantilla la usaba.
 	 */
 	function treasuryArtefactStateCell($row, $activeRows) {
-		global $generator;
 		$state = artefactActivationState($row, $activeRows);
 		$label = artefactActivationStateLabel($state);
 		if($state['state'] === 'pending') {
-			return '<td class="cap">'.$label.' '.$generator->getTimeFormat($state['seconds']).'</td>';
+			return '<td class="cap">'.$label.' '.date('d/m/Y H:i:s', (int)$row['conquered'] + artefactActivationDelay()).'</td>';
 		}
 		if($state['state'] === 'displaced') {
 			return '<td class="cap inactive" title="Sólo pueden estar activos '

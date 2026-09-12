@@ -763,7 +763,7 @@ function artefactActivationState($row, $activeRows, $now = null, $speed = null) 
 function artefactActivationStateLabel($state) {
     switch(isset($state['state']) ? $state['state'] : '') {
         case 'active':    return 'Activo';
-        case 'pending':   return 'Se activa en';
+        case 'pending':   return 'Se activa el';
         case 'displaced': return 'Inactivo';
     }
     return '';
