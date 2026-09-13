@@ -21,8 +21,10 @@ $routeFormResourceLabels = array(1=>'Madera',2=>'Barro',3=>'Hierro',4=>'Cereal')
 
 // Aldeas propias primero; jugador antes de la aldea, como en el envio de recursos y tropas.
 $routeFormTargetOptions = array();
+$routeFormTripSeconds = array();
 foreach(tradeRouteDestinations($session->uid, $village->wid) as $destination) {
     $candidateWid = (int)$destination['wref'];
+    $routeFormTripSeconds[$candidateWid] = Automation::routeTripSeconds($village->wid,$candidateWid,$session->tribe,1);
     $coor = $database->getCoor($candidateWid);
     $label = $destination['username'].': '.$destination['name'].' ('.(int)$coor['x'].'|'.(int)$coor['y'].')';
     $label .= (int)$destination['owner'] === (int)$session->uid ? ' — Propia' : '';
@@ -78,6 +80,23 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
                     </select>
                 </div>
             </div>
+        </div>
+
+        <div class="routeFormField">
+            <label for="routeFormFrequency">Frecuencia</label>
+            <select id="routeFormFrequency">
+                <option value="manual">Manual</option>
+                <option value="fastest">Lo antes posible (ida y vuelta)</option>
+                <?php foreach(array(15=>'Cada 15 minutos',30=>'Cada media hora',60=>'Cada hora',120=>'Cada 2 horas',180=>'Cada 3 horas',240=>'Cada 4 horas',360=>'Cada 6 horas',720=>'Cada 12 horas') as $interval => $label) { ?>
+                <option value="<?php echo $interval; ?>"><?php echo $label; ?></option>
+                <?php } ?>
+            </select>
+            <div id="routeFormAutomatic" hidden>
+                <label for="routeFormFirst">Primera salida del día</label>
+                <input type="time" id="routeFormFirst" value="00:00" step="300">
+                <button type="button" id="routeFormGenerate">Generar horarios</button>
+            </div>
+            <p id="routeFormFrequencyHelp" aria-live="polite"></p>
         </div>
 
         <div class="routeFormField">
@@ -201,6 +220,73 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
         refresh();
     });
 
+    var frequency = document.getElementById('routeFormFrequency');
+    var target = document.getElementById('routeFormTarget');
+    var deliveries = document.getElementById('routeFormDeliveries');
+    var automatic = document.getElementById('routeFormAutomatic');
+    var first = document.getElementById('routeFormFirst');
+    var generate = document.getElementById('routeFormGenerate');
+    var help = document.getElementById('routeFormFrequencyHelp');
+    var trips = <?php echo json_encode($routeFormTripSeconds); ?>;
+
+    // Daily slots: leave at least one full interval across midnight too.
+    function frequencySchedules(start, interval) {
+        if(!Number.isInteger(start) || start < 0 || start >= 1440 ||
+            !Number.isInteger(interval) || interval < 5 || interval > 1440) { return []; }
+        var result = [];
+        for(var minute = start; minute < 1440 && result.length < Math.floor(1440 / interval); minute += interval) {
+            result.push(minute);
+        }
+        return result;
+    }
+
+    function refreshFrequency() {
+        var seconds = Number(trips[target.value]) * Number(deliveries.value);
+        var minimum = Math.max(5, Math.ceil(seconds / 300) * 5);
+        var available = seconds > 0 && minimum <= 1440;
+        Array.prototype.forEach.call(frequency.options, function(option) {
+            option.disabled = option.value !== 'manual' && (!available ||
+                (option.value !== 'fastest' && Number(option.value) < minimum));
+        });
+        if(frequency.selectedOptions[0].disabled) { frequency.value = 'manual'; }
+        automatic.hidden = frequency.value === 'manual';
+        generate.disabled = !available;
+        help.textContent = available
+            ? 'Intervalo mínimo automático: ' + minimum + ' min (ida y vuelta × envíos, redondeado a 5 minutos). Generar reemplaza los horarios; se repiten cada día. Manual permite ajustarlos libremente.'
+            : 'No hay una frecuencia diaria sin superposición para este destino y cantidad de envíos. Podés configurar horarios manuales si tenés suficientes mercaderes.';
+        return minimum;
+    }
+    frequency.addEventListener('change', refreshFrequency);
+    target.addEventListener('change', refreshFrequency);
+    deliveries.addEventListener('change', refreshFrequency);
+    generate.addEventListener('click', function() {
+        var minimum = refreshFrequency();
+        if(frequency.value === 'manual') { return; }
+        var parts = first.value.split(':');
+        var start = Number(parts[0]) * 60 + Number(parts[1]);
+        if(parts.length !== 2 || start % 5 !== 0) {
+            help.textContent = 'Elegí una primera salida en pasos de 5 minutos.';
+            return;
+        }
+        var interval = frequency.value === 'fastest' ? minimum : Number(frequency.value);
+        var times = frequencySchedules(start, interval);
+        if(!times.length) { return; }
+        list.innerHTML = '';
+        times.forEach(function(minute) {
+            var clone = tpl.content.cloneNode(true);
+            clone.querySelector('select[name="schedule_hour[]"]').value = String(Math.floor(minute / 60));
+            clone.querySelector('select[name="schedule_minute[]"]').value = String(minute % 60);
+            list.appendChild(clone);
+        });
+        refresh();
+        help.textContent += ' ' + times.length + ' salidas diarias. Pausa hasta la primera del día siguiente: ' + (1440 + times[0] - times[times.length - 1]) + ' min. Se guardan al pulsar guardar.';
+    });
+    list.addEventListener('change', function() { frequency.value = 'manual'; refreshFrequency(); });
+    list.addEventListener('click', function(event) {
+        if(event.target.classList.contains('routeFormScheduleRemove')) { frequency.value = 'manual'; refreshFrequency(); }
+    });
+    addBtn.addEventListener('click', function() { frequency.value = 'manual'; refreshFrequency(); });
+    refreshFrequency();
     refresh();
 })();
 </script>

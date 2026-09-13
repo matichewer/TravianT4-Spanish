@@ -17,12 +17,9 @@ require_once __DIR__.'/TradeRoutes.php';
 
 class Market {
 
-    // Tope de horarios que se pueden declarar en un solo guardado de ruta comercial:
-    // 24, uno por cada hora del dia (el maximo con sentido en un reloj de 24hs). La
-    // reserva de mercaderes ya lo limita en la practica (cada horario extra suma otro
-    // reqMerc completo, salvo que el solapamiento real lo permita compartir), esto es
-    // solo un techo duro contra un payload absurdo.
-    const MAX_ROUTE_SCHEDULES = 24;
+    // Un horario por cada paso de cinco minutos del formulario. Incluso al editar,
+    // 288 horarios y sus ids caben dentro de los 1000 inputs de PHP.
+    const MAX_ROUTE_SCHEDULES = 288;
 
     // Una sola asignacion al final solo inicializa la ultima propiedad: el resto
     // quedaba en null y disparaba warnings de count() al abrir el mercado por una

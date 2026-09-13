@@ -58,6 +58,21 @@ $reflection = new ReflectionClass('Market');
 $market = $reflection->newInstanceWithoutConstructor();
 $maxcarryProperty = $reflection->getProperty('maxcarry');
 $maxcarryProperty->setAccessible(true);
+$parseSchedules = $reflection->getMethod('parseRouteSchedules');
+$parseSchedules->setAccessible(true);
+foreach(array(30=>48, 5=>288) as $step=>$expected) {
+    $post = array('schedule_hour'=>array(), 'schedule_minute'=>array());
+    for($minute=0; $minute<1440; $minute+=$step) {
+        $post['schedule_hour'][] = (int)floor($minute/60);
+        $post['schedule_minute'][] = $minute%60;
+    }
+    check(count($parseSchedules->invoke($market,$post)) === $expected,
+        'acepta un día completo de horarios cada '.$step.' minutos');
+}
+$post['schedule_hour'][] = 0;
+$post['schedule_minute'][] = 0;
+check($parseSchedules->invoke($market,$post) === array(), 'rechaza más de 288 horarios');
+
 $requiredMerchants = $reflection->getMethod('requiredMerchants');
 $requiredMerchants->setAccessible(true);
 
