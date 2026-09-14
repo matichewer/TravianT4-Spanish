@@ -57,7 +57,6 @@ while($row = mysql_fetch_array($sql)){
 			<tr>
 				<td class="checkbox edit"></td>
 				<td class="village sortable" onclick="Travian.Game.RaidList.sort(<?php echo $lid; ?>, 'village');">Aldea</td>
-				<td class="ew sortable" onclick="Travian.Game.RaidList.sort(<?php echo $lid; ?>, 'ew');">Hab.</td>
                 <td class="distance sortable" onclick="Travian.Game.RaidList.sort(<?php echo $lid; ?>, 'distance');">Distancia</td>
                 <td class="troops sortable" onclick="Travian.Game.RaidList.sort(<?php echo $lid; ?>, 'troops');">Tropas</td>
                 <td class="lastRaid sortable" onclick="Travian.Game.RaidList.sort(<?php echo $lid; ?>, 'lastRaid');">Último saqueo</td>
@@ -72,7 +71,7 @@ while($row = mysql_fetch_array($sql)){
 $sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid ORDER BY CAST(distance AS DECIMAL(10,2)) ASC, id ASC");
 $query2 = mysql_num_rows($sql2);
 if($query2 == 0) {
-    echo '<td class="noData" colspan="7">No hay listas de saqueo.</td>';
+    echo '<td class="noData" colspan="6">No hay listas de saqueo.</td>';
 }else{
 while($row = mysql_fetch_array($sql2)){
 $id= $row['id'];$lid = $row['lid'];$towref = $row['towref'];$x = $row['x'];$y = $row['y'];
@@ -89,11 +88,7 @@ $vdata = $database->getVillage($towref);
 ?>
 <tr class="slotRow">
 <td class="checkbox">
-				<?php if($checked[$lid] == 0){ ?>
-                <input id="slot<?php echo $id; ?>" name="slot<?php echo $id; ?>" type="checkbox" class="markSlot" onclick="Travian.Game.RaidList.markSlotForRaid(<?php echo $lid; ?>, <?php echo $id; ?>, this.checked);">
-				<?php }else{ ?>
-                <input id="slot<?php echo $id; ?>" name="slot<?php echo $id; ?>" type="checkbox" class="markSlot" checked>
-				<?php } ?>
+                <input id="slot<?php echo $id; ?>" name="slot<?php echo $id; ?>" type="checkbox" class="markSlot" onclick="Travian.Game.RaidList.markSlotForRaid(<?php echo $lid; ?>, <?php echo $id; ?>, this.checked);"<?php if(!empty($checked[$lid])) echo ' checked'; ?>>
 			</td>
 			<td class="village">
             <?php
@@ -134,7 +129,6 @@ $vdata = $database->getVillage($towref);
                 <span class="clear">‎</span>
                 </label>
 			</td>
-			<td class="ew"><?php echo $vdata['pop']; ?></td>
 			<td class="distance"><?php echo $distance; ?></td>
 			<td class="troops">
 
@@ -251,11 +245,7 @@ while($row2 = mysql_fetch_array($getnotice)){
 </tbody>
 	</table>
     <div class="markAll">
-		<?php if($checked[$lid] == 0){ ?>
-		<input type="checkbox" id="raidListMarkAll<?php echo $lid; ?>" class="markAll" onclick="window.location.href = '?gid=16&t=99&slid=<?php echo $lid; ?>';">
-		<?php }else{ ?>
-        <input type="checkbox" id="raidListMarkAll<?php echo $lid; ?>" class="markAll" onclick="window.location.href = '?gid=16&t=99';" checked>
-		<?php } ?>
+        <input type="checkbox" id="raidListMarkAll<?php echo $lid; ?>" class="markAll" onclick="Travian.Game.RaidList.markAllSlotsOfAListForRaid(<?php echo $lid; ?>, this.checked);"<?php if(!empty($checked[$lid])) echo ' checked'; ?>>
         <label for="raidListMarkAll<?php echo $lid; ?>">Seleccionar todo</label>
     </div>
 
