@@ -6211,8 +6211,8 @@ break;
 
 			/**
 			 * Revive al héroe con un balde manteniendo sincronizados hero, units y la
-			 * cola de rescate. Si el rescate ya estaba pagado, su aldea manda sobre la
-			 * aldea que el jugador tenía seleccionada al usar el objeto.
+			 * cola de rescate. Siempre vuelve a su natal, independientemente de la
+			 * aldea seleccionada o de una cola antigua.
 			 */
 			function consumeHeroRevivalBucket($uid,$itemId,$selectedVillageId) {
 				$uid = (int)$uid;
@@ -6231,7 +6231,7 @@ break;
 
 				try {
 					$heroResult = mysqli_query($this->connection,
-						"SELECT dead FROM ".TB_PREFIX."hero WHERE uid=$uid LIMIT 1"
+						"SELECT * FROM ".TB_PREFIX."hero WHERE uid=$uid LIMIT 1"
 					);
 					$hero = $heroResult ? mysqli_fetch_assoc($heroResult) : false;
 					$itemResult = mysqli_query($this->connection,
@@ -6243,13 +6243,7 @@ break;
 						return array('ok'=>false,'status'=>'unavailable','vref'=>0);
 					}
 
-					$queueResult = mysqli_query($this->connection,
-						"SELECT t.vref FROM ".TB_PREFIX."training AS t"
-						." INNER JOIN ".TB_PREFIX."vdata AS v ON v.wref=t.vref"
-						." WHERE t.unit=0 AND v.owner=$uid ORDER BY t.id ASC LIMIT 1"
-					);
-					$queue = $queueResult ? mysqli_fetch_assoc($queueResult) : false;
-					$destination = $queue ? (int)$queue['vref'] : $selectedVillageId;
+					$destination = heroHomeVillage($hero);
 					$destinationResult = mysqli_query($this->connection,
 						"SELECT v.wref FROM ".TB_PREFIX."vdata AS v"
 						." INNER JOIN ".TB_PREFIX."units AS u ON u.vref=v.wref"

@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__.'/Catapult.php';
+require_once __DIR__.'/Hero.php';
 
 class Units {
 	const TROOP_CANCEL_WINDOW = 90;
@@ -338,6 +339,9 @@ class Units {
 
 						}												
 					}
+					if(!empty($post['t11']) && !heroCanDepartFromVillage($database->getHeroData($session->uid), $village->wid, $village->unitarray['hero'])) {
+						$form->addError("error","El héroe solo puede salir desde su aldea natal y debe estar vivo y disponible en ella.");
+					}
 					if(isset($post['t11']))
 					{
 							if ($post['t11'] > $village->unitarray['hero'])
@@ -474,6 +478,9 @@ class Units {
 							}
 
 						}
+					}
+					if(!empty($data['u11']) && !heroCanDepartFromVillage($database->getHeroData($session->uid), $village->wid, $village->unitarray['hero'])) {
+						$form->addError("error","El héroe solo puede salir desde su aldea natal y debe estar vivo y disponible en ella.");
 					}
                     if ($data['u11'] > $village->unitarray['hero'])
                             {

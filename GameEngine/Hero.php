@@ -777,6 +777,15 @@ if(!function_exists('heroHomeVillage')){
 	}
 }
 
+if(!function_exists('heroCanDepartFromVillage')){
+	// Disponibilidad para un nuevo ataque o refuerzo; los regresos no pasan por aquí.
+	function heroCanDepartFromVillage($hero, $villageId, $localHeroCount){
+		return is_array($hero) && (int)$hero['dead'] === 0
+			&& (int)$villageId > 0 && heroHomeVillage($hero) === (int)$villageId
+			&& (int)$localHeroCount > 0;
+	}
+}
+
 if(!function_exists('reassignHeroHomeVillage')){
 	// Devuelve la aldea natal del héroe, mudándola si la que tenía dejó de ser del
 	// jugador.

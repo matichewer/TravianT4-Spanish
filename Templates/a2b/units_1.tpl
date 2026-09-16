@@ -1,3 +1,4 @@
+<?php $availableHero = heroCanDepartFromVillage($database->getHeroData($session->uid), $village->wid, $village->unitarray['hero']) ? 1 : 0; ?>
 <h1>Enviar tropas</h1>
 <?php
 if(is_array($reportdata)) {
@@ -112,10 +113,10 @@ if(is_array($reportdata)) {
 		}
         ?>
 						<td class="line-last regular"></td>
-						<td class="line-last column-last small"><img class="unit u<?php echo 'hero'; ?>" src="img/x.gif" onclick="document.snd.t11.value=''; return false;" alt="Héroe" title="Héroe"> <input <?php if ($village->unitarray['hero']<=0) {echo 'class="text disabled" disabled="disabled"';} else {echo 'class="text"'; } ?> type="text" name="t11" value="" maxlength="1">
+						<td class="line-last column-last small"><img class="unit u<?php echo 'hero'; ?>" src="img/x.gif" onclick="document.snd.t11.value=''; return false;" alt="Héroe" title="Héroe"> <input <?php if ($availableHero<=0) {echo 'class="text disabled" disabled="disabled"';} else {echo 'class="text"'; } ?> type="text" name="t11" value="" maxlength="1">
 		<?php 
-        if ($village->unitarray['hero']>0){
-              echo "/ <a href=\"#\" onclick=\"document.snd.t11.value=".$village->unitarray['hero']."; return false;\">".$village->unitarray['hero']."</a></td>";
+        if ($availableHero>0){
+              echo "/ <a href=\"#\" onclick=\"document.snd.t11.value=".$availableHero."; return false;\">".$availableHero."</a></td>";
         }else{ 
        		echo  "<span class=\"none\">/ 0</span></td>";
 		}
