@@ -143,7 +143,8 @@ class StorageDatabaseStub {
                 if($v['maxstore'] < 800 || $v['maxcrop'] < 800) { $out[] = $v; }
             } elseif(strpos($q, 'wood > maxstore') !== false) {
                 if($v['wood'] > $v['maxstore'] || $v['clay'] > $v['maxstore']
-                    || $v['iron'] > $v['maxstore'] || $v['crop'] > $v['maxcrop']) { $out[] = $v; }
+                    || $v['iron'] > $v['maxstore'] || $v['crop'] > $v['maxcrop']
+                    || $v['wood'] < 0 || $v['clay'] < 0 || $v['iron'] < 0) { $out[] = $v; }
             } elseif(strpos($q, 'wood < 0') !== false) {
                 if($v['wood'] < 0 || $v['clay'] < 0 || $v['iron'] < 0 || $v['crop'] < 0) { $out[] = $v; }
             }
@@ -152,6 +153,15 @@ class StorageDatabaseStub {
     }
     public function query($q) {
         $this->queries[] = $q;
+        if(strpos($q, 'wood = GREATEST(0, LEAST(maxstore, wood))') !== false
+            && preg_match('/WHERE wref = (\d+)/', $q, $m)) {
+            $v = &$this->villages[(int)$m[1]];
+            foreach(array('wood', 'clay', 'iron') as $resource) {
+                $v[$resource] = max(0, min($v['maxstore'], $v[$resource]));
+            }
+            $v['crop'] = min($v['maxcrop'], $v['crop']);
+            return true;
+        }
         // UPDATE ... fdata SET fN=lvl[,fNt=0] WHERE vref=X
         if(preg_match('/'.TB_PREFIX.'fdata SET f(\d+)=(-?\d+)(,f\d+t=0)? WHERE vref=(\d+)/', $q, $m)) {
             $this->fields[(int)$m[4]]['f'.$m[1]] = (int)$m[2];
@@ -547,11 +557,19 @@ check($database->villages[$vref]['maxstore'] == 80000 * STORAGE_MULTIPLIER,
 // ---------------------------------------------------------------------------
 section('F. Automation::pruneResource() — recorte de recursos por desborde');
 
+// Estas fixtures prueban capacidad sin tiempo transcurrido. La liquidación con
+// consumo pendiente se ejecuta en check_market_crop_accounting.php.
+class StoragePruneAutomation extends Automation {
+    protected function accrueProductionBeforeChange($wref, $until) {}
+}
+$pruneAutomation = (new ReflectionClass('StoragePruneAutomation'))->newInstanceWithoutConstructor();
+
+
 $database->villages = array(
     1 => array('maxstore' => 4000, 'maxcrop' => 80000,
                'wood' => 9999, 'clay' => 100, 'iron' => 100, 'crop' => 90000, 'owner' => 1),
 );
-callPrivate($automation, 'pruneResource');
+callPrivate($pruneAutomation, 'pruneResource');
 check($database->villages[1]['wood'] == 4000,
     "Desborde de madera: se recorta a maxstore (4000), quedó ".$database->villages[1]['wood']);
 check($database->villages[1]['crop'] == 80000,
@@ -561,7 +579,7 @@ $database->villages = array(
     1 => array('maxstore' => 80000, 'maxcrop' => 4000,
                'wood' => 100, 'clay' => 100, 'iron' => 100, 'crop' => 50000, 'owner' => 1),
 );
-callPrivate($automation, 'pruneResource');
+callPrivate($pruneAutomation, 'pruneResource');
 check($database->villages[1]['crop'] == 4000,
     "Granero más chico que el almacén: el cereal se recorta a maxcrop (4000), quedó ".$database->villages[1]['crop']);
 
@@ -572,7 +590,7 @@ $database->villages = array(
     2 => array('maxstore' => 800, 'maxcrop' => 800,
                'wood' => 10, 'clay' => 10, 'iron' => 10, 'crop' => -50, 'owner' => 1),
 );
-callPrivate($automation, 'pruneResource');
+callPrivate($pruneAutomation, 'pruneResource');
 check($database->villages[2]['crop'] == -50 || $database->villages[2]['crop'] == 0,
     "Cereal negativo: debe quedar en -50 o 0, quedó ".$database->villages[2]['crop']);
 

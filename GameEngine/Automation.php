@@ -598,6 +598,10 @@ class Automation {
         $this->ClearUser();
         $this->ClearInactive();
         $this->oasisResourcesProduce();
+        // Acreditar llegadas vencidas antes de recortar reservas o evaluar hambre.
+        if(!file_exists("GameEngine/Prevention/market.txt") or time() - filemtime("GameEngine/Prevention/market.txt") > 50) {
+            $this->marketComplete();
+        }
         $this->pruneResource();
         $this->pruneOResource();
         $this->addAdventures();
@@ -638,9 +642,6 @@ class Automation {
         $this->MasterBuilder();
         if(!file_exists("GameEngine/Prevention/auction.txt") or time() - filemtime("GameEngine/Prevention/auction.txt") > 50) {
             $this->auctionComplete();
-        }
-        if(!file_exists("GameEngine/Prevention/market.txt") or time() - filemtime("GameEngine/Prevention/market.txt") > 50) {
-            $this->marketComplete();
         }
         if(!file_exists("GameEngine/Prevention/training.txt") or time() - filemtime("GameEngine/Prevention/training.txt") > 50) {
             $this->trainingComplete();
@@ -1527,54 +1528,20 @@ class Automation {
                 $q = "UPDATE ".TB_PREFIX."vdata set maxstore = $maxstore, maxcrop = $maxcrop where wref = ".$getvillage['wref']."";
                 $database->query($q);
             }
-            $q = "SELECT * FROM ".TB_PREFIX."vdata WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop";
-            $array = $database->query_return($q);
-            foreach ($array as $getvillage) {
-                if($getvillage['wood'] > $getvillage['maxstore']) {
-                    $wood = $getvillage['maxstore'];
-                } else {
-                    $wood = $getvillage['wood'];
-                }
-                if($getvillage['clay'] > $getvillage['maxstore']) {
-                    $clay = $getvillage['maxstore'];
-                } else {
-                    $clay = $getvillage['clay'];
-                }
-                if($getvillage['iron'] > $getvillage['maxstore']) {
-                    $iron = $getvillage['maxstore'];
-                } else {
-                    $iron = $getvillage['iron'];
-                }
-                if($getvillage['crop'] > $getvillage['maxcrop']) {
-                    $crop = $getvillage['maxcrop'];
-                } else {
-                    $crop = $getvillage['crop'];
-                }
-                $q = "UPDATE ".TB_PREFIX."vdata set wood = $wood, clay = $clay, iron = $iron, crop = $crop where wref = ".$getvillage['wref']."";
-                $database->query($q);
-            }
-            $q = "SELECT * FROM ".TB_PREFIX."vdata WHERE wood < 0 OR clay < 0 OR iron < 0 OR crop < 0";
-            $array = $database->query_return($q);
-            foreach ($array as $getvillage) {
-                if($getvillage['wood'] < 0) {
-                    $wood = 0;
-                } else {
-                    $wood = $getvillage['wood'];
-                }
-                if($getvillage['clay'] < 0) {
-                    $clay = 0;
-                } else {
-                    $clay = $getvillage['clay'];
-                }
-                if($getvillage['iron'] < 0) {
-                    $iron = 0;
-                } else {
-                    $iron = $getvillage['iron'];
-                }
-                // el cereal negativo se conserva: la hambruna lo resuelve starvation()
-                $crop = $getvillage['crop'];
-                $q = "UPDATE ".TB_PREFIX."vdata set wood = $wood, clay = $clay, iron = $iron, crop = $crop where wref = ".$getvillage['wref']."";
-                $database->query($q);
+            // El stock puede incluir entregas anteriores a la última liquidación.
+            // Descontar primero el consumo pendiente: recortar antes destruye cereal
+            // que alimentó al ejército mientras el jugador estaba desconectado.
+            $q = "SELECT wref FROM ".TB_PREFIX."vdata WHERE wood > maxstore OR clay > maxstore OR iron > maxstore OR crop > maxcrop OR wood < 0 OR clay < 0 OR iron < 0";
+            foreach ($database->query_return($q) as $village) {
+                $wref = (int)$village['wref'];
+                $this->accrueProductionBeforeChange($wref, null);
+                // Operar sobre el stock actual, no sobrescribir entregas concurrentes
+                // con los valores de un SELECT anterior. El cereal negativo es deuda.
+                $database->query("UPDATE ".TB_PREFIX."vdata SET "
+                    ."wood = GREATEST(0, LEAST(maxstore, wood)), "
+                    ."clay = GREATEST(0, LEAST(maxstore, clay)), "
+                    ."iron = GREATEST(0, LEAST(maxstore, iron)), "
+                    ."crop = LEAST(maxcrop, crop) WHERE wref = ".$wref);
             }
         }
     }
@@ -2396,6 +2363,20 @@ class Automation {
             $noticeData, (int)$time);
     }
 
+    /** Liquidar el destino antes de sumar y limitar una entrega (también botín). */
+    protected function receiveVillageResources($data) {
+        global $database;
+        $wref = (int)$data['to'];
+        $this->accrueProductionBeforeChange($wref, (int)$data['endtime']);
+        $assignments = array();
+        foreach (array('wood', 'clay', 'iron', 'crop') as $resource) {
+            $sum = $resource.' + '.max(0, (int)$data[$resource]);
+            $capacity = $resource === 'crop' ? 'maxcrop' : 'maxstore';
+            $assignments[] = $resource.' = '.(ALLOW_BURST ? $sum : 'LEAST('.$capacity.', '.$sum.')');
+        }
+        $database->query("UPDATE ".TB_PREFIX."vdata SET ".implode(', ', $assignments)." WHERE wref = ".$wref);
+    }
+
     private function marketComplete() {
         if(file_exists("GameEngine/Prevention/market.txt")) {
             @unlink("GameEngine/Prevention/market.txt");
@@ -2406,7 +2387,7 @@ class Automation {
         @fclose($ourFileHandle);
         do {
             $processed = false;
-            $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."send where ".TB_PREFIX."movement.ref = ".TB_PREFIX."send.id and ".TB_PREFIX."movement.proc = 0 and sort_type = 0 and endtime <= $time";
+            $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."send where ".TB_PREFIX."movement.ref = ".TB_PREFIX."send.id and ".TB_PREFIX."movement.proc = 0 and sort_type = 0 and endtime <= $time ORDER BY endtime ASC, moveid ASC";
             $dataarray = $database->query_return($q);
             foreach ($dataarray as $data) {
                 if(!$database->claimMovementProc($data['moveid'])) {
@@ -2442,7 +2423,7 @@ class Automation {
                 if($from['owner'] != $to['owner']) {
                     $database->addNotice($from['owner'], $to['wref'], $fromAlly, $sort_type, ''.addslashes($from['name']).' envió recursos a '.addslashes($to['name']).'', $noticeData, $data['endtime']);
                 }
-                $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
+                $this->receiveVillageResources($data);
                 $endtime = $travelTime + $data['endtime'];
                 // El regreso lleva las dos cifras, que no son la misma: en las columnas,
                 // lo que ESTE tramo entrego (es lo que muestran los paneles de mercaderes,
@@ -4913,7 +4894,7 @@ class Automation {
 
             $to = $database->getMInfo($data['to']);
             $from = $database->getMInfo($data['from']);
-            $database->modifyResource($data['to'], $data['wood'], $data['clay'], $data['iron'], $data['crop'], 1);
+            $this->receiveVillageResources($data);
             //$database->updateVillage($data['to']);
             $database->setMovementProc($data['moveid']);
         }
