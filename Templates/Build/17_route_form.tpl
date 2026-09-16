@@ -94,7 +94,7 @@ if(!$routeFormTarget && !empty($routeFormTargetOptions)) {
             <div id="routeFormAutomatic" hidden>
                 <label for="routeFormFirst">Primera salida del día</label>
                 <input type="time" id="routeFormFirst" value="00:00" step="300">
-                <button type="button" id="routeFormGenerate">Generar horarios</button>
+                <button type="button" id="routeFormGenerate"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Generar horarios</div></div></button>
             </div>
             <p id="routeFormFrequencyHelp" aria-live="polite"></p>
         </div>
