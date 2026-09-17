@@ -61,12 +61,9 @@ for ($dy = $HY; $dy >= -$HY; $dy--) { $yfull[] = $wrapCoord($y + $dy); }   /* no
 $xarray = array_slice($xfull, $HX - $VHX, $VCOLS);
 $yarray = array_slice($yfull, $HY - $VHY, $VROWS);
 
-$maparray = array();
-foreach ($yfull as $yy) {
-    foreach ($xfull as $xx) {
-        $maparray[] = $database->getMInfo($generator->getBaseID($xx, $yy));
-    }
-}
+require_once dirname(__DIR__, 2).'/GameEngine/MapData.php';
+$maparray = mapTilesForCoordinates($xfull, $yfull);
+$mapMarkers = $session->plus ? mapAttackMarkers($maparray, $village->wid, false) : array();
 echo "<h1 dir=\"rtl\">Mapa</h1>";
 echo "<div class=\"mapElephantFinderButton\"><a href=\"elephantfinder.php\">Buscador de elefantes</a></div>";
 $row = 0;
@@ -103,15 +100,12 @@ $row1 = 0;
 
 
 
-// La diplomacia de la alianza de quien mira, resuelta una sola vez para toda la vista.
-// Antes estos tres arreglos se creaban vacios dentro del bucle, casilla por casilla, asi que
-// las ramas de aliado y enemigo del sprite eran inalcanzables por construccion: un aliado se
-// veia igual que un desconocido. Se calcula aca, fuera del bucle, porque el mapa ya hace una
-// consulta por casilla y esto seria una mas por cada una.
+// Resolve all three relationships once for the whole viewport.
 include_once(dirname(__DIR__, 2)."/GameEngine/Diplomacy.php");
-$friendarray = alliedAlliances($session->alliance);      // marco verde
-$enemyarray = hostileAlliances($session->alliance);      // marco rojo
-$neutralarray = napAlliances($session->alliance);        // marco cian
+$mapDiplomacy = allianceDiplomacy($session->alliance);
+$friendarray = $mapDiplomacy[DIPLOMACY_ALLY];
+$enemyarray = $mapDiplomacy[DIPLOMACY_WAR];
+$neutralarray = $mapDiplomacy[DIPLOMACY_NAP];
 
 for($i=0;$i<count($maparray);$i++) {
 	$row1 = intdiv($i, $COLS);
@@ -123,23 +117,13 @@ for($i=0;$i<count($maparray);$i++) {
 	$allyname = '-';
 	$tribename = '-';
 	if($maparray[$index]['occupied'] > 0 && $maparray[$index]['fieldtype'] >= 0) {
-	$tileowner = (int)$maparray[$index]['owner'];
-	if($maparray[$index]['fieldtype'] == 0 && $maparray[$index]['oasistype'] > 0) {
-		$odata = $database->getOMInfo($maparray[$index]['id']);
-		$tileowner = (int)$odata['owner'];
-		$oasisVillageName = isset($odata['conqured_name']) && $odata['conqured_name'] !== ''
-			? $odata['conqured_name']
-			: '-';
-	}
-	$targetalliance = $database->getUserField($tileowner,"alliance",0);
-    $tribe = $database->getUserField($tileowner,"tribe",0);
-    $username = $database->getUserField($tileowner,"username",0);
-    $uinfo = $username;
-    // Los tres arreglos se calculan UNA vez antes del bucle (ver arriba): antes se
-    // reinicializaban vacios en cada casilla, asi que la diplomacia nunca podia influir.
+        $targetalliance = (int)$maparray[$index]['map_alliance'];
+        $tribe = (int)$maparray[$index]['map_tribe'];
+        $username = (string)$maparray[$index]['map_username'];
+        $uinfo = $username;
+        $oasisVillageName = $maparray[$index]['map_oasis_village'] ?: '-';
     }
-    
-    
+
 switch($maparray[$index]['fieldtype']) {
 case 1:
 $tt =  "3-3-3-9";
@@ -194,7 +178,7 @@ break;
    	$image = ($maparray[$index]['occupied'] == 1 && $maparray[$index]['fieldtype'] > 0 && $hasVillage)? (($maparray[$index]['owner'] == $session->uid)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b30-'.$tribe: 'b20-'.$tribe :'b10-'.$tribe : 'b00-'.$tribe) : (($targetalliance != 0)? (in_array($targetalliance,$friendarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b31-'.$tribe: 'b21-'.$tribe :'b11-'.$tribe : 'b01-'.$tribe) : (in_array($targetalliance,$enemyarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b32-'.$tribe: 'b22-'.$tribe :'b12-'.$tribe : 'b02-'.$tribe) : (in_array($targetalliance,$neutralarray)? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b35-'.$tribe: 'b25-'.$tribe :'b15-'.$tribe : 'b05-'.$tribe) : ($targetalliance == $session->alliance? ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b33-'.$tribe: 'b23-'.$tribe :'b13-'.$tribe : 'b03-'.$tribe) : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))))) : ($maparray[$index]['pop']>=100? $maparray[$index]['pop']>= 250?$maparray[$index]['pop']>=500? 'b34-'.$tribe: 'b24-'.$tribe :'b14-'.$tribe : 'b04-'.$tribe))) : $maparray[$index]['image'];
     
     if($targetalliance!=0) {
-    	$allyname = $database->getAllianceName($targetalliance);
+        $allyname = $maparray[$index]['map_alliance_name'];
     	}
     if($tribe==1) {
     	$tribename = "Romano";
@@ -263,12 +247,8 @@ break;
         $greyZoneTile = '';
     }
     echo "<a href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div style=\"position:absolute;left:".(($i % $COLS)*$TILE)."px;top:".($row1*$TILE)."px;transform:scale(".($TILE/60).");transform-origin:top left;\" class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile."\" title=\"".$targettitle."\">";
-    if($session->plus) {
-    	$wref = $village->wid;
-        $toWref = $maparray[$index]['id'];
-    	if ($database->checkAttack($wref,$toWref) != 0) {
-			echo '<img style="margin-right:45px;" class="att1" src="img/x.gif" />';
-		}
+    if(isset($mapMarkers[(int)$maparray[$index]['id']])) {
+        echo '<img style="margin-right:45px;" class="att1" src="img/x.gif" />';
     }
     echo "</div></a>\n";
     
@@ -283,7 +263,7 @@ break;
 	<div class="rulerContainer">
     	<?php
 			for($i=0;$i<$VCOLS;$i++) {
-				echo "<div class=\"coordinate zoom1\">".$xarray[$i]."</div>\n";
+				echo "<div class=\"coordinate zoom1\">".(($TILE >= 30 || ($i-$VHX)%4 === 0) ? $xarray[$i] : '&nbsp;')."</div>\n";
 			}
 		?>
 				<div class="clear"></div>
@@ -293,7 +273,7 @@ break;
 	<div class="rulerContainer">
     	<?php
 			for($i=0;$i<$VROWS;$i++) {
-				echo "<div class=\"coordinate zoom1\">".$yarray[$i]."</div>\n";
+				echo "<div class=\"coordinate zoom1\">".(($TILE >= 30 || ($i-$VHY)%4 === 0) ? $yarray[$i] : '&nbsp;')."</div>\n";
 			}
 		?>
 </div>

@@ -1,12 +1,12 @@
 <div class="mapZoomControls" role="group" aria-label="Zoom del mapa">
 <?php foreach (array(1 => array('−', 'Alejar'), -1 => array('+', 'Acercar')) as $step => $control) {
     $nextZoom = $mapZoom + $step;
-    if ($nextZoom >= 0 && $nextZoom <= 2) { ?>
+    if ($nextZoom >= 0 && $nextZoom <= 3) { ?>
     <a href="<?php echo $mapRoute; ?>?x=<?php echo (int)$x; ?>&amp;y=<?php echo (int)$y; ?>&amp;zoom=<?php echo $nextZoom; ?>" aria-label="<?php echo $control[1]; ?>" title="<?php echo $control[1]; ?>"><?php echo $control[0]; ?></a>
 <?php } else { ?>
     <span aria-disabled="true" aria-label="<?php echo $control[1]; ?>"><?php echo $control[0]; ?></span>
 <?php } } ?>
-    <span class="mapZoomLabel">Zoom <?php echo array('100%', '67%', '50%')[$mapZoom]; ?></span>
+    <span class="mapZoomLabel">Zoom <?php echo array('100%', '67%', '50%', '25%')[$mapZoom]; ?></span>
 </div>
 <style>
 .mapZoomControls{display:flex;gap:6px;align-items:center;margin:8px 0;}
