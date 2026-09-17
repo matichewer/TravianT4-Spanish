@@ -14,6 +14,10 @@
 .mapZoomControls a:hover{background:#dce7ba;}
 .mapZoomControls span[aria-disabled]{opacity:.4;}
 .mapZoomLabel{font-size:12px;}
+/* These tiles are scaled to 25%: 4 CSS pixels become one visible pixel.
+   Keep the original village/diplomacy art and its click target underneath. */
+#mapContainer.lowRes .tile.mapVillageHighlight{z-index:1;}
+#mapContainer.lowRes .tile.mapVillageHighlight:before{content:'';position:absolute;inset:0;z-index:2;border-radius:8px;box-shadow:inset 0 0 0 4px #fff,0 0 0 4px #352b20;pointer-events:none;}
 #mapContainer.lowRes .ruler.x{width:<?php echo $VIEW_WIDTH; ?>px;overflow:hidden;}
 #mapContainer.lowRes .ruler.x .rulerContainer{position:relative;left:-<?php echo $OFFSET_X; ?>px;width:<?php echo $VCOLS*$TILE; ?>px;background-size:<?php echo $TILE; ?>px 30px;}
 #mapContainer.lowRes .ruler.x .coordinate{box-sizing:border-box;width:<?php echo $TILE; ?>px;}

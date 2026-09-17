@@ -246,7 +246,11 @@ break;
         // la región.
         $greyZoneTile = '';
     }
-    echo "<a href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div style=\"position:absolute;left:".(($i % $COLS)*$TILE)."px;top:".($row1*$TILE)."px;transform:scale(".($TILE/60).");transform-origin:top left;\" class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile."\" title=\"".$targettitle."\">";
+    // A high-contrast frame makes villages readable on the 15px overview tiles.
+    $villageHighlight = ($mapZoom === 3 && $hasVillage
+        && (int)$maparray[$index]['occupied'] === 1 && (int)$maparray[$index]['fieldtype'] > 0)
+        ? ' mapVillageHighlight' : '';
+    echo "<a href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div style=\"position:absolute;left:".(($i % $COLS)*$TILE)."px;top:".($row1*$TILE)."px;transform:scale(".($TILE/60).");transform-origin:top left;\" class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile.$villageHighlight."\" title=\"".$targettitle."\">";
     if(isset($mapMarkers[(int)$maparray[$index]['id']])) {
         echo '<img style="margin-right:45px;" class="att1" src="img/x.gif" />';
     }
