@@ -1,4 +1,4 @@
-﻿
+
 <div id="content" class="map">
 
 <div class="t2"></div>
@@ -28,12 +28,23 @@ else {
     $bigmid = $village->wid;
 }
 
-/* --- Map grid with a render buffer, so dragging doesn't reveal blank tiles --- */
-$BUF    = 6;              /* extra tiles rendered beyond the visible area, each side */
-$HX     = 4 + $BUF;       /* half width  (visible half 4 + buffer) -> 2*HX+1 = 21 cols */
-$HY     = 3 + $BUF;       /* half height (visible half 3 + buffer) -> 2*HY+1 = 19 rows */
-$COLS   = 2 * $HX + 1;
-$ROWS   = 2 * $HY + 1;
+// Keep the viewport fixed while showing more terrain at each zoom level.
+require_once dirname(__DIR__, 2).'/GameEngine/MapZoom.php';
+$mapZoom = mapZoomLevel($_GET['zoom'] ?? $_POST['zoom'] ?? 0);
+$TILE = mapZoomTileSize($mapZoom);
+$VIEW_WIDTH = 540;
+$VIEW_HEIGHT = 420;
+$VHX = (int)ceil(($VIEW_WIDTH / $TILE - 1) / 2);
+$VHY = (int)ceil(($VIEW_HEIGHT / $TILE - 1) / 2);
+$VCOLS = 2*$VHX + 1;
+$VROWS = 2*$VHY + 1;
+$OFFSET_X = ($VCOLS*$TILE - $VIEW_WIDTH)/2;
+$OFFSET_Y = ($VROWS*$TILE - $VIEW_HEIGHT)/2;
+$BUF = 6;
+$HX = $VHX + $BUF;
+$HY = $VHY + $BUF;
+$COLS = 2*$HX + 1;
+$ROWS = 2*$HY + 1;
 $PERIOD = 2 * WORLD_MAX + 1;
 $wrapCoord = function($v) use ($PERIOD) {
     while ($v >  WORLD_MAX) { $v -= $PERIOD; }
@@ -47,8 +58,8 @@ $yfull = array();
 for ($dy = $HY; $dy >= -$HY; $dy--) { $yfull[] = $wrapCoord($y + $dy); }   /* north -> south */
 
 /* visible center slices, used only for the coordinate rulers */
-$xarray = array_slice($xfull, $HX - 4, 9);
-$yarray = array_slice($yfull, $HY - 3, 7);
+$xarray = array_slice($xfull, $HX - $VHX, $VCOLS);
+$yarray = array_slice($yfull, $HY - $VHY, $VROWS);
 
 $maparray = array();
 foreach ($yfull as $yy) {
@@ -62,6 +73,7 @@ $row = 0;
 $coorindex = 0;
 ?>
 
+<?php $mapRoute = "karte.php"; include __DIR__."/zoom.tpl"; ?>
 <div class="map2 lowRes">
 	<div id="mapContainer" class="lowRes">
   <?php if($session->goldclub) { ?>
@@ -84,7 +96,7 @@ $coorindex = 0;
 </div>
 <?php } ?>
 <div id="mapViewport" style="position:relative;width:540px;height:420px;overflow:hidden;">
-<div class="mapContainerData" id="mapData" style="position:absolute;left:-<?php echo $BUF*60; ?>px;top:-<?php echo $BUF*60; ?>px;width:<?php echo $COLS*60; ?>px;height:<?php echo $ROWS*60; ?>px;">
+<div class="mapContainerData" id="mapData" style="position:absolute;left:-<?php echo $BUF*$TILE + $OFFSET_X; ?>px;top:-<?php echo $BUF*$TILE + $OFFSET_Y; ?>px;width:<?php echo $COLS*$TILE; ?>px;height:<?php echo $ROWS*$TILE; ?>px;">
 <?php
 $index = 0;
 $row1 = 0;
@@ -250,7 +262,7 @@ break;
         // la región.
         $greyZoneTile = '';
     }
-    echo "<a href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile."\" title=\"".$targettitle."\">";
+    echo "<a href=\"position_details.php?x=".$maparray[$index]['x']."&y=".$maparray[$index]['y']."\" style=\"cursor:default;\"><div style=\"position:absolute;left:".(($i % $COLS)*$TILE)."px;top:".($row1*$TILE)."px;transform:scale(".($TILE/60).");transform-origin:top left;\" class=\"tile tile-".$i."-row".$row1." ".$image."".$occupied.$greyZoneTile."\" title=\"".$targettitle."\">";
     if($session->plus) {
     	$wref = $village->wid;
         $toWref = $maparray[$index]['id'];
@@ -270,7 +282,7 @@ break;
 <div class="ruler x">
 	<div class="rulerContainer">
     	<?php
-			for($i=0;$i<=8;$i++) {
+			for($i=0;$i<$VCOLS;$i++) {
 				echo "<div class=\"coordinate zoom1\">".$xarray[$i]."</div>\n";
 			}
 		?>
@@ -280,19 +292,19 @@ break;
 <div class="ruler y">
 	<div class="rulerContainer">
     	<?php
-			for($i=0;$i<=6;$i++) {
+			for($i=0;$i<$VROWS;$i++) {
 				echo "<div class=\"coordinate zoom1\">".$yarray[$i]."</div>\n";
 			}
 		?>
 </div>
 </div>
 		<div class="navigation">
-			<a href="karte.php?x=<?php echo $x-1; ?>&y=<?php echo $y; ?>" id="navigationMoveLeft" class="moveLeft"><img src="img/x.gif" title="mover a la izquierda"></a>
-            <a href="karte.php?x=<?php echo $x+1; ?>&y=<?php echo $y; ?>" id="navigationMoveRight" class="moveRight"><img src="img/x.gif" title="mover a la derecha"></a>
-			<a href="karte.php?x=<?php echo $x; ?>&y=<?php echo $y+1; ?>" id="navigationMoveUp" class="moveUp"><img src="img/x.gif" title="mover arriba"></a>
-			<a href="karte.php?x=<?php echo $x; ?>&y=<?php echo $y-1; ?>" id="navigationMoveDown" class="moveDown"><img src="img/x.gif" title="mover abajo"></a>
+			<a href="karte.php?zoom=<?php echo $mapZoom; ?>&x=<?php echo $x-1; ?>&y=<?php echo $y; ?>" id="navigationMoveLeft" class="moveLeft"><img src="img/x.gif" title="mover a la izquierda"></a>
+            <a href="karte.php?zoom=<?php echo $mapZoom; ?>&x=<?php echo $x+1; ?>&y=<?php echo $y; ?>" id="navigationMoveRight" class="moveRight"><img src="img/x.gif" title="mover a la derecha"></a>
+			<a href="karte.php?zoom=<?php echo $mapZoom; ?>&x=<?php echo $x; ?>&y=<?php echo $y+1; ?>" id="navigationMoveUp" class="moveUp"><img src="img/x.gif" title="mover arriba"></a>
+			<a href="karte.php?zoom=<?php echo $mapZoom; ?>&x=<?php echo $x; ?>&y=<?php echo $y-1; ?>" id="navigationMoveDown" class="moveDown"><img src="img/x.gif" title="mover abajo"></a>
             <?php if($session->plus) { ?>
-            <a href="karte2.php?x=<?php echo $x ?>&y=<?php echo $y; ?>" id="navigationFullScreen" class="viewFullScreen full"><img src="img/x.gif" alt="ver a pantalla completa" title="ver a pantalla completa"></a>
+            <a href="karte2.php?zoom=<?php echo $mapZoom; ?>&x=<?php echo $x ?>&y=<?php echo $y; ?>" id="navigationFullScreen" class="viewFullScreen full"><img src="img/x.gif" alt="ver a pantalla completa" title="ver a pantalla completa"></a>
             <?php } ?>
 		</div>
 		<form id="mapCoordEnter" name="map_coords" method="post" action="karte.php" class="toolbar ">
@@ -300,6 +312,7 @@ break;
 		<div class="mr">
 			<div class="mc">
 				<div class="contents">
+			<input type="hidden" name="zoom" value="<?php echo $mapZoom; ?>" />
 			<div class="coordinatesInput">
             <?php
             if(isset($_GET['x']) && isset($_GET['y'])) {
@@ -380,14 +393,14 @@ body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:
 <script type="text/javascript">
 /* Click-and-drag panning plus in-place tile details for the small map. */
 (function(){
-	var TILE=60, THRESHOLD=6, WORLD=<?php echo (int)WORLD_MAX; ?>, PERIOD=2*WORLD+1;
+	var TILE=<?php echo $TILE; ?>, THRESHOLD=6, WORLD=<?php echo (int)WORLD_MAX; ?>, PERIOD=2*WORLD+1;
 	var curX=<?php echo (int)$x; ?>, curY=<?php echo (int)$y; ?>;
 	var dialogOpen=false;
 	function bindMapLinks(content){
 		$(content).getElements('a[href^="karte.php"]').addEvent('click',function(event){
 			event.stop();
 			var url=new URI(this.href);
-			window.location.href='karte.php?x='+parseInt(url.getData('x'),10)+'&y='+parseInt(url.getData('y'),10);
+			window.location.href='karte.php?zoom=<?php echo $mapZoom; ?>&x='+parseInt(url.getData('x'),10)+'&y='+parseInt(url.getData('y'),10);
 		});
 	}
 	function openTileDetails(event,link){
@@ -480,7 +493,7 @@ body.map .dialog .dialog-contents .cancel:hover{background:#eee!important;color:
 			var nx=curX-tdx, ny=curY+tdy;
 			if(nx>WORLD) nx-=PERIOD; if(nx<-WORLD) nx+=PERIOD;
 			if(ny>WORLD) ny-=PERIOD; if(ny<-WORLD) ny+=PERIOD;
-			window.location.href='karte.php?x='+nx+'&y='+ny;
+			window.location.href='karte.php?zoom=<?php echo $mapZoom; ?>&x='+nx+'&y='+ny;
 		});
 	});
 })();
