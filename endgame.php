@@ -28,13 +28,22 @@ $endgameSizes = array(
 $endgameWonderMaxLevel = isset($GLOBALS['bid40']) ? max(array_keys($GLOBALS['bid40'])) : 100;
 $endgameTreasuryCost = isset($GLOBALS['bid27'][10]) ? $GLOBALS['bid27'][10] : null;
 
-/** El valor de un artefacto tal como lo muestra su ficha, o una raya si ese tamaño no existe. */
+/** Describe las reducciones sin confundir el porcentaje descontado con el restante. */
 function endgameValue($type, $size)
 {
     if ($type === ARTEFACT_STORAGE && $size === ARTEFACT_SIZE_UNIQUE) {
         return '&mdash;';
     }
+    if ($type === ARTEFACT_FOOL) {
+        return 'Efecto variable';
+    }
     $row = array('id' => 0, 'type' => $type, 'size' => $size, 'conquered' => 0);
+    if ($type === ARTEFACT_DIET || $type === ARTEFACT_TRAINER) {
+        $reduction = (1 - artefactEffectValue($row, $type)) * 100;
+        $percent = rtrim(rtrim(number_format($reduction, 2, ',', '.'), '0'), ',');
+        $quantity = $type === ARTEFACT_DIET ? 'el consumo de cereal' : 'el tiempo de entrenamiento';
+        return htmlspecialchars('Reduce un '.$percent.'% '.$quantity, ENT_QUOTES, 'UTF-8');
+    }
     return htmlspecialchars(artefactEffectValueLabel($row), ENT_QUOTES, 'UTF-8');
 }
 
@@ -148,7 +157,7 @@ include "Templates/html.tpl";
 										</tbody>
 									</table>
 								</div>
-								<p>Cómo leer los números: <b>x4</b> quiere decir que multiplica por cuatro (los edificios aguantan cuatro veces más catapultazos, las tropas van al doble de rápido). <b>1/2</b> quiere decir que lo reduce a la mitad (tus tropas comen la mitad de cereal, entrenar tarda la mitad).</p>
+								<p>Cómo leer los números: <b>x4</b> multiplica por cuatro la propiedad indicada; <b>x2</b> la duplica. En el consumo de cereal y el tiempo de entrenamiento, el porcentaje indica cuánto se descuenta del valor original. Por ejemplo, <b>reducir un 25%</b> un entrenamiento de 60 minutos lo deja en <b>45 minutos</b>; reducirlo un 50% lo deja en 30 minutos. La reducción del entrenamiento afecta al tiempo, no al costo de las tropas.</p>
 								<div class="helpInfoBlock helpInfoLinkLess">
 									<div class="helpHeadLine">El artefacto del necio</div>
 									<div class="helpText">Es el raro de la familia. Cada 24 horas copia al azar el efecto de otro artefacto, y <b>puede salir en contra</b>: te puede tocar que tus tropas coman el doble o que los edificios se te caigan más fácil. El único del necio es la excepción — ese nunca te perjudica. En la ficha del artefacto, dentro del Tesoro, siempre podés ver a quién está imitando hoy y a qué hora vuelve a cambiar.</div>
