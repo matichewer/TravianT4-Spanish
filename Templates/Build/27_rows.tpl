@@ -52,7 +52,7 @@ if(!function_exists('treasuryArtefactIcon')) {
 			: artefactEffectValueLabel($row);
 		return '<td class="nam"><a href="build.php?id='.(int)$buildingId.'&amp;show='.(int)$row['id'].'">'.$name.'</a>'
 			.'<div class="info">Tesoro <b>'.artefactTreasuryRequirement($size, $type).'</b>, alcance <b>'.$scope.'</b>'
-			.($value !== '' ? ', efecto <b>'.htmlspecialchars($value, ENT_QUOTES, 'UTF-8').'</b>' : '')
+			.($value !== '' ? '<br>Efecto: <b>'.htmlspecialchars($value, ENT_QUOTES, 'UTF-8').'</b>' : '')
 			.'<br>'.htmlspecialchars($effect, ENT_QUOTES, 'UTF-8').'</div></td>';
 	}
 
@@ -116,7 +116,7 @@ if(!function_exists('treasuryArtefactIcon')) {
 		}
 		if($state['state'] === 'displaced') {
 			return '<td class="cap inactive" title="Sólo pueden estar activos '
-				.ARTEFACT_MAX_ACTIVE.' artefactos a la vez, y uno solo de cuenta. Tienen prioridad los más antiguos.">'
+				.ARTEFACT_MAX_ACTIVE.' artefactos a la vez, pero solo uno con efecto sobre todas tus aldeas. Tienen prioridad los más antiguos.">'
 				.$label.'</td>';
 		}
 		return '<td class="cap"><b>'.$label.'</b></td>';

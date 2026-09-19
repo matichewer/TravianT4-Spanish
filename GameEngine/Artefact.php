@@ -770,11 +770,8 @@ function artefactActivationStateLabel($state) {
 }
 
 /**
- * El valor del efecto tal como se lee en la ficha: "x4", "1/2", "x200".
- *
- * Los multiplicadores se muestran como "xN" y las fracciones (dieta y entrenamiento,
- * donde un valor menor es mejor) como "1/2" y "3/4", que es como los anuncia el oficial.
- * El necio en su cara mala invierte el número, así que sale por la otra rama.
+ * El valor del efecto para el jugador. Consumo y tiempo se expresan como variación
+ * porcentual; también se indica el aumento cuando el necio aplica una penalización.
  */
 function artefactEffectValueLabel($row, $now = null) {
     $type = artefactEffectiveType($row, $now);
@@ -788,13 +785,10 @@ function artefactEffectValueLabel($row, $now = null) {
     if($value <= 0) {
         return '';
     }
-    if($value < 1) {
-        $inverse = 1 / $value;
-        // 0,5 -> 1/2 y 0,75 -> 4/3 no: la fracción que anuncia el oficial es la del
-        // consumo/tiempo que QUEDA, o sea 1/2 y 3/4.
-        if(abs($value - 0.5) < 0.001)  { return '1/2'; }
-        if(abs($value - 0.75) < 0.001) { return '3/4'; }
-        return '1/'.rtrim(rtrim(number_format($inverse, 2, ',', '.'), '0'), ',');
+    if($type === ARTEFACT_DIET || $type === ARTEFACT_TRAINER) {
+        $percent = rtrim(rtrim(number_format(abs(1 - $value) * 100, 2, ',', '.'), '0'), ',');
+        $quantity = $type === ARTEFACT_DIET ? 'consumo de cereal' : 'tiempo de entrenamiento';
+        return $percent.'% '.($value > 1 ? 'más' : 'menos').' '.$quantity;
     }
     return 'x'.rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
 }

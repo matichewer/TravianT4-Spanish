@@ -112,7 +112,7 @@ if(is_file($artefactImage)) {
                                 echo ' '.date('d/m/Y H:i:s', (int)$artefact['conquered'] + artefactActivationDelay());
                             } elseif($state['state'] === 'displaced') {
                                 echo ' &mdash; sólo pueden estar activos '.ARTEFACT_MAX_ACTIVE
-                                    .' artefactos a la vez, y uno solo de cuenta';
+                                    .' artefactos a la vez, pero solo uno con efecto sobre todas tus aldeas';
                             }
                         ?></td>
                     </tr>

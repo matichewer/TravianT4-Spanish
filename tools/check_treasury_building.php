@@ -280,7 +280,8 @@ check(strpos($templates['27_rows'], 'artefactEffectValueLabel(') !== false,
     'la fila del Tesoro anuncia el valor del efecto');
 foreach(array(ARTEFACT_ARCHITECT => array('x4', 'x3', 'x5'),
               ARTEFACT_EAGLE     => array('x5', 'x3', 'x10'),
-              ARTEFACT_DIET      => array('1/2', '3/4', '1/2')) as $type => $esperado) {
+              ARTEFACT_DIET      => array('50% menos consumo de cereal', '25% menos consumo de cereal', '50% menos consumo de cereal'),
+              ARTEFACT_TRAINER   => array('50% menos tiempo de entrenamiento', '25% menos tiempo de entrenamiento', '50% menos tiempo de entrenamiento')) as $type => $esperado) {
     foreach(array(ARTEFACT_SIZE_SMALL, ARTEFACT_SIZE_LARGE, ARTEFACT_SIZE_UNIQUE) as $index => $size) {
         $row = array('id' => 1, 'type' => $type, 'size' => $size, 'conquered' => 0);
         check(artefactEffectValueLabel($row) === $esperado[$index],

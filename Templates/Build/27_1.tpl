@@ -40,7 +40,7 @@ if(count($ownArtefacts) === 0) {
 	}
 	if(count($ownArtefacts) > count($activeArtefacts)) {
 		echo '<tr><td colspan="5" class="none">Sólo pueden estar activos '.ARTEFACT_MAX_ACTIVE
-			.' artefactos a la vez y uno solo de cuenta. Tienen prioridad los capturados hace más tiempo.</td></tr>';
+			.' artefactos a la vez, pero solo uno con efecto sobre todas tus aldeas. Tienen prioridad los capturados hace más tiempo.</td></tr>';
 	}
 }
 ?>
