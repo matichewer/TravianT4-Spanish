@@ -3,9 +3,9 @@
  * Las dos pestañas de tropas del resumen de aldeas (dorf3.php?s=5).
  *
  * Cubre:
- *   A. "Tropas propias" muestra lo que hay EN cada aldea, como en el T4 oficial: un
- *      refuerzo enviado a otra aldea NO aparece en la fila de la aldea que lo entrenó.
- *      Esto es a propósito y por eso está fijado acá — se ve en la plaza de reuniones.
+ *   A. "Tropas propias" suma guarniciones propias por ubicación y tropas en viaje
+ *      por aldea de origen, incluidos colonos, exploradores y héroe en aventura.
+ *      Los refuerzos estacionados en aldeas ajenas y prisioneros quedan fuera.
  *   B. Un refuerzo alojado en una aldea propia tampoco se suma a las tropas propias de la
  *      aldea que lo hospeda: son de otro dueño y van en la otra pestaña.
  *   E. "Tropas en aldeas" lista los grupos por ubicación, con las columnas de la tribu de
@@ -91,6 +91,13 @@ function cleanScratch() {
 register_shutdown_function('cleanScratch');
 cleanScratch();
 
+$TESTUSER = 990009;
+$database->query("DELETE FROM ".TB_PREFIX."users WHERE id = $TESTUSER");
+$database->query("INSERT INTO ".TB_PREFIX."users (id,username,tribe) VALUES ($TESTUSER,'checkTroopOverview',1)");
+register_shutdown_function(function() use ($database,$TESTUSER) {
+    $database->query("DELETE FROM ".TB_PREFIX."users WHERE id = $TESTUSER");
+});
+
 $ROMAN = 1;   // u1..u10
 $GAUL  = 3;   // u21..u30
 
@@ -153,20 +160,19 @@ $database->query("INSERT INTO ".TB_PREFIX."vdata (wref,owner,name) VALUES ($A,$U
 
 $own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
 
-check($own[$A]['u1'] === 30,
-    'la aldea que los entrenó muestra los 30 que se quedaron (dio '.$own[$A]['u1'].')');
+check($own[$A]['u1'] === 40,
+    'la aldea que los entrenó muestra 30 en casa más 10 en viaje (dio '.$own[$A]['u1'].')');
 check($own[$B]['u1'] === 60,
     'los 20 alojados en la otra aldea propia se cuentan EN esa aldea: 40 + 20 (dio '.$own[$B]['u1'].')');
-check($own[$A]['u1'] + $own[$B]['u1'] === 90,
-    'y una sola vez: el total no los duplica (esperado 90)');
+check($own[$A]['u1'] + $own[$B]['u1'] === 100,
+    'y una sola vez: el total no los duplica (esperado 100)');
 check($own[$A]['hero'] === 1, 'el héroe se muestra en la aldea donde está');
 check($own[$A]['u2'] === 8, 'las demás unidades de la aldea se muestran igual');
 
-// Lo que está fuera de las aldeas del jugador no aparece acá, y eso es la regla: se ve en
-// la plaza de reuniones, como en el T4 oficial.
+// Los refuerzos estacionados en aldeas ajenas siguen fuera del resumen.
 check($own[$A]['u1'] + $own[$B]['u1'] !== 140,
     'los 50 que refuerzan al aliado no se muestran en esta pantalla');
-check($own[$A]['u10'] === 0, 'los colonos en camino tampoco');
+check($own[$A]['u10'] === 3, 'los tres colonos en camino se suman a su aldea');
 
 // ---------------------------------------------------------------------------
 section('B. Los refuerzos ajenos no son tropas propias');
@@ -177,7 +183,7 @@ $own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
 check($own[$B]['u1'] === 60,
     'un refuerzo de otro jugador alojado en B no engorda las tropas propias de B (esperado 60, dio '.$own[$B]['u1'].')');
 
-// El invariante que evita que las dos pestañas vuelvan a discrepar.
+// Sin movimientos en B, ambas pestañas coinciden para sus grupos propios.
 $garrisonsB = troopOverviewVillageGarrisons(array($B), $ROMAN, $UID);
 $sum = troopOverviewEmptyUnits(1,10);
 foreach($garrisonsB[$B] as $group) {
@@ -236,7 +242,7 @@ check(count($garrisons[$B]) >= 1, 'una aldea sin refuerzos igual aparece con su 
 // (Los 20 legionarios que hay en B son de A, no de B: en `enforcement` `from` es la aldea
 // natal y `vref` el destino, y confundirlos es justo el error que esta pestaña arrastraba.)
 $own = troopOverviewOwnTroops(array($A,$B), $ROMAN, $UID);
-check($own[$A]['u1'] === 30 + 12,
+check($own[$A]['u1'] === 30 + 10 + 12,
     'los 12 que B tiene en el oasis de A se cuentan en A, que es donde está el oasis (dio '.$own[$A]['u1'].')');
 
 $oasisGroup = null;
@@ -292,14 +298,6 @@ check(strpos($tpl,'<tr class="small') === false,
 check(strpos($tpl,'<td class="vil fc" colspan="12">') === false,
     'los destinos ya no se imprimen en una fila de texto a lo ancho: parten la cuadrícula en dos');
 
-
-// La pantalla lee `units` y `enforcement` y nada más: lo que está en camino o atrapado no
-// se muestra acá a propósito. Si alguien vuelve a sumarlo, estas dos aserciones lo avisan.
-$engine = file_get_contents(dirname(__DIR__).'/GameEngine/TroopOverview.php');
-check(strpos($engine,TB_PREFIX."movement") === false && strpos($engine,'."movement') === false,
-    'la agregación del resumen no mira los movimientos: lo que está en camino se ve en la plaza de reuniones');
-check(strpos($engine,'."prisoners') === false,
-    'ni las tropas atrapadas en trampas ajenas');
 
 $dorf3 = file_get_contents(dirname(__DIR__).'/dorf3.php');
 check(strpos($dorf3,"su=") !== false,
@@ -370,10 +368,26 @@ $upkeepOnAdventure = (int)$technology->getUpkeep($technology->getAllUnits($SCOUT
 check($upkeepOnAdventure === $upkeepAtHome,
     'la aldea paga lo mismo con el héroe en casa que de aventura (casa '.$upkeepAtHome.', aventura '.$upkeepOnAdventure.')');
 
+$ownMoving = troopOverviewOwnTroops(array($SCOUTVIL), $ROMAN, $SCOUTUSER);
+check($ownMoving[$SCOUTVIL]['u4'] === 150 && $ownMoving[$SCOUTVIL]['u1'] === 7
+    && $ownMoving[$SCOUTVIL]['hero'] === 1,
+    'Tropas propias incluye exploradores de ida/vuelta, ataque de regreso y héroe en aventura');
 $database->query("DELETE FROM ".TB_PREFIX."movement WHERE sort_type = 9 AND `from` = $SCOUTVIL");
 $upkeepWithoutHero = (int)$technology->getUpkeep($technology->getAllUnits($SCOUTVIL),0,$SCOUTVIL);
 check($upkeepAtHome - $upkeepWithoutHero === 6,
     'y esos 6 de cereal son exactamente los del héroe (diferencia '.($upkeepAtHome - $upkeepWithoutHero).')');
+
+addMove(3, $FOREIGN, $SCOUTVIL, $FOREIGN, array(1 => 500));
+addMove(3, $SCOUTVIL, $FOREIGN, $SCOUTVIL, array(1 => 900), 1);
+addTypedMove(3, $SCOUTVIL, $A, $SCOUTVIL, 2, 11, 2);
+$ownMoving = troopOverviewOwnTroops(array($SCOUTVIL,$A), $ROMAN, $SCOUTUSER);
+check($ownMoving[$SCOUTVIL]['u1'] === 7,
+    'no suma ataques enemigos entrantes ni movimientos procesados');
+check($ownMoving[$SCOUTVIL]['u2'] === 11 && $ownMoving[$A]['u2'] === 8,
+    'un refuerzo en viaje entre aldeas propias se cuenta sólo en el origen');
+$stationary = troopOverviewVillageGarrisons(array($SCOUTVIL), $ROMAN, $SCOUTUSER);
+check($stationary[$SCOUTVIL][0]['units']['u4'] === 0,
+    'Tropas en aldeas sigue mostrando sólo tropas estacionadas');
 
 $dbSource = file_get_contents(dirname(__DIR__).'/GameEngine/Database/db_MYSQLi.php');
 check(strpos($dbSource,"if(\$ret['attack_type'] != 1)") === false,

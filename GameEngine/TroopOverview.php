@@ -1,44 +1,11 @@
 <?php
 /**
- * Fuente única de las dos pestañas de tropas del resumen de aldeas (dorf3.php?s=5).
- *
- * Las dos agrupan por UBICACIÓN, como en el T4 oficial, y se calculan con la misma
- * función para que no puedan discrepar:
- *
- *   - **Tropas propias**: matriz aldea x unidad con las tropas DEL JUGADOR que están en
- *     cada aldea. Incluye las que mandó de refuerzo desde otra aldea suya y las de sus
- *     oasis anexados: están ahí, son suyas, y se cuentan donde están. No incluye los
- *     refuerzos de otros jugadores, que son de otro dueño.
- *   - **Tropas en aldeas**: la misma lista sin resumir — una tabla por aldea con cada
- *     grupo por separado, los refuerzos ajenos incluidos, y el consumo de cereal.
- *
- * Invariante: la celda de la pestaña 1 para una aldea es la suma de los grupos propios que
- * la pestaña 2 muestra para esa aldea. Por eso la pestaña 1 se deriva de la 2 y no tiene
- * consultas propias: una versión anterior leía sólo `units` y las tropas alojadas en otra
- * aldea de la misma cuenta no aparecían en ninguna fila, con lo que el Total dejaba de ser
- * un total.
- *
- * **Lo que está fuera de la aldea no se muestra acá, y es a propósito.** Un ejército que
- * refuerza otra aldea sale de `units` y pasa a `enforcement`; uno en camino vive en
- * `movement`+`attacks`. En el T4 oficial esos se ven en la plaza de reuniones (bloque
- * "Refuerzos" de Templates/Build/16.tpl, que lista a qué aldea fue cada grupo), no en el
- * resumen. Una versión de esta pantalla los sumaba a la fila de su aldea natal: es más
- * informativo, pero no es lo que hace el juego original. Si aparece un reporte de que
- * "faltan tropas" en esta pantalla, esa es la respuesta, no un bug.
- *
- * Dónde vive cada tropa, que sí hay que tener presente para no contar dos veces:
- *
- *   units       en su aldea                       vref = aldea
- *   enforcement reforzando otra aldea o un oasis   `from` = aldea natal, vref = destino
- *   movement    en camino, colonos, aventura       (ver mysqli_DB::getVillageMovement)
- *   prisoners   atrapadas en las trampas de otro   `from` = aldea natal
- *
- * Son excluyentes: una tropa sale de `units` en el mismo request en que entra al
- * siguiente. Esta pantalla sólo lee `units` y `enforcement`; el cereal, que sí tiene que
- * cobrarlas todas, las junta en `Technology::getAllUnits()`.
- *
- * Ojo con los ids de unidad: son absolutos (u1..u50, diez por tribu) en `units` y en
- * `enforcement`, y relativos a la tribu (t1..t10, t11 = héroe) en `attacks` y `prisoners`.
+ * Tropas propias suma las guarniciones del jugador por ubicación y las tropas en
+ * viaje por su aldea de origen. Tropas en aldeas detalla sólo las guarniciones.
+ * Los movimientos se leen con getVillageMovement(), compartido con la manutención:
+ * ida, regreso (incluido espionaje), colonos y héroe de aventura.
+ * units/enforcement usan ids absolutos; el helper convierte los t1..t11 de attacks.
+ * Refuerzos alojados fuera de las aldeas propias y prisioneros quedan fuera.
  */
 
 /**
@@ -236,16 +203,9 @@ function troopOverviewPlaceLabel($wref, $places, $coords) {
 	return $name;
 }
 
-/**
- * Pestaña "Tropas propias": las tropas del jugador que están en cada una de sus aldeas.
- *
- * Se deriva de troopOverviewVillageGarrisons() quedándose con los grupos cuyo dueño es el
- * jugador: las de la aldea, las que mandó de refuerzo desde otra aldea suya, y las de sus
- * oasis anexados. Lo que está fuera de sus aldeas —refuerzo a un aliado, tropas en
- * camino— no se muestra acá, igual que en el T4 oficial: eso se ve en la plaza de
- * reuniones. Ver la cabecera del archivo.
- */
+/** Guarniciones propias por ubicación, más movimientos por aldea de origen. */
 function troopOverviewOwnTroops($villageIds, $tribe, $uid) {
+	global $database;
 	$range = troopOverviewTribeRange($tribe);
 	$ids = troopOverviewIdList($villageIds);
 	$out = array();
@@ -266,6 +226,9 @@ function troopOverviewOwnTroops($villageIds, $tribe, $uid) {
 			}
 			$out[$vid] = troopOverviewSumUnits($out[$vid],$group['units']);
 		}
+	}
+	foreach($ids as $vid) {
+		$out[$vid] = troopOverviewSumUnits($out[$vid],$database->getVillageMovement($vid));
 	}
 	return $out;
 }

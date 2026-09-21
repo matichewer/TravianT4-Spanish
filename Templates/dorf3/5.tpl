@@ -1,19 +1,8 @@
 <?php
 /**
- * Resumen de aldeas -> Tropas. Dos pestañas, como en el T4 oficial:
- *
- *   ?s=5        "Tropas propias"  — matriz aldea x unidad con las tropas del jugador que
- *                                   están en cada aldea, más un total por tipo.
- *
- * Las aldeas van en orden de fundación en las dos pestañas, igual que el cartel lateral.
- *   ?s=5&su=2   "Tropas en aldeas" — lo que hay DENTRO de cada aldea propia, incluidos los
- *                                   refuerzos de otros jugadores y la guarnición de los
- *                                   oasis anexados, con el consumo de cereal.
- *
- * La segunda pestaña era un <span> muerto: no tenía enlace ni contenido. Las tropas que
- * están fuera de la aldea (de refuerzo, en camino) no se muestran en ninguna de las dos,
- * igual que en el T4 oficial: se ven en la plaza de reuniones. La agregación vive entera
- * en GameEngine/TroopOverview.php; acá sólo se imprime.
+ * Resumen de tropas: propias incluye guarniciones propias y tropas en viaje.
+ * Tropas en aldeas detalla las guarniciones, incluidos refuerzos ajenos y oasis.
+ * La agregación vive en GameEngine/TroopOverview.php.
  */
 
 include('menu.tpl');
@@ -67,10 +56,7 @@ $unitIcons = function($start, $end, $hero = true) use ($technology) {
 </div>
 <?php
 if($troopTab == 1) {
-	// Las tropas del jugador que están en cada aldea: las de la aldea más las que mandó
-	// de refuerzo desde otra aldea suya y las de sus oasis. Lo que está fuera de sus
-	// aldeas (refuerzo a un aliado, en camino) se ve en la plaza de reuniones, como en el
-	// T4 oficial. Ver la cabecera de GameEngine/TroopOverview.php.
+	// Los movimientos se suman a la fila de su aldea de origen.
 	$own = troopOverviewOwnTroops($villageIds,$tribe,$session->uid);
 	$totals = troopOverviewEmptyUnits($ownStart,$ownEnd);
 
