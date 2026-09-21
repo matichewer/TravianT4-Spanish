@@ -21,11 +21,11 @@ function smithyAssert($condition,$message) {
 	if(!$condition) { $errors[]=$message; }
 }
 class SmithySession {
-	public $tribe=1,$mchecker='token',$changes=0;
+	public $userinfo=array('gold'=>0),$plus=false,$tribe=1,$mchecker='token',$changes=0;
 	public function changeChecker() { $this->changes++; $this->mchecker='changed'; }
 }
 class SmithyVillage {
-	public $wid=77,$resarray=array('f25t'=>12,'f25'=>5),$techarray=array('t1'=>1,'t2'=>1),$researching=array();
+	public $maxstore=999999,$maxcrop=999999,$awood=999999,$aclay=999999,$airon=999999,$acrop=999999,$wid=77,$resarray=array('f25t'=>12,'f25'=>5),$techarray=array('t1'=>1,'t2'=>1),$researching=array();
 }
 class SmithyBuilding {
 	public $level=5;
@@ -104,6 +104,49 @@ smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
 smithyAssert(count($database->refunds)===1 && $database->refunds[0][5]===1,'queue failure refunds the reservation');
 smithyAssert($database->locks===0 && !$logging->logs,'queue failure releases the lock and is not logged');
 
+// Plus allows one waiting order, paid now, finishing after the active order.
+$session->plus=true; $session->mchecker='token'; $database=new SmithyDatabase(); $logging=new SmithyLogging();
+$end=time()+3600;
+$database->running=array(array('tech'=>'t3','timestamp'=>$end+9999),array('tech'=>'b2','timestamp'=>$end));
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+$cost=$GLOBALS['ab2'][2];
+$duration=max(1,(int)round($cost['time']*($bid12[5]['attri']/100)/SPEED));
+smithyAssert($database->deductions[0]===array(77,$cost['wood'],$cost['clay'],$cost['iron'],$cost['crop']),
+    'same-unit waiting order pays level 2 costs');
+smithyAssert($database->research[0][2]===$end+$duration,'waiting order starts after Smithy order, ignoring Academy');
+smithyAssert($logging->logs[0]===array(77,'b2',2),'waiting level is logged correctly');
+
+$session->mchecker='token'; $database=new SmithyDatabase();
+$database->running=array(array('tech'=>'b1','timestamp'=>$end));
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+smithyAssert(count($database->research)===1 && $database->deductions[0][1]===$GLOBALS['ab2'][1]['wood'],
+    'different unit can occupy the Plus waiting slot at its own level');
+
+$session->mchecker='token'; $database=new SmithyDatabase();
+$database->running=array(array('tech'=>'b1','timestamp'=>$end),array('tech'=>'b2','timestamp'=>$end+500));
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+smithyAssert(!$database->deductions && !$database->research,'Plus cannot queue a third Smithy order');
+$session->plus=false; $session->mchecker='token';
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+smithyAssert(!$database->deductions && count($database->running)===2,'expired Plus preserves paid orders but cannot add another');
+
+foreach(array(5,20) as $cap) {
+    $building->level=$cap; $session->plus=true; $session->mchecker='token'; $database=new SmithyDatabase();
+    $database->ab['b2']=$cap-1;
+    $database->running=array(array('tech'=>'b2','timestamp'=>$end));
+    smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+    smithyAssert(!$database->deductions,'pending level counts toward cap '.$cap);
+}
+$building->level=5;
+$session->mchecker='token'; $database=new SmithyDatabase(); $database->deduct=false;
+$database->running=array(array('tech'=>'b1','timestamp'=>$end));
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+smithyAssert(!$database->research,'waiting order requires resources immediately');
+$session->mchecker='token'; $database=new SmithyDatabase(); $database->insert=false;
+$database->running=array(array('tech'=>'b1','timestamp'=>$end));
+smithyRun(array('id'=>'25','a'=>'2','c'=>'token'));
+smithyAssert(count($database->refunds)===1 && $database->locks===0,'failed waiting order refunds resources and unlocks');
+
 foreach(range(1,5) as $tribe) {
 	foreach(range(1,8) as $position) {
 		$table=$GLOBALS['ab'.(($tribe-1)*10+$position)];
@@ -125,8 +168,36 @@ smithyAssert($upgradeMethod->invoke($battle,array('b2'=>99),2)===20,'combat caps
 smithyAssert($upgradeMethod->invoke($battle,array('a2'=>7),2)===0,'combat ignores obsolete armoury columns');
 smithyAssert($strengthMethod->invoke($battle,40,1,20)>$strengthMethod->invoke($battle,40,1,0),'a completed Smithy level increases combat strength');
 
+// Render the actual page partial so costs and the queue button agree with the handler.
+class SmithyGenerator {
+    public function getTimeFormat($time) { return (string)$time; }
+    public function procMtime($time) { return array('',(string)$time); }
+}
+$generator=new SmithyGenerator(); $id=25;
+function smithyRender() {
+    global $database,$village,$session,$technology,$building,$generator,$id,$bid12;
+    for($i=1;$i<=8;$i++) { ${'ab'.$i}=$GLOBALS['ab'.$i]; }
+    ob_start();
+    include 'Templates/Build/12_upgrades.tpl';
+    return ob_get_clean();
+}
+$database=new SmithyDatabase();
+$village->researching=array(array('tech'=>'b2','timestamp'=>$end));
+$session->plus=true;
+$html=smithyRender();
+smithyAssert(strpos($html,'Poner en cola')!==false,'Plus page offers waiting order');
+smithyAssert(strpos($html,'alt="Madera">'.$GLOBALS['ab2'][2]['wood'].'</span>')!==false,
+    'page displays next unqueued level cost');
+$session->plus=false;
+smithyAssert(strpos(smithyRender(),'Poner en cola')===false,'non-Plus page blocks waiting order');
+$session->plus=true;
+$village->researching[]=array('tech'=>'b1','timestamp'=>$end+500);
+smithyAssert(strpos(smithyRender(),'Poner en cola')===false,'full Plus queue has no upgrade buttons');
+$database->ab['b2']=19;
+smithyAssert(strpos(smithyRender(),'Nivel máximo en cola')!==false,'pending level 20 renders without level 21 lookup');
+
 $template=file_get_contents('Templates/Build/12_upgrades.tpl');
-smithyAssert(strpos($template,"if((int)\$abdata['b'.\$j] >= 20)")!==false,'level-20 rendering avoids reading nonexistent level 21 data');
+smithyAssert(strpos($template,"if(\$queuedLevel >= 20)")!==false,'level-20 rendering avoids reading nonexistent level 21 data');
 $automation=file_get_contents('GameEngine/Automation.php');
 smithyAssert(strpos($automation,"preg_match('/^[ab][1-8]$/D',\$tech)")!==false,'completion only accepts valid Smithy columns');
 smithyAssert(strpos($automation,'LEAST(20,')!==false,'completion cannot increment beyond level 20');

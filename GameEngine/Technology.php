@@ -28,6 +28,22 @@ class Technology {
 		return $holder;
 	}
 	
+	/** Shared Smithy queue calculation for the page and the locked request handler. */
+	public function smithyQueueState($orders, $position, $currentLevel, $plus, $now) {
+		$count = 0;
+		$level = (int)$currentLevel;
+		$start = (int)$now;
+		foreach((array)$orders as $order) {
+			if(!isset($order['tech']) || !preg_match('/^b[1-8]$/D',(string)$order['tech'])) {
+				continue;
+			}
+			$count++;
+			if($order['tech'] === 'b'.$position) { $level++; }
+			$start = max($start,isset($order['timestamp']) ? (int)$order['timestamp'] : 0);
+		}
+		return array('full' => $count >= ($plus ? 2 : 1), 'level' => $level, 'start' => $start);
+	}
+
 	public function isResearch($tech,$type) {
 		global $village;
 		if(count($village->researching) == 0) {
@@ -917,21 +933,16 @@ class Technology {
 			$ABTech = $database->getABTech($village->wid);
 			$currentTech = is_array($ABTech) && isset($ABTech['b'.$position]) ? (int)$ABTech['b'.$position] : 20;
 			$running = $database->getResearching($village->wid);
-			$hasSmithyOrder = false;
-			foreach(is_array($running) ? $running : array() as $research) {
-				if(isset($research['tech']) && substr((string)$research['tech'],0,1) === 'b') {
-					$hasSmithyOrder = true;
-					break;
-				}
-			}
+			$queue = $this->smithyQueueState($running,$position,$currentTech,!empty($session->plus),time());
+			$currentTech = $queue['level'];
 			$nextLevel = $currentTech+1;
 			$data = $GLOBALS[$dataName];
-			if($hasSmithyOrder || $currentTech < 0 || $currentTech >= 20
+			if($queue['full'] || $currentTech < 0 || $currentTech >= 20
 				|| $currentTech >= $smithyLevel || !isset($data[$nextLevel])) {
 				break;
 			}
 			$cost = $data[$nextLevel];
-			$time = time()+max(1,(int)round(($cost['time']*($bid12[$smithyLevel]['attri']/100))/SPEED));
+			$time = $queue['start']+max(1,(int)round(($cost['time']*($bid12[$smithyLevel]['attri']/100))/SPEED));
 			if(!$database->deductResourcesIfAvailable($village->wid,$cost['wood'],$cost['clay'],$cost['iron'],$cost['crop'])) {
 				break;
 			}
