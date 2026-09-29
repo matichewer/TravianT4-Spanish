@@ -40,21 +40,13 @@ if(isset($_POST['action'],$_POST['lid']) && $_POST['action'] === 'addSlot' && $_
 		$errormsg .= "Este objetivo ya está agregado a la lista seleccionada.";
     }else{
     
-        $coor = $database->getCoor($village->wid);
-            
-            function getDistance($coorx1, $coory1, $coorx2, $coory2) {
-                   $max = 2 * WORLD_MAX + 1;
-                   $x1 = intval($coorx1);
-                   $y1 = intval($coory1);
-                   $x2 = intval($coorx2);
-                   $y2 = intval($coory2);
-                   $distanceX = min(abs($x2 - $x1), abs($max - abs($x2 - $x1)));
-                   $distanceY = min(abs($y2 - $y1), abs($max - abs($y2 - $y1)));
-                   $dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
-                   return round($dist, 1);
-               }
-            
-        $distance = getDistance($coor['x'], $coor['y'], $targetX, $targetY);
+        $distanceList = $database->getFLData((int)$_POST['lid']);
+        if(!is_array($distanceList) || (int)$distanceList['owner'] !== (int)$session->uid) {
+            header('Location: build.php?gid=16&t=99');
+            exit;
+        }
+        $coor = $database->getCoor((int)$distanceList['wref']);
+        $distance = round(natarSettlementDistance($coor['x'], $coor['y'], $targetX, $targetY), 1);
 
         // addSlotFarm valida internamente que `lid` sea una lista del usuario logueado.
         $slotAdded = $database->addSlotFarm($_POST['lid'], $session->uid, $Wref, $targetX, $targetY, $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);

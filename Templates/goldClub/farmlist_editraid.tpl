@@ -35,22 +35,15 @@ if(is_array($eiddata) && isset($_POST['action'],$_POST['eid']) && $_POST['action
      	$errormsg .= "No se ha seleccionado ninguna tropa.";
     }else{
     
-		$coor = $database->getCoor($village->wid);
-			
-            function getDistance($coorx1, $coory1, $coorx2, $coory2) {
-   				$max = 2 * WORLD_MAX + 1;
-   				$x1 = intval($coorx1);
-   				$y1 = intval($coory1);
-   				$x2 = intval($coorx2);
-   				$y2 = intval($coory2);
-   				$distanceX = min(abs($x2 - $x1), abs($max - abs($x2 - $x1)));
-   				$distanceY = min(abs($y2 - $y1), abs($max - abs($y2 - $y1)));
-   				$dist = sqrt(pow($distanceX, 2) + pow($distanceY, 2));
-   				return round($dist, 1);
-   			}
-            $distance = getDistance($coor['x'], $coor['y'], $_POST['x'], $_POST['y']);
+		$distanceList = $database->getFLData((int)$_POST['lid']);
+        if(!is_array($distanceList) || (int)$distanceList['owner'] !== (int)$session->uid) {
+            header('Location: build.php?gid=16&t=99');
+            exit;
+        }
+        $coor = $database->getCoor((int)$distanceList['wref']);
+        $distance = round(natarSettlementDistance($coor['x'], $coor['y'], $_POST['x'], $_POST['y']), 1);
 
-		// editSlotFarm valida internamente que tanto la lista actual como la
+        // editSlotFarm valida internamente que tanto la lista actual como la
 		// nueva (`lid`) pertenezcan al usuario logueado.
 		$database->editSlotFarm($requestedEid, $_POST['lid'], $session->uid, $Wref, $_POST['x'], $_POST['y'], $distance, $_POST['t1'], $_POST['t2'], $_POST['t3'], $_POST['t4'], $_POST['t5'], $_POST['t6'], $_POST['t7'], $_POST['t8'], $_POST['t9'], $_POST['t10']);
 

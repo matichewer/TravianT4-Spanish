@@ -66,20 +66,29 @@ while($row = mysql_fetch_array($sql)){
 		<tbody>
 
 <?php
-// `distance` es VARCHAR en el esquema legado: sin convertirla, MariaDB ordena
-// 10.3 antes que 3.2. El id deja estable el orden de objetivos equidistantes.
-$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid ORDER BY CAST(distance AS DECIMAL(10,2)) ASC, id ASC");
-$query2 = mysql_num_rows($sql2);
+// Las distancias guardadas pueden pertenecer a otra aldea o haber quedado
+// obsoletas: calcular y ordenar desde el origen real de esta lista.
+$sql2 = mysql_query("SELECT * FROM ".TB_PREFIX."raidlist WHERE lid = $lid");
+$farmRows = array();
+$farmOrigin = $database->getCoor($lwref);
+while($farmRow = mysql_fetch_array($sql2)) {
+    $farmTarget = $database->getCoor((int)$farmRow['towref']);
+    $farmRow['distance'] = natarSettlementDistance($farmOrigin['x'], $farmOrigin['y'], $farmTarget['x'], $farmTarget['y']);
+    $farmRows[] = $farmRow;
+}
+usort($farmRows, function($a, $b) {
+    if($a['distance'] == $b['distance']) {
+        return (int)$a['id'] <=> (int)$b['id'];
+    }
+    return $a['distance'] <=> $b['distance'];
+});
+$query2 = count($farmRows);
 if($query2 == 0) {
     echo '<td class="noData" colspan="6">No hay listas de saqueo.</td>';
 }else{
-while($row = mysql_fetch_array($sql2)){
+foreach($farmRows as $row){
 $slotId= $row['id'];$lid = $row['lid'];$towref = $row['towref'];$x = $row['x'];$y = $row['y'];
-if($village->wid == $towref){
-	$distance = '0';
-}else{
-	$distance = $row['distance'];
-}
+$distance = number_format($row['distance'], 1, ',', '.');
 
 $t1 = $row['t1'];$t2 = $row['t2'];$t3 = $row['t3'];$t4 = $row['t4'];$t5 = $row['t5'];$t6 = $row['t6'];$t7 = $row['t7'];
 $t8 = $row['t8'];$t9 = $row['t9'];$t10 = $row['t10'];

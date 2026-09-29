@@ -5696,6 +5696,7 @@ break;
 				$eid = (int)$eid;
 				$lid = (int)$lid;
 				$owner = (int)$owner;
+				$dist = (float)$dist;
 				$wref = (int)$wref;
 				$x = (int)$x;
 				$y = (int)$y;
@@ -5705,6 +5706,7 @@ break;
 					." INNER JOIN " . TB_PREFIX . "farmlist f_old ON f_old.id = " . TB_PREFIX . "raidlist.lid"
 					." INNER JOIN " . TB_PREFIX . "farmlist f_new ON f_new.id = $lid"
 					." SET " . TB_PREFIX . "raidlist.lid = $lid, " . TB_PREFIX . "raidlist.towref = $wref, " . TB_PREFIX . "raidlist.x = $x, " . TB_PREFIX . "raidlist.y = $y,"
+					." " . TB_PREFIX . "raidlist.distance = $dist,"
 					." " . TB_PREFIX . "raidlist.t1 = $t1, " . TB_PREFIX . "raidlist.t2 = $t2, " . TB_PREFIX . "raidlist.t3 = $t3, " . TB_PREFIX . "raidlist.t4 = $t4, " . TB_PREFIX . "raidlist.t5 = $t5,"
 					." " . TB_PREFIX . "raidlist.t6 = $t6, " . TB_PREFIX . "raidlist.t7 = $t7, " . TB_PREFIX . "raidlist.t8 = $t8, " . TB_PREFIX . "raidlist.t9 = $t9, " . TB_PREFIX . "raidlist.t10 = $t10"
 					." WHERE " . TB_PREFIX . "raidlist.id = $eid AND f_old.owner = $owner AND f_new.owner = $owner";
