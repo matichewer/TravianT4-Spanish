@@ -772,7 +772,7 @@ div.village2 div.buildingList div.buildingNotifications {
            contenido, que ademas trae el <h1> de la pagina posicionado en
            y=123. Pasarse de 115 come el redondeo y roza el titulo.
 
-   O sea 45px, repartidos en 13 (cantidad) + 12 (barra) + 20 (pie). El fondo
+   O sea 35px, repartidos en 13 (cantidad) + 12 (barra) + 10 (pie). El fondo
    blanco arranca en realidad en y=70 pero viene pintado en el arte de fondo
    (bgVillage-rtl.jpg, x 193..789, y 70..110), asi que la tarjeta usa el mismo
    blanco y las dos piezas se leen como una sola. Por eso tambien el ancho es
@@ -783,11 +783,9 @@ div.village2 div.buildingList div.buildingNotifications {
 	left: 193px;
 	z-index: 1;
 	width: 596px;
-	height: 45px;
-	/* El ancho de la tarjeta lo manda el dibujo del fondo, pero el contenido va
-	   metido 24px a cada lado: asi el bloque queda mas angosto que el blanco y
-	   sobra aire entre la ultima cifra y el borde. */
-	padding: 0 24px;
+	height: 35px;
+	/* Aprovechar los margenes para mostrar tasa y capacidad en una sola linea. */
+	padding: 0 4px;
 	background: #f5fefd;
 	border-radius: 0 0 5px 5px;
 	/* El desenfoque va metido 2px hacia adentro y bajado otros 2: si la sombra
@@ -797,18 +795,15 @@ div.village2 div.buildingList div.buildingNotifications {
 	line-height: 10px;
 }
 
-/* 16px de canaleta entre columnas: con la cifra pegada al borde derecho quedaba
-   a milimetros del icono del recurso siguiente y se leian como un solo bloque. */
-/* La canaleta va repartida en las dos celdas (10px + 10px) en vez de colgada de
-   la derecha: asi el separador cae justo en el medio del hueco. Los 96px de
-   contenido alojan la tasa y la capacidad en renglones separados. */
+/* Cuatro columnas de 126px y consumo de 84px, con 4px de margen exterior.
+   Cada recurso tiene 114px utiles y 12px de separacion entre contenidos. */
 #res li.r1,
 #res li.r2,
 #res li.r3,
 #res li.r4 {
 	box-sizing: border-box;
-	width: 116px;
-	padding: 0 10px;
+	width: 126px;
+	padding: 0 6px;
 }
 
 #res li.r5 {
@@ -935,23 +930,11 @@ div.village2 div.buildingList div.buildingNotifications {
 }
 
 #res .resRate {
-	display: block;
+	float: left;
 }
 
 #res .resMax {
 	float: right;
-}
-
-/* Las tasas negativas largas necesitan su propio renglon para no ocultar
-   la capacidad del granero. */
-#res li:not(.r5) .resFoot {
-	height: 20px;
-}
-
-#res li:not(.r5) .resMax {
-	display: block;
-	float: none;
-	text-align: right;
 }
 
 #res .resNegative {
