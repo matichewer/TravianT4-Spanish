@@ -74,7 +74,7 @@ if($query2 == 0) {
     echo '<td class="noData" colspan="6">No hay listas de saqueo.</td>';
 }else{
 while($row = mysql_fetch_array($sql2)){
-$id= $row['id'];$lid = $row['lid'];$towref = $row['towref'];$x = $row['x'];$y = $row['y'];
+$slotId= $row['id'];$lid = $row['lid'];$towref = $row['towref'];$x = $row['x'];$y = $row['y'];
 if($village->wid == $towref){
 	$distance = '0';
 }else{
@@ -88,7 +88,7 @@ $vdata = $database->getVillage($towref);
 ?>
 <tr class="slotRow">
 <td class="checkbox">
-                <input id="slot<?php echo $id; ?>" name="slot<?php echo $id; ?>" type="checkbox" class="markSlot" onclick="Travian.Game.RaidList.markSlotForRaid(<?php echo $lid; ?>, <?php echo $id; ?>, this.checked);"<?php if(!empty($checked[$lid])) echo ' checked'; ?>>
+                <input id="slot<?php echo $slotId; ?>" name="slot<?php echo $slotId; ?>" type="checkbox" class="markSlot" onclick="Travian.Game.RaidList.markSlotForRaid(<?php echo $lid; ?>, <?php echo $slotId; ?>, this.checked);"<?php if(!empty($checked[$lid])) echo ' checked'; ?>>
 			</td>
 			<td class="village">
             <?php
@@ -108,7 +108,7 @@ $vdata = $database->getVillage($towref);
 			}
 		}
         ?>
-				<label for="slot<?php echo $id; ?>">
+				<label for="slot<?php echo $slotId; ?>">
                 <?php
                 	$oasistype = $database->getVillageType2($towref);
                     if($oasistype != 0){
@@ -234,7 +234,7 @@ while($row2 = mysql_fetch_array($getnotice)){
 				<div class="clear"></div>
 			</td>
 			<td class="action">
-				<a class="arrow" href="#" onclick="Travian.Game.RaidList.editSlot(<?php echo $lid; ?>, <?php echo $id; ?>); return false;">editar</a>
+				<a class="arrow" href="#" onclick="Travian.Game.RaidList.editSlot(<?php echo $lid; ?>, <?php echo $slotId; ?>); return false;">editar</a>
 			</td>
             </tr>
 <?php
@@ -347,12 +347,12 @@ $result3 = mysql_query('SELECT * FROM '.TB_PREFIX.'raidlist WHERE lid = '.$lid.'
 $query2 = mysql_num_rows($result3);
 $NUM2 = 1;
 while($row3 = mysql_fetch_array($result3)){
-$id = $row3['id'];
+$slotId = $row3['id'];
 $t1 = $row3['t1'];$t2 = $row3['t2'];$t3 = $row3['t3'];$t4 = $row3['t4'];$t5 = $row3['t5'];$t6 = $row3['t6'];$t7 = $row3['t7'];
 $t8 = $row3['t8'];$t9 = $row3['t9'];$t10 = $row3['t10'];
 
 echo '
-						"'.$id.'":{"troops":{"1":'.$t1.',"2":'.$t2.',"3":'.$t3.',"4":'.$t4.',"5":'.$t5.',"6":'.$t6.',"7":'.$t7.',"8":'.$t8.',"9":'.$t9.',"10":'.$t10.',"11":0}}';
+						"'.$slotId.'":{"troops":{"1":'.$t1.',"2":'.$t2.',"3":'.$t3.',"4":'.$t4.',"5":'.$t5.',"6":'.$t6.',"7":'.$t7.',"8":'.$t8.',"9":'.$t9.',"10":'.$t10.',"11":0}}';
 if($NUM2 != $query2){
 	echo ',';
 }
