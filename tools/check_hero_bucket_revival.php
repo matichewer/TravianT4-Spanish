@@ -83,6 +83,14 @@ $hero = mysqli_fetch_assoc(mysqli_query($database->connection,"SELECT wref,dead,
 $item = mysqli_fetch_assoc(mysqli_query($database->connection,"SELECT proc FROM $itemsTable WHERE id=4"));
 heroBucketAssert(!$result['ok'] && (int)$hero['dead']===1 && (int)$item['proc']===0,'Foreign destination changed revival state');
 
+// A stack revives once and keeps the remaining buckets available.
+heroBucketAssert(mysqli_query($database->connection,"UPDATE $heroTable SET dead=1,health=0 WHERE uid=910001"),'Could not reset stacked hero');
+heroBucketAssert(mysqli_query($database->connection,"UPDATE $itemsTable SET num=3,proc=0 WHERE id=3"),'Could not seed bucket stack');
+$result=$database->consumeHeroRevivalBucket(910001,3,910101);
+$item=$database->getItemData(3);
+heroBucketAssert($result['ok'] && (int)$item['num']===2 && (int)$item['proc']===0,'Revival consumed the whole bucket stack');
+heroBucketAssert(!$database->consumeHeroRevivalBucket(910001,3,910101)['ok'],'Repeated request consumed another bucket');
+
 $controller = file_get_contents(dirname(__DIR__).'/GameEngine/Inventory.php');
 heroBucketAssert(strpos($controller,'consumeHeroRevivalBucket($uid,$data[\'id\'],$village->wid)')!==false,'Inventory does not use centralized bucket revival');
 

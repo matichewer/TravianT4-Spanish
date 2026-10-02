@@ -4395,6 +4395,12 @@
 				}
 
 				function consumeBookOfWisdom($uid,$itemid) {
+                    if(!$this->acquireAuctionLock()){ return false; }
+                    try { return $this->consumeBookOfWisdomLocked($uid,$itemid); }
+                    finally { $this->releaseAuctionLock(); }
+                }
+
+                private function consumeBookOfWisdomLocked($uid,$itemid) {
 					$uid = (int)$uid;
 					$itemid = (int)$itemid;
 					if($uid<1 || $itemid<1){
@@ -4406,10 +4412,10 @@
 						." SET hero.points = hero.points + hero.power + hero.offBonus + hero.defBonus + hero.product,"
 						." hero.power = 0, hero.offBonus = 0, hero.defBonus = 0, hero.product = 0,"
 						." hero.r0 = 1, hero.r1 = 0, hero.r2 = 0, hero.r3 = 0, hero.r4 = 0,"
-						." item.proc = 1"
+						." item.proc = IF(item.num=1,1,0), item.num = item.num - 1"
 						." WHERE hero.uid = $uid AND hero.dead = 0"
 						." AND item.id = $itemid AND item.uid = $uid"
-						." AND item.btype = 13 AND item.num = 1 AND item.proc = 0";
+						." AND item.btype = 13 AND item.num > 0 AND item.proc = 0";
 					$result = mysqli_query($this->connection,$q);
 					return $result && mysqli_affected_rows($this->connection)>0;
 				}
@@ -6158,7 +6164,37 @@ break;
         		return mysqli_query($this->connection,$q);
         	}
 
-			function addHeroItem($uid, $btype, $type, $num) {
+			function consolidateHeroConsumables($uid) {
+                    $uid = (int)$uid;
+                    if($uid<1 || !$this->acquireAuctionLock()){ return false; }
+                    try {
+                        foreach(array(12,13) as $btype){
+                            $result = mysqli_query($this->connection,"SELECT id,num FROM ".TB_PREFIX."heroitems WHERE uid=$uid AND btype=$btype AND proc=0 AND num>0 ORDER BY id");
+                            if(!$result){ return false; }
+                            $first = mysqli_fetch_assoc($result);
+                            if(!$first){ continue; }
+                            while($row = mysqli_fetch_assoc($result)){
+                                $id = (int)$row['id'];
+                                $target = (int)$first['id'];
+                                // One statement moves the quantity and retires the old row.
+                                if(!mysqli_query($this->connection,"UPDATE ".TB_PREFIX."heroitems AS target JOIN ".TB_PREFIX."heroitems AS source ON source.id=$id SET target.num=target.num+source.num, source.proc=1 WHERE target.id=$target AND target.proc=0 AND source.proc=0")){ return false; }
+                            }
+                        }
+                        return true;
+                    } finally { $this->releaseAuctionLock(); }
+                }
+
+                function addHeroItem($uid, $btype, $type, $num) {
+                    if(in_array((int)$btype,array(12,13),true)){
+                        $uid=(int)$uid; $btype=(int)$btype; $num=(int)$num;
+                        if($uid<1 || $num<1 || !$this->acquireAuctionLock()){ return false; }
+                        try {
+                            $existing=$this->checkHeroItem($uid,$btype);
+                            if($existing){ return $this->editHeroNum($existing,$num,1); }
+                            return mysqli_query($this->connection,"INSERT INTO ".TB_PREFIX."heroitems (uid,btype,type,num,proc) VALUES ($uid,$btype,".(int)$type.",$num,0)");
+                        } finally { $this->releaseAuctionLock(); }
+                    }
+
         		$q = "INSERT INTO " . TB_PREFIX . "heroitems (`uid`, `btype`, `type`, `num`, `proc`) VALUES ('$uid', '$btype', '$type', '$num', 0)";
         		return mysqli_query($this->connection,$q);
         	}
@@ -6217,6 +6253,12 @@ break;
 			 * aldea seleccionada o de una cola antigua.
 			 */
 			function consumeHeroRevivalBucket($uid,$itemId,$selectedVillageId) {
+                    if(!$this->acquireAuctionLock()){ return array('ok'=>false,'status'=>'busy','vref'=>0); }
+                    try { return $this->consumeHeroRevivalBucketLocked($uid,$itemId,$selectedVillageId); }
+                    finally { $this->releaseAuctionLock(); }
+                }
+
+                private function consumeHeroRevivalBucketLocked($uid,$itemId,$selectedVillageId) {
 				$uid = (int)$uid;
 				$itemId = (int)$itemId;
 				$selectedVillageId = (int)$selectedVillageId;
@@ -6277,7 +6319,7 @@ break;
 						." WHERE t.unit=0 AND v.owner=$uid"
 					);
 					$consumed = $queueRemoved ? mysqli_query($this->connection,
-						"UPDATE ".TB_PREFIX."heroitems SET proc=1"
+						"UPDATE ".TB_PREFIX."heroitems SET proc=IF(num=1,1,0), num=num-1"
 						." WHERE id=$itemId AND uid=$uid AND btype=12 AND proc=0 AND num>0"
 					) : false;
 					if(!$consumed || mysqli_affected_rows($this->connection)!==1) {

@@ -244,9 +244,10 @@ foreach($equipmentSlots as $slot => $expectedBtype){
 <div id="hero_inventory">
 	<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
     <div id="itemsToSale"><?php
+$database->consolidateHeroConsumables((int)$session->uid);
 $prefix = "".TB_PREFIX."heroitems";
 
-$sql = mysql_query("SELECT * FROM ".TB_PREFIX."heroitems WHERE (proc = 0 OR ((btype = 7 OR btype = 8 OR btype = 9) && num != 0)) AND uid = $session->uid");
+$sql = mysql_query("SELECT * FROM ".TB_PREFIX."heroitems WHERE (proc = 0 OR ((btype = 7 OR btype = 8 OR btype = 9) && num != 0)) AND uid = $session->uid ORDER BY FIELD(btype,1,2,4,3,5,6,7,8,9,10,11,12,13,14,15), type, id");
 $query = mysql_num_rows($sql);
 
 $outputList = '';
@@ -264,7 +265,8 @@ $proc = $row["proc"];
 
 include "Templates/Auction/alt.tpl";
 $inventoryItemDetails[(int)$id] = array('name'=>$name,'description'=>$title,'icon'=>(int)$item,
-    'sellable'=>(int)$proc===0,'stackable'=>heroItemIsAuctionStackable($btype));
+    'sellable'=>(int)$proc===0,'stackable'=>heroItemIsAuctionStackable($btype),
+    'liquidationPerUnit'=>in_array((int)$btype,array(12,13),true) ? 10 : 0);
 	if($btype<=10 or $btype==11 or $btype==13){
 		if($hero['dead']==1){
 			$dis = ' disabled';
@@ -433,7 +435,7 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
             var escape = function(value){ return new Element('span', {text: value}).get('html'); };
             var html = '<div class="heroItemDetails"><div class="item item_'+info.icon+'" style="position:relative;float:left;margin:0 16px 12px 0"></div>'+
                 '<p>'+info.description+'</p><div class="clear"></div><p>Disponibles: '+amount+'</p>'+
-                '<label>Cantidad: <input id="itemDetailsAmount" class="text" type="number" min="1" max="'+amount+'" value="'+(btype===15 ? 1 : amount)+'" style="width:65px"></label>'+
+                '<label>Cantidad: <input id="itemDetailsAmount" class="text" type="number" min="1" max="'+amount+'" value="'+(btype===12 || btype===13 || btype===15 ? 1 : amount)+'" style="width:65px"></label>'+
                 '<p id="itemDetailsReward"></p><p id="itemDetailsError" class="error" role="alert"></p>'+
                 '<div id="itemDetailsActions"></div></div>';
             html.dialog({relativeTo: $('content'), title: escape(info.name), buttonOk: false,
@@ -441,7 +443,7 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
                 onOpen: function(dialog){
                     var input = $('itemDetailsAmount');
                     var reward = function(){
-                        return info.stackable ? Math.floor(Number(input.value)/10) : 10;
+                        return info.liquidationPerUnit ? info.liquidationPerUnit*Number(input.value) : (info.stackable ? Math.floor(Number(input.value)/10) : 10);
                     };
                     var update = function(){
                         $('itemDetailsReward').set('text', 'Liquidar: '+reward()+' de plata. La liquidación es definitiva.');
@@ -468,7 +470,7 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
                                 $('itemDetailsError').set('text','Elige una cantidad válida.'); return;
                             }
                             if(index===0){
-                                if(btype===15){ quantity=1; }
+                                if(btype===12 || btype===13 || btype===15){ quantity=1; }
                                 dialog.close();
                                 self.showItem(id, quantity, btype, type);
                                 return;

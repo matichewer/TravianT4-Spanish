@@ -12,7 +12,7 @@ function heroItemDisposalAssert($condition,$message)
 
 heroItemDisposalAssert(heroItemIsAuctionStackable(7),'Bandages must remain stackable');
 heroItemDisposalAssert(heroItemIsAuctionStackable(14),'Law tablets must remain stackable');
-heroItemDisposalAssert(!heroItemIsAuctionStackable(12),'Buckets must remain non-stackable');
+heroItemDisposalAssert(heroItemIsAuctionStackable(12),'Buckets must be stackable');
 heroItemDisposalAssert(!heroItemIsAuctionStackable(15),'Artwork must preserve the existing auction rule');
 heroItemDisposalAssert(heroItemAuctionStartingPrice(10,25)===25,'Stackable auction price is incorrect');
 heroItemDisposalAssert(heroItemAuctionStartingPrice(1,1)===100,'Equipment auction price is incorrect');
@@ -80,6 +80,29 @@ $result = $database->disposeHeroItem(999999,7,1,'liquidate');
 heroItemDisposalAssert($result['status']==='error','Missing user did not trigger the compensation path');
 $item = mysqli_fetch_assoc(mysqli_query($database->connection,"SELECT num,proc FROM $itemsTable WHERE id=7"));
 heroItemDisposalAssert((int)$item['num']===1 && (int)$item['proc']===0,'Failed credit did not restore the item');
+
+foreach(array(12,13) as $btype){
+    heroItemDisposalAssert($database->addHeroItem(910001,$btype,0,3),'Could not add rare consumables');
+    heroItemDisposalAssert($database->addHeroItem(910001,$btype,0,2),'Could not extend rare consumable stack');
+    $id=$database->checkHeroItem(910001,$btype);
+    $item=$database->getItemData($id);
+    heroItemDisposalAssert((int)$item['num']===5,'Incoming consumables were not stacked');
+    heroItemDisposalAssert(mysqli_query($database->connection,"INSERT INTO $itemsTable (uid,btype,type,num,proc) VALUES (910001,$btype,0,2,0),(910001,$btype,0,1,1)"),'Could not seed legacy piles');
+    heroItemDisposalAssert($database->consolidateHeroConsumables(910001),'Could not merge legacy piles');
+    $item=$database->getItemData($id);
+    heroItemDisposalAssert((int)$item['num']===7,'Legacy consolidation lost items or included spent items');
+    heroItemDisposalAssert($database->consolidateHeroConsumables(910001),'Could not repeat consolidation');
+    heroItemDisposalAssert((int)$database->getItemData($id)['num']===7,'Consolidation counted retired piles twice');
+    heroItemDisposalAssert($database->disposeHeroItem(910001,$id,2,'discard')['status']==='success','Partial rare consumable disposal failed');
+    $item=$database->getItemData($id);
+    heroItemDisposalAssert((int)$item['num']===5,'Partial disposal removed the whole pile');
+    heroItemDisposalAssert(heroItemAuctionStartingPrice($btype,3)===300,'Rare consumable auction price is incorrect');
+    $sale=$database->disposeHeroItem(910001,$id,2,'liquidate');
+    heroItemDisposalAssert($sale['status']==='success' && $sale['silver']===20,'Partial rare liquidation did not pay per unit');
+    $sale=$database->disposeHeroItem(910001,$id,3,'liquidate');
+    heroItemDisposalAssert($sale['status']==='success' && $sale['silver']===30,'Whole rare liquidation failed');
+
+}
 
 $secondConnection = mysqli_connect(SQL_SERVER,SQL_USER,SQL_PASS,SQL_DB);
 heroItemDisposalAssert($secondConnection!==false,'Could not create second database connection');

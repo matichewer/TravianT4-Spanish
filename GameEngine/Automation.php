@@ -5954,10 +5954,7 @@ class Automation {
         }
 
         $btype = (int) $auction['btype'];
-        if(in_array($btype, array(7, 8, 9, 10, 11, 13, 14), true)) {
-            return (int) $auction['num'];
-        }
-        return 100;
+        return heroItemAuctionStartingPrice($btype,(int)$auction['num']);
     }
 
     private function getAuctionItemName($auction) {

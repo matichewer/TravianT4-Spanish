@@ -837,13 +837,14 @@ if(!function_exists('heroVillageResourceBonus')){
 
 if(!function_exists('heroItemIsAuctionStackable')){
 	function heroItemIsAuctionStackable($btype){
-		return in_array((int)$btype,array(7,8,9,10,11,13,14),true);
+		return in_array((int)$btype,array(7,8,9,10,11,12,13,14),true);
 	}
 }
 
 if(!function_exists('heroItemAuctionStartingPrice')){
 	function heroItemAuctionStartingPrice($btype,$amount){
 		$amount = max(0,(int)$amount);
+		if(in_array((int)$btype,array(12,13),true)){ return 100*$amount; }
 		return heroItemIsAuctionStackable($btype) ? $amount : 100;
 	}
 }

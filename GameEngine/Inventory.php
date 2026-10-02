@@ -289,11 +289,11 @@ if($_POST && isset($_POST['a']) && $_POST['a']=='inventory'){
 		}
 	}
 
-	elseif($data['btype']==12){
+	elseif($data['btype']==12 && $data['amount']===1){
 		$database->consumeHeroRevivalBucket($uid,$data['id'],$village->wid);
 	}
 
-		elseif($data['btype']==13){
+		elseif($data['btype']==13 && $data['amount']===1){
 			$database->consumeBookOfWisdom($uid,$data['id']);
 			header("Location: hero_inventory.php");
 			exit;

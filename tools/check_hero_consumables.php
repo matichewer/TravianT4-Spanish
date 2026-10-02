@@ -189,6 +189,9 @@ consumableAssert($r['revivido'] === true, 'el balde no puso al héroe en la alde
 $r = useItem(12, 1, 1);
 consumableAssert($r['proc'] === 0, 'el balde se gastó con el héroe vivo');
 
+$r = useItem(12, 2, 3, $muerto);
+consumableAssert($r['muerto']===1 && $r['stack']===3 && $r['proc']===0, 'se aceptó usar varios baldes en una petición');
+
 // --- Obra de arte -----------------------------------------------------------------
 // El objeto promete "tantos PC como producen todas tus aldeas en un día, hasta 2000"
 // (1000 en un mundo de velocidad). Acá SPEED no está definido, así que corre como x1.

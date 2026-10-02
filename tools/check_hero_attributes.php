@@ -357,6 +357,12 @@ heroAttributeAssert(
 );
 heroAttributeAssert((int)$book['proc']===1,'Book of Wisdom was not marked as consumed');
 heroAttributeAssert(!$database->consumeBookOfWisdom(900001,1),'Consumed Book of Wisdom was reused');
+heroAttributeAssert(mysqli_query($database->connection,"UPDATE $temporaryHeroItemsTable SET num=3,proc=0 WHERE id=1"),'Could not seed book stack');
+heroAttributeAssert(mysqli_query($database->connection,$bookResetState),'Could not reset stacked book hero');
+heroAttributeAssert($database->consumeBookOfWisdom(900001,1),'Stacked book could not be used');
+$book=$database->getItemData(1);
+heroAttributeAssert((int)$book['num']===2 && (int)$book['proc']===0,'Book use consumed the whole stack');
+
 
 $deadHeroState = "UPDATE $temporaryHeroTable SET points=10,power=10,offBonus=5,defBonus=5,product=10,"
 	."dead=1,r0=0,r1=1,r2=0,r3=0,r4=0 WHERE uid=900001";
@@ -388,6 +394,15 @@ heroAttributeAssert(!$database->addAuction(900001,4,13,110,-1),'Auction accepted
 heroAttributeAssert((int)$database->getItemData(4)['num']===1,'Negative auction amount changed item quantity');
 heroAttributeAssert($database->addAuction(900001,4,0,0,1),'Valid Book of Wisdom auction was rejected');
 heroAttributeAssert(!$database->getItemData(4),'Auctioned Book of Wisdom remained in inventory');
+foreach(array(12,13) as $btype){
+    $id=100+$btype;
+    heroAttributeAssert(mysqli_query($database->connection,"INSERT INTO $temporaryHeroItemsTable (id,uid,btype,type,num,proc) VALUES ($id,900003,$btype,0,4,0)"),'Could not seed rare auction pile');
+    heroAttributeAssert($database->addAuction(900003,$id,0,0,2),'Partial rare auction failed');
+    heroAttributeAssert((int)$database->getItemData($id)['num']===2,'Partial auction removed the whole pile');
+    heroAttributeAssert($database->addAuction(900003,$id,0,0,2),'Whole rare auction failed');
+    heroAttributeAssert(!$database->getItemData($id),'Whole rare auction left a pile');
+}
+
 $auctionResult = mysqli_query(
 	$database->connection,
 	"SELECT owner,btype,type,num FROM $temporaryAuctionTable WHERE owner=900001 LIMIT 1"
