@@ -1214,3 +1214,34 @@ button.routeFormResAdd:disabled {
 	cursor: default;
 	text-decoration: none;
 }
+
+/* Keep the hero's resource selectors, icons and rates on one line. */
+#setResource .heroResourceOptions {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 8px;
+	overflow-x: auto;
+}
+#setResource .heroResourceOptions .resource {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+	float: none;
+	width: auto;
+	margin: 0;
+	white-space: nowrap;
+}
+#setResource .heroResourceOptions label {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	float: none;
+	width: auto;
+}
+#setResource .heroResourceOptions input,
+#setResource .heroResourceOptions img,
+#setResource .heroResourceOptions .current {
+	float: none;
+	flex: 0 0 auto;
+}

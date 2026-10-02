@@ -158,6 +158,7 @@ ob_start();
 		<div class="changeResourcesHeadline"><b>Recursos</b></div>
 		<p class="resourceProductionHelp">Como tienes <span class="productPointsValue"><?php echo $productPoints; ?></span> puntos en Recursos, el héroe produce <span class="allResourceRate"><?php echo $allResourceRate; ?></span> de cada recurso o <span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span> de un recurso específico. Este extra de producción se otorga a la aldea natal del héroe. Puedes cambiar la aldea natal del héroe enviándolo entre tus aldeas.</p>
 		<div class="clear"></div>
+		<div class="heroResourceOptions">
 		<div class="resource">
 		  <input type="radio" onclick="window.location.href = '?product=r0';" name="resource" value="0" id="resourceHero0" <?php if($hero['r0']!=0){ echo $checked="checked"; } ?>>
 			<label for="resourceHero0">
@@ -192,6 +193,7 @@ ob_start();
 					<img title="Cereal" class="r4" src="img/x.gif">
 	                <span class="current">+<span class="focusedResourceRate"><?php echo $focusedResourceRate; ?></span>/h</span>
 			</label>
+		</div>
 		</div>
 			</div>
 	<div class="clear"></div>

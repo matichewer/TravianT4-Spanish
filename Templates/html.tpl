@@ -11,7 +11,7 @@
 		<meta name="content-language" content="ir" />
 		<link href="gpack/travian_Travian_4.0_41/lang/ir/compact.css?asd499" rel="stylesheet" type="text/css" />
         <link href="gpack/travian_Travian_4.0_41/lang/ir/lang.css?asd423" rel="stylesheet" type="text/css" />										
-		<link href="img/travian_basics.css?v=61" rel="stylesheet" type="text/css" />
+		<link href="img/travian_basics.css?v=62" rel="stylesheet" type="text/css" />
 		<?php /* La version sale de filemtime(): la URL cambia cuando cambia el archivo y
 		     en ningun otro momento. crypt.js llevaba time() aca, o sea una URL nueva por
 		     segundo, y sus 427 KB se re-descargaban en cada carga de pagina. jquery y
