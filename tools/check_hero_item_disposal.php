@@ -98,21 +98,12 @@ $controller = file_get_contents(dirname(__DIR__).'/hero_auction.php');
 $template = file_get_contents(dirname(__DIR__).'/Templates/Auction/sell.tpl');
 heroItemDisposalAssert(strpos($controller,"\$_POST['a']==='disposeHeroItem'")!==false,'Disposal POST handler is missing');
 heroItemDisposalAssert(strpos($controller,'hash_equals((string)$session->mchecker')!==false,'Disposal CSRF validation is missing');
-heroItemDisposalAssert(strpos($template,'Gestionar objetos no deseados')!==false,'Disposal controls are missing');
-heroItemDisposalAssert(strpos($template,"submitHeroItemDisposal('liquidate')")!==false,'Liquidation control is missing');
-heroItemDisposalAssert(strpos($template,"submitHeroItemDisposal('discard')")!==false,'Discard control is missing');
-heroItemDisposalAssert(strpos($template,'confirm(message)')!==false,'Irreversible action confirmation is missing');
-heroItemDisposalAssert(
-	strpos($template,'id="disposeLiquidateLabel">Liquidar</div>')!==false
-	&& strpos($template,"'Liquidar por '+reward+' de plata'")!==false
-	&& strpos($template,'updateHeroItemDisposal(true)')!==false
-	&& strpos($template,'<div class="button-contents">Descartar sin plata</div>')!==false,
-	'Disposal actions do not use recognizable, hierarchical game buttons'
-);
-heroItemDisposalAssert(
-	strpos($template,'<table class="transparent" style="margin-top:10px">')!==false
-	&& strpos($template,'Estas acciones son definitivas.')!==false,
-	'Disposal fields and irreversible warning are not clearly separated'
-);
+$inventory = file_get_contents(dirname(__DIR__).'/hero_inventory.php');
+heroItemDisposalAssert(strpos($template,'Gestionar objetos no deseados')===false,'Vender duplicates disposal controls');
+heroItemDisposalAssert(strpos($template,'itemsToSale')===false && strpos($template,'sellForm')===false,'Vender duplicates the inventory');
+heroItemDisposalAssert(strpos($template,'hero_inventory.php')!==false,'Vender must link to inventory management');
+heroItemDisposalAssert(strpos($inventory,"'inventoryLiquidate'")!==false,'Inventory liquidation control is missing');
+heroItemDisposalAssert(strpos($inventory,'window.confirm(confirmation)')!==false,'Liquidation confirmation is missing');
+heroItemDisposalAssert(strpos($inventory,'La liquidación es definitiva.')!==false,'Liquidation warning is missing');
 
 echo "Hero item disposal checks passed.\n";

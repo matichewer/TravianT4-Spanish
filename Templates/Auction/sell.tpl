@@ -1,4 +1,4 @@
-﻿<div id="auction">
+<div id="auction">
 <span class="error"><?php echo htmlspecialchars((string)$bidError,ENT_QUOTES,'UTF-8'); ?></span>
 <div class="silverAmount">
 <div id="filter">
@@ -47,7 +47,7 @@ include "Templates/Auction/alt.tpl";
 	}
 }
 echo 'Actualmente tienes ' . $query . ' objetos en venta en la subasta (el máximo permitido a la vez es 5)<br><br>';
-$maxReached = ($query == 5 ? true : false);
+
 ?>
 <table class="sellings" cellspacing="1" cellpadding="1">
 	<thead>
@@ -65,132 +65,7 @@ $maxReached = ($query == 5 ? true : false);
 </table>
 
 
-<?php
-$prefix = "".TB_PREFIX."heroitems";
-
-$sql2 = mysql_query("SELECT * FROM $prefix WHERE proc = 0 AND uid = $session->uid");
-$query2 = mysql_num_rows($sql2);
-
-$outputList = '';
-$disposalItems = array();
-if($query2==0){
-	$outputList .= "<span class='none'>Subastas finalizadas.</span>";
-}else{
-while($row = mysql_fetch_array($sql2)){
-$id = $row["id"];$uid = $row["uid"];$btype = $row["btype"];$type = $row["type"];$num = $row["num"];$proc = $row["proc"];
-
-include "Templates/Auction/alt.tpl";
-$disposalItems[] = array(
-	'id'=>(int)$id,
-	'name'=>(string)$name,
-	'num'=>(int)$num,
-	'stackable'=>heroItemIsAuctionStackable($btype)
-);
-
-   	$outputList .= "<div class=\"\" title=\"".$name."||".$title."\" id=\"item_".$id."\">";
-	$outputList .= "<div class=\"itemInInventory item item_".$item." inventory\">";
-	$outputList .= "<div class=\"amount\">".$num."</div>";
-	$outputList .= "</div></div>";
-
-}
-}
-?>
-
-<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
-
-<div class="hero_inventory">
-
-<div id="itemsToSale">
-<?php echo $outputList; ?>
-		<div class="clear"></div>
-</div>
-</div>
-
-	</div>
-				</div><div class="clear"></div>
-<?php if(!empty($disposalItems)){ ?>
-<div class="boxes boxesColor gray"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents cf">
-	<h4>Gestionar objetos no deseados</h4>
-	<p>Elige qué hacer con los objetos que ya no necesitas. Liquidar paga el 10 % del precio inicial; descartar los elimina sin entregar plata.</p>
-	<form id="disposeHeroItemForm" method="post" action="hero_auction.php?action=sell">
-		<input type="hidden" name="a" value="disposeHeroItem">
-		<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
-		<input type="hidden" name="disposalAction" value="">
-		<table class="transparent" style="margin-top:10px">
-			<tbody>
-				<tr>
-					<th style="width:90px"><label for="disposeHeroItemId">Objeto</label></th>
-					<td><select id="disposeHeroItemId" name="id" style="width:280px" onchange="updateHeroItemDisposal(true)">
-						<?php foreach($disposalItems as $disposalItem){ ?>
-						<option value="<?php echo $disposalItem['id']; ?>" data-name="<?php echo htmlspecialchars($disposalItem['name'],ENT_QUOTES,'UTF-8'); ?>" data-amount="<?php echo $disposalItem['num']; ?>" data-stackable="<?php echo $disposalItem['stackable'] ? '1' : '0'; ?>"><?php echo $disposalItem['num'].' × '.htmlspecialchars($disposalItem['name'],ENT_QUOTES,'UTF-8'); ?></option>
-						<?php } ?>
-					</select></td>
-				</tr>
-				<tr>
-					<th><label for="disposeHeroItemAmount">Cantidad</label></th>
-					<td><input class="text" id="disposeHeroItemAmount" name="amount" type="number" min="1" value="1" style="width:55px" onchange="updateHeroItemDisposal(false)" onkeyup="updateHeroItemDisposal(false)"> <span id="disposeHeroItemValue"></span></td>
-				</tr>
-			</tbody>
-		</table>
-		<p id="disposeHeroItemWarning" style="margin:8px 0 0"><b>Estas acciones son definitivas.</b> Revisa el objeto y la cantidad antes de confirmar.</p>
-		<div style="margin-top:12px;text-align:right">
-			<button type="button" onclick="submitHeroItemDisposal('liquidate')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents" id="disposeLiquidateLabel">Liquidar</div></div></button>
-			<button type="button" style="margin-left:8px" onclick="submitHeroItemDisposal('discard')"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Descartar sin plata</div></div></button>
-		</div>
-		<div class="clear"></div>
-	</form>
-</div></div>
-<script type="text/javascript">
-function selectedHeroDisposalItem(){
-	var select = document.getElementById('disposeHeroItemId');
-	return select.options[select.selectedIndex];
-}
-function updateHeroItemDisposal(resetAmount){
-	var option = selectedHeroDisposalItem();
-	var input = document.getElementById('disposeHeroItemAmount');
-	var stackable = option.getAttribute('data-stackable') === '1';
-	var maximum = parseInt(option.getAttribute('data-amount'),10);
-	input.max = maximum;
-	input.readOnly = !stackable;
-	if(resetAmount || !stackable || parseInt(input.value,10)>maximum || parseInt(input.value,10)<1){
-		input.value = maximum;
-	}
-	var amount = parseInt(input.value,10) || 0;
-	var reward = stackable ? Math.floor(amount/10) : 10;
-	document.getElementById('disposeHeroItemValue').innerHTML = stackable && amount<10
-		? '<span class="error">Mínimo para liquidar: 10 unidades.</span>'
-		: 'Recibirás <b>'+reward+' de plata</b>.';
-	document.getElementById('disposeLiquidateLabel').innerHTML = reward>0
-		? 'Liquidar por '+reward+' de plata'
-		: 'Liquidar';
-}
-function submitHeroItemDisposal(action){
-	var option = selectedHeroDisposalItem();
-	var input = document.getElementById('disposeHeroItemAmount');
-	var stackable = option.getAttribute('data-stackable') === '1';
-	var maximum = parseInt(option.getAttribute('data-amount'),10);
-	var amount = stackable ? parseInt(input.value,10) : maximum;
-	if(!amount || amount<1 || amount>maximum){
-		alert('Elige una cantidad válida.');
-		return;
-	}
-	if(action==='liquidate' && stackable && amount<10){
-		alert('Debes liquidar al menos 10 unidades para recibir 1 de plata.');
-		return;
-	}
-	var name = option.getAttribute('data-name');
-	var reward = stackable ? Math.floor(amount/10) : 10;
-	var message = action==='liquidate'
-		? '¿Liquidar definitivamente '+amount+' × '+name+' por '+reward+' de plata?'
-		: '¿Descartar definitivamente '+amount+' × '+name+' sin recibir plata?';
-	if(confirm(message)){
-		document.getElementById('disposeHeroItemForm').disposalAction.value = action;
-		document.getElementById('disposeHeroItemForm').submit();
-	}
-}
-updateHeroItemDisposal(true);
-</script>
-<?php } ?>
+<p><a class="arrow" href="hero_inventory.php">Gestionar objetos en el inventario del héroe</a></p>
 <?php
 $prefix = "".TB_PREFIX."auction";
 
@@ -377,88 +252,4 @@ include "Templates/Auction/alt.tpl";
     </div>
     <div class="clear"></div>
 </div>
-<form id="sellForm" method="post" action="hero_auction.php?action=sell">
-	<input type="hidden" name="a" value="e45">
-	<input type="hidden" name="c" value="<?php echo htmlspecialchars((string)$session->mchecker,ENT_QUOTES,'UTF-8'); ?>">
-	<input type="hidden" name="id" value="<?php echo isset($_POST['id']) ? (int)$_POST['id'] : ''; ?>">
-	<input type="hidden" name="amount" value="<?php echo isset($_POST['amount']) ? (int)$_POST['amount'] : ''; ?>">
-</form>
-<script type="text/javascript">
-	Travian.Game.HeroAuction = new (new Class(
-	{
-		alreadyOpen: false,
-		textSingle: '¿Realmente quieres vender este objeto?',
-		textMulti: 'Vender &lt;input class=\"text\" id=\"sellAmount\" style=\"width:30px\" type=\"text\" value=\"0\" /&gt; unidades'.unescapeHtml(),
-		initialize: function() {
-			var $this = this;
-<?php
-$prefix = "".TB_PREFIX."heroitems";
-
-$sql2 = mysql_query("SELECT * FROM $prefix WHERE proc = 0 AND uid = $session->uid");
-
-while($row = mysql_fetch_array($sql2)){
-$id = $row["id"];$num = $row["num"];
-?>
-				$('item_<?php echo $id; ?>').addEvent('click', function() { $this.sellItem(<?php echo $id; ?>,<?php echo $num; ?>); });
-<?php } ?>
-
-							},
-		sellItem: function (id, amount)
-        {
-            var maxReached = "<?php echo $maxReached; ?>";
-            if (maxReached)
-            {
-                return;
-            }
-            var html = '';
-			var $this = this;
-			if (this.alreadyOpen)
-			{
-				return;
-			}
-			this.alreadyOpen = true;
-			$('sellForm').id.value = id;
-			$('sellForm').amount.value = amount;
-			if (amount == 1)
-			{
-				html = $this.textSingle;
-			}
-			else
-			{
-				html = $this.textMulti;
-			}
-			html.dialog(
-			{
-				relativeTo:			$('content'),
-				elementFoucs:		'sellAmount',
-				buttonTextOk:		'OK',
-				buttonTextCancel:	'CANCELAR',
-				title:				'Confirmar venta:',
-				onOpen: function(dialog, contentElement)
-				{
-					if ($('sellAmount'))
-					{
-						$('sellAmount').value = amount;
-						$('sellAmount').addEvent('change', function()
-						{
-							$('sellForm').amount.value = $('sellAmount').value;
-						});
-					}
-				},
-				onOkay: function(dialog, contentElement)
-				{
-					if ($('sellAmount'))
-					{
-						$('sellForm').amount.value = $('sellAmount').value;
-					}
-					$('sellForm').submit();
-				},
-				onClose: function(dialog, contentElement)
-				{
-					$this.alreadyOpen = false;
-				}
-			});
-		}
-	}));
-</script>
 </div>

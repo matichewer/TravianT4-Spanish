@@ -45,6 +45,24 @@ if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
 	exit;
 }
 
+// La liquidación reutiliza la operación del servidor y vuelve al inventario.
+if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']==='POST'
+    && isset($_POST['a']) && $_POST['a']==='inventoryLiquidate'){
+    $message = 'La solicitud expiró. Vuelve a intentarlo.';
+    if(isset($_POST['c']) && is_scalar($_POST['c'])
+        && hash_equals((string)$session->mchecker,(string)$_POST['c'])){
+        $itemId = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
+        $result = $database->disposeHeroItem((int)$session->uid,$itemId,$amount,'liquidate');
+        $message = $result['status']==='success'
+            ? 'Objeto liquidado. Recibiste '.(int)$result['silver'].' de plata.'
+            : 'No se pudo liquidar. Revisa la cantidad y la disponibilidad (mínimo 10 unidades para objetos apilables).';
+    }
+    $_SESSION['inventoryItemFeedback'] = $message;
+    header('Location: hero_inventory.php');
+    exit;
+}
+
 include "Templates/html.tpl";
 
 if(isset($_GET['inventory'])){
@@ -145,6 +163,10 @@ if(isset($_GET['inventory'])){
 	</div>
 <?php } ?>
 <?php
+if(isset($_SESSION['inventoryItemFeedback'])){
+    echo '<p class="boxes boxesColor gray">'.htmlspecialchars($_SESSION['inventoryItemFeedback'],ENT_QUOTES,'UTF-8').'</p>';
+    unset($_SESSION['inventoryItemFeedback']);
+}
 include("Templates/hero.tpl");
 ?>
 
@@ -228,6 +250,7 @@ $sql = mysql_query("SELECT * FROM ".TB_PREFIX."heroitems WHERE (proc = 0 OR ((bt
 $query = mysql_num_rows($sql);
 
 $outputList = '';
+$inventoryItemDetails = array();
 
 $inv = 1;
 while($row = mysql_fetch_array($sql)){ 
@@ -240,6 +263,8 @@ $num = $row["num"];
 $proc = $row["proc"];
 
 include "Templates/Auction/alt.tpl";
+$inventoryItemDetails[(int)$id] = array('name'=>$name,'description'=>$title,'icon'=>(int)$item,
+    'sellable'=>(int)$proc===0,'stackable'=>heroItemIsAuctionStackable($btype));
 	if($btype<=10 or $btype==11 or $btype==13){
 		if($hero['dead']==1){
 			$dis = ' disabled';
@@ -282,11 +307,6 @@ for($i=$inv;$i<=12;$i++){
 	echo '<div id="inventory_'.$i.'" class="inventory draggable"></div>';
 }
 ?>
-			<div class="market">
-				<a class="buy arrow" href="hero_auction.php?action=buy">Comprar objetos</a>
-				<a class="sell arrow" href="hero_auction.php?action=sell">Vender objetos</a>
-				<div class="clear"></div>
-			</div>
 			<div class="clear"></div>
 		</div>
 	</div>
@@ -349,21 +369,9 @@ $id = $row2["id"];$num = $row2["num"];$btype = $row2["btype"];$type = $row2["typ
 		$element = "item_".$id;
 		$bindAmount = $num;
 	}
-	if($btype<=10 or $btype==11 or $btype==13){
-		if($hero['dead']==0){
-			if($bindAmount==1 && $btype!=13){
-?>
-	$this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, true);
-<?php		}else{ ?>
-	$this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
-<?php
-			}
-		}
-	}else{
 ?>
 $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bindAmount; ?>, <?php echo $btype; ?>, <?php echo $type; ?>, false);
 <?php
-	}
 }
 ?>
 								},
@@ -372,11 +380,7 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 			var touchStart = null;
 			var touchMoved = false;
 			var activate = function(){
-				if(useImmediately){
-					$this.showItem(id, amount, btype, type);
-				}else{
-					$this.sellItem(id, amount, btype, type);
-				}
+                $this.openItemDetails(id, amount, btype, type);
 			};
 
 			if(!element){
@@ -419,12 +423,85 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 				}
 			});
 		},
+        itemDetails: <?php echo json_encode($inventoryItemDetails, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>,
+        heroDead: <?php echo (int)$hero['dead']; ?>,
+        openItemDetails: function(id, amount, btype, type){
+            if(this.alreadyOpen){ return; }
+            var self = this, info = this.itemDetails[id];
+            if(!info){ return; }
+            this.alreadyOpen = true;
+            var escape = function(value){ return new Element('span', {text: value}).get('html'); };
+            var html = '<div class="heroItemDetails"><div class="item item_'+info.icon+'" style="position:relative;float:left;margin:0 16px 12px 0"></div>'+
+                '<p>'+info.description+'</p><div class="clear"></div><p>Disponibles: '+amount+'</p>'+
+                '<label>Cantidad: <input id="itemDetailsAmount" class="text" type="number" min="1" max="'+amount+'" value="'+(btype===15 ? 1 : amount)+'" style="width:65px"></label>'+
+                '<p id="itemDetailsReward"></p><p id="itemDetailsError" class="error" role="alert"></p>'+
+                '<div id="itemDetailsActions"></div></div>';
+            html.dialog({relativeTo: $('content'), title: escape(info.name), buttonOk: false,
+                elementFocus: 'itemDetailsAmount',
+                onOpen: function(dialog){
+                    var input = $('itemDetailsAmount');
+                    var reward = function(){
+                        return info.stackable ? Math.floor(Number(input.value)/10) : 10;
+                    };
+                    var update = function(){
+                        $('itemDetailsReward').set('text', 'Liquidar: '+reward()+' de plata. La liquidación es definitiva.');
+                    };
+                    input.addEventListener('input', update);
+                    input.addEventListener('change', update);
+                    update();
+                    ['Equipar','Subastar','Liquidar'].each(function(label, index){
+                        var button = dialog.buttonOk.clone().removeProperty('id');
+                        button.removeClass('ok').setProperty('type','button').setStyle('display','inline-block');
+                        button.getElement('.text').set('text', index===0 && btype>9 ? 'Usar' : label);
+                        button.setStyle('margin','6px');
+                        button.inject($('itemDetailsActions'));
+                        var blocked = index===0 ? (self.heroDead && (btype<=11 || btype===13)) : !info.sellable;
+                        button.disabled = !!blocked;
+                        if(blocked){
+                            button.addClass('disabled');
+                            button.title = index===0 ? 'Tu héroe está muerto.' : 'Primero retira este objeto de la bolsa del héroe.';
+                        }
+                        button.addEvent('click', function(event){
+                            event.stop();
+                            var quantity = Number(input.value);
+                            if(!isFinite(quantity) || quantity<1 || quantity>amount || Math.floor(quantity)!==quantity){
+                                $('itemDetailsError').set('text','Elige una cantidad válida.'); return;
+                            }
+                            if(index===0){
+                                if(btype===15){ quantity=1; }
+                                dialog.close();
+                                self.showItem(id, quantity, btype, type);
+                                return;
+                            }
+                            if(!info.stackable && quantity!==amount){
+                                $('itemDetailsError').set('text','Este objeto debe venderse completo.'); return;
+                            }
+                            if(index===2 && reward()<1){
+                                $('itemDetailsError').set('text','Debes liquidar al menos 10 unidades.'); return;
+                            }
+                            if(index===2){
+                                var confirmation = '¿Liquidar '+quantity+' × '+info.name+' por '+reward()+' de plata? Esta acción es definitiva.';
+                                if(!window.confirm(confirmation)){ return; }
+                            }
+                            var form = $('HeroInventory');
+                            form.setAttribute('action', index===1 ? 'hero_auction.php?action=sell' : 'hero_inventory.php');
+                            form.elements.a.value = index===1 ? 'e45' : 'inventoryLiquidate';
+                            form.elements.id.value = id;
+                            form.elements.amount.value = quantity;
+                            button.disabled = true;
+                            form.submit();
+                        });
+                    });
+                },
+                onClose: function(){ self.alreadyOpen=false; }
+            });
+        },
 		showItem: function (id, amount, btype, type){
 			var $this = this;
-			$('HeroInventory').id.value = id;
-			$('HeroInventory').amount.value = amount;
-			$('HeroInventory').btype.value = btype;
-			$('HeroInventory').type.value = type;
+			$('HeroInventory').elements.id.value = id;
+			$('HeroInventory').elements.amount.value = amount;
+			$('HeroInventory').elements.btype.value = btype;
+			$('HeroInventory').elements.type.value = type;
 			$('HeroInventory').submit();
 		},
 		sellItem: function (id, amount, btype, type){
@@ -435,10 +512,10 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 			}
 			this.alreadyOpen = true;
 			if(btype == 15){ amount = 1; }
-			$('HeroInventory').id.value = id;
-			$('HeroInventory').amount.value = amount;
-			$('HeroInventory').btype.value = btype;
-			$('HeroInventory').type.value = type;
+			$('HeroInventory').elements.id.value = id;
+			$('HeroInventory').elements.amount.value = amount;
+			$('HeroInventory').elements.btype.value = btype;
+			$('HeroInventory').elements.type.value = type;
 			if (amount == 1){
 				if(btype == 10){
 					html = $this.textSingle;
@@ -484,13 +561,13 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
 					if ($('amount')){
 						$('amount').value = amount;
 						$('amount').addEvent('change', function(){
-							$('HeroInventory').amount.value = $('amount').value;
+							$('HeroInventory').elements.amount.value = $('amount').value;
 						});
 					}
 				},
 				onOkay: function(dialog, contentElement){
 					if ($('amount')){
-						$('HeroInventory').amount.value = $('amount').value;
+						$('HeroInventory').elements.amount.value = $('amount').value;
 					}
 					$('HeroInventory').submit();
 				},

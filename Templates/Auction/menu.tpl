@@ -7,7 +7,7 @@
 				<div class="container <?php if(isset($_GET['action']) && $_GET['action'] == sell) { echo "active"; } else { echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
 					<div class="background-end">&nbsp;</div>
-					<div class="content"><a href="hero_auction.php?action=sell"><span class="tabItem">Vender</span></a></div>
+					<div class="content"><a href="hero_auction.php?action=sell"><span class="tabItem">Mis ventas</span></a></div>
 				</div>
 				<div class="container <?php if(isset($_GET['action']) && $_GET['action'] == bids) { echo "active"; } else { echo "normal"; } ?>">
 					<div class="background-start">&nbsp;</div>
