@@ -84,8 +84,8 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="#" role="button" data-add-attribute="power"></a>
 	        <a class="removePoint disabled" href="#" role="button" data-remove-attribute="power" aria-disabled="true"></a>
+	        <a class="setPoint<?php echo $powerPointStyle; ?>" href="#" role="button" data-add-attribute="power"></a>
 				</div>
 				<div class="element points"><?php echo $powerPoints; ?></div>
 			</div>
@@ -100,8 +100,8 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="#" role="button" data-add-attribute="offBonus"></a>
 	            <a class="removePoint disabled" href="#" role="button" data-remove-attribute="offBonus" aria-disabled="true"></a>
+	            <a class="setPoint<?php echo $offBonusPointStyle; ?>" href="#" role="button" data-add-attribute="offBonus"></a>
 				</div>
 				<div class="element points"><?php echo $offBonusPoints; ?></div>
 			</div>
@@ -117,8 +117,8 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="#" role="button" data-add-attribute="defBonus"></a>
 	            <a class="removePoint disabled" href="#" role="button" data-remove-attribute="defBonus" aria-disabled="true"></a>
+	            <a class="setPoint<?php echo $defBonusPointStyle; ?>" href="#" role="button" data-add-attribute="defBonus"></a>
 				</div>
 				<div class="element points"><?php echo $defBonusPoints; ?></div>
 			</div>
@@ -135,8 +135,8 @@ ob_start();
 					</div>
 				</div>
 				<div class="element add">
-	             <a class="setPoint<?php echo $productPointStyle; ?>" href="#" role="button" data-add-attribute="product"></a>
 	             <a class="removePoint disabled" href="#" role="button" data-remove-attribute="product" aria-disabled="true"></a>
+	             <a class="setPoint<?php echo $productPointStyle; ?>" href="#" role="button" data-add-attribute="product"></a>
 				</div>
 				<div class="element points"><?php echo $productPoints; ?></div>
 		</div>
