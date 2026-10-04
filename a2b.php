@@ -80,7 +80,21 @@ if ($reportdata !== null) {
         $selectedAttackType = (int)$reportdata[$missionIndex + 1];
     }
 }
-	$process = $units->procUnits($_POST);
+// Editar vuelve al formulario sin pasar por el envío definitivo.
+$editingTroopSend = isset($_POST['edit_send']);
+$troopDraft = array();
+if ($editingTroopSend) {
+    for ($position = 1; $position <= 11; $position++) {
+        $value = isset($_POST['t'.$position]) ? $_POST['t'.$position] : 0;
+        $troopDraft['t'.$position] = is_scalar($value) ? max(0, (int)$value) : 0;
+    }
+    $selectedAttackType = isset($_POST['c']) && is_scalar($_POST['c'])
+        ? (int)$_POST['c'] : 2;
+    if (!in_array($selectedAttackType, array(2, 3, 4), true)) {
+        $selectedAttackType = 3; // La exploración se vuelve a detectar al confirmar.
+    }
+}
+$process = $editingTroopSend ? null : $units->procUnits($_POST);
 	$automation->isWinner();
 include "Templates/html.tpl";
 ?>

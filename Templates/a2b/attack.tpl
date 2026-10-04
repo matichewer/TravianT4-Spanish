@@ -346,7 +346,14 @@ if($canMoveHome){
 <input name="id" value="39" type="hidden"> 
 
 <input name="a" value="533374" type="hidden">
-<input name="c" value="3" type="hidden">
+<input name="c" value="<?php echo $process['c'] == 1 ? (isset($_POST['c']) && (int)$_POST['c'] == 4 ? 4 : 3) : (int)$process['c']; ?>" type="hidden">
+<input name="x" value="<?php echo (int)$coor['x']; ?>" type="hidden">
+<input name="y" value="<?php echo (int)$coor['y']; ?>" type="hidden">
+<?php for ($position = 1; $position <= 11; $position++) { ?>
+<input name="t<?php echo $position; ?>" value="<?php echo (int)${'t'.$position}; ?>" type="hidden">
+<?php } ?>
+
+<button type="submit" name="edit_send" value="1" id="btn_edit"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Editar</div></div></button>
 
 <?php
 $attacker = $database->getUserField($session->uid,'alliance',0);

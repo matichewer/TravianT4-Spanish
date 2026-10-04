@@ -19,7 +19,12 @@
 						<td>
 							<span class="or">Coordenadas</span>
 <?php
-if(isset($_GET['z'])){
+if ($editingTroopSend) {
+$coor = array();
+foreach (array('x', 'y') as $axis) {
+    $coor[$axis] = isset($_POST[$axis]) && is_scalar($_POST[$axis]) ? (int)$_POST[$axis] : 0;
+}
+}elseif(isset($_GET['z'])){
 $coor = $database->getCoor($_GET['z']);
 
 }elseif(isset($_GET['bid'])){
