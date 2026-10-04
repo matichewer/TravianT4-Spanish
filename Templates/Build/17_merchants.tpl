@@ -22,11 +22,9 @@ if(!isset($marketShowCounter) || $marketShowCounter) {
 		// mismos mercaderes las tres veces. Sumarlos daba cifras imposibles ("24" en un
 		// Mercado de 20) y ademas no coincidian con lo que valida el guardado.
 		$marketRouteReserved = (int)$market->routeReserved;
-		echo '<p class="none">Hasta '.$marketRouteReserved.' de esos mercaderes '
-			.($marketRouteReserved === 1 ? 'está de viaje' : 'están de viaje')
-			.' a la vez en rutas comerciales. '
-			.'Mientras no viajen podés usarlos para cualquier otro envío; si a esa hora están ocupados, '
-			.'la ruta se reintenta sola.';
+		echo '<p class="none">Tus rutas comerciales actualmente usan hasta '.$marketRouteReserved
+			.' mercaderes al mismo tiempo. Si al momento de ejecutar una ruta comercial no hay suficientes '
+			.'mercaderes disponibles, esa salida se omite.';
 		echo '</p>';
 	}
 }
