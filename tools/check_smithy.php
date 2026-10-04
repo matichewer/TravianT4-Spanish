@@ -176,7 +176,7 @@ class SmithyGenerator {
 $generator=new SmithyGenerator(); $id=25;
 function smithyRender() {
     global $database,$village,$session,$technology,$building,$generator,$id,$bid12;
-    for($i=1;$i<=8;$i++) { ${'ab'.$i}=$GLOBALS['ab'.$i]; }
+    for($i=($session->tribe-1)*10+1;$i<=($session->tribe-1)*10+8;$i++) { ${'ab'.$i}=$GLOBALS['ab'.$i]; }
     ob_start();
     include 'Templates/Build/12_upgrades.tpl';
     return ob_get_clean();
@@ -197,6 +197,31 @@ $database->ab['b2']=19;
 smithyAssert(strpos(smithyRender(),'Nivel máximo en cola')!==false,'pending level 20 renders without level 21 lookup');
 
 $template=file_get_contents('Templates/Build/12_upgrades.tpl');
+// Render each tribe, including consecutive upgrades of the same unit and mixed units.
+for($tribe=1;$tribe<=3;$tribe++) {
+    $session->tribe=$tribe;
+    $database->ab['b2']=7;
+    $database->ab['b1']=3;
+    $village->researching=array(
+        array('tech'=>'b2','timestamp'=>$end+500),
+        array('tech'=>'b2','timestamp'=>$end)
+    );
+    $unit=($tribe-1)*10+2;
+    $html=smithyRender();
+    smithyAssert(strpos($html,'Unit '.$unit.' <span class="level">Nivel 8</span></td>')!==false,
+        "tribe $tribe shows the active target level");
+    smithyAssert(strpos($html,'Unit '.$unit.' <span class="level">Nivel 9</span></td>')!==false,
+        "tribe $tribe shows the consecutive queued target level");
+    $village->researching[0]['tech']='b1';
+    $html=smithyRender();
+    $otherUnit=($tribe-1)*10+1;
+    smithyAssert(strpos($html,'Unit '.$otherUnit.' <span class="level">Nivel 4</span></td>')!==false,
+        "tribe $tribe counts each unit's levels independently");
+    $database->ab['b2']=19;
+    smithyAssert(strpos(smithyRender(),'Unit '.$unit.' <span class="level">Nivel 20</span></td>')!==false,
+        "tribe $tribe shows target level 20");
+}
+
 smithyAssert(strpos($template,"if(\$queuedLevel >= 20)")!==false,'level-20 rendering avoids reading nonexistent level 21 data');
 $automation=file_get_contents('GameEngine/Automation.php');
 smithyAssert(strpos($automation,"preg_match('/^[ab][1-8]$/D',\$tech)")!==false,'completion only accepts valid Smithy columns');

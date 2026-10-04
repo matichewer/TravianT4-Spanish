@@ -106,10 +106,12 @@ echo "</div>
 		echo "<table cellpadding=\"1\" cellspacing=\"1\" class=\"under_progress\"><thead><tr><td>Unidad</td><td>Tiempo restante</td><td>Finaliza</td></tr>
 </thead><tbody>";
 		$timer = 1;
+		$queueLevels = $abdata;
 		usort($ABups,function($a,$b) { return $a['timestamp'] <=> $b['timestamp']; });
 		foreach($ABups as $black) {
+			$targetLevel = ++$queueLevels[$black['tech']];
 			$unit = ($session->tribe-1)*10 + substr($black['tech'],1,2);
-			echo "<tr><td class=\"desc\"><img class=\"unit u$unit\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($unit)."\" title=\"".$technology->getUnitName($unit)."\" />".$technology->getUnitName($unit)."</td>";
+			echo "<tr><td class=\"desc\"><img class=\"unit u$unit\" src=\"img/x.gif\" alt=\"".$technology->getUnitName($unit)."\" title=\"".$technology->getUnitName($unit)."\" />".$technology->getUnitName($unit)." <span class=\"level\">Nivel ".$targetLevel."</span></td>";
 			echo "<td class=\"dur\"><span id=\"timer$timer\">".$generator->getTimeFormat($black['timestamp']-time())."</span></td>";
 			$date = $generator->procMtime($black['timestamp']);
 			echo "<td class=\"fin\"><span>".$date[1]."</span><span> </span></td>";
