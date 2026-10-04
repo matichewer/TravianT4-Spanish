@@ -56,17 +56,17 @@ $coor['y'] = "";
                 
                 <div class="option">
 		<label>
-			<input class="radio" name="c" <?php if (!$checked) {?> checked=checked <?php }?>value="2" type="radio" <?php echo $disabledr; ?>>
+			<input class="radio" name="c" <?php if ($selectedAttackType === 2) {?> checked=checked <?php }?>value="2" type="radio" <?php echo $disabledr; ?>>
 			Refuerzo		</label>
 		<br>
 
 		<label>
-			<input class="radio" name="c" value="3" type="radio" <?php echo $disabled ?>>
+			<input class="radio" name="c" value="3" type="radio" <?php if ($selectedAttackType === 3) { ?>checked=checked<?php } ?> <?php echo $disabled ?>>
 			Ataque normal		</label>
 		<br>
 
 		<label>
-			<input class="radio" name="c" <?php echo $checked ?> value="4" type="radio">
+			<input class="radio" name="c" <?php if ($selectedAttackType === 4) { ?>checked=checked<?php } ?> value="4" type="radio">
 			Saqueo		</label>
 
 	</div>

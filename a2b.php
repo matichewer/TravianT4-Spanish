@@ -70,6 +70,16 @@ if(isset($_GET['o'])) {
     }
     $checked  ="checked=checked";
 }
+// Legacy combat reports did not store the mission: default them to a normal attack.
+$selectedAttackType = $checked ? 4 : 2;
+if ($reportdata !== null) {
+    $selectedAttackType = 3;
+    $missionIndex = array_search('attack-type-v1', $reportdata, true);
+    if ($missionIndex !== false && isset($reportdata[$missionIndex + 1])
+        && in_array((int)$reportdata[$missionIndex + 1], array(3, 4), true)) {
+        $selectedAttackType = (int)$reportdata[$missionIndex + 1];
+    }
+}
 	$process = $units->procUnits($_POST);
 	$automation->isWinner();
 include "Templates/html.tpl";

@@ -4190,6 +4190,7 @@ class Automation {
                     // movimiento: sin esta línea el atacante las veía aparecer sin ninguna
                     // explicación en el informe. Va solo en su copia, no en la del defensor.
                     $data2att = $totalheal > 0 ? $data2.',heal-v1,'.(int)$totalheal : $data2;
+                    $data2att .= ',attack-type-v1,'.(int)$data['attack_type'];
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
                         $spyReportType = ($totaldead_att == 0 && $totalstilltraped_att == 0) ? 22 : 23;
@@ -4247,6 +4248,7 @@ class Automation {
                 } else //else they die and don't return or report.
                 {
                     $database->setMovementProc($data['moveid']);
+                    $data_fail .= ',attack-type-v1,'.(int)$data['attack_type'];
                     if($type == 1) {
                         $fromAlly = $database->getUserField($from['owner'], 'alliance', 0);
                         $database->addNotice($from['owner'], $to['wref'], $fromAlly, 24, ''.addslashes($from['name']).' espía a '.addslashes($to['name']).$oasisTopicSuffix.'', $data_fail, $AttackArrivalTime);
