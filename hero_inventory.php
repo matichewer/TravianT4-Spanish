@@ -435,11 +435,12 @@ $this.bindItem($('<?php echo $element; ?>'), <?php echo $id; ?>, <?php echo $bin
             var escape = function(value){ return new Element('span', {text: value}).get('html'); };
             var html = '<div class="heroItemDetails"><div class="item item_'+info.icon+'" style="position:relative;float:left;margin:0 16px 12px 0"></div>'+
                 '<p>'+info.description+'</p><div class="clear"></div><p>Disponibles: '+amount+'</p>'+
-                '<label>Cantidad: <input id="itemDetailsAmount" class="text" type="number" min="1" max="'+amount+'" value="'+(btype===12 || btype===13 || btype===15 ? 1 : amount)+'" style="width:65px"></label>'+
+                (amount===1 ? '<input id="itemDetailsAmount" type="hidden" value="1">' :
+                '<label>Cantidad: <input id="itemDetailsAmount" class="text" type="number" min="1" max="'+amount+'" value="'+(btype===12 || btype===13 || btype===15 ? 1 : amount)+'" style="width:65px"></label>')+
                 '<p id="itemDetailsReward"></p><p id="itemDetailsError" class="error" role="alert"></p>'+
                 '<div id="itemDetailsActions"></div></div>';
             html.dialog({relativeTo: $('content'), title: escape(info.name), buttonOk: false,
-                elementFocus: 'itemDetailsAmount',
+                elementFocus: amount===1 ? null : 'itemDetailsAmount',
                 onOpen: function(dialog){
                     var input = $('itemDetailsAmount');
                     var reward = function(){
