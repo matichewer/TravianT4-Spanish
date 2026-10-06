@@ -1116,8 +1116,8 @@ div.build .gid16 #raidList td{padding-left:4px;padding-right:4px;}div.build .gid
 div.build .gid16 #raidList .village{text-align:left;}div.build .gid16 #raidList .village img.attack{float:left;margin-right:3px;}
 div.build .gid16 #raidList .checkbox{width:3%;padding-left:0;padding-right:0;}div.build .gid16 #raidList .ew{width:6%;}
 div.build .gid16 #raidList .distance{width:8%;}div.build .gid16 #raidList .troops{width:15%;line-height:20px;}
-div.build .gid16 #raidList .troops .troopIcon{white-space:nowrap;}div.build .gid16 #raidList .lastRaid{width:25%;white-space:nowrap;}
-div.build .gid16 #raidList .action{width:14%;}div.build .gid16 #raidList .openedClosedSwitch{float:right;}
+div.build .gid16 #raidList .troops .troopIcon{white-space:nowrap;}div.build .gid16 #raidList .lastRaid{width:34%;white-space:nowrap;}
+div.build .gid16 #raidList .action{width:5%;}div.build .gid16 #raidList .openedClosedSwitch{float:right;}
 div.build .gid16 #raidList .listTitleText{float:left;}div.build .gid16 #raidList div.markAll{margin:10px 0 0 1px;float:left;}
 div.build .gid16 #raidList div.addSlot{margin:10px 5px 0 0;float:right;}div.build .gid16 #raidList img.del{margin:0 4px 1px 0;}
 div.build .gid16 #raidList .listTitle{cursor:pointer;font-weight:bold;}div.build .gid16 #raidList #spaceUsed{padding:20px 0 10px;}

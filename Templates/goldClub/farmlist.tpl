@@ -243,7 +243,7 @@ while($row2 = mysql_fetch_array($getnotice)){
 				<div class="clear"></div>
 			</td>
 			<td class="action">
-				<a class="arrow" href="#" onclick="Travian.Game.RaidList.editSlot(<?php echo $lid; ?>, <?php echo $slotId; ?>); return false;">editar</a>
+				<a href="#" title="Editar saqueo" aria-label="Editar saqueo" onclick="Travian.Game.RaidList.editSlot(<?php echo $lid; ?>, <?php echo $slotId; ?>); return false;"><img src="gpack/travian_Travian_4.0_41/img/f/edit.gif" width="12" height="12" alt=""></a>
 			</td>
             </tr>
 <?php
