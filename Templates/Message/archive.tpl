@@ -1,7 +1,10 @@
 ﻿<?php
 $prefix = "".TB_PREFIX."mdata";
-$sql = mysql_query("SELECT * FROM $prefix WHERE target = $session->uid AND archived = 1 ORDER BY time DESC");
-$query = mysql_num_rows($sql); // Obtener el número de consultas de la base de datos
+// Una sola condición para contar y para listar. Contar es COUNT(*): antes se traían
+// todos los mensajes de la bandeja, con su texto, sólo para contarlos.
+$messageListWhere = "target = $session->uid AND archived = 1";
+$messageCount = mysql_fetch_array(mysql_query("SELECT COUNT(*) FROM $prefix WHERE $messageListWhere"));
+$query = $messageCount ? (int)$messageCount[0] : 0;
 
 if (isset($_GET['page'])) { // Obtener el número de página
     $page = preg_replace('#[^0-9]#i', '', $_GET['page']); // Filtrar todo excepto los números
@@ -12,10 +15,13 @@ if (isset($_GET['page'])) { // Obtener el número de página
 $itemsPerPage = 10; //Número de elementos mostrados por página
 $lastPage = ceil($query / $itemsPerPage); // Obtener el número de la última página
 
+// Una bandeja vacía tiene 0 páginas: la página se acota arriba primero y nunca baja
+// de 1, o el LIMIT de más abajo sale negativo.
+if ($page > $lastPage) {
+    $page = $lastPage;
+}
 if ($page < 1) {
     $page = 1;
-} else if ($page > $lastPage) {
-    $page = $lastPage;
 }
 
 $centerPages = "";
@@ -93,7 +99,7 @@ if ($page <= 1 && $lastPage <= 1) {
 
 
 $limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
-$sql2 = mysql_query("SELECT * FROM $prefix WHERE target = $session->uid AND archived = 1 ORDER BY time DESC $limit");
+$sql2 = mysql_query("SELECT * FROM $prefix WHERE $messageListWhere ORDER BY time DESC $limit");
 $paginationDisplay = "";
 $nextPage = $_GET['page'] + 1;
 $previous = $_GET['page'] - 1;

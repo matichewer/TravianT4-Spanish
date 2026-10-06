@@ -443,3 +443,19 @@ ALTER TABLE s1_movement
 -- mundo cada vez.
 ALTER TABLE s1_ndata
   ADD INDEX IF NOT EXISTS unread_by_player (uid, viewed);
+
+-- 2026-10-06 - Oasis anexados por aldea
+-- "Que oasis tiene esta aldea" se pregunta varias veces por pagina (produccion, hambruna,
+-- resumen de tropas) y recorria los 4.092 oasis del mapa cada vez: de ellos, anexados hay
+-- un punado.
+ALTER TABLE s1_odata
+  ADD INDEX IF NOT EXISTS annexed_by_village (conqured);
+
+-- 2026-10-05 - Indice para las listas de informes (berichte.php)
+-- Cada pestana lista "los informes de este jugador, archivados o no, sin borrar, del mas
+-- nuevo al mas viejo" y muestra diez. Sin indice leia y ordenaba todos los informes del
+-- jugador para quedarse con esos diez: 27.000 lecturas por visita en el mundo vivo. Las
+-- tres primeras columnas son las igualdades del filtro y las dos ultimas el orden
+-- (`time DESC, id DESC`), asi que la primera pagina lee las filas que muestra.
+ALTER TABLE s1_ndata
+  ADD INDEX IF NOT EXISTS list_by_player (uid, archive, del, time, id);

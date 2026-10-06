@@ -9,12 +9,11 @@ $noticeClass = array("Informe de exploración","Victoria como atacante sin bajas
 // la pestana donde vive; lo que lo distingue en la lista es el asunto.
 $noticeClass[Automation::NTYPE_ROUTE_NOT_SENT] = 'Ruta comercial sin ejecutar';
 $noticeIconType = array(Automation::NTYPE_ROUTE_NOT_SENT => 13);
-$prefix = "".TB_PREFIX."ndata";
 $limit2 = isset($noticeSqlFilter)
     ? $noticeSqlFilter
     : "and ntype IN (10,11,12,13) and data NOT LIKE '%,route'";
-$sql = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive = 0 $limit2 and del = 0 ORDER BY time DESC");
-$query = mysql_num_rows($sql);
+// Contar es COUNT(*): antes se traían todas las filas de la pestaña para contarlas.
+$query = $database->countNoticeList($session->uid, 0, $limit2);
 
 if (isset($_GET['page'])) {
     $page = preg_replace('#[^0-9]#i', '', $_GET['page']);
@@ -25,10 +24,12 @@ if (isset($_GET['page'])) {
 $itemsPerPage = $reportsPerPage;
 $lastPage = ceil($query / $itemsPerPage);
 
+// Una pestaña vacía tiene 0 páginas: la página se acota arriba primero y nunca baja de 1.
+if ($page > $lastPage) {
+    $page = $lastPage;
+}
 if ($page < 1) {
     $page = 1;
-} else if ($page > $lastPage) {
-    $page = $lastPage;
 } 
 
 $centerPages = "";
@@ -105,9 +106,10 @@ if ($page <= 1 && $lastPage <= 1) {
 
 
 
-$limit = 'LIMIT ' .($page - 1) * $itemsPerPage .',' .$itemsPerPage;
 
-$sql2 = mysql_query("SELECT * FROM $prefix WHERE uid = $session->uid and archive=0 $limit2 and del = 0 ORDER BY time DESC $limit");
+$sql2 = $query > 0
+    ? $database->getNoticeListPage($session->uid, 0, $limit2, $page, $itemsPerPage)
+    : false;
 $paginationDisplay = "";
 // $page ya viene acotado a [1, ultima pagina]; $_GET['page'] puede no existir.
 $nextPage = $page + 1;

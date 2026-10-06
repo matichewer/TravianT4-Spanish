@@ -1176,7 +1176,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%ndata` (
   `archive` tinyint(1) unsigned NOT NULL,
   `del` tinyint(1) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `unread_by_player` (`uid`,`viewed`)
+  KEY `unread_by_player` (`uid`,`viewed`),
+  KEY `list_by_player` (`uid`,`archive`,`del`,`time`,`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 --
@@ -1227,7 +1228,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%odata` (
   `loyalty` int(11) NOT NULL DEFAULT '100',
   `owner` int(11) unsigned NOT NULL DEFAULT '2',
   `name` varchar(32) NOT NULL DEFAULT 'Unoccupied Oasis',
-  PRIMARY KEY (`wref`)
+  PRIMARY KEY (`wref`),
+  KEY `annexed_by_village` (`conqured`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 --

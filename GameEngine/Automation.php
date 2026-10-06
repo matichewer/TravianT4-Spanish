@@ -597,13 +597,24 @@ class Automation {
         $this->procNewClimbers();
         $this->ClearUser();
         $this->ClearInactive();
-        $this->oasisResourcesProduce();
+        // Los tres barridos de oasis recorren los 4.092 del mapa y ninguno hace falta en
+        // cada request: la producción es función del tiempo transcurrido y el saqueo pone
+        // al día su oasis antes de leerlo (updateORes), así que una pasada por minuto da
+        // los mismos números. El UPDATE de producción costaba diez veces lo que cuesta
+        // leerlos aunque no cambiara ninguna fila, y tomaba el candado de escritura de la
+        // tabla en todas las páginas.
+        $oasisSweepDue = $this->sweepDue('oasis');
+        if($oasisSweepDue) {
+            $this->oasisResourcesProduce();
+        }
         // Acreditar llegadas vencidas antes de recortar reservas o evaluar hambre.
         if(!file_exists("GameEngine/Prevention/market.txt") or time() - filemtime("GameEngine/Prevention/market.txt") > 50) {
             $this->marketComplete();
         }
         $this->pruneResource();
-        $this->pruneOResource();
+        if($oasisSweepDue) {
+            $this->pruneOResource();
+        }
         $this->addAdventures();
         $this->checkWWAttacks();
         if(!file_exists("GameEngine/Prevention/loyalty.txt") or time() - filemtime("GameEngine/Prevention/loyalty.txt") > 50) {
@@ -669,8 +680,35 @@ class Automation {
         }
         $this->updateStore();
         $this->TradeRoute();
-        $this->regenerateOasisTroops();
+        if($oasisSweepDue) {
+            $this->regenerateOasisTroops();
+        }
         $this->weeklyMedals();
+    }
+
+    /**
+     * ¿Le toca correr a un barrido que no hace falta en cada request?
+     *
+     * Devuelve true a lo sumo una vez cada $seconds, y deja la marca puesta en ese mismo
+     * momento. Ojo que no es lo que hacen casi todas las marcas de `Prevention/`: ésas se
+     * crean al entrar al barrido y se BORRAN al salir, o sea que son candados contra la
+     * reentrada y no limitan nada — el barrido corre igual en cada request. Ésta queda.
+     *
+     * Se borra antes de recrearla a propósito: si la dejó un script corrido como root,
+     * Apache no puede reescribirla pero sí borrarla, y sin eso el barrido volvería a
+     * correr en todos los requests para siempre.
+     */
+    private function sweepDue($name, $seconds = 50) {
+        $marker = "GameEngine/Prevention/".$name.".txt";
+        if(file_exists($marker) && time() - filemtime($marker) <= $seconds) {
+            return false;
+        }
+        @unlink($marker);
+        $handle = @fopen($marker, 'w');
+        if($handle) {
+            @fclose($handle);
+        }
+        return true;
     }
 
     private function getfieldDistance($coorx1, $coory1, $coorx2, $coory2) {
@@ -6456,8 +6494,24 @@ class Automation {
     }
 
     // by SlimShady95, aka Manuel Mannhardt < manuel_mannhardt@web.de > UPDATED FROM songeriux < haroldas.snei@gmail.com >
+    /**
+     * Recalcula la capacidad de almacén y granero de cada aldea a partir de sus edificios
+     * y recorta lo que se pase del tope.
+     *
+     * Corre en cada request como red de seguridad de `applyStorageCapacityDelta()`, y casi
+     * nunca encuentra nada que corregir. Por eso primero compara y sólo escribe donde hace
+     * falta: antes mandaba un UPDATE por cada aldea del mundo —natars incluidos— en todas
+     * las páginas, que además de la ida y vuelta toma el candado de escritura de `vdata`,
+     * la tabla que más se lee del juego.
+     */
     private function updateStore() {
         global $bid10, $bid38, $bid11, $bid39;
+
+        $stored = array();
+        $result = mysql_query('SELECT `wref`,`maxstore`,`maxcrop`,`wood`,`clay`,`iron`,`crop` FROM `'.TB_PREFIX.'vdata`');
+        while($result && $row = mysql_fetch_assoc($result)) {
+            $stored[$row['wref']] = $row;
+        }
 
         $result = mysql_query('SELECT * FROM `'.TB_PREFIX.'fdata`');
         while($row = mysql_fetch_assoc($result)) {
@@ -6487,6 +6541,17 @@ class Automation {
 
             if($crop == 0) {
                 $crop = 800 * STORAGE_MULTIPLIER;
+            }
+
+            if(!isset($stored[$row['vref']])) {
+                // fdata sin su aldea: no hay fila que corregir.
+                continue;
+            }
+            $village = $stored[$row['vref']];
+            if($village['maxstore'] == $ress && $village['maxcrop'] == $crop
+                && $village['wood'] <= $ress && $village['clay'] <= $ress
+                && $village['iron'] <= $ress && $village['crop'] <= $crop) {
+                continue;
             }
 
             mysql_query('UPDATE `'.TB_PREFIX.'vdata` SET `maxstore` = '.$ress.', `maxcrop` = '.$crop

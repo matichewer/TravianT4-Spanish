@@ -57,6 +57,14 @@ $GLOBALS['sqlUpdates'] = array();
 $GLOBALS['sqlCursor'] = 0;
 
 function mysql_query($sql) {
+    // updateStore() compara contra lo guardado antes de escribir. Acá lo guardado se
+    // declara siempre desactualizado (capacidad 0) para que el recálculo salga escrito y
+    // se pueda leer del UPDATE; que NO escriba cuando ya coincide lo cubre
+    // tools/check_world_sweep_cost.php.
+    if(stripos($sql, 'SELECT `wref`,`maxstore`,`maxcrop`') === 0) {
+        $GLOBALS['sqlCursor'] = 0;
+        return 'vdata';
+    }
     if(stripos($sql, 'SELECT * FROM `'.TB_PREFIX.'fdata`') === 0) {
         $GLOBALS['sqlCursor'] = 0;
         return 'fdata';
@@ -71,14 +79,19 @@ function mysql_query($sql) {
 }
 
 function mysql_fetch_assoc($result) {
-    if($result !== 'fdata') {
+    if($result !== 'fdata' && $result !== 'vdata') {
         return false;
     }
     $rows = $GLOBALS['sqlFdata'];
     if($GLOBALS['sqlCursor'] >= count($rows)) {
         return false;
     }
-    return $rows[$GLOBALS['sqlCursor']++];
+    $row = $rows[$GLOBALS['sqlCursor']++];
+    if($result === 'vdata') {
+        return array('wref' => $row['vref'], 'maxstore' => 0, 'maxcrop' => 0,
+            'wood' => 0, 'clay' => 0, 'iron' => 0, 'crop' => 0);
+    }
+    return $row;
 }
 
 function mysql_error() { return ''; }

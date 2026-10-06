@@ -2997,8 +2997,8 @@
 			 * página. Antes lo averiguaba trayéndose TODOS los informes del jugador, dos
 			 * veces (`getNotice()` y `getNotice3()`, que ya no existen), y recorriéndolos
 			 * en PHP: con 27.000 informes eran ~47 MB y la mayor parte del tiempo de cada
-			 * página. Las listas de berichte.php nunca salieron de ahí: paginan con su
-			 * propio SQL.
+			 * página. Las listas de berichte.php nunca salieron de ahí: tienen sus
+			 * propias consultas, countNoticeList() y getNoticeListPage().
 			 *
 			 * La condición es la misma de entonces —cualquier fila sin ver, archivada o
 			 * no— y la sirve el índice `unread_by_player (uid, viewed)`.
@@ -3011,6 +3011,66 @@
 				$q = "SELECT 1 FROM " . TB_PREFIX . "ndata WHERE uid = $uid AND viewed = 0 LIMIT 1";
 				$result = mysqli_query($this->connection,$q);
 				return $result && mysqli_num_rows($result) === 1;
+			}
+
+			/**
+			 * Las listas de berichte.php, una por pestaña: cuántos informes hay
+			 * (countNoticeList) y los de una página (getNoticeListPage).
+			 *
+			 * Las plantillas de Templates/Notice/ contaban trayéndose TODAS las filas de la
+			 * pestaña, con su `data` y ordenadas, sólo para llamar a mysql_num_rows(): con
+			 * 27.641 informes eran ~22.000 filas por visita para saber cuántas páginas
+			 * dibujar. Y la página en sí leía y ordenaba todos los informes del jugador
+			 * para quedarse con diez.
+			 *
+			 * La condición se arma acá, en un solo lugar, porque es lo que sirve el índice
+			 * `list_by_player (uid, archive, del, time, id)`: jugador, archivo y no borrado
+			 * por igualdad, y después el orden. Con eso la primera página lee las filas
+			 * que muestra. Cada plantilla escribía su copia y ya habían derivado — la
+			 * pestaña de ataques contaba también los borrados, así que su paginador
+			 * ofrecía páginas vacías al final.
+			 *
+			 * El desempate por `id` es el de getNoticeNeighbors(): los informes del mismo
+			 * segundo son comunes (una lista de granjeo cae junta) y sin él el orden entre
+			 * ellos lo decidía el ordenamiento de turno, distinto del que siguen las
+			 * flechas de anterior/siguiente al abrir uno.
+			 *
+			 * $extra es el filtro propio de la pestaña tal como lo escriben las plantillas,
+			 * empezando por `and`.
+			 */
+			private function noticeListCondition($uid, $archive, $extra) {
+				return "uid = ".(int)$uid." AND archive = ".((int)$archive === 1 ? 1 : 0)
+					." AND del = 0 ".$extra;
+			}
+
+			function countNoticeList($uid, $archive, $extra = '') {
+				$q = "SELECT COUNT(*) FROM " . TB_PREFIX . "ndata WHERE "
+					.$this->noticeListCondition($uid, $archive, $extra);
+				$result = mysqli_query($this->connection, $q);
+				if($result === false) {
+					travian_log_failed_query($q, mysqli_error($this->connection));
+					return 0;
+				}
+				$row = mysqli_fetch_row($result);
+				return $row ? (int)$row[0] : 0;
+			}
+
+			/**
+			 * Devuelve el resultado sin recorrer, para el `while(mysql_fetch_array())` de
+			 * las plantillas. La página se acota a 1: una pestaña vacía tiene 0 páginas, y
+			 * con la página en 0 el LIMIT salía negativo, que es un error de sintaxis.
+			 */
+			function getNoticeListPage($uid, $archive, $extra, $page, $perPage) {
+				$perPage = max(1, (int)$perPage);
+				$offset = (max(1, (int)$page) - 1) * $perPage;
+				$q = "SELECT * FROM " . TB_PREFIX . "ndata WHERE "
+					.$this->noticeListCondition($uid, $archive, $extra)
+					." ORDER BY time DESC, id DESC LIMIT $offset,$perPage";
+				$result = mysqli_query($this->connection, $q);
+				if($result === false) {
+					travian_log_failed_query($q, mysqli_error($this->connection));
+				}
+				return $result;
 			}
 
 			function getNotice2($id, $field) {
