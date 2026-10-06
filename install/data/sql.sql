@@ -1148,7 +1148,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%movement` (
   `iron` int(11) unsigned NOT NULL,
   `crop` int(11) unsigned NOT NULL,
   PRIMARY KEY (`moveid`),
-  KEY `evasion_return_window` (`to`,`sort_type`,`endtime`,`from`)
+  KEY `evasion_return_window` (`to`,`sort_type`,`endtime`,`from`),
+  KEY `pending_by_type` (`proc`,`sort_type`,`endtime`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 --
@@ -1174,7 +1175,8 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%ndata` (
   `viewed` tinyint(1) unsigned NOT NULL,
   `archive` tinyint(1) unsigned NOT NULL,
   `del` tinyint(1) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `unread_by_player` (`uid`,`viewed`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 --

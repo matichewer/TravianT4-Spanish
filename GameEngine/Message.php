@@ -4,19 +4,19 @@
 
 	public $unread, $nunread = false;
 	public $note;
-	public $inbox = array(), $inbox1 = array(), $sent = array(), $sent1 = array(), $reading = array(), $reply = array(), $archived = array(), $archived1 = array(), $noticearray = array(), $notice = array(), $readingNotice = array();
-	private $totalMessage, $totalNotice;
-	private $allNotice = array();
+	public $inbox = array(), $inbox1 = array(), $sent = array(), $sent1 = array(), $reading = array(), $reply = array(), $archived = array(), $archived1 = array(), $readingNotice = array();
+	private $totalMessage;
 
         	function __construct() {
+        		global $database, $session;
         		$this->getMessages();
-        		$this->getNotice();
         		if($this->totalMessage > 0) {
         			$this->unread = $this->checkUnread();
         		}
-        		if($this->totalNotice > 0) {
-        			$this->nunread = $this->checkNUnread();
-        		}
+        		// Esto corre en TODAS las páginas, así que de los informes sólo se pregunta
+        		// el sí/no. Cargarlos acá costaba la mayor parte de cada request y nadie
+        		// leía las listas: berichte.php pagina con su propio SQL.
+        		$this->nunread = $database->hasUnreadNotice(isset($session->uid) ? $session->uid : 0);
         		if(isset($_SESSION['reply'])) {
         			$this->reply = $_SESSION['reply'];
         			unset($_SESSION['reply']);
@@ -61,35 +61,6 @@
 
 			public function noticeType($get) {
 				global $session, $database;
-				if(isset($get['t'])) {
-					if($get['t'] == 1) {
-						$type = array(1, 2, 3, 4, 5, 6, 7, 25);
-					}
-					if($get['t'] == 2) {
-						$type = array(10, 11, 12, 13);
-					}
-					if($get['t'] == 3) {
-						$type = array(9, 15, 16, 17, 18, 19, 20, 21);
-					}
-					if($get['t'] == 4) {
-						$type = array(0, 18, 19, 20, 21);
-					}
-					if($get['t'] == 5) {
-						$type = 8;
-					}
-					if($get['t'] == 6) {
-						$type = array(0, 22, 23, 24);
-					}
-					if($get['t'] == 7) {
-						$type = array(10, 11, 12, 13, 26);
-					}
-					if($get['t'] == 8) {
-						$type = array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26);
-					}
-					if (!is_array($type)) { $type = array($type); }
-					$this->noticearray = $this->filter_by_value($database->getNotice($session->uid), "ntype", $type);
-					$this->notice = $this->filter_by_value($database->getNotice3($session->uid), "ntype", $type);
-				}
 				if(isset($get['id'])) {
 					$noticeId = (int)$get['id'];
 					$authorizedNotice = $database->getAuthorizedNotice(
@@ -184,44 +155,6 @@
         			$database->getMessage($id, 4);
         		}
         	}
-
-        	private function filter_by_value_except($array, $index, $value) {
-        		$newarray = array();
-        		if(is_array($array) && count($array) > 0) {
-        			foreach(array_keys($array) as $key) {
-        				$temp[$key] = $array[$key][$index];
-
-        				if($temp[$key] != $value) {
-        					array_push($newarray, $array[$key]);
-        					//$newarray[$key] = $array[$key];
-        				}
-        			}
-        		}
-        		return $newarray;
-        	}
-
-			private function filter_by_value($array, $index, $value) {
-				$newarray = array();
-				if(is_array($array) && count($array) > 0) {
-					foreach(array_keys($array) as $key) {
-						$temp[$key] = $array[$key][$index];
-
-						if(in_array($temp[$key], $value)) {
-							array_push($newarray, $array[$key]);
-							//$newarray[$key] = $array[$key];
-						}
-					}
-				}
-				return $newarray;
-			}
-
-			private function getNotice() {
-				global $database, $session;
-				$this->allNotice = $database->getNotice3($session->uid);
-				$this->noticearray = $this->filter_by_value_except($database->getNotice($session->uid), "ntype", 9);
-				$this->notice = $this->filter_by_value_except($this->allNotice, "ntype", 9);
-				$this->totalNotice = count($this->allNotice);
-			}
 
 			private function removeMessage($post) {
 				global $database,$session;
@@ -568,15 +501,6 @@
         	private function checkUnread() {
         		foreach($this->inbox as $message) {
         			if($message['viewed'] == 0) {
-        				return true;
-        			}
-        		}
-        		return false;
-        	}
-
-        	private function checkNUnread() {
-        		foreach($this->allNotice as $notice) {
-        			if($notice['viewed'] == 0) {
         				return true;
         			}
         		}

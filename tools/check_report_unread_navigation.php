@@ -9,7 +9,6 @@ $assert = function($condition, $message) {
 };
 
 $berichte = file_get_contents($root . '/berichte.php');
-$message = file_get_contents($root . '/GameEngine/Message.php');
 $database = file_get_contents($root . '/GameEngine/Database/db_MYSQLi.php');
 $tradeList = file_get_contents($root . '/Templates/Notice/t_2.tpl');
 $routeList = file_get_contents($root . '/Templates/Notice/t_7.tpl');
@@ -34,7 +33,9 @@ $assert(strpos($tradeList, '&amp;t=2') === false, 'A hardcoded Commerce detail l
 $assert(strpos($routeList, 'include("Templates/Notice/t_2.tpl")') !== false, 'The route list no longer exercises the shared-filter link path.');
 $assert(strpos($database, '8 => "archive = 0 AND (viewed = 0 OR id = $id)"') !== false, 'Unread detail neighbors cannot locate the report after it is marked read.');
 $assert(strpos($database, '7 => "archive = 0 AND (ntype = 26') !== false, 'Route detail navigation is not restricted to route reports.');
-$assert(strpos($message, "if(\$get['t'] == 7)") !== false, 'Message report filtering does not recognize Rutas.');
+// Message.php ya no figura acá: su filtro por pestaña armaba dos listas que no leía nadie
+// y se quitó (tools/check_page_load_queries.php). La pestaña Rutas se filtra en t_7.tpl y
+// en el alcance de vecinos de la capa de datos, que son las dos comprobaciones de arriba.
 
 $assert(strpos($navigation, "'adventure' => 'Aventura'") !== false, 'Adventure badges have no navigation label.');
 $assert(strpos($css, '.report-badge-trade .report-badge-background{background-color:#555;}') !== false, 'Trade badges are not dark gray.');
