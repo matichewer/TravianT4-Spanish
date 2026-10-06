@@ -430,7 +430,7 @@ check(preg_match('/completeVillageConquest.*?releaseVillageOasesSafely\(\$target
     'los suelta con releaseVillageOasesSafely()');
 
 // Y un oasis ocupado no repuebla animales; uno libre sí.
-check(preg_match('/FROM ".TB_PREFIX."odata where conqured = 0 and \$time - lastupdated2 > 86400/', $automationSource) === 1,
+check(preg_match('/FROM ".TB_PREFIX."odata WHERE conqured \+ 0 = 0 AND lastupdated2 < \$due/', $automationSource) === 1,
     'sólo repueblan animales los oasis libres');
 
 echo PHP_EOL;

@@ -6611,12 +6611,34 @@ class Automation {
         $database->syncClimberPopulation((int)$uid);
     }
 
+    // Cuántos oasis repone como mucho una pasada de regenerateOasisTroops().
+    const OASIS_REGEN_BATCH = 60;
+
+    /**
+     * Repone los animales de los oasis libres que llevan más de un día sin reponerse.
+     *
+     * De a tandas, los más atrasados primero. Antes entraban todos los vencidos en la
+     * misma pasada, y como cada uno queda con la hora en que se lo repuso, los ~4.000
+     * oasis del mapa vencían JUNTOS para siempre: una vez por día un request cualquiera
+     * pagaba los cuatro mil de un saque (unas 16.000 consultas) mientras tenía bloqueadas
+     * `units` y `odata` para todos los demás. Con el tope, ese día se reparte en una hora
+     * de pasadas y ninguna carga más que una tanda.
+     *
+     * El plazo se escribe como `lastupdated2 < ahora - 86400` y no como una resta sobre la
+     * columna: `lastupdated2` es UNSIGNED, y con un solo oasis fechado en el futuro la
+     * resta desbordaba y la consulta entera fallaba para todos.
+     *
+     * `conqured + 0 = 0` también es a propósito: le impide a MariaDB usar el índice
+     * `annexed_by_village`. Casi todos los oasis del mapa están libres, así que por ese
+     * índice los leería igual a todos pero de a uno, que en MyISAM es quince veces más
+     * lento que recorrer la tabla (medido: 0,5 ms contra 7).
+     */
     private function regenerateOasisTroops() {
         global $database;
-        $time = time();
-        $q = "SELECT * FROM ".TB_PREFIX."odata where conqured = 0 and $time - lastupdated2 > 86400";
-        $array = $database->query_return($q);
-        foreach ($array as $oasis) {
+        $due = time() - 86400;
+        $q = "SELECT wref FROM ".TB_PREFIX."odata WHERE conqured + 0 = 0 AND lastupdated2 < $due"
+            ." ORDER BY lastupdated2 ASC, wref ASC LIMIT ".self::OASIS_REGEN_BATCH;
+        foreach ($database->query_return($q) as $oasis) {
             $database->populateOasisUnitsLow2($oasis['wref']);
             $database->updateOasis2($oasis['wref']);
         }

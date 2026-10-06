@@ -29,6 +29,7 @@
  *   F. movement: las consultas de los barridos de Automation, sacadas del fuente, tampoco.
  *   G. Ninguna lectura de movement en el repo queda fuera de un índice.
  *   H. Los índices están en la base viva, en migrations.sql y en el instalador, iguales.
+ *   I. La Lista de granjas encuentra el "Último saqueo" de cada objetivo sin leer los demás.
  *
  * Corre sobre TABLAS TEMPORALES copiadas del esquema real, igual que
  * check_account_deletion.php: el mundo de verdad no se toca. Por eso mismo, si la base no
@@ -102,12 +103,23 @@ function scalar($sql) {
     $line = mysqli_fetch_row(q($sql));
     return $line ? $line[0] : null;
 }
+function rowsOf($sql) {
+    $rows = array();
+    $result = q($sql);
+    while($row = mysqli_fetch_assoc($result)) {
+        $rows[] = $row;
+    }
+    return $rows;
+}
 
 // Los índices que este checker defiende, con sus columnas EN ORDEN: un índice con las
 // mismas columnas en otro orden tiene el mismo nombre y no sirve para nada de esto.
 $EXPECTED_INDEXES = array(
     'movement' => array('pending_by_type' => array('proc', 'sort_type', 'endtime')),
-    'ndata'    => array('unread_by_player' => array('uid', 'viewed')),
+    'ndata'    => array(
+        'unread_by_player' => array('uid', 'viewed'),
+        'last_report_by_target' => array('uid', 'toWref', 'time'),
+    ),
 );
 
 $P = TB_PREFIX;
@@ -191,6 +203,7 @@ define('V_ENEMY', 990002);
 define('TILE_TARGET', 880001); // una casilla cualquiera a la que se ataca
 define('U_OWNER', 990500);
 define('REPORTS', 3000);       // informes del jugador cargado
+define('FARM_TARGETS', 100);   // objetivos de granjeo entre los que se reparten
 define('U_HEAVY', 990600);     // el jugador con miles de informes, todos leídos
 define('U_OTHER', 990601);
 
@@ -270,7 +283,8 @@ unset($moves, $attacks, $sends);
 $reports = array();
 $reportId = 0;
 for($i = 1; $i <= REPORTS; $i++) {
-    $reports[] = array(++$reportId, U_HEAVY, V_HOME, 0, "'informe'", 1 + ($i % 7), "'".str_repeat('d', 66)."'", $now - $i * 120, 1, 0, 0);
+    // Repartidos entre FARM_TARGETS objetivos: el objetivo k recibe los informes k, k+100...
+    $reports[] = array(++$reportId, U_HEAVY, TILE_TARGET + 1000 + ($i % FARM_TARGETS), 0, "'informe'", 1 + ($i % 7), "'".str_repeat('d', 66)."'", $now - $i * 120, 1, 0, 0);
 }
 mt_srand(20261005);
 $mixedPlayers = array();
@@ -637,6 +651,87 @@ foreach($EXPECTED_INDEXES as $table => $indexes) {
         check($inInstaller === $columns,
             'install/data/sql.sql lo crea igual en un mundo nuevo'.($inInstaller === null ? ' — no está' : ' ('.implode(', ', $inInstaller).')'));
     }
+}
+
+// =====================================================================================
+section('I. Lista de granjas: el último saqueo de cada objetivo');
+// =====================================================================================
+// La lista hace UNA de estas consultas por objetivo, así que lo que cueste una se
+// multiplica por cientos. Acá entró la única regresión de los índices de arriba: con
+// `unread_by_player` MariaDB dejó de recorrer la tabla y pasó a leer por el índice todos
+// los informes del jugador —mismas filas, pero de a una, 17 veces más lento— y la lista
+// quedó peor que antes de tener índices. Por eso se mide la consulta de la plantilla,
+// sacada del fuente, y no una copia.
+$farmlistSource = file_get_contents($root.'/Templates/goldClub/farmlist.tpl');
+$lastRaidSql = null;
+if(preg_match('/\$limits = "([^"]*)";/', $farmlistSource, $limitsMatch)
+    && strpos($farmlistSource, 'mysql_query("SELECT * FROM ".TB_PREFIX."ndata WHERE $limits AND toWref = ".$towref." AND uid = ".$session->uid." ORDER BY time DESC Limit 1")') !== false) {
+    $lastRaidSql = function($target, $uid) use ($limitsMatch) {
+        return "SELECT * FROM ".TB_PREFIX."ndata WHERE ".$limitsMatch[1]." AND toWref = ".$target." AND uid = ".$uid." ORDER BY time DESC Limit 1";
+    };
+}
+check($lastRaidSql !== null,
+    'se reconoce la consulta de "Último saqueo" de Templates/goldClub/farmlist.tpl; si cambió de forma hay que traerla acá de nuevo');
+if($lastRaidSql !== null) {
+    $lastRaid = function($target, $uid = U_HEAVY) use ($lastRaidSql) {
+        return measure(function() use ($lastRaidSql, $target, $uid) {
+            $row = mysqli_fetch_assoc(q($lastRaidSql($target, $uid)));
+            return $row ? $row : null;
+        });
+    };
+    // Lo que tiene que devolver, calculado sin la consulta: el más nuevo de ese objetivo
+    // que no sea un informe de defensa (ntype 4 a 7).
+    $expectedLast = function($target) use ($P) {
+        $best = null;
+        foreach(rowsOf("SELECT id, ntype, time FROM {$P}ndata WHERE uid = ".U_HEAVY." AND toWref = ".$target) as $row) {
+            if(in_array((int)$row['ntype'], array(4, 5, 6, 7), true)) {
+                continue;
+            }
+            if($best === null || (int)$row['time'] > (int)$best['time']) {
+                $best = $row;
+            }
+        }
+        return $best === null ? null : (int)$best['id'];
+    };
+    // Cada objetivo tiene ~30 informes; con el índice se llega al último leyendo un puñado.
+    $perTarget = 20;
+    $firstTarget = TILE_TARGET + 1000;
+    $one = $lastRaid($firstTarget + 7);
+    check($one['value'] !== null && (int)$one['value']['id'] === $expectedLast($firstTarget + 7),
+        'devuelve el informe más nuevo de ese objetivo');
+    check($one['reads'] <= $perTarget,
+        'leyendo '.$one['reads'].' fila(s), no los '.thousands(REPORTS).' informes del jugador (tope '.$perTarget.')');
+    $none = $lastRaid(TILE_TARGET + 5000);
+    check($none['value'] === null && $none['reads'] <= $perTarget,
+        'un objetivo recién agregado, sin informes, tampoco los recorre ('.$none['reads'].' lecturas)');
+
+    // La lista entera: cien objetivos.
+    $totalReads = 0;
+    $wrong = 0;
+    for($slot = 0; $slot < FARM_TARGETS; $slot++) {
+        $result = $lastRaid($firstTarget + $slot);
+        $totalReads += $result['reads'];
+        $wrong += ($result['value'] !== null ? (int)$result['value']['id'] : null) === $expectedLast($firstTarget + $slot) ? 0 : 1;
+    }
+    check($wrong === 0, 'los '.FARM_TARGETS.' objetivos de una lista muestran cada uno su último saqueo');
+    check($totalReads <= FARM_TARGETS * $perTarget,
+        'dibujar la lista lee '.thousands($totalReads).' filas en total (antes: '.thousands(FARM_TARGETS * REPORTS).', '.thousands(REPORTS).' por objetivo)');
+
+    // Un objetivo cuyos informes más nuevos son de defensa: se saltean hasta el primer ataque.
+    $defended = $firstTarget + 3;
+    $newest = rowsOf("SELECT id FROM {$P}ndata WHERE uid = ".U_HEAVY." AND toWref = $defended ORDER BY time DESC LIMIT 5");
+    $ids = array();
+    foreach($newest as $row) { $ids[] = (int)$row['id']; }
+    q("UPDATE {$P}ndata SET ntype = 4 WHERE id IN (".implode(',', $ids).")");
+    $skipping = $lastRaid($defended);
+    check($skipping['value'] !== null && (int)$skipping['value']['id'] === $expectedLast($defended)
+            && !in_array((int)$skipping['value']['id'], $ids, true),
+        'los informes de defensa no cuentan como "último saqueo": se muestra el ataque anterior');
+    check($skipping['reads'] <= $perTarget, 'y se llega a él sin recorrer el resto ('.$skipping['reads'].' lecturas)');
+
+    // Otro jugador con el mismo objetivo no ve los informes del primero.
+    $foreign = $lastRaid($firstTarget + 7, U_OTHER);
+    check($foreign['value'] === null, 'el último saqueo es el del jugador que mira, no el de otro');
 }
 
 // =====================================================================================

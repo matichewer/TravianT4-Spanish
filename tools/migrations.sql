@@ -459,3 +459,12 @@ ALTER TABLE s1_odata
 -- (`time DESC, id DESC`), asi que la primera pagina lee las filas que muestra.
 ALTER TABLE s1_ndata
   ADD INDEX IF NOT EXISTS list_by_player (uid, archive, del, time, id);
+
+-- 2026-10-06 - Ultimo informe por objetivo (Lista de granjas)
+-- La Lista de granjas busca el "Ultimo saqueo" de CADA objetivo con una consulta propia
+-- (uid + toWref, el mas nuevo). Sin un indice que empiece por algo que filtre, MariaDB
+-- elegia `unread_by_player` o `list_by_player` solo por la columna `uid` y leia todos los
+-- informes del jugador de a uno: 17 veces mas lento que recorrer la tabla, o sea que esos
+-- dos indices habian dejado la lista PEOR que antes de tenerlos.
+ALTER TABLE s1_ndata
+  ADD INDEX IF NOT EXISTS last_report_by_target (uid, toWref, time);

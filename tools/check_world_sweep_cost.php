@@ -15,6 +15,9 @@
  *     aunque no cambiara ninguna fila.
  *   - "Qué oasis tiene esta aldea" (`conqured = N`) no tenía índice y se pregunta varias
  *     veces por página.
+ *   - La reposición diaria de animales entraba entera en una sola pasada: como cada oasis
+ *     queda con la hora en que se lo repuso, los ~4.000 vencían juntos para siempre y una
+ *     vez por día un request cualquiera pagaba todos.
  *
  * Ninguno de los tres cambios puede alterar un solo número del juego, y eso es lo que se
  * comprueba acá además del costo:
@@ -25,6 +28,7 @@
  *   D. Limitar el barrido no cambia la producción de un oasis ni lo que se saquea.
  *   E. Los oasis de una aldea salen por índice.
  *   F. El índice está en la base viva, en migrations.sql y en el instalador, igual.
+ *   G. Los animales de los oasis se reponen de a tandas, no los 4.000 en un request.
  *
  * Corre sobre TABLAS TEMPORALES copiadas del esquema real: el mundo de verdad no se toca.
  */
@@ -137,7 +141,7 @@ while($row = mysqli_fetch_assoc($result)) {
 ksort($liveIndex);
 $liveIndex = array_values($liveIndex);
 
-foreach(array('vdata', 'fdata', 'odata') as $table) {
+foreach(array('vdata', 'fdata', 'odata', 'units', 'wdata') as $table) {
     $create = mysqli_fetch_assoc(q("SHOW CREATE TABLE {$P}{$table}"));
     q(preg_replace('/^CREATE TABLE/', 'CREATE TEMPORARY TABLE', $create['Create Table']));
     if((int)scalar("SELECT COUNT(*) FROM {$P}{$table}") !== 0) {
@@ -478,6 +482,20 @@ if(isset($loyaltyQuery[1])) {
     check($loyalty['reads'] <= $budget, 'sin recorrer el mapa: '.$loyalty['reads'].' lecturas (tope '.$budget.')');
 }
 
+// La reposición de animales es el caso inverso: casi todos los oasis están libres, así
+// que el índice no filtra nada y por él MariaDB los lee igual a todos, pero de a uno —
+// quince veces más lento en MyISAM que recorrer la tabla. La consulta lo esquiva con
+// `conqured + 0 = 0`; acá se comprueba sobre la que está escrita en el fuente.
+check(preg_match('/\$q = "(SELECT wref FROM )"\.TB_PREFIX\."(odata WHERE [^"]*lastupdated2 < )\$due"\s*\."( ORDER BY lastupdated2 ASC, wref ASC LIMIT )"\.self::OASIS_REGEN_BATCH;/', $automationSource, $regenQuery) === 1,
+    'se reconoce la consulta de regenerateOasisTroops()');
+if(!empty($regenQuery)) {
+    $regenSql = $regenQuery[1].TB_PREFIX.$regenQuery[2].($now - 86400).$regenQuery[3].Automation::OASIS_REGEN_BATCH;
+    $regenPlan = rowsOf("EXPLAIN ".$regenSql);
+    check($regenPlan[0]['key'] === null && $regenPlan[0]['type'] === 'ALL',
+        'la tanda de animales se busca recorriendo la tabla, no por el índice de anexados (plan: '
+            .$regenPlan[0]['type'].', índice '.var_export($regenPlan[0]['key'], true).')');
+}
+
 // =====================================================================================
 section('F. El índice existe en los tres lugares, con las mismas columnas');
 // =====================================================================================
@@ -500,6 +518,96 @@ if(preg_match('/CREATE TABLE IF NOT EXISTS `%PREFIX%odata` \((.*?)\) ENGINE=/s',
     $inInstaller = $normalize($m[1]);
 }
 check($inInstaller === $columns, 'install/data/sql.sql lo crea igual en un mundo nuevo'.($inInstaller === null ? ' — no está' : ''));
+
+// =====================================================================================
+section('G. Los animales de los oasis se reponen de a tandas');
+// =====================================================================================
+$batch = Automation::OASIS_REGEN_BATCH;
+define('DUE_OASES', 150);
+q("DELETE FROM {$P}odata");
+$now = time();
+$regenRows = array();
+$mapRows = array();
+$unitRows = array();
+$addRegenOasis = function($wref, $annexedTo, $lastRegen) use (&$regenRows, &$mapRows, &$unitRows, $now) {
+    // Tipos 4 a 9: su cadena empieza por una especie que siempre repone algo.
+    $regenRows[] = "($wref, 4, $annexedTo, 1000, 1000, 1000, 1000, 1000, 1000, $now, $lastRegen, 100, 3, 'oasis')";
+    $mapRows[] = "($wref, 0, ".(4 + $wref % 6).", ".($wref % 200 - 100).", ".(intdiv($wref, 200) % 200 - 100).", 0)";
+    $unitRows[] = "($wref)";
+};
+// 150 vencidos, cada uno un segundo más atrasado que el anterior: el orden es conocido.
+for($i = 1; $i <= DUE_OASES; $i++) {
+    $addRegenOasis(940000 + $i, 0, $now - 90000 - (DUE_OASES - $i));
+}
+$oldest = range(940001, 940000 + $batch);
+for($i = 1; $i <= 10; $i++) { $addRegenOasis(941000 + $i, 0, $now - 3600); }               // al día
+for($i = 1; $i <= 5; $i++)  { $addRegenOasis(942000 + $i, V_HOLDER, $now - 200000); }      // anexados
+$addRegenOasis(943001, 0, $now + 86400);                                                   // reloj adelantado
+q("INSERT INTO {$P}odata ($oasisColumns) VALUES ".implode(',', $regenRows));
+q("INSERT INTO {$P}wdata (id, fieldtype, oasistype, x, y, occupied) VALUES ".implode(',', $mapRows));
+q("INSERT INTO {$P}units (vref) VALUES ".implode(',', $unitRows));
+
+$animals = "u31+u32+u33+u34+u35+u36+u37+u38+u39+u40";
+$regenerated = function() use ($P, $now) {
+    $ids = array();
+    foreach(rowsOf("SELECT wref FROM {$P}odata WHERE wref BETWEEN 940001 AND 940999 AND lastupdated2 >= ".($now - 5)." ORDER BY wref") as $row) {
+        $ids[] = (int)$row['wref'];
+    }
+    return $ids;
+};
+$herd = function($where) use ($P, $animals) {
+    $out = array();
+    foreach(rowsOf("SELECT vref, $animals AS total FROM {$P}units WHERE $where ORDER BY vref") as $row) {
+        $out[(int)$row['vref']] = (int)$row['total'];
+    }
+    return $out;
+};
+
+// La forma vieja de escribir el plazo, con un solo oasis fechado en el futuro.
+$legacyDue = @mysqli_query($database->connection,
+    "SELECT * FROM {$P}odata where conqured = 0 and $now - lastupdated2 > 86400");
+check($legacyDue === false,
+    'restar sobre la columna UNSIGNED fallaba entera con un oasis de reloj adelantado: por eso el plazo se compara del otro lado');
+
+$firstPass = measure(function() use ($call) { $call('regenerateOasisTroops'); });
+check($regenerated() === $oldest,
+    'una pasada repone '.$batch.' oasis, y son los '.$batch.' más atrasados (repuso '.count($regenerated()).')');
+$afterFirst = $herd("vref BETWEEN 940001 AND 940999");
+$fed = 0;
+$untouched = 0;
+foreach($afterFirst as $wref => $total) {
+    if(in_array($wref, $oldest, true)) { $fed += $total > 0 ? 1 : 0; } else { $untouched += $total === 0 ? 1 : 0; }
+}
+check($fed === $batch, 'a los '.$batch.' les llegaron animales ('.$fed.')');
+check($untouched === DUE_OASES - $batch, 'y a los otros '.(DUE_OASES - $batch).' vencidos, todavía no ('.$untouched.')');
+check($firstPass['updates'] <= 2 * $batch,
+    'la pasada manda a lo sumo dos UPDATE por oasis de la tanda ('.$firstPass['updates'].' de '.(2 * $batch).'), no dos por oasis vencido ('.(2 * DUE_OASES).')');
+
+// Las pasadas siguientes terminan el resto, y nadie se repone dos veces.
+$call('regenerateOasisTroops');
+$afterSecond = $herd("vref BETWEEN 940001 AND 940999");
+$again = 0;
+foreach($oldest as $wref) {
+    $again += $afterSecond[$wref] === $afterFirst[$wref] ? 0 : 1;
+}
+check($again === 0, 'los de la primera tanda no vuelven a reponerse en la segunda');
+check(count($regenerated()) === 2 * $batch, 'la segunda pasada repone otros '.$batch.' ('.count($regenerated()).' en total)');
+$call('regenerateOasisTroops');
+check(count($regenerated()) === DUE_OASES, 'y a la tercera están los '.DUE_OASES.' ('.count($regenerated()).')');
+check(min($herd("vref BETWEEN 940001 AND 940999")) > 0, 'todos con animales');
+$idle = measure(function() use ($call) { $call('regenerateOasisTroops'); });
+check($idle['updates'] === 0, 'sin nada vencido, la pasada no escribe ('.$idle['updates'].' UPDATE)');
+
+// Lo que no vence: al día, anexados y el del reloj adelantado.
+check(array_sum($herd("vref BETWEEN 941001 AND 941999")) === 0
+        && (int)scalar("SELECT COUNT(*) FROM {$P}odata WHERE wref BETWEEN 941001 AND 941999 AND lastupdated2 = ".($now - 3600)) === 10,
+    'un oasis repuesto hace una hora no se toca');
+check(array_sum($herd("vref BETWEEN 942001 AND 942999")) === 0
+        && (int)scalar("SELECT COUNT(*) FROM {$P}odata WHERE wref BETWEEN 942001 AND 942999 AND lastupdated2 = ".($now - 200000)) === 5,
+    'un oasis anexado no repone animales por más atrasado que esté');
+check(array_sum($herd("vref = 943001")) === 0
+        && (int)scalar("SELECT lastupdated2 FROM {$P}odata WHERE wref = 943001") === $now + 86400,
+    'y el del reloj adelantado ni se toca ni rompe la pasada de los demás');
 
 // =====================================================================================
 echo PHP_EOL.(count($failures)

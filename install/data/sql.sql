@@ -1177,6 +1177,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%ndata` (
   `del` tinyint(1) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `unread_by_player` (`uid`,`viewed`),
+  KEY `last_report_by_target` (`uid`,`toWref`,`time`),
   KEY `list_by_player` (`uid`,`archive`,`del`,`time`,`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
