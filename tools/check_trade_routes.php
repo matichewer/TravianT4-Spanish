@@ -280,9 +280,9 @@ check(strpos($marketSource,'if($peakDemand > $this->merchant)') !== false,
 	'crear una ruta sigue exigiendo que las salidas de la aldea entren en el Mercado en su momento de mayor superposición');
 $merchantsTpl = file_get_contents(dirname(__DIR__).'/Templates/Build/17_merchants.tpl');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
-	&& strpos($merchantsTpl,'a la vez en rutas comerciales') !== false
-	&& strpos($merchantsTpl,'$market->routeDepartureHours()') !== false,
-	'el contador del Mercado explica cuantos mercaderes viajan a la vez en rutas y a que hora salen');
+	&& strpos($merchantsTpl,'mercaderes al mismo tiempo') !== false
+	&& strpos($merchantsTpl,'esa salida se omite') !== false,
+	'el contador del Mercado explica cuantos mercaderes usan las rutas al mismo tiempo y que una salida sin mercaderes se omite');
 check(strpos($marketSource,'public function routeDepartureHours()') !== false,
 	'existe el horario de salida de las rutas para poder mostrarlo junto al contador');
 check(strpos($tplSource,'$market->routeMerchants($firstRoute)') !== false,

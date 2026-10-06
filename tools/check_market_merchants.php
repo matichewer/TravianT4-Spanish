@@ -11,7 +11,7 @@
  *      bloqueaba enviar/vender/comprar, y mientras la ruta viajaba contaba los mismos
  *      mercaderes dos veces (la reserva más el envío real).
  *   B. Lo comprometido por rutas se sigue calculando, pero para mostrarlo junto al
- *      contador con su horario de salida.
+ *      contador, con el aviso de que una salida sin mercaderes se omite.
  *   C. Crear una ruta sigue exigiendo que todas las rutas de la aldea quepan juntas en el
  *      Mercado (si no, hay una que no podría salir nunca).
  *   D. Ningún rechazo es mudo: enviar, ofertar, aceptar, cancelar y el NPC dejan un
@@ -86,15 +86,18 @@ check(strpos($marketSource,'public function routeDepartureHours()') !== false
 check(strpos($dbSource,'start, start_minute, deliveries FROM " . TB_PREFIX . "route') !== false,
 	'getTradeRoutesFrom() trae también el horario completo (hora y minuto) de la ruta');
 check(strpos($merchantsTpl,'$market->routeReserved') !== false
-	&& strpos($merchantsTpl,'a la vez en rutas comerciales') !== false
-	&& strpos($merchantsTpl,'$market->routeDepartureHours()') !== false,
-	'el contador explica cuántos mercaderes viajan a la vez en rutas y a qué hora salen');
-// El texto dice "Hasta N ... a la vez", no "N salen todos los días": N es el pico de
-// mercaderes simultáneos, y sumarlos daba cifras mayores que el Mercado entero.
+	&& strpos($merchantsTpl,'mercaderes al mismo tiempo') !== false,
+	'el contador explica cuántos mercaderes usan las rutas al mismo tiempo');
+// El texto dice "hasta N ... al mismo tiempo", no "N salen todos los días": N es el pico
+// de mercaderes simultáneos, y sumarlos daba cifras mayores que el Mercado entero.
 check(strpos($merchantsTpl,'salen todos los días en') === false,
 	'el contador ya no presenta el número como una suma de todas las salidas del día');
-check(strpos($merchantsTpl,'Mientras no viajen podés usarlos') !== false,
-	'el texto aclara que esos mercaderes se pueden usar mientras tanto');
+// Lo que la pantalla anuncia tiene que ser lo que hace Automation::TradeRoute(): una
+// salida sin mercaderes no se ejecuta. El texto anterior decía "la ruta se reintenta
+// sola" cuando el reintento ya se había quitado del motor.
+check(strpos($merchantsTpl,'esa salida se omite') !== false
+	&& strpos($merchantsTpl,'se reintenta sola') === false,
+	'el texto avisa que una salida sin mercaderes se omite, y no promete un reintento que no existe');
 
 // ---------------------------------------------------------------------------
 section('C. Las rutas de una aldea tienen que caber juntas en el Mercado');
