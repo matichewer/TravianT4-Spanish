@@ -145,6 +145,18 @@ if(isset($_GET['id'])) {
 		include("Templates/Build/avaliable.tpl");
 	}
 	else {
+		// El envío de la Lista de granjas termina en una redirección, así que se resuelve
+		// ANTES de dibujar la pestaña. Estaba después del include de más abajo: la página
+		// pintaba la lista entera —una consulta de "último saqueo" por objetivo— para una
+		// respuesta que el navegador descarta, y la volvía a pintar al seguir la redirección.
+		if(isset($_GET['t']) && $_GET['t'] == 99 && $session->goldclub == 1
+			&& isset($_POST['action']) && $_POST['action'] == 'startRaid') {
+			if($session->access != BANNED){
+				include ("Templates/a2b/startRaid.tpl");
+			}
+			header("Location: banned.php");
+			exit;
+		}
 		// Una pestaña inexistente (?s=5, ?t=1 en la residencia, un enlace viejo) dejaba
 		// la página sin contenido y con el warning del include a la vista. Si la
 		// plantilla de la pestaña no existe se cae a la vista principal del edificio.
@@ -181,14 +193,6 @@ if(isset($_GET['id'])) {
 				$database->delSlotFarm((int)$_GET['eid'], $session->uid);
 				header("Location: build.php?id=39&t=99");
 				exit;
-			}
-			if(isset($_POST['action']) && $_POST['action'] == 'startRaid'){
-			if($session->access != BANNED){
-			include ("Templates/a2b/startRaid.tpl");
-			}else{
-			header("Location: banned.php");
-			exit;
-			}
 			}
 		}
 		if(isset($_GET['t']) && $_GET['t'] == 100 && $session->goldclub == 1) {

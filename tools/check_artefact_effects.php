@@ -232,7 +232,8 @@ $sources = array(
     'Village'     => file_get_contents($root.'/GameEngine/Village.php'),
     'Units'       => file_get_contents($root.'/GameEngine/Units.php'),
     'GeneratorX'  => file_get_contents($root.'/GameEngine/GeneratorX.php'),
-    'startRaid'   => file_get_contents($root.'/Templates/a2b/startRaid.tpl'),
+    // El envío de la lista de granjeo vive en el motor; la plantilla sólo lo llama.
+    'startRaid'   => file_get_contents($root.'/GameEngine/FarmList.php'),
     'incoming'    => file_get_contents($root.'/Templates/Build/16_incomming.tpl')
 );
 $all = implode("\n", $sources);
