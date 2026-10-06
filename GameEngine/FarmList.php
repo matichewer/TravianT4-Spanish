@@ -114,9 +114,7 @@ function farmListSendRaids($database, $generator, $uid, $tribe, $lid, array $pos
             if($reference > 0) {
                 $database->removeAttack($reference);
             }
-            foreach($deductions as $column => $amount) {
-                $database->modifyUnit($origin, substr($column, 1), $amount, 1);
-            }
+            $database->refundUnits($origin, $deductions);
             $result['skipped']++;
             continue;
         }

@@ -4355,6 +4355,30 @@
 				return $result && mysqli_affected_rows($this->connection) === 1;
 			}
 
+			/**
+			 * Devuelve lo que descontó deductUnitsIfAvailable(), con sus mismas claves
+			 * (nombres de columna: `u11`, `hero`).
+			 *
+			 * Existe para que quien descuenta con una no tenga que devolver con
+			 * modifyUnit(), que espera el NÚMERO de la unidad y le antepone la `u`: el
+			 * envío normal le pasaba `u11`, armaba `uu11`, el UPDATE fallaba en silencio
+			 * y el jugador perdía las tropas de un ataque que nunca salió.
+			 */
+			function refundUnits($vid, $units) {
+				$vid = (int)$vid;
+				$sets = array();
+				foreach($units as $column => $amount) {
+					if(!preg_match('/^(u[1-5]?[0-9]|hero)$/',(string)$column)) return false;
+					$amount = max(0,(int)$amount);
+					if($amount === 0) continue;
+					$sets[] = "`$column` = `$column` + $amount";
+				}
+				if(empty($sets)) return true;
+				$q = "UPDATE ".TB_PREFIX."units SET ".implode(',',$sets)." WHERE vref = $vid";
+				$result = mysqli_query($this->connection,$q);
+				return $result && mysqli_affected_rows($this->connection) === 1;
+			}
+
 			function removeAttack($id) {
 				return mysqli_query($this->connection,"DELETE FROM ".TB_PREFIX."attacks WHERE id = ".(int)$id." LIMIT 1");
 			}

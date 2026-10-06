@@ -627,9 +627,10 @@ class Units {
 			&& $database->addMovement(3,$village->wid,$data['to_vid'],$reference,$sentAt,($time+$sentAt));
 		if(!$movementAdded) {
 			if($reference > 0) $database->removeAttack($reference);
-			foreach($unitDeductions as $column => $amount) {
-				if($amount > 0) $database->modifyUnit($village->wid,$column,$amount,1);
-			}
+			// Con la pareja de deductUnitsIfAvailable() y sus mismas claves. Acá se
+			// devolvía con modifyUnit(), que espera el número de la unidad y no el nombre
+			// de la columna: armaba `uu11`, fallaba, y las tropas no volvían.
+			$database->refundUnits($village->wid,$unitDeductions);
 			$form->addError("error","No se pudo crear el movimiento. Las unidades fueron devueltas.");
 			$_SESSION['errorarray'] = $form->getErrors();
 			header("Location: a2b.php");

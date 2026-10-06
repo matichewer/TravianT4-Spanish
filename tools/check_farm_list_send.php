@@ -420,8 +420,9 @@ check($dispatch !== false && $render !== false && $dispatch < $render,
     'y antes de incluir la plantilla de la pestaña, que es la que dibuja la lista objetivo por objetivo');
 check(preg_match('/\$_GET\[\'t\'\] == 99 && \$session->goldclub == 1\s*&& isset\(\$_POST\[\'action\'\]\) && \$_POST\[\'action\'\] == \'startRaid\'\) \{\s*if\(\$session->access != BANNED\)\{/', $build) === 1,
     'con las mismas condiciones de antes: pestaña 99, Club de Oro y cuenta no baneada');
-check(strpos($engine, 'deductUnitsIfAvailable(') !== false && strpos($engine, 'addA2b') === false && substr_count($engine, 'modifyUnit(') === 1,
-    'el motor descuenta con deductUnitsIfAvailable(), no pasa por a2b y sólo usa modifyUnit() para devolver');
+check(strpos($engine, 'deductUnitsIfAvailable(') !== false && strpos($engine, 'addA2b') === false
+        && strpos($engine, 'refundUnits(') !== false && strpos($engine, 'modifyUnit(') === false,
+    'el motor descuenta con deductUnitsIfAvailable(), no pasa por a2b y devuelve con refundUnits()');
 check(strpos($engine, 'artefactTroopSpeedFactor(') !== false,
     'y la velocidad sigue saliendo de artefactTroopSpeedFactor(), como en el punto de reunión');
 
