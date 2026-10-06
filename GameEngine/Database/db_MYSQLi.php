@@ -2990,10 +2990,27 @@
         		return mysqli_query($this->connection,$q) or die(mysqli_error());
         	}
 
-			function getNotice($uid) {
-				$q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid and del = 0 ORDER BY time DESC";
+			/**
+			 * ¿Tiene el jugador algún informe sin leer?
+			 *
+			 * Es lo único que Message necesita saber de los informes en cada carga de
+			 * página. Antes lo averiguaba trayéndose TODOS los informes del jugador, dos
+			 * veces (`getNotice()` y `getNotice3()`, que ya no existen), y recorriéndolos
+			 * en PHP: con 27.000 informes eran ~47 MB y la mayor parte del tiempo de cada
+			 * página. Las listas de berichte.php nunca salieron de ahí: paginan con su
+			 * propio SQL.
+			 *
+			 * La condición es la misma de entonces —cualquier fila sin ver, archivada o
+			 * no— y la sirve el índice `unread_by_player (uid, viewed)`.
+			 */
+			function hasUnreadNotice($uid) {
+				$uid = (int)$uid;
+				if($uid <= 0) {
+					return false;
+				}
+				$q = "SELECT 1 FROM " . TB_PREFIX . "ndata WHERE uid = $uid AND viewed = 0 LIMIT 1";
 				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
+				return $result && mysqli_num_rows($result) === 1;
 			}
 
 			function getNotice2($id, $field) {
@@ -3009,12 +3026,6 @@
 				$result = mysqli_query($this->connection,$q);
 				$dbarray = $result ? mysqli_fetch_assoc($result) : false;
 				return $dbarray ? $dbarray[$field] : false;
-			}
-
-			function getNotice3($uid) {
-				$q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid ORDER BY time DESC";
-				$result = mysqli_query($this->connection,$q);
-				return $this->mysqli_fetch_all($result);
 			}
 
 			function getNotice4($id) {

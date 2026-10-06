@@ -428,3 +428,18 @@ ALTER TABLE s1_config
   ADD COLUMN IF NOT EXISTS artefact_release_at int(11) unsigned NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS artefact_release_done int(11) unsigned NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS artefact_release_config text DEFAULT NULL;
+
+-- 2026-10-05 - Indices para lo que se consulta en CADA carga de pagina
+-- Los movimientos ya procesados (proc = 1) no se borran nunca, asi que la tabla solo
+-- crece: 61.000 filas en el mundo vivo, de las que importan las pocas decenas que estan
+-- en camino. El unico indice que habia empieza por `to`, y casi todo lo que el motor
+-- pregunta ("que llego", "que sale de esta aldea") filtra por proc = 0 y sort_type, o sea
+-- que recorria la tabla entera unas 19 veces por pagina: 33 ms cada una en la Pi.
+ALTER TABLE s1_movement
+  ADD INDEX IF NOT EXISTS pending_by_type (proc, sort_type, endtime);
+
+-- El "hay informes sin leer" de Message y el contador del menu corren en todas las
+-- paginas y filtran por jugador y `viewed`; sin indice recorrian todos los informes del
+-- mundo cada vez.
+ALTER TABLE s1_ndata
+  ADD INDEX IF NOT EXISTS unread_by_player (uid, viewed);
