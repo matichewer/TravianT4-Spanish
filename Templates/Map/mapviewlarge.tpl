@@ -324,6 +324,9 @@ body.map{background:#c8dd9b;overflow-y:hidden;}
 #mapContainer.lowRes #mapData a,#mapContainer.lowRes #mapData img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 #mapContainer.lowRes .ruler.y .coordinate{box-sizing:border-box;height:<?php echo $TILE; ?>px;}
 .dialog.mapTileDetailsDialog{color:#333;font-size:13px;}
+/* Include the right column in the dialog height and keep long details reachable. */
+.dialog.mapTileDetailsDialog #tileDetails div#map_details{position:static;float:right;width:217px;}
+.dialog.mapTileDetailsDialog .content{max-height:70vh;overflow-y:auto;overflow-x:hidden;}
 .dialog.mapTileDetailsDialog .dialog-container{background:#fff;border:1px solid #9a9a9a;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.45);}
 .dialog.mapTileDetailsDialog .dialog-tl,.dialog.mapTileDetailsDialog .dialog-tc,.dialog.mapTileDetailsDialog .dialog-tr,
 .dialog.mapTileDetailsDialog .dialog-ml,.dialog.mapTileDetailsDialog .dialog-mc,.dialog.mapTileDetailsDialog .dialog-mr,
