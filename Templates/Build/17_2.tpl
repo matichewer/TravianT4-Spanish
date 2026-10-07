@@ -35,7 +35,7 @@ $offerDraft = array_merge(array(
 <tr> 
 	<th>
 Ofrezco</th> 
-	<td class="val"><input class="text" tabindex="1" name="m1" value="<?php echo (int)$offerDraft['gamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m1');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
+	<td class="val" style="white-space: nowrap;"><input class="text" tabindex="1" name="m1" value="<?php echo (int)$offerDraft['gamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m1');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
 	<td class="res"> 
 		<select name="rid1" tabindex="2" class="dropdown"> 
 			<option value="1"<?php if((int)$offerDraft['gtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
@@ -48,7 +48,7 @@ Ofrezco</th>
 </tr> 
 <tr> 
 	<th>Busco</th> 
-	<td class="val"><input class="text" tabindex="3" name="m2" value="<?php echo (int)$offerDraft['wamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m2');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
+	<td class="val" style="white-space: nowrap;"><input class="text" tabindex="3" name="m2" value="<?php echo (int)$offerDraft['wamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m2');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
 	<td class="res"> 
 		<select name="rid2" tabindex="4" class="dropdown"> 
 			<option value="1"<?php if((int)$offerDraft['wtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
