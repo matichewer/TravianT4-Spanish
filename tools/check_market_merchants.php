@@ -140,8 +140,8 @@ foreach(array('sendResource','addOffer','acceptOffer','tradeResource') as $metho
 }
 check(strpos($marketSource,'if(!$this->cancelOffer($get[\'del\'])) {') !== false,
 	'cancelar una oferta que ya no se puede cancelar también avisa');
-check(strpos($marketSource,"unset(\$_SESSION['marketOfferDraft'][\$village->wid]);") !== false,
-	'una oferta que sí entró no deja el borrador cargado en el formulario');
+check(strpos($marketSource,"unset(\$_SESSION['marketOfferDraft'][\$village->wid]);") === false,
+	'una oferta publicada conserva el borrador para repetir recursos y cantidades');
 
 foreach(array('17.tpl'=>$mainTpl,'17_1.tpl'=>$buyTpl,'17_2.tpl'=>$sellTpl,'17_3.tpl'=>$npcTpl) as $name => $tpl) {
 	check(strpos($tpl,'include("17_merchants.tpl")') !== false,

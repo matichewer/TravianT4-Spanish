@@ -35,7 +35,7 @@ $offerDraft = array_merge(array(
 <tr> 
 	<th>
 Ofrezco</th> 
-	<td class="val"><input class="text" tabindex="1" name="m1" value="<?php echo (int)$offerDraft['gamt'] ?: ''; ?>" maxlength="6" /></td>
+	<td class="val"><input class="text" tabindex="1" name="m1" value="<?php echo (int)$offerDraft['gamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m1');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
 	<td class="res"> 
 		<select name="rid1" tabindex="2" class="dropdown"> 
 			<option value="1"<?php if((int)$offerDraft['gtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
@@ -48,7 +48,7 @@ Ofrezco</th>
 </tr> 
 <tr> 
 	<th>Busco</th> 
-	<td class="val"><input class="text" tabindex="3" name="m2" value="<?php echo (int)$offerDraft['wamt'] ?: ''; ?>" maxlength="6" /></td>
+	<td class="val"><input class="text" tabindex="3" name="m2" value="<?php echo (int)$offerDraft['wamt'] ?: ''; ?>" maxlength="6" /> / <a href="#" onclick="return marketOfferAddCapacity('m2');" title="Sumar la capacidad de un mercader"><?php echo (int)$market->maxcarry; ?></a></td>
 	<td class="res"> 
 		<select name="rid2" tabindex="4" class="dropdown"> 
 			<option value="1"<?php if((int)$offerDraft['wtype'] === 1) echo ' selected="selected"'; ?>>Madera</option>
@@ -66,6 +66,15 @@ Ofrezco</th>
     </td>
 </tr> 
 </table>
+<script type="text/javascript">
+function marketOfferAddCapacity(fieldName)
+{
+	var input = document.forms['snd'].elements[fieldName];
+	var amount = parseInt(input.value, 10);
+	input.value = Math.min(999999, Math.max(0, isNaN(amount) ? 0 : amount) + <?php echo (int)$market->maxcarry; ?>);
+	return false;
+}
+</script>
 <button type="submit" value="ok" name="s1" id="btn_ok" tabindex="8"><div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Aceptar</div></div></button></form><br />
 <?php if(count($market->onmarket) > 0) { ?>
 <h4 class="spacer">Ofertas</h4>

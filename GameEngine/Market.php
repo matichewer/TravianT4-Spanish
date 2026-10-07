@@ -624,8 +624,7 @@ class Market {
             $database->modifyResource($village->wid,$resource[1],$resource[2],$resource[3],$resource[4],1);
             $this->marketFailure('failed',$id,$tab);
         }
-        // La oferta entro: el formulario vuelve vacio en vez de repetir el borrador.
-        unset($_SESSION['marketOfferDraft'][$village->wid]);
+        // Conservar la ultima oferta de esta aldea para facilitar publicar otra igual.
         $this->redirectToMarket($id,$tab);
     }
      
