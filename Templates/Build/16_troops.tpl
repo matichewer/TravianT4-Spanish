@@ -24,15 +24,15 @@
                 else {
                 echo "<td>";
                 }
-                echo $village->unitarray['u'.$i]."</td>";
+                echo number_format($village->unitarray['u'.$i], 0, ',', '.')."</td>";
             }
             if($village->unitarray['hero'] == 0) {
                 	echo "<td class=\"none\">";
                 }else {
                 	echo "<td>";
                 }
-                echo $village->unitarray['hero']."</td>";
+                echo number_format($village->unitarray['hero'], 0, ',', '.')."</td>";
             ?>
            </tr></tbody>
             <tbody class="infos"><tr><th>Consumo de cereal</th>
-            <td colspan="11"><div class="sup"><?php echo $technology->getUpkeep($village->unitarray,$session->tribe); ?><img class="r4" src="img/x.gif" title="" alt="Cereal" />por hora</div></td></tr>
+            <td colspan="11"><div class="sup"><?php echo number_format($technology->getUpkeep($village->unitarray,$session->tribe), 0, ',', '.'); ?><img class="r4" src="img/x.gif" title="" alt="Cereal" />por hora</div></td></tr>

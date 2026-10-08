@@ -68,7 +68,7 @@ if($isNature){
 	// Son tus propios animales capturados: no hay nada que ocultar.
 	for($t=1;$t<=11;$t++){
 		if($units[$y]['t'.$t]){
-			echo "<td>".$units[$y]['t'.$t]."</td>";
+			echo "<td>".number_format($units[$y]['t'.$t], 0, ',', '.')."</td>";
 		}else{
 			echo "<td class=\"none\">0</td>";
 		}
@@ -171,7 +171,7 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
                 }else {
                 echo "<td>";
                 }
-                echo $units[$y]['t'.$i]."</td>";
+                echo number_format($units[$y]['t'.$i], 0, ',', '.')."</td>";
             }
             if($units[$y]['t11']!=0){
             	if($units[$y]['t11'] == 0) {
@@ -179,7 +179,7 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
                 }else {
                 	echo "<td>";
                 }
-                echo $units[$y]['t11']."</td>";
+                echo number_format($units[$y]['t11'], 0, ',', '.')."</td>";
             }
             ?>
            </tr>
@@ -194,29 +194,29 @@ $destinationName = htmlspecialchars((string)$destination['name'], ENT_QUOTES, 'U
     <tr><th>Botín</th>
     <td colspan="<?php echo $colspan; ?>">
     <div class="res">
-    <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo $dataarray['0']; ?></span>
-    <span class="resource" title="Barro"><img class="r2" src="img/x.gif" alt="Barro"><?php echo $dataarray['1']; ?></span>
-    <span class="resource" title="Hierro"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo $dataarray['2']; ?></span>
-    <span class="resource" title="Cereal"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo $dataarray['3']; ?></span>
+    <span class="resource" title="Madera"><img class="r1" src="img/x.gif" alt="Madera"><?php echo number_format($dataarray['0'], 0, ',', '.'); ?></span>
+    <span class="resource" title="Barro"><img class="r2" src="img/x.gif" alt="Barro"><?php echo number_format($dataarray['1'], 0, ',', '.'); ?></span>
+    <span class="resource" title="Hierro"><img class="r3" src="img/x.gif" alt="Hierro"><?php echo number_format($dataarray['2'], 0, ',', '.'); ?></span>
+    <span class="resource" title="Cereal"><img class="r4" src="img/x.gif" alt="Cereal"><?php echo number_format($dataarray['3'], 0, ',', '.'); ?></span>
     </div>
     <div class="carry">
     <?php
     if ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3] == 0) {
     echo"<img title=\"";
-    echo ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3])."/".$dataarray[4];
+    echo number_format($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3], 0, ',', '.')."/".number_format($dataarray[4], 0, ',', '.');
     echo"\" src=\"img/x.gif\" class=\"carry empty\">";
 	} elseif ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3] != $dataarray[4]) {
     echo "<img title=\"";
-    echo ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3])."/".$dataarray[4];
+    echo number_format($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3], 0, ',', '.')."/".number_format($dataarray[4], 0, ',', '.');
     echo"\" src=\"img/x.gif\" class=\"carry half\">";
     } else {
     echo"<img title=\"";
-    echo ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3])."/".$dataarray[4];
+    echo number_format($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3], 0, ',', '.')."/".number_format($dataarray[4], 0, ',', '.');
     echo"\" src=\"img/x.gif\" class=\"carry full\">";
     }
 
     ?>
-    <?php echo ($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3])."/".$dataarray[4]; ?>
+    <?php echo number_format($dataarray[0]+$dataarray[1]+$dataarray[2]+$dataarray[3], 0, ',', '.')."/".number_format($dataarray[4], 0, ',', '.'); ?>
     </td>
     </tr>
     <?php } ?>

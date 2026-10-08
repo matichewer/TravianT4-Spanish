@@ -70,7 +70,7 @@ if($units[$y]['attack_type'] == 2){ $style = ""; }else{ $style = "outRaid"; }
                 else {
                 echo "<td>";
                 }
-                echo $units[$y]['t'.$i]."</td>";
+                echo number_format($units[$y]['t'.$i], 0, ',', '.')."</td>";
             }
             
             ?>

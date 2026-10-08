@@ -93,7 +93,7 @@ if(!empty($captivesHere) || !empty($ownCaptured)) {
 	echo '<table class="troop_details" cellpadding="1" cellspacing="1"><thead><tr><th>Situación</th><th>Aldea</th><th>Tropas</th><th>Acción</th></tr></thead><tbody>';
 	foreach($captivesHere as $prisoner) {
 		$originName = $prisonerVillageLink($prisoner['from']);
-		echo '<tr><td>Prisioneros en tus trampas</td><td>'.$originName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
+		echo '<tr><td>Prisioneros en tus trampas</td><td>'.$originName.'</td><td>'.number_format($prisonerTotal($prisoner), 0, ',', '.').'</td><td>';
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="release"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
 		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
@@ -101,7 +101,7 @@ if(!empty($captivesHere) || !empty($ownCaptured)) {
 	}
 	foreach($ownCaptured as $prisoner) {
 		$trapName = $prisonerVillageLink($prisoner['wref']);
-		echo '<tr><td>Tropas tuyas prisioneras</td><td>'.$trapName.'</td><td>'.$prisonerTotal($prisoner).'</td><td>';
+		echo '<tr><td>Tropas tuyas prisioneras</td><td>'.$trapName.'</td><td>'.number_format($prisonerTotal($prisoner), 0, ',', '.').'</td><td>';
 		echo '<form method="post" action="build.php?gid=16"><input type="hidden" name="action" value="managePrisoners">';
 		echo '<input type="hidden" name="operation" value="disband"><input type="hidden" name="prisoner_id" value="'.(int)$prisoner['id'].'">';
 		echo '<input type="hidden" name="c" value="'.htmlspecialchars($session->mchecker,ENT_QUOTES,'UTF-8').'">';
@@ -189,16 +189,16 @@ if($units_walking >= 1){
 					else {
 						echo "<td>";
 					}
-					echo $enforce['u'.$i]."</td>";
+					echo number_format($enforce['u'.$i], 0, ',', '.')."</td>";
 				}
                 if($enforce['hero'] > 0){
                 	if($enforce['hero'] == 0) { echo "<td class=\"none\">"; }else { echo "<td>"; }
-					echo $enforce['hero']."</td>";
+					echo number_format($enforce['hero'], 0, ',', '.')."</td>";
                 }
 				echo "</tr></tbody>
 				<tbody class=\"infos\"><tr><th>Consumo de cereal</th>";
                 if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
-                echo "<div class='sup'>".$technology->getUpkeep($enforce,$tribe)."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
+                echo "<div class='sup'>".number_format($technology->getUpkeep($enforce,$tribe), 0, ',', '.')."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
             
 				echo "</tbody></table>";
 			}else{
@@ -221,12 +221,12 @@ if($units_walking >= 1){
 					else {
 						echo "<td>";
 					}
-					echo $enforce['u'.$i]."</td>";
+					echo number_format($enforce['u'.$i], 0, ',', '.')."</td>";
 				}
 				echo "</tr></tbody>
 				<tbody class=\"infos\"><tr><th>Consumo de cereal</th>";
                 echo "<td colspan=\"10\">";
-                echo "<div class='sup'>".$technology->getUpkeep($enforce,4)."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
+                echo "<div class='sup'>".number_format($technology->getUpkeep($enforce,4), 0, ',', '.')."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />por hora </div><div class='sback'><a href='a2b.php?w=".$enforce['id']."'>Devolver</a></div></td></tr>";
             
 				echo "</tbody></table>";
 			}
@@ -276,16 +276,16 @@ if($units_walking >= 1){
                   	} else {
 						echo "<td>";
                   	}
-                    echo $enforce['u'.$i]."</td>";
+                    echo number_format($enforce['u'.$i], 0, ',', '.')."</td>";
                   }
                   if($enforce['hero'] > 0){
                 	if($enforce['hero'] == 0) { echo "<td class=\"none\">"; }else { echo "<td>"; }
-					echo $enforce['hero']."</td>";
+					echo number_format($enforce['hero'], 0, ',', '.')."</td>";
                   }
                   echo "</tr></tbody>
             <tbody class=\"infos\"><tr><th>Consumo de cereal</th>";
             if($enforce['hero'] > 0){ echo "<td colspan=\"11\">"; }else{ echo "<td colspan=\"10\">"; }
-            echo "<div class='sup'>".$technology->getUpkeep($enforce,$tribe)."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />Por hora</div><div class='sback'><a href='a2b.php?r=".$enforce['id']."'>Devolver</a></div></td></tr>";
+            echo "<div class='sup'>".number_format($technology->getUpkeep($enforce,$tribe), 0, ',', '.')."<img class=\"r4\" src=\"img/x.gif\" title=\"Cereal\" alt=\"Cereal\" />Por hora</div><div class='sback'><a href='a2b.php?r=".$enforce['id']."'>Devolver</a></div></td></tr>";
             
                   echo "</tbody></table>";
             }
