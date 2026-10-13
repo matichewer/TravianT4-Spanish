@@ -60,15 +60,17 @@ echo "<div class=\"clear\"></div></div><span class=\"value\"></span>
                         <input type=\"text\" class=\"text\" name=\"t".$i."\" value=\"0\" maxlength=\"4\">
                         <span class=\"value\"> / </span>
 						<a href=\"#\" onClick=\"document.snd.t".$i.".value=".$maxunit."; return false;\">".$maxunit."</a>
+					</div></div>
 					<div class=\"clear\">&nbsp;</div><BR />";
 			}
 		} ?>
 <div class="clear">&nbsp;</div>
-    <div class="clear"></div></div>
+    <div class="clear"></div>
 <button type="submit" value="ok" name="s1" id="btn_train" value="ok" class="startTraining">
                     <div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">Entrenamiento</div></div>
                     </button>
-</form></div></div>
+</div>
+</form>
 <?php
 	} else {
 		echo '<div class="c">Para crear una nueva aldea u ocupar una se requiere residencia o palacio a nivel 10/20.</div>';
