@@ -32,7 +32,7 @@ $marketX = isset($_POST['x']) && is_scalar($_POST['x']) ? (string)$_POST['x'] : 
 $marketY = isset($_POST['y']) && is_scalar($_POST['y']) ? (string)$_POST['y'] : '';
 $marketVillageName = isset($_POST['dname']) && is_scalar($_POST['dname']) ? (string)$_POST['dname'] : '';
 $marketSendCount = isset($_POST['send3']) && is_scalar($_POST['send3']) && ctype_digit((string)$_POST['send3']) ? (int)$_POST['send3'] : 1;
-if(!$session->goldclub || $marketSendCount < 1 || $marketSendCount > 3) {
+if(!$session->goldclub || !in_array($marketSendCount,Market::SEND_COUNTS,true)) {
 	$marketSendCount = 1;
 }
 $marketCoordinatesValid = preg_match('/^-?\d+$/',$marketX) && preg_match('/^-?\d+$/',$marketY)
@@ -258,7 +258,11 @@ $coor['y'] = $marketY;
 								</div>
 				</div>
 <?php if($session->goldclub == 1){?>
-<p><select name="send3"><option value="1"<?php echo $marketSendCount === 1 ? ' selected="selected"' : ''; ?>>1x</option><option value="2"<?php echo $marketSendCount === 2 ? ' selected="selected"' : ''; ?>>2x</option><option value="3"<?php echo $marketSendCount === 3 ? ' selected="selected"' : ''; ?>>3x</option></select> envíos</p>
+<p><select name="send3">
+<?php foreach(Market::SEND_COUNTS as $sendCountOption) { ?>
+<option value="<?php echo $sendCountOption; ?>"<?php echo $marketSendCount === $sendCountOption ? ' selected="selected"' : ''; ?>><?php echo $sendCountOption; ?>x</option>
+<?php } ?>
+</select> envíos</p>
 <?php
 }else{
 ?>

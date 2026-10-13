@@ -46,9 +46,15 @@ checkMarketUi(strpos($template,"&& !isset(\$_POST['cancel'])") !== false,
 	'Editar evita volver a mostrar la pantalla de confirmación');
 checkMarketUi(strpos($marketEngine,"if(isset(\$post['cancel']))") !== false,
 	'Editar no procesa el envío ni consume el token de seguridad');
-checkMarketUi(strpos($template,"\$marketSendCount === 2 ? ' selected=\"selected\"'") !== false
-	&& strpos($template,"\$marketSendCount === 3 ? ' selected=\"selected\"'") !== false,
-	'Editar conserva la cantidad de envíos seleccionada');
+require_once dirname(__DIR__).'/GameEngine/Market.php';
+checkMarketUi(Market::SEND_COUNTS === array(1,2,3,5,10,20,50,100),
+    'el mercado ofrece x1, x2, x3, x5, x10, x20, x50 y x100');
+checkMarketUi(strpos($template,'foreach(Market::SEND_COUNTS as $sendCountOption)') !== false
+    && strpos($template,"\$marketSendCount === \$sendCountOption ? ' selected=\"selected\"'") !== false,
+    'Editar conserva cualquiera de las cantidades de envíos seleccionada');
+checkMarketUi(strpos($marketEngine,'!in_array($sendCount,self::SEND_COUNTS,true)') !== false
+    && strpos($template,'!in_array($marketSendCount,Market::SEND_COUNTS,true)') !== false,
+    'el formulario y el envío definitivo validan las mismas cantidades');
 checkMarketUi(strpos($template,"\$quickTargetSelected = \$marketCoordinatesValid ? ((int)\$marketX).'|'.((int)\$marketY) : '';") !== false
 	&& strpos($template,'$marketTargetCoor = $database->getCoor($getwref);') !== false,
 	'Editar conserva las coordenadas para preseleccionar el destino rápido');

@@ -21,6 +21,8 @@ class Market {
     // 288 horarios y sus ids caben dentro de los 1000 inputs de PHP.
     const MAX_ROUTE_SCHEDULES = 288;
 
+    const SEND_COUNTS = array(1, 2, 3, 5, 10, 20, 50, 100);
+
     // Una sola asignacion al final solo inicializa la ultima propiedad: el resto
     // quedaba en null y disparaba warnings de count() al abrir el mercado por una
     // pestaña que no carga los datos.
@@ -534,7 +536,7 @@ class Market {
 	        }
 	        $id = isset($post['id']) ? $post['id'] : 0;
 	        $reqMerc = $this->requiredMerchants(array_sum($resource));
-	        if(in_array(false,$resource,true) || $sendCount < 1 || $sendCount > 3 || $reqMerc == 0) {
+	        if(in_array(false,$resource,true) || !in_array($sendCount,self::SEND_COUNTS,true) || $reqMerc == 0) {
 	            $this->marketFailure('invalid',$id,null);
 	        }
 	        if($target == 0 || !$database->checkVilExist($target)) {
