@@ -48,10 +48,10 @@ if($form->getError("email") != "") {
 echo "<span class=\"error\">".$form->getError('email')."</span>";
 }
 ?>
-<h4 class="round spacer">Cuidadores</h4>
+<h4 class="round spacer">Representantes</h4>
 <input type="hidden" name="sitter_flag_posted" value="1">
 
-<div class="text">Agrega un cuidador para que pueda ver tu cuenta</div>
+<div class="text">Agrega un representante para que pueda ver tu cuenta</div>
 
 <script type="text/javascript">
 function cloneName(obj, id)
@@ -64,7 +64,7 @@ function cloneName(obj, id)
 <table class="sitters transparent">
 				<tbody><tr>
 		<th>
-				<div class="boxes boxesColor lightGreen"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Cuidador 1				</span>	</div>
+				<div class="boxes boxesColor lightGreen"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Representante 1				</span>	</div>
 				</div>
 		</th><td>
 <?php
@@ -82,7 +82,7 @@ if($session->userinfo['sit1'] != 0) {
 	</tr>
 				<tr>
 		<th>
-				<div class="boxes boxesColor orange"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Cuidador 2</span>	</div>
+				<div class="boxes boxesColor orange"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Representante 2</span>	</div>
 				</div>
 		</th><td>
 <?php
@@ -99,10 +99,10 @@ if($session->userinfo['sit2'] != 0) {
 	</tr>
 			</tbody></table>
             
-<h4 class="round spacer">Cuentas que cuidas</h4>
+<h4 class="round spacer">Cuentas que representas</h4>
 <input type="hidden" name="sitter_flag_posted" value="1">
 
-<div class="text">Estas son las cuentas que estás cuidando</div>
+<div class="text">Estas son las cuentas que representas</div>
 
 <table class="sitters transparent">
 				<tbody><tr>
@@ -112,7 +112,7 @@ if($session->userinfo['sit2'] != 0) {
 		</th><td>
 <?php
 if(!$database->getSitee1($session->uid)){
-	echo '<span class="none">No estás cuidando ninguna</span>';
+	echo '<span class="none">No representas ninguna cuenta</span>';
     }else{
     $getsit1 = $database->getSitee1($session->uid);
     echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = 'spieler.php?s=3&e=3&id=".$session->uid."&owner=".$getsit1['id']."&a=".$session->checker."&type=3'; return false;\"><img src=\"img/x.gif\" class=\"del\" alt=\"helyettes\"></button>";
@@ -129,7 +129,7 @@ if(!$database->getSitee1($session->uid)){
 		</th><td>
 <?php
 if(!$database->getSitee2($session->uid)){
-	echo '<span class="none">No estás cuidando ninguna</span>';
+	echo '<span class="none">No representas ninguna cuenta</span>';
     }else{
     $getsit2 = $database->getSitee2($session->uid);
     echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = 'spieler.php?s=3&e=3&id=".$session->uid."&owner=".$getsit2['id']."&a=".$session->checker."&type=3'; return false;\"><img src=\"img/x.gif\" class=\"del\" alt=\"helyettes\"></button>";
