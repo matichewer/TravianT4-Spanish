@@ -51,7 +51,7 @@ echo "<span class=\"error\">".$form->getError('email')."</span>";
 <h4 class="round spacer">Representantes</h4>
 <input type="hidden" name="sitter_flag_posted" value="1">
 
-<div class="text">Agrega un representante para que pueda ver tu cuenta</div>
+<div class="text">Agrega un representante para que pueda administrar tu cuenta</div>
 
 <script type="text/javascript">
 function cloneName(obj, id)
@@ -140,7 +140,7 @@ if(!$database->getSitee2($session->uid)){
 	</tr>
 			</tbody></table>
             
-<h4 class="round spacer">Eliminar CUENTA</h4>
+<h4 class="round spacer">Eliminar cuenta</h4>
 <table cellpadding="1" cellspacing="1" id="del_acc" class="account transparent">
 	<tbody>
 		<tr>
@@ -162,7 +162,7 @@ echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.loca
 else {
 ?>
 			<tr>
-				<th>¿eliminar cuenta?</th>
+				<th>¿Eliminar cuenta?</th>
 				<td class="del_selection">
 					<label><input class="radio" type="radio" name="del" value="1"> Sí</label>
 					<label><input class="radio" type="radio" name="del" value="0" checked="checked"> No</label>
