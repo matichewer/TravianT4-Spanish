@@ -12,9 +12,10 @@
  * silencio. Acá se mide la SALIDA del motor con el artefacto y sin él, y se exige que
  * cambie.
  *
- * Para cada tipo se prueban los tres tamaños, y además los tres casos que apagan un
+ * Para cada tipo se prueban los tres tamaños, y además los cuatro casos que apagan un
  * artefacto sin que nadie lo note: uno todavía sin madurar, uno desplazado del podio de
- * tres activos, y uno pequeño mirado desde otra aldea.
+ * tres activos, uno pequeño mirado desde otra aldea, y uno que sigue en manos de los
+ * Natars, que oficialmente no hace nada.
  */
 
 if(PHP_SAPI !== 'cli') {
@@ -89,11 +90,11 @@ define('VILLAGE_A', 500);   // la aldea que guarda los artefactos pequeños
 define('VILLAGE_B', 600);   // otra aldea de la misma cuenta
 define('OWNER', 77);
 
-/** Una fila de artefacto ya madura, salvo que se diga lo contrario. */
-function art($type, $size, $village = VILLAGE_A, $id = 1, $age = 999999999) {
+/** Una fila de artefacto ya madura y de un jugador, salvo que se diga lo contrario. */
+function art($type, $size, $village = VILLAGE_A, $id = 1, $age = 999999999, $owner = OWNER) {
     return array(
         'id' => $id, 'type' => $type, 'size' => $size, 'vref' => $village,
-        'owner' => OWNER, 'conquered' => max(0, time() - $age)
+        'owner' => $owner, 'conquered' => max(0, time() - $age)
     );
 }
 
@@ -500,6 +501,88 @@ check(artefactTroopUpkeep($database, OWNER, VILLAGE_A, 1000)['charged'] === 500,
     'en la aldea con el pequeño manda el pequeño (1/2)');
 check(artefactTroopUpkeep($database, OWNER, VILLAGE_B, 1000)['charged'] === 500,
     'y en la otra manda el único, que también es 1/2');
+
+// =====================================================================================
+section('10. En manos de los Natars el artefacto no hace nada, y se nota en el motor');
+// =====================================================================================
+//
+// Oficial: "They are inactive while owned by Natars", "Natars do not receive artefact
+// effects". El motor los trataba como activos para su dueño, así que una aldea de
+// artefacto se protegía con su propio arquitecto de las catapultas y de los arietes. Cada
+// caso mide la salida del motor con la MISMA fila en manos de los Natars y de un jugador:
+// si sólo se mirara la de los Natars, un arquitecto que no protege a nadie también pasaría.
+// UID_NATARS y no NATARS, que en Lang/es.php es el nombre de la cuenta ("Natares").
+$natars = UID_NATARS;
+$holders = array($natars => 'de los Natars', OWNER => 'de un jugador');
+
+// Catapultas: el disparo justo para tirar el edificio sin artefacto.
+foreach($sizes as $size => $label) {
+    foreach($holders as $holder => $holderLabel) {
+        $database->artefacts = array(art(ARTEFACT_ARCHITECT, $size, VILLAGE_A, 1, 999999999, $holder));
+        $database->fields = baseFields();
+        $impact->invoke($automation, VILLAGE_A, 15, $required, 0, 1, 0, array('owner' => $holder, 'capital' => 0));
+        $standing = (int)$database->fields['f20'];
+        check($holder === $natars ? $standing === 0 : $standing > 0,
+            'contra catapultas, el arquitecto '.$label.' '.$holderLabel
+                .($holder === $natars ? ' no protege' : ' protege').' (el edificio quedó en '.$standing.')');
+    }
+}
+
+// Arietes: diez contra una muralla 10, con el arquitecto del DEFENSOR.
+function ramWallAfter($artefacts, $defenderOwner) {
+    global $battle, $database;
+    $database->artefacts = $artefacts;
+    $attacker = array();
+    $defender = array();
+    for($unit = 1; $unit <= 50; $unit++) {
+        $attacker['u'.$unit] = 0;
+        $defender['u'.$unit] = 0;
+    }
+    $attacker['u1'] = 3000;   // legionarios
+    $attacker['u7'] = 10;     // arietes
+    $defender['u1'] = 1;
+    $database->unitsByVillage = array(VILLAGE_A => $defender);
+    $result = $battle->calculateBattle(
+        $attacker, array('id' => 1), 10, 1, 1, 0, 100, 100, 3, array(), array(), 0, 0, 10,
+        OWNER + 1, $defenderOwner, VILLAGE_B, VILLAGE_A
+    );
+    return isset($result['wall_level_after']) ? (int)$result['wall_level_after'] : -1;
+}
+$plainWall = ramWallAfter(array(), $natars);
+check($plainWall >= 0 && $plainWall < 10,
+    'sin artefacto diez arietes bajan la muralla 10 (quedó en '.$plainWall.')');
+foreach($sizes as $size => $label) {
+    $natarWall = ramWallAfter(array(art(ARTEFACT_ARCHITECT, $size, VILLAGE_A, 1, 999999999, $natars)), $natars);
+    check($natarWall === $plainWall,
+        'contra arietes, el arquitecto '.$label.' de los Natars no protege (muralla en '
+            .$natarWall.', sin artefacto '.$plainWall.')');
+    $playerWall = ramWallAfter(array(art(ARTEFACT_ARCHITECT, $size, VILLAGE_A, 1, 999999999, OWNER)), OWNER);
+    check($playerWall > $plainWall,
+        'contra arietes, el arquitecto '.$label.' de un jugador protege (muralla en '.$playerWall.')');
+}
+
+// Lo mismo con los demás efectos que una aldea natar usaría para defenderse.
+$database->artefacts = array();
+$plainDefence = scoutBattle($battle, VILLAGE_A, VILLAGE_B)['Defend_points'];
+$database->artefacts = array(art(ARTEFACT_EAGLE, ARTEFACT_SIZE_UNIQUE, VILLAGE_B, 1, 999999999, $natars));
+check(scoutBattle($battle, VILLAGE_A, VILLAGE_B)['Defend_points'] == $plainDefence,
+    'el águila de los Natars no refuerza a sus exploradores');
+$database->artefacts = array(art(ARTEFACT_CONFUSION, ARTEFACT_SIZE_UNIQUE, VILLAGE_A, 1, 999999999, $natars));
+check((float)$database->getArtefactEffectValue(VILLAGE_A, $natars, ARTEFACT_CONFUSION) === 1.0,
+    'la confusión de los Natars no les agranda el escondite');
+// El disparo al azar no se puede comparar por resultado, así que se pregunta al mismo
+// resolvedor que usa resolveCatapultAttacks() si hay confusión que aplicar.
+$artefactRow = new ReflectionMethod('Automation', 'artefactRow');
+$artefactRow->setAccessible(true);
+check($artefactRow->invoke($automation, VILLAGE_A, $natars, ARTEFACT_CONFUSION) === null,
+    'ni les desvía las catapultas: para el motor no hay confusión que aplicar');
+$database->artefacts = array(art(ARTEFACT_CONFUSION, ARTEFACT_SIZE_UNIQUE, VILLAGE_A, 1, 999999999, OWNER));
+check($artefactRow->invoke($automation, VILLAGE_A, OWNER, ARTEFACT_CONFUSION) !== null,
+    'la misma confusión en manos de un jugador sí desvía las catapultas');
+$database->artefacts = array(art(ARTEFACT_DIET, ARTEFACT_SIZE_UNIQUE, VILLAGE_A, 1, 999999999, $natars));
+check(artefactTroopUpkeep($database, $natars, VILLAGE_A, 1000)['charged'] === 1000,
+    'la dieta de los Natars no les ahorra cereal');
+$database->artefacts = array();
 
 echo PHP_EOL.(count($failures)
     ? count($failures).' FALLA(S) sobre '.$checks.' comprobaciones'

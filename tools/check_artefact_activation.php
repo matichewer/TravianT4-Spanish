@@ -12,7 +12,9 @@
  *   - una cuenta tiene como mucho TRES activos a la vez y sólo UNO puede ser de cuenta;
  *   - entre los que compiten ganan los capturados hace más tiempo;
  *   - dentro de una aldea, el artefacto de aldea PISA al de cuenta del mismo tipo: no se
- *     suman ni gana el más fuerte.
+ *     suman ni gana el más fuerte;
+ *   - en manos de una cuenta del sistema (los Natars) ninguno está activo, sin tocar el
+ *     retardo que corre desde que un jugador se lo lleva.
  *
  * Ejecutar: docker compose exec -T web php /var/www/html/tools/check_artefact_activation.php
  */
@@ -225,6 +227,62 @@ check($states[5]['seconds'] > 0, 'con los segundos que le faltan');
 check($states[4]['seconds'] === 0, 'el desplazado no tiene cuenta atrás: ya maduró');
 check(artefactActivationStateLabel($states[1]) !== '' && artefactActivationStateLabel($states[4]) !== '',
     'los tres estados tienen texto en español');
+
+// -------------------------------------------------------------------------------------
+section('E. En manos del sistema un artefacto no hace nada');
+//
+// Oficial: "They are inactive while owned by Natars", "Natars do not receive artefact
+// effects". El motor los trataba como activos para su dueño: una aldea natar con un
+// arquitecto se protegía con su propio artefacto.
+
+$natar = UID_NATARS;
+$player = lastSystemAccountId() + 1;   // el primer id de jugador
+$rowsFor = function($owner) use($old, $mid, $now, $VILLAGE_A) {
+    return array(
+        art(1, ARTEFACT_ARCHITECT, 1, $old, $VILLAGE_A, $owner),
+        art(2, ARTEFACT_EAGLE,     2, $old, $VILLAGE_A, $owner),
+        art(3, ARTEFACT_CONFUSION, 1, $mid, $VILLAGE_A, $owner)
+    );
+};
+
+foreach(systemAccounts() as $name => $uid) {
+    check(artefactActiveRows($rowsFor($uid), $now, 3) === array(),
+        'los artefactos maduros de '.$name.' (id '.$uid.') no pueden estar activos');
+}
+check(ids(artefactActiveRows($rowsFor($player), $now, 3)) === array(1, 2, 3),
+    'los mismos tres artefactos en manos de un jugador sí están activos');
+check(artefactVillageEffectValue(artefactActiveRows($rowsFor($natar), $now, 3), ARTEFACT_ARCHITECT, $VILLAGE_A) === 1.0,
+    'el arquitecto de una aldea natar vale el neutro en su propia aldea');
+check(artefactVillageEffectValue(artefactActiveRows($rowsFor($player), $now, 3), ARTEFACT_ARCHITECT, $VILLAGE_A) === 4.0,
+    'y el de un jugador vale x4');
+
+// Un artefacto natar no ocupa ni corre el podio de nadie.
+$mixed = array_merge($rowsFor($natar), array(art(9, ARTEFACT_DIET, 1, $new, $VILLAGE_A, $player)));
+check(ids(artefactActiveRows($mixed, $now, 3)) === array(9),
+    'mezclado con uno de jugador, sólo entra el del jugador');
+
+// El retardo no se toca: lo que se ve en el Tesoro sale de `conquered`, no del dueño.
+$fresh = art(5, ARTEFACT_TRAINER, 1, $now - 100, $VILLAGE_A, $natar);
+$state = artefactActivationState($fresh, artefactActiveRows(array($fresh), $now, 3), $now, 3);
+check($state['state'] === 'pending' && $state['seconds'] === $delay - 100,
+    'un artefacto natar sin madurar sigue contando su retardo igual que antes');
+$ripe = art(6, ARTEFACT_TRAINER, 1, $old, $VILLAGE_A, $natar);
+$state = artefactActivationState($ripe, artefactActiveRows(array($ripe), $now, 3), $now, 3);
+check($state['state'] !== 'active', 'y ya maduro no figura como activo');
+
+// El robo: cambia el dueño y reinicia `conquered`. Desde ahí corre el retardo normal.
+$stolen = $ripe;
+$stolen['owner'] = $player;
+$stolen['conquered'] = $now;
+check(artefactActiveRows(array($stolen), $now, 3) === array(),
+    'recién robado a los Natars todavía no hace efecto: primero el retardo');
+check(ids(artefactActiveRows(array($stolen), $now + $delay, 3)) === array(6),
+    'y pasado el retardo, en manos del jugador, sí');
+
+// La frontera es la de Accounts.php, no una comparación escrita acá.
+$source = file_get_contents(dirname(__DIR__).'/GameEngine/Artefact.php');
+check(preg_match('/function artefactActiveRows\(.*?isSystemAccount\(\$row\[\'owner\'\]\)/s', $source) === 1,
+    'artefactActiveRows() descarta las filas del sistema con isSystemAccount()');
 
 // -------------------------------------------------------------------------------------
 echo PHP_EOL.($failures

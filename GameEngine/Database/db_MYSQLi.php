@@ -5315,7 +5315,10 @@ break;
 				return $this->artefactCacheByOwner[$owner];
 			}
 
-			/** Los artefactos de la cuenta que están activos ahora mismo (como mucho tres). */
+			/**
+			 * Los artefactos de la cuenta que están activos ahora mismo (como mucho tres, y
+			 * ninguno si la cuenta es del sistema: eso lo decide artefactActiveRows()).
+			 */
 			function getActiveArtefactsByOwner($owner) {
 				return artefactActiveRows($this->getArtefactsByOwner($owner));
 			}

@@ -242,6 +242,8 @@ $building->levels[41] = 0;
 // El artefacto del entrenador aplica a los tres edificios, no solo al taller, y su
 // tabla es la oficial: 1/2 el pequeño y el único, 3/4 el grande. Acá el grande valía
 // 0,25 —cuatro veces más rápido, el más fuerte de los tres— y el checker lo pinaba.
+// El dueño de las filas tiene que ser un jugador: en manos de una cuenta del sistema
+// (1..4) un artefacto no hace nada.
 $trainerFactors = array(
 	1 => array(0.5,  'pequeño (aldea)'),
 	2 => array(0.75, 'grande (cuenta)'),
@@ -250,7 +252,7 @@ $trainerFactors = array(
 foreach($trainerFactors as $size => $expected) {
 	list($factor,$label) = $expected;
 	$database->artefacts = array(array(
-		'id' => 1, 'vref' => 100, 'owner' => 3,
+		'id' => 1, 'vref' => 100, 'owner' => 77,
 		'type' => ARTEFACT_TRAINER, 'size' => $size, 'conquered' => 0
 	));
 	trainingAssert(
@@ -269,7 +271,7 @@ foreach($trainerFactors as $size => $expected) {
 
 // Un artefacto recién capturado todavía no hace nada: el retardo de activación primero.
 $database->artefacts = array(array(
-	'id' => 1, 'vref' => 100, 'owner' => 3,
+	'id' => 1, 'vref' => 100, 'owner' => 77,
 	'type' => ARTEFACT_TRAINER, 'size' => 1, 'conquered' => time()
 ));
 trainingAssert(queuedTime(1,20,19,5) === $barracksBase,
@@ -277,7 +279,7 @@ trainingAssert(queuedTime(1,20,19,5) === $barracksBase,
 
 // Artefacto y casco se acumulan.
 $database->artefacts = array(array(
-	'id' => 1, 'vref' => 100, 'owner' => 3,
+	'id' => 1, 'vref' => 100, 'owner' => 77,
 	'type' => ARTEFACT_TRAINER, 'size' => 1, 'conquered' => 0
 ));
 $database->wearHelmet(15);

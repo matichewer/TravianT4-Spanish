@@ -37,6 +37,14 @@
  * varios tipos más fuerte que el pequeño) queda anulado en la aldea que tenga el
  * pequeño del mismo tipo, y sigue valiendo en todas las demás.
  *
+ * Y un artefacto que sigue en manos del **sistema** (los Natars, o cualquier otra cuenta
+ * de `Accounts.php`) no hace nada: "They are inactive while owned by Natars", "Natars do
+ * not receive artefact effects". El arquitecto de una aldea de artefacto no la protege de
+ * las catapultas ni de los arietes, la confusión no le agranda el escondite ni desvía los
+ * disparos, el águila no le refuerza los exploradores. Se cuidan con su guarnición y nada
+ * más; el artefacto empieza a contar recién cuando un jugador se lo lleva, y el retardo de
+ * activación corre desde esa captura como con cualquier otra.
+ *
  * ---------------------------------------------------------------------------------
  * LOS TIPOS. La numeración es la del panel de administración (`Admin/Mods/addArtefacts.php`)
  * y la que ya usaban los consumidores del motor. `cn.php` traía **otra** numeración
@@ -49,6 +57,10 @@
  * compite por los tres huecos de artefacto activo. Sus reglas de uso están en
  * GameEngine/Wonder.php; acá sólo vive su ficha.
  */
+
+// Quién es del sistema. Va acá y no sólo en Database.php porque varios checkers cargan
+// este archivo solo, y el conjunto activo no puede calcularse sin saberlo.
+require_once __DIR__.'/Accounts.php';
 
 if(!defined('ARTEFACT_ARCHITECT')) {
     define('ARTEFACT_ARCHITECT', 1);   // los edificios aguantan más catapultas y arietes
@@ -325,6 +337,16 @@ function artefactIsMature($row, $now = null, $speed = null) {
  * viejo de cuenta más los dos más viejos de aldea, y si no hay ninguno de cuenta, los
  * tres más viejos de aldea. Sólo entran los que ya pasaron el retardo.
  *
+ * Los de una cuenta del sistema no entran nunca, y es ACÁ donde se descartan porque ésta
+ * es la única definición de "activo": la capa de datos (`getActiveArtefactsByOwner()`), la
+ * pestaña de resumen del Tesoro y los dobles de los checkers llaman todos a esta función,
+ * y todos los efectos —catapultas, arietes, espionaje, escondite, dieta, entrenamiento,
+ * velocidad, plano de almacenamiento— leen lo que devuelve. Ponerlo en la capa de datos
+ * dejaba a los checkers probando una copia. Se mira el `owner` de cada fila, que es el
+ * dueño real en la base; una fila sin dueño (las de los checkers puros) cuenta como de
+ * jugador. El retardo y el robo no se tocan: el estado `pending` sale de `conquered` y no
+ * de esta lista, y el robo cambia el dueño y reinicia `conquered` en la misma escritura.
+ *
  * Empate de `conquered`: gana el id más bajo. Da igual cuál sea mientras sea estable —
  * si no lo fuera, dos cargas de página seguidas activarían artefactos distintos.
  */
@@ -335,6 +357,11 @@ function artefactActiveRows($rows, $now = null, $speed = null) {
     $mature = array();
     foreach($rows as $row) {
         if(!is_array($row) || !isset($row['size'])) {
+            continue;
+        }
+        // Oficial: "Natars do not receive artefact effects". Vale para toda cuenta del
+        // sistema, no sólo para los Natars, por lo mismo que la hambruna los salta a todos.
+        if(isset($row['owner']) && isSystemAccount($row['owner'])) {
             continue;
         }
         // El plano de construcción no entra en el podio: no tiene un efecto que pueda
