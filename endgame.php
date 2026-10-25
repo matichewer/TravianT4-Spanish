@@ -246,7 +246,7 @@ include "Templates/html.tpl";
 							<section class="buildingStatsSection" id="planos">
 								<h2>Los planos</h2>
 								<p>La palabra "plano" se usa para dos cosas distintas y conviene no confundirlas.</p>
-								<p><b>El plano de almacenamiento</b> es uno de los <?php echo count($endgameCatalog); ?> artefactos, y es el único que no te da un bono sino que te <b>desbloquea dos edificios</b>: el Gran almacén y el Gran granero. Sin él no existen, ni siquiera aparecen en la lista de construcción. Funciona como cualquier otro artefacto: tiene que estar activo, y si se te cae del podio de <?php echo ARTEFACT_MAX_ACTIVE; ?> dejás de poder ampliarlos (lo que ya construiste se queda).</p>
+								<p><b>El plano de almacenamiento</b> es uno de los <?php echo count($endgameCatalog); ?> artefactos, y es el único que no te da un bono sino que te <b>desbloquea dos edificios</b>: el Gran almacén y el Gran granero. Sin él no existen, ni siquiera aparecen en la lista de construcción — salvo en la <a href="#maravilla">aldea de la Maravilla</a>, que los construye sin plano. Funciona como cualquier otro artefacto: tiene que estar activo, y si se te cae del podio de <?php echo ARTEFACT_MAX_ACTIVE; ?> dejás de poder ampliarlos (lo que ya construiste se queda).</p>
 								<p><b>El plano de construcción de la Maravilla</b> es otra cosa completamente distinta: no te da ningún bono, no mejora ninguna aldea, y aun así es <b>el objeto más importante del servidor</b>. Sin uno, tu alianza no puede levantar la Maravilla del Mundo. Con eso alcanza para describirlo: es la llave del final.</p>
 								<div class="troopStatsTableWrapper">
 									<table class="troopStatsTable" cellpadding="1" cellspacing="1">
@@ -302,6 +302,8 @@ include "Templates/html.tpl";
 											<tr><td>No se puede construir <b>Tesoro</b></td><td style="text-align:left;">Por eso el plano vive en otra aldea tuya, y por eso se puede robar. Si pudiera estar acá, defender una cosa defendería las dos.</td></tr>
 											<tr><td>No funciona el <b>mercader NPC</b></td><td style="text-align:left;">Nada de convertir el cereal sobrante en madera con oro. Los recursos que necesita la Maravilla llegan en carros, de tus aldeas y de las de tus aliados.</td></tr>
 											<tr><td>No funciona <b>terminar con oro</b> ni el <b>constructor maestro</b></td><td style="text-align:left;">La Maravilla se construye con tiempo real. No hay atajo que se compre.</td></tr>
+											<tr><td>Se construyen el <b>Gran almacén</b> y el <b>Gran granero</b> sin plano</td><td style="text-align:left;">La Maravilla necesita guardar más de un millón de cada recurso, y en esta aldea el plano de almacenamiento no hace falta: no ocupa ningún hueco de artefacto.</td></tr>
+											<tr><td>Las tropas estacionadas comen <b><?php echo (int) round((1 - WONDER_CROP_UPKEEP_FACTOR) * 100); ?>% menos cereal</b></td><td style="text-align:left;">Desde el momento en que aparecen los planos de construcción en el mundo, sin necesidad de tener uno. Vale para las tropas propias, los refuerzos y el héroe que estén en la aldea; no para las que están de viaje. Se suma al artefacto de dieta: con la dieta pequeña, por ejemplo, comen el <?php $endgameDietTable = artefactValueTable(); echo (int) round(WONDER_CROP_UPKEEP_FACTOR * $endgameDietTable[ARTEFACT_DIET][ARTEFACT_SIZE_SMALL] * 100); ?>% de lo normal.</td></tr>
 										</tbody>
 									</table>
 								</div>

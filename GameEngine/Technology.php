@@ -295,13 +295,23 @@ class Technology {
 		return $ownunit;
 	}
 	
-	function getAllUnits($base) {
+	/**
+	 * Las tropas que están físicamente en la aldea: la guarnición propia (con el héroe si
+	 * está en casa) y los refuerzos alojados ahí, de quien sean. Es la parte de
+	 * getAllUnits() que no está de viaje, en un oasis ni atrapada afuera, y la única que
+	 * come la mitad en la aldea de la Maravilla (villageTroopUpkeep).
+	 */
+	function getStationedUnits($base) {
 		global $database;
 		$ownunit = $database->getUnit($base);
-		$ownunit['u99'] -= $ownunit['u99'];
-		$ownunit['u99o'] -= $ownunit['u99o'];
+		if(!is_array($ownunit)) {
+			$ownunit = array();
+		}
+		// Las trampas no son tropas.
+		$ownunit['u99'] = 0;
+		$ownunit['u99o'] = 0;
 		$enforcementarray = $database->getEnforceVillage($base,0);
-		if(count($enforcementarray) > 0) {
+		if(is_array($enforcementarray)) {
 			foreach($enforcementarray as $enforce) {
 				for($i=1;$i<=50;$i++) {
 					$ownunit['u'.$i] = (int)(isset($ownunit['u'.$i]) ? $ownunit['u'.$i] : 0)
@@ -311,6 +321,12 @@ class Technology {
 					+ (int)(isset($enforce['hero']) ? $enforce['hero'] : 0);
 			}
 		}
+		return $ownunit;
+	}
+
+	function getAllUnits($base) {
+		global $database;
+		$ownunit = $this->getStationedUnits($base);
 		// Un oasis no produce cereal ni tiene granero: a las tropas estacionadas ahí
 		// las alimenta la aldea que lo conquistó. Sin esto un ejército aparcado en el
 		// oasis no le costaba cereal a nadie.

@@ -624,6 +624,10 @@ function artefactVillageHasEffect($activeRows, $type, $villageId, $now = null) {
  *     pequeño, 20 para el grande y el único).
  *   - **Y ese Tesoro tiene que estar vacío**: una aldea sostiene un solo artefacto.
  *
+ * Y una sexta que no es del robo sino de la aldea: **la de la Maravilla no recibe nada**,
+ * porque oficialmente no puede tener Tesoro. Las Aldeas de la Maravilla de este repo traían
+ * uno de fábrica, así que el nivel solo no alcanzaba para decir que no.
+ *
  * El orden importa para el informe: primero lo que decide el jugador al armar el ataque
  * (asalto, héroe), después lo que decide en el campo (el Tesoro enemigo) y al final lo
  * que decide en su casa (su propio Tesoro).
@@ -650,6 +654,13 @@ function artefactTheftOutcome($attack, $target, $attacker) {
         return $status('defender_treasury_standing',
             array('treasury' => (int)$target['treasury']));
     }
+    // Oficial: en la aldea de la Maravilla no puede haber Tesoro, y por eso nada se guarda
+    // ahí. Las Aldeas de la Maravilla traían un Tesoro 10 de fábrica, así que mirar sólo el
+    // nivel dejaba que un héroe salido de la Maravilla se trajera el plano a la misma aldea
+    // que lo necesita, y que un solo ejército defendiera las dos cosas.
+    if(!empty($attacker['wonder_village'])) {
+        return $status('attacker_wonder_village');
+    }
     // Por tipo y por tamaño: el plano de construcción pide Tesoro 10 aunque su alcance sea
     // la alianza entera, y esa excepción vive en artefactTreasuryRequirement(), no acá.
     $required = artefactTreasuryRequirement($size, isset($target['type']) ? (int)$target['type'] : 0);
@@ -669,6 +680,7 @@ function artefactTheftMessages() {
         'no_hero' => 'hace falta que tu héroe participe del ataque para llevarse el artefacto.',
         'hero_dead' => 'tu héroe murió en la batalla, así que el artefacto se quedó donde estaba.',
         'defender_treasury_standing' => 'el Tesoro enemigo sigue en pie: hay que derribarlo para llevarse el artefacto.',
+        'attacker_wonder_village' => 'la aldea de la Maravilla no puede guardar artefactos: el héroe tiene que salir de otra aldea con Tesoro.',
         'attacker_treasury_low' => 'tu aldea necesita un Tesoro de nivel %d para guardar este artefacto.',
         'attacker_treasury_occupied' => 'el Tesoro de tu aldea ya guarda un artefacto.',
         'claimed' => 'tu héroe se lleva el artefacto a la aldea.',
@@ -689,27 +701,36 @@ function artefactTheftMessage($outcome) {
 }
 
 /**
- * El consumo de cereal de una guarnición después del artefacto de dieta.
+ * La fracción del cereal que las tropas de una aldea siguen comiendo por el artefacto de
+ * dieta: 1/2 el pequeño, 3/4 el grande, 1/2 el único, 1 sin artefacto. El necio en su
+ * cara mala devuelve más de 1.
+ */
+function artefactDietFactor($database, $owner, $villageId) {
+    if(is_object($database) && method_exists($database, 'getArtefactEffectValue')) {
+        $candidate = (float)$database->getArtefactEffectValue($villageId, $owner, ARTEFACT_DIET);
+        if($candidate > 0) {
+            return $candidate;
+        }
+    }
+    return 1.0;
+}
+
+/**
+ * El consumo de cereal de una guarnición después del artefacto de dieta, y nada más.
  *
- * Una sola definición porque hay dos caminos que la necesitan y tienen que dar el mismo
- * número: `Village::calculateProduction()` (lo que el jugador ve en dorf1) y
- * `Automation::bountycalculateProduction()` (lo que se acredita de verdad, y de lo que
- * come la hambruna). Las dos traían su propia copia de la cascada de tres `if` y las dos
- * cobraban **3/4 al artefacto pequeño**, cuando el oficial le cobra 1/2: el pequeño es el
- * fuerte y el grande el flojo, no al revés.
+ * Los dos caminos de producción —`Village::calculateProduction()` (lo que el jugador ve en
+ * dorf1) y `Automation::bountycalculateProduction()` (lo que se acredita y de lo que come
+ * la hambruna)— ya no la llaman directo: pasan por `villageTroopUpkeep()` (Wonder.php), que
+ * le suma la mitad de consumo de la aldea de la Maravilla con el mismo factor de dieta.
+ * Antes cada camino traía su propia cascada de tres `if`, y las dos cobraban **3/4 al
+ * artefacto pequeño** cuando el oficial le cobra 1/2.
  *
  * Devuelve lo que la aldea paga, lo que ahorra y el factor. El ahorro puede ser negativo:
  * un artefacto del necio en su cara mala cobra de más, y esa es su gracia.
  */
 function artefactTroopUpkeep($database, $owner, $villageId, $upkeep) {
     $upkeep = (int)$upkeep;
-    $factor = 1.0;
-    if(is_object($database) && method_exists($database, 'getArtefactEffectValue')) {
-        $candidate = (float)$database->getArtefactEffectValue($villageId, $owner, ARTEFACT_DIET);
-        if($candidate > 0) {
-            $factor = $candidate;
-        }
-    }
+    $factor = artefactDietFactor($database, $owner, $villageId);
     $charged = (int)round($upkeep * $factor);
     return array('charged' => $charged, 'saving' => $upkeep - $charged, 'factor' => $factor);
 }

@@ -11,7 +11,10 @@
 $heroData = $database->getHeroData($session->uid);
 $heroProduction = heroVillageResourceBonus($heroData, $village->wid, SPEED);
 $cropGrossProduction = $village->allcrop + $heroProduction['crop'];
-$cropUpkeep = $village->pop + $technology->getUpkeep($village->unitall, 0);
+// El consumo que de verdad se paga, con la Maravilla y la dieta ya descontadas: sumar acá
+// el mantenimiento crudo hacía que consumo y producción neta no cerraran con un artefacto.
+$cropBreakdown = $village->getProductionBreakdown('crop');
+$cropUpkeep = $village->pop + (isset($cropBreakdown['upkeep_charged']) ? $cropBreakdown['upkeep_charged'] : 0);
 $cropNetProduction = $village->getProd('crop');
 
 $formatResourceAmount = function ($amount) {

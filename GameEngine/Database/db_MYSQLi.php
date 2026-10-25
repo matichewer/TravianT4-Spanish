@@ -5279,9 +5279,25 @@ break;
 			 * artefacto funcionaba. Ver el encabezado de Artefact.php.
 			 */
 			private $artefactCacheByOwner = array();
+			private $wonderPlansAppearedCache = null;
 
 			function flushArtefactCache() {
 				$this->artefactCacheByOwner = array();
+				$this->wonderPlansAppearedCache = null;
+			}
+
+			/**
+			 * ¿Hay algún plano de construcción en el mundo? Es el evento que enciende la mitad de
+			 * consumo en las aldeas de la Maravilla (ver wonderPlansHaveAppeared()). Sólo se
+			 * pregunta desde una aldea de la Maravilla, y una vez por request.
+			 */
+			function wonderPlansHaveAppeared() {
+				if($this->wonderPlansAppearedCache === null) {
+					$result = mysqli_query($this->connection,
+						"SELECT 1 FROM " . TB_PREFIX . "artefacts WHERE type = " . ARTEFACT_PLAN . " LIMIT 1");
+					$this->wonderPlansAppearedCache = $result && mysqli_num_rows($result) > 0;
+				}
+				return $this->wonderPlansAppearedCache;
 			}
 
 			function getArtefactsByOwner($owner) {
@@ -6918,7 +6934,8 @@ break;
 						'type' => (int)$artefactType, 'treasury' => 0),
 					array(
 						'treasury' => $this->getVillageTreasuryLevel($attackerVillage),
-						'artefact' => $this->villageHoldsArtefact($attackerVillage)
+						'artefact' => $this->villageHoldsArtefact($attackerVillage),
+						'wonder_village' => wonderVillage($this->getResourceLevel($attackerVillage))
 					)
 				);
 				return $outcome['status'] === 'claimed';

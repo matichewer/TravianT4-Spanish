@@ -984,6 +984,24 @@ class Battle {
 		return $value > 0 ? $value : 1.0;
 	}
 
+	/**
+	 * El multiplicador de durabilidad del secreto del arquitecto para la muralla del
+	 * defensor, o 1 si no tiene el artefacto activo.
+	 *
+	 * Oficial: el arquitecto protege los edificios "against attacks from catapults and
+	 * rams". Las catapultas lo aplican en Automation::applyCatapultImpact(); los arietes no
+	 * leían ningún artefacto, así que una muralla con arquitecto caía igual que sin él. El
+	 * simulador tampoco lo aplica, por lo mismo que el águila: no sabe qué aldea defiende.
+	 */
+	private function battleArchitectArtefact($villageId, $ownerId) {
+		global $database;
+		if((int)$villageId <= 0 || !is_object($database) || !method_exists($database, 'getArtefactEffectValue')) {
+			return 1.0;
+		}
+		$value = (float)$database->getArtefactEffectValue((int)$villageId, (int)$ownerId, ARTEFACT_ARCHITECT);
+		return $value > 0 ? $value : 1.0;
+	}
+
 	// 1 = scouting, 3 = normal attack, 4 = raid
 	function calculateBattle($Attacker, $Defender, $def_wall, $att_tribe, $def_tribe, $residence, $attpop, $defpop, $type, $def_ab, $att_ab, $tblevel, $stonemason, $walllevel = 0, $AttackerID = 0, $DefenderID = 0, $AttackerWref = 0, $DefenderWref = 0) {
 		global $bid34, $database;
@@ -1251,6 +1269,10 @@ class Battle {
 			: 1;
 		$ramCount = isset($attackerAmounts[7]) ? $attackerAmounts[7] : 0;
 		$ramUpgrade = $this->battleUpgradeLevel($att_ab, 7);
+		// La muralla aguanta lo que dice el taller de cantería y, encima, el arquitecto del
+		// defensor. Va aparte de $stonemasonFactor porque ése sigue siendo el de la cuenta
+		// de catapultas de más abajo, que aplica el arquitecto en el motor.
+		$ramDurabilityFactor = $stonemasonFactor * $this->battleArchitectArtefact($DefenderWref, $DefenderID);
 		$combat = $this->calculateCombatWithRams(
 			$attackerInfantry,
 			$attackerCavalry,
@@ -1265,7 +1287,7 @@ class Battle {
 			$type,
 			$ramCount,
 			$ramUpgrade,
-			$stonemasonFactor
+			$ramDurabilityFactor
 		);
 		$attackPoints = $combat['attack_points'];
 		$defensePoints = $combat['defense_points'];

@@ -80,11 +80,14 @@ if($wall == 0 && !$database->getBuildList(31) && !$database->getBuildList(32) &&
 if($building->meetRequirement(10) && $id != 39 && $id != 40) {
 include("avaliable/warehouse.tpl");
 }
-$storageArtefact = $building->hasStorageArtefact();
-if($building->meetRequirement(38)) {
+// Plano de almacenamiento activo o aldea de la Maravilla: la misma pregunta que se hace
+// meetRequirement(), para que la tarjeta de "próximamente" no pida un plano que acá no hace
+// falta. Las casillas 39 y 40 son de la plaza y la muralla, como para el resto.
+$storageUnlocked = $building->storageGreatBuildingsUnlocked();
+if($building->meetRequirement(38) && $id != 39 && $id != 40) {
     include("avaliable/greatwarehouse.tpl");
 }
-if($building->meetRequirement(39)) {
+if($building->meetRequirement(39) && $id != 39 && $id != 40) {
     include("avaliable/greatgranary.tpl");
 }
 if($building->meetRequirement(36) && $id != 39 && $id != 40) {
@@ -243,12 +246,14 @@ if($session->tribe == 1 && $horsedrinkingtrough == 0 && $rallypoint >= 5 && $sta
 if($brewery == 0 && $village->capital == 1 && $session->tribe == 2 && $rallypoint >= 5 && $granary >= 10 && !$building->meetsLevelRequirements(35)) {
     include("soon/brewery.tpl");
 }
-if($village->capital == 0 && !($mainbuilding >= 10 && $storageArtefact)) {
+// Sin el `capital == 0` que quedó del fork: el gran almacén se puede en la capital, así
+// que la capital también tiene que poder ver qué le falta para construirlo.
+if(!($mainbuilding >= 10 && $storageUnlocked)) {
     include("soon/greatwarehouse.tpl");
 }
-if($village->capital == 0 && !($mainbuilding >= 10 && $storageArtefact)) {
+if(!($mainbuilding >= 10 && $storageUnlocked)) {
     include("soon/greatgranary.tpl");
-} 
+}
 if($greatbarracks == 0 && $barrack >= 15 && $barrack < 20 && $village->capital == 0) {
     include("soon/greatbarracks.tpl");
 }

@@ -179,15 +179,25 @@ section('B. canClaimArtifact(): la mitad "en casa", contra la base real');
 // =====================================================================================
 //
 // Se conserva como función propia y ahora delega en artefactTheftOutcome(), así que las
-// dos no pueden divergir. Las Maravillas tienen Tesoro 10, que es justo el umbral del
-// artefacto de aldea.
-$wonder = $database->query_return(
+// dos no pueden divergir. Se busca una aldea con Tesoro 10, que es justo el umbral del
+// artefacto de aldea, y que NO sea una Maravilla: antes se usaba una Maravilla porque
+// traían Tesoro 10 de fábrica, y justamente una Maravilla no puede guardar artefactos.
+$withTreasury = $database->query_return(
     "SELECT f.vref FROM ".TB_PREFIX."fdata f "
     ."INNER JOIN ".TB_PREFIX."vdata v ON v.wref = f.vref "
-    ."WHERE f.f22t = 27 AND f.f22 >= 10 LIMIT 1"
+    ."WHERE f.f22t = 27 AND f.f22 >= 10 AND f.f99t <> 40 LIMIT 1"
 );
-if(is_array($wonder) && count($wonder)) {
-    $vref = (int)$wonder[0]['vref'];
+$wonderWithTreasury = $database->query_return(
+    "SELECT f.vref FROM ".TB_PREFIX."fdata f "
+    ."INNER JOIN ".TB_PREFIX."vdata v ON v.wref = f.vref "
+    ."WHERE f.f22t = 27 AND f.f22 >= 10 AND f.f99t = 40 LIMIT 1"
+);
+if(is_array($wonderWithTreasury) && count($wonderWithTreasury)) {
+    check($database->canClaimArtifact((int)$wonderWithTreasury[0]['vref'], 1) === false,
+        'una Maravilla con el Tesoro 10 de fábrica no puede quedarse ni un artefacto de aldea');
+}
+if(is_array($withTreasury) && count($withTreasury)) {
+    $vref = (int)$withTreasury[0]['vref'];
     check($database->getVillageTreasuryLevel($vref) >= 10,
         'la lectura del nivel de Tesoro encuentra el edificio en su ranura');
     check($database->canClaimArtifact($vref, 1) === true,
@@ -352,6 +362,31 @@ check((int)scalar("SELECT conquered FROM ".TB_PREFIX."artefacts LIMIT 1") > 1,
     'la captura reinicia el reloj de activación');
 check(strpos(lastAttackerReport(), 'artefacto') !== false,
     'y el informe del atacante lo cuenta');
+
+// --- canClaimArtifact() sobre el mundo de prueba -----------------------------------------
+// La sección B lo prueba contra la base real sólo si el mundo tiene una aldea normal con
+// Tesoro 10; acá se prueba siempre.
+resetTheftWorld(10, 0, 1, 3);
+$database->flushArtefactCache();
+check($database->getVillageTreasuryLevel(V_ATT) === 10,
+    'la lectura del nivel de Tesoro encuentra el edificio en su ranura (mundo de prueba)');
+check($database->canClaimArtifact(V_ATT, 1) === true,
+    'una aldea con Tesoro 10 puede quedarse un artefacto de aldea (mundo de prueba)');
+check($database->canClaimArtifact(V_ATT, 2) === false && $database->canClaimArtifact(V_ATT, 3) === false,
+    'pero no uno de cuenta ni uno único, que piden Tesoro 20 (mundo de prueba)');
+
+// --- Desde la aldea de la Maravilla no se roba nada ---------------------------------------
+// Oficial: ahí no puede haber Tesoro. Las Aldeas de la Maravilla traían uno de nivel 10 de
+// fábrica, así que el nivel solo no alcanzaba para negarse.
+resetTheftWorld(10, 0, 1, 3);
+q("UPDATE {$P}fdata SET f99t = 40, f99 = 1 WHERE vref = ".V_ATT);
+check($database->canClaimArtifact(V_ATT, 1) === false,
+    'una Maravilla con Tesoro 10 no puede quedarse un artefacto');
+runTheft();
+check(artefactVillage() === V_TARGET,
+    'un héroe que sale de la Maravilla no se lleva el artefacto, aunque se cumpla todo lo demás');
+check(strpos(lastAttackerReport(), 'Maravilla') !== false,
+    'y el informe dice que la Maravilla no puede guardar artefactos');
 
 // Un barrido tardío no debe iniciar el retardo desde la hora de procesamiento.
 foreach(array(6 * 3600, artefactActivationDelay() + 3600) as $lag) {

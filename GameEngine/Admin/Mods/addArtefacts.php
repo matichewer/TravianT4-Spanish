@@ -74,9 +74,21 @@ if(!$plan['villages']) {
     exit;
 }
 
+// El primer plano de construcción es lo que pone a comer la mitad a las aldeas de la
+// Maravilla: antes se les acredita lo producido con la tarifa vieja, igual que en la
+// liberación programada. Automation se carga sin su barrido, porque el constructor corre
+// todo el mantenimiento del mundo (incluido el borrado de cuentas inactivas).
+// Technology (que deja `$technology` armado al incluirse) nombra las unidades con las
+// constantes del idioma, así que el idioma va antes.
+define('TRAVIAN_SKIP_AUTOMATION_BOOTSTRAP', true);
+include_once("../../Lang/".LANG.".php");
+include_once("../../Technology.php");
+include_once("../../Automation.php");
+$automation = (new ReflectionClass('Automation'))->newInstanceWithoutConstructor();
+
 // La creación de cada aldea vive en ArtefactRelease.php para que los checkers puedan
 // llamarla sobre tablas temporales: acá sólo queda disparar el plan.
-$result = artefactReleaseExecute($database, $plan, $natarId);
+$result = artefactReleaseExecute($database, $plan, $natarId, array($automation, 'accrueWonderVillagesBeforePlans'));
 
 header("Location: ../../../Admin/admin.php?p=addArtefacts&g=".count($result['created'])
     .($result['failed'] > 0 ? "&sinsitio=".$result['failed'] : ""));

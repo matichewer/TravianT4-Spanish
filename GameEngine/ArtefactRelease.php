@@ -40,6 +40,9 @@ require_once __DIR__.'/NatarVillage.php';
 // Por greyZoneDistanceToCentre(), que es la distancia al centro que usa el resto del
 // motor: los anillos de artefactos tienen que medirse con la misma regla que la zona gris.
 require_once __DIR__.'/GreyZone.php';
+// Por wonderPlansHaveAppeared(): sembrar el primer plano es lo que enciende la mitad de
+// consumo en las aldeas de la Maravilla.
+require_once __DIR__.'/Wonder.php';
 
 /**
  * Los valores por defecto. Donde el oficial dice algo, dice esto.
@@ -652,12 +655,27 @@ function artefactReleaseWallType() {
     return defined('NATAR_SETTLEMENT_WALL_TYPE') ? (int)NATAR_SETTLEMENT_WALL_TYPE : 31;
 }
 
-/** Ejecuta un plan entero. Devuelve cuántas aldeas se crearon y cuántas quedaron sin sitio. */
-function artefactReleaseExecute($database, $plan, $natarId) {
+/**
+ * Ejecuta un plan entero. Devuelve cuántas aldeas se crearon y cuántas quedaron sin sitio.
+ *
+ * `$beforePlansAppear` es lo que hay que correr justo antes de que exista el primer plano de
+ * construcción del mundo: ese es el instante en que las aldeas de la Maravilla pasan a comer
+ * la mitad (wonderPlansHaveAppeared), así que antes se les acredita lo producido con la
+ * tarifa vieja (Automation::accrueWonderVillagesBeforePlans). Se llama una sola vez, y
+ * ninguna si el mundo ya tenía planos o si el plan no trae.
+ */
+function artefactReleaseExecute($database, $plan, $natarId, $beforePlansAppear = null) {
     $taken = array();
     $created = array();
     $failed = 0;
+    $plansAlreadyOut = wonderPlansHaveAppeared($database);
     foreach($plan['villages'] as $village) {
+        if(!$plansAlreadyOut && (int)$village['type'] === ARTEFACT_PLAN) {
+            $plansAlreadyOut = true;
+            if($beforePlansAppear !== null) {
+                call_user_func($beforePlansAppear, time());
+            }
+        }
         $wref = artefactReleaseCreateVillage($database, $village, $natarId, $taken);
         if($wref > 0) {
             $created[] = $wref;
@@ -872,7 +890,7 @@ function artefactReleaseSchedule($database, $at, $config) {
  * el sembrado se cae a la mitad, el turno queda tomado igual — es lo correcto: mejor media
  * liberación que dos enteras, y el panel muestra lo que hay.
  */
-function artefactReleaseRunScheduled($database, $now = null) {
+function artefactReleaseRunScheduled($database, $now = null, $beforePlansAppear = null) {
     $now = $now === null ? time() : (int)$now;
     $status = artefactReleaseScheduleStatus($database, $now);
     if(!$status['available'] || !$status['due']) {
@@ -894,7 +912,7 @@ function artefactReleaseRunScheduled($database, $now = null) {
         return array('created' => array(), 'failed' => $plan['total_villages'],
             'error' => 'no existe la cuenta Natars');
     }
-    $result = artefactReleaseExecute($database, $plan, $natarId);
+    $result = artefactReleaseExecute($database, $plan, $natarId, $beforePlansAppear);
     $result['plan'] = $plan;
     return $result;
 }

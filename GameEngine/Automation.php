@@ -16,6 +16,9 @@ require_once __DIR__.'/Catapult.php';
 // Los artefactos. Se declara acá además de en Database.php por lo mismo que Accounts.php:
 // hay checkers que cargan Automation con un doble de la capa de datos.
 require_once __DIR__.'/Artefact.php';
+// Las reglas de la aldea de la Maravilla: su consumo de cereal, el arquitecto que no la
+// protege, el constructor maestro que no trabaja ahí. Mismo motivo que Artefact.php.
+require_once __DIR__.'/Wonder.php';
 // La liberacion programada de artefactos se dispara desde el barrido de Automation, sin cron.
 require_once __DIR__.'/ArtefactRelease.php';
 
@@ -278,11 +281,17 @@ class Automation {
         // cantería. El valor sale de la tabla oficial en Artefact.php; acá estaba escrito
         // a mano y, sobre todo, la consulta pedía una columna inexistente y devolvía
         // siempre vacío, así que ningún artefacto protegía nada.
-        $durability *= $this->artefactValue(
-            (int)$villageId,
-            isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
-            ARTEFACT_ARCHITECT
-        );
+        //
+        // Oficial: "does not apply to the Wonder of the World itself". Los demás edificios
+        // de la aldea de la Maravilla sí se protegen; la Maravilla no, ni ante un jugador ni
+        // ante las oleadas natar, que entran por este mismo camino con ctar1 = 40.
+        if($slot !== WONDER_FIELD) {
+            $durability *= $this->artefactValue(
+                (int)$villageId,
+                isset($targetVillage['owner']) ? (int)$targetVillage['owner'] : 0,
+                ARTEFACT_ARCHITECT
+            );
+        }
         $outcome = $battle->calculateSiegeOutcome(
             $firingPower,
             $oldLevel,
@@ -299,7 +308,11 @@ class Automation {
 			}
 			$database->query("DELETE FROM ".TB_PREFIX."bdata WHERE wid = ".(int)$villageId." AND field = ".(int)$slot);
             $database->setVillageLevel((int)$villageId, 'f'.$slot, $newLevel);
-            if($slot >= 19 && $newLevel === 0) {
+            // La Maravilla en 0 conserva su tipo: el campo 99 es lo único que dice que esta
+            // es la aldea de la Maravilla (wonderVillage), y sin él la aldea dejaba de serlo —
+            // se podía levantar un Tesoro, volvía el constructor maestro y no había forma de
+            // reconstruir la Maravilla.
+            if($slot >= 19 && $slot !== WONDER_FIELD && $newLevel === 0) {
                 $database->setVillageLevel((int)$villageId, 'f'.$slot.'t', 0);
             }
             $this->applyStorageCapacityDelta($villageId, $buildingType, $oldLevel, $newLevel);
@@ -4065,7 +4078,8 @@ class Automation {
                                 ),
                                 array(
                                     'treasury' => $database->getVillageTreasuryLevel($attackerVillage),
-                                    'artefact' => $database->villageHoldsArtefact($attackerVillage)
+                                    'artefact' => $database->villageHoldsArtefact($attackerVillage),
+                                    'wonder_village' => wonderVillage($database->getResourceLevel($attackerVillage))
                                 )
                             );
                             if($theft['status'] === 'claimed') {
@@ -5285,6 +5299,26 @@ class Automation {
         $this->bountyprocessProduction($bountywid, $until);
     }
 
+    /**
+     * Cierra el tramo de las aldeas de la Maravilla de jugadores justo antes de que
+     * aparezcan los planos de construcción.
+     *
+     * La mitad de consumo empieza en ese instante: sin esto, la primera visita después de
+     * la liberación acreditaría con la tarifa nueva todas las horas que el dueño estuvo
+     * afuera, como si los planos hubieran salido cuando él se fue. Las Maravillas natar no
+     * hace falta tocarlas: no pagan manutención.
+     */
+    public function accrueWonderVillagesBeforePlans($until) {
+        global $database;
+        $rows = $database->query_return(
+            "SELECT `vref` FROM ".TB_PREFIX."fdata WHERE `f".WONDER_FIELD."t` = ".WONDER_BUILDING_TYPE
+            ." AND `vref` IN (SELECT `wref` FROM ".TB_PREFIX."vdata WHERE ".playerAccountSql('owner').")"
+        );
+        foreach((array)$rows as $row) {
+            $this->accrueProductionBeforeChange((int)$row['vref'], (int)$until);
+        }
+    }
+
     /** Cierra el tramo con los efectos viejos antes de cambiar el podio de artefactos. */
     public function accrueAccountProductionBeforeArtefactChange($owner, $until) {
         global $database;
@@ -5458,8 +5492,14 @@ class Automation {
 	        // La fila ya viene en bountyinfoarray, así que la clase sale de ahí sin una
 	        // consulta extra; sólo se cae a $uid si por algún motivo no está cargada.
 	        $villageRow = is_array($this->bountyinfoarray) ? $this->bountyinfoarray : array('owner' => (int)$uid);
+	        // La parte que está en la aldea, que en la de la Maravilla come la mitad. Fuera de
+	        // una Maravilla no se pide: son dos consultas más por aldea en cada barrido.
+	        $stationedUpkeep = wonderVillage($this->bountyresarray)
+	            ? $this->getUpkeep($technology->getStationedUnits($bountywid), 0, $bountywid)
+	            : 0;
 	        if(isStaticNpcVillage($villageRow)) {
 	            $upkeep = 0;
+	            $stationedUpkeep = 0;
 	        }
 	        $heroData = $database->getHeroData($uid);
 	        $heroProduction = heroVillageResourceBonus($heroData, $bountywid, SPEED);
@@ -5478,10 +5518,10 @@ class Automation {
 	        $this->bountyproduction['clay'] = $gross['production']['clay']+$heroProduction['clay'];
 	        $this->bountyproduction['iron'] = $gross['production']['iron']+$heroProduction['iron'];
 
-	        // El artefacto de dieta, con la misma función que usa dorf1: esta producción
-	        // escribe recursos reales y de ella come la hambruna, así que no puede diferir
-	        // de la que el jugador tiene a la vista.
-	        $upkeepDetail = artefactTroopUpkeep($database, $uid, $bountywid, $upkeep);
+	        // La Maravilla y el artefacto de dieta, con la misma función que usa dorf1: esta
+	        // producción escribe recursos reales y de ella come la hambruna, así que no puede
+	        // diferir de la que el jugador tiene a la vista.
+	        $upkeepDetail = villageTroopUpkeep($database, $uid, $bountywid, $this->bountyresarray, $upkeep, $stationedUpkeep);
 	        $this->bountyproduction['crop'] = $grossCrop-$this->bountypop-$upkeepDetail['charged']+$heroProduction['crop'];
 	    }
 
@@ -6052,7 +6092,7 @@ class Automation {
         $ourFileHandle = @fopen("GameEngine/Prevention/artefactrelease.txt", 'w');
         @fclose($ourFileHandle);
 
-        $result = artefactReleaseRunScheduled($database);
+        $result = artefactReleaseRunScheduled($database, null, array($this, 'accrueWonderVillagesBeforePlans'));
         if(is_array($result)) {
             $this->logArtefactRelease($result);
         }
@@ -6098,6 +6138,13 @@ class Automation {
         $q = "SELECT * FROM ".TB_PREFIX."bdata WHERE master = 1";
         $array = $database->query_return($q);
         foreach ($array as $master) {
+            // Oficial: el constructor maestro no funciona en la aldea de la Maravilla. Un
+            // pedido que quedó de antes se cancela en vez de activarse; como el oro y los
+            // recursos se cobran recién al activar, no hay nada que devolver.
+            if(wonderVillage($database->getResourceLevel($master['wid']))) {
+                $this->cancelMasterRequest($master);
+                continue;
+            }
             $owner = $database->getVillageField($master['wid'], 'owner');
             $tribe = $database->getUserField($owner, 'tribe', 0);
             $villwood = $database->getVillageField($master['wid'], 'wood');
@@ -6164,6 +6211,31 @@ class Automation {
 	                }
             }
         }
+    }
+
+    /**
+     * Borra un pedido sin pagar del constructor maestro.
+     *
+     * Encolar una construcción nueva ya le escribe el tipo a la casilla (addBuilding), así
+     * que si era el único trabajo sobre una casilla todavía vacía, el tipo se limpia igual
+     * que en Building::removeBuilding(): si no, la casilla queda ocupada por un edificio de
+     * nivel 0 que nadie va a construir.
+     */
+    private function cancelMasterRequest($master) {
+        global $database;
+        $id = (int)$master['id'];
+        $wid = (int)$master['wid'];
+        $field = (int)$master['field'];
+        if(!$database->query("DELETE FROM ".TB_PREFIX."bdata WHERE id = ".$id." AND master = 1")) {
+            return false;
+        }
+        $remaining = $database->query_return("SELECT id FROM ".TB_PREFIX."bdata WHERE wid = ".$wid." AND field = ".$field." LIMIT 1");
+        if($field >= 19 && $field <= 40
+            && (!is_array($remaining) || count($remaining) === 0)
+            && (int)$database->getFieldLevel($wid, $field) === 0) {
+            $database->setVillageLevel($wid, 'f'.$field.'t', 0);
+        }
+        return true;
     }
 
     /**

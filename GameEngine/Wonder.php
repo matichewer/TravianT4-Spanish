@@ -24,7 +24,12 @@
  *     vuelve robable: si pudiera estar en la propia aldea de la Maravilla, defender una
  *     cosa defendería las dos.
  *   - **Ni el fin de obra con oro, ni el constructor maestro, ni el mercader NPC funcionan
- *     en la aldea de la Maravilla.** Los dos primeros ya estaban; el tercero no.
+ *     en la aldea de la Maravilla.** El primero ya estaba; el maestro se creía bloqueado y
+ *     no lo estaba en ningún punto (ver Building::masterBuildingRequest()).
+ *
+ * Las otras reglas de la aldea viven más abajo: el gran almacenamiento sin plano
+ * (Building::storageGreatBuildingsUnlocked), la mitad de consumo de cereal desde que
+ * aparecen los planos (villageTroopUpkeep) y la limpieza del Tesoro de fábrica.
  *
  * Un jugador **sin alianza** puede llegar al 49 con su propio plano —es un caso que el
  * oficial no contempla porque allá nadie llega ahí solo, pero prohibirlo sería peor: en un
@@ -39,6 +44,15 @@ require_once __DIR__.'/Accounts.php';
 if(!defined('WONDER_BUILDING_TYPE')) {
     define('WONDER_BUILDING_TYPE', 40);
     define('WONDER_FIELD', 99);
+}
+
+/**
+ * La fracción del cereal que comen las tropas estacionadas en la aldea de la Maravilla una
+ * vez que aparecieron los planos. Oficial ("World Wonder", "Reducing crop consumption"):
+ * "units that are stationed inside a World Wonder village will consume only 50% crop".
+ */
+if(!defined('WONDER_CROP_UPKEEP_FACTOR')) {
+    define('WONDER_CROP_UPKEEP_FACTOR', 0.5);
 }
 
 /**
@@ -172,9 +186,136 @@ function wonderPlanMessage($status) {
         .' del Mundo.';
 }
 
-/** ¿Esta aldea es la de una Maravilla del Mundo? */
+/**
+ * ¿Ya aparecieron los planos de construcción en este mundo?
+ *
+ * Oficial: la mitad de consumo empieza "once construction plans appear", que es un evento
+ * del servidor —el anuncio de que salieron las aldeas de los planos—, no tener uno. Acá
+ * ese evento es que exista al menos una fila del tipo 9 en `artefacts`, la tenga quien la
+ * tenga: los planos no se borran nunca (abandonar uno lo muda a otra aldea natar), así que
+ * el estado se deriva sin columna ni migración. La única forma de volver atrás es deshacer
+ * la liberación desde el panel, que es una herramienta de calibración.
+ *
+ * Un doble de la capa de datos sin el método contesta que no, igual que con los artefactos.
+ */
+function wonderPlansHaveAppeared($database) {
+    return is_object($database) && method_exists($database, 'wonderPlansHaveAppeared')
+        && (bool)$database->wonderPlansHaveAppeared();
+}
+
+/**
+ * La fracción del cereal que comen las tropas ESTACIONADAS en esta aldea: 1/2 en la de la
+ * Maravilla una vez que aparecieron los planos, 1 en cualquier otro caso.
+ */
+function wonderStationedUpkeepFactor($database, $fields) {
+    if(!wonderVillage($fields) || !wonderPlansHaveAppeared($database)) {
+        return 1.0;
+    }
+    return (float)WONDER_CROP_UPKEEP_FACTOR;
+}
+
+/**
+ * Lo que paga de cereal por hora una aldea por sus tropas: la única definición.
+ *
+ * La usan dorf1 (`Village::calculateProduction`), lo que se acredita de verdad y lee la
+ * hambruna (`Automation::bountycalculateProduction`), la barra de recursos y el resumen de
+ * aldeas. `$upkeep` es el consumo de todo lo que la aldea alimenta (`getAllUnits`) y
+ * `$stationedUpkeep` la parte que está físicamente en la aldea (`getStationedUnits`), los
+ * dos ya con el abrevadero romano descontado por unidad.
+ *
+ * Las reglas que el oficial publica están citadas en WONDER_CROP_UPKEEP_FACTOR. Las que no
+ * publica son decisiones de este repo, documentadas en AGENTS.md:
+ *
+ *   - **Quién entra en la mitad**: las tropas propias de la aldea, los refuerzos que están
+ *     ahí (de quien sean: los alimenta la aldea que los aloja) y el héroe que esté en la
+ *     aldea, porque el oficial dice "units stationed inside" sin excluirlo. **No** entran
+ *     las tropas de la aldea que están de viaje, atrapadas en trampas ajenas o en un oasis
+ *     anexado: no están adentro.
+ *   - **Abrevadero**: el −1 por unidad va primero, porque es una rebaja por unidad del
+ *     edificio, y la mitad se aplica sobre lo que queda.
+ *   - **Dieta**: se multiplica. La Maravilla deja la mitad y la dieta su fracción de eso;
+ *     el oficial lista los dos efectos por separado y no dice que uno anule al otro.
+ *
+ * Devuelve lo que la aldea paga y cuánto ahorra cada efecto. Las dos partes del ahorro
+ * suman exacto `upkeep − charged`, para que el detalle de producción cierre.
+ */
+function villageTroopUpkeep($database, $owner, $villageId, $fields, $upkeep, $stationedUpkeep) {
+    $upkeep = max(0, (int)$upkeep);
+    $stationed = min($upkeep, max(0, (int)$stationedUpkeep));
+    $wonderFactor = wonderStationedUpkeepFactor($database, $fields);
+    $afterWonder = ($upkeep - $stationed) + $stationed * $wonderFactor;
+    $dietFactor = artefactDietFactor($database, $owner, $villageId);
+    $charged = (int)round($afterWonder * $dietFactor);
+    return array(
+        'charged' => $charged,
+        'saving' => $upkeep - $charged,
+        'wonder_saving' => $upkeep - $afterWonder,
+        'artefact_saving' => $afterWonder - $charged,
+        'factor' => $dietFactor,
+        'wonder_factor' => $wonderFactor
+    );
+}
+
+/**
+ * ¿Esta aldea es la de una Maravilla del Mundo?
+ *
+ * Es el único marcador que identifica la aldea: `vdata.natar = 1` lo llevan también las
+ * aldeas de artefacto, y `npckind` estático vale para la capital natar y se pierde con la
+ * conquista. Por eso las catapultas que dejan la Maravilla en 0 NO borran el tipo del
+ * campo 99 (ver Automation::applyCatapultImpact()): con el tipo se iba la aldea entera.
+ */
 function wonderVillage($fields) {
     return is_array($fields)
         && isset($fields['f'.WONDER_FIELD.'t'])
         && (int)$fields['f'.WONDER_FIELD.'t'] === WONDER_BUILDING_TYPE;
+}
+
+/**
+ * Las Aldeas de la Maravilla que todavía tienen un Tesoro, para tools/fix_wonder_treasury.php.
+ *
+ * Venían con uno de nivel 10 de fábrica (natarWonderBuildings) y sobrevivía a la
+ * conquista. Cada fila dice si se puede derribar o por qué no:
+ *
+ *   'ok'             — se derriba.
+ *   'holds_artefact' — guarda un artefacto. No se toca: derribar el Tesoro no lo saca de
+ *                      ahí, y moverlo es una decisión del administrador, no de un arreglo.
+ *   'queued'         — hay una obra del Tesoro en la cola. Hay que cancelarla primero, o
+ *                      al terminar volvería a levantarlo.
+ */
+function wonderVillageTreasuryRepairs($database) {
+    $repairs = array();
+    $villages = $database->query_return(
+        'SELECT f.*, v.`owner` FROM '.TB_PREFIX.'fdata f INNER JOIN '.TB_PREFIX.'vdata v ON v.`wref` = f.`vref` '
+        .'WHERE f.`f'.WONDER_FIELD.'t` = '.WONDER_BUILDING_TYPE.' ORDER BY f.`vref`'
+    );
+    foreach((array)$villages as $fields) {
+        $wref = (int)$fields['vref'];
+        for($slot = 19; $slot <= 38; $slot++) {
+            if((int)$fields['f'.$slot.'t'] !== 27) {
+                continue;
+            }
+            $status = 'ok';
+            if($database->villageHoldsArtefact($wref)) {
+                $status = 'holds_artefact';
+            } elseif(count((array)$database->query_return('SELECT `id` FROM '.TB_PREFIX.'bdata WHERE `wid` = '.$wref
+                .' AND `field` = '.$slot.' LIMIT 1')) > 0) {
+                $status = 'queued';
+            }
+            $repairs[] = array('wref' => $wref, 'owner' => (int)$fields['owner'], 'slot' => $slot,
+                'level' => (int)$fields['f'.$slot], 'status' => $status);
+        }
+    }
+    return $repairs;
+}
+
+/**
+ * Derriba el Tesoro de una fila de wonderVillageTreasuryRepairs() con el mismo paso que
+ * la demolición con oro (Automation::demolishBuildingNow), que es el único lugar donde baja
+ * un nivel: recuenta habitantes y cultura igual que cualquier otra demolición.
+ */
+function wonderVillageRemoveTreasury($automation, $repair) {
+    if(!is_array($repair) || $repair['status'] !== 'ok') {
+        return 0;
+    }
+    return (int)$automation->demolishBuildingNow((int)$repair['wref'], (int)$repair['slot']);
 }

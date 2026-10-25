@@ -65,6 +65,13 @@ class Building {
 		if(!$this->isTribeBuildingAllowed($tid)) {
 			return 1;
 		}
+		// Oficial: en la aldea de la Maravilla no puede haber Tesoro. meetRequirement()
+		// sólo frena el Tesoro NUEVO; este es el camino de la mejora, por donde se subía el
+		// que las aldeas natar traían de fábrica hasta el 20 y se guardaba ahí un artefacto
+		// grande o el propio plano, defendido por el mismo ejército que la Maravilla.
+		if($tid === 27 && wonderVillage($village->resarray)) {
+			return 13;
+		}
 		$demolition = $database->getDemolition($village->wid);
 		if(!empty($demolition) && (int)$demolition[0]['buildnumber'] === $id) { return 11; }
 		// La Maravilla pide planos de construcción, y eso NO se puede comprobar en
@@ -577,9 +584,11 @@ class Building {
 			// — el requisito publicado es Edificio principal 10 más el artefacto. Con la
 			// regla de más, el artefacto de almacenamiento no servía justo en la aldea donde
 			// más rinde: la capital, que es la única con los campos por encima de 10.
+			// La excepción de la Maravilla vive en storageGreatBuildingsUnlocked(): este
+			// case la anunciaba en el comentario y no la aplicaba.
 			case 38:
 			case 39:
-			return $this->hasStorageArtefact() && $this->canBuildAnotherOfType($id);
+			return $this->storageGreatBuildingsUnlocked() && $this->canBuildAnotherOfType($id);
 			break;
 			// Oficial: en la aldea de la Maravilla no se puede levantar un Tesoro. Es lo
 			// que obliga a guardar el plano de construcción en OTRA aldea, y por lo tanto
@@ -691,7 +700,11 @@ class Building {
 			break;
 			case 38:
 			case 39:
-			$extras[] = array('Plano de almacenamiento',$this->hasStorageArtefact());
+			if(wonderVillage($village->resarray)) {
+				$extras[] = array('Aldea de la Maravilla (no necesita plano de almacenamiento)',true);
+			} else {
+				$extras[] = array('Plano de almacenamiento',$this->hasStorageArtefact());
+			}
 			break;
 		}
 		return $extras;
@@ -730,6 +743,20 @@ class Building {
 			return false;
 		}
 		return $database->hasActiveArtefactEffect((int)$village->wid,(int)$session->uid,ARTEFACT_STORAGE);
+	}
+
+	/**
+	 * ¿Esta aldea puede levantar un gran almacén o un gran granero?
+	 *
+	 * Oficial ("Building a World Wonder"): en la aldea de la Maravilla los "Great" se
+	 * construyen "without needing an artefact"; en cualquier otra hace falta el plano de
+	 * almacenamiento activo. Es la única definición: la usan meetRequirement(), la ficha
+	 * "Necesario:" y las dos rejas de la lista de construcciones. La Maravilla va primero
+	 * porque se resuelve con la fila que ya está cargada, sin preguntar por artefactos.
+	 */
+	public function storageGreatBuildingsUnlocked() {
+		global $village;
+		return wonderVillage($village->resarray) || $this->hasStorageArtefact();
 	}
 
 	/**
@@ -1233,6 +1260,12 @@ class Building {
 		$field = (int)$field;
 		$type = (int)$type;
 		if($field < 1 || $field > 40) {
+			return false;
+		}
+		// Oficial: el constructor maestro no funciona en la aldea de la Maravilla, igual
+		// que el fin de obra con oro y el mercader NPC. Estaba anunciado como bloqueado y
+		// no lo estaba en ningún punto: se ofrecía, se aceptaba y se activaba.
+		if(wonderVillage($village->resarray)) {
 			return false;
 		}
 		$dataarray = isset($GLOBALS['bid'.$type]) ? $GLOBALS['bid'.$type] : null;

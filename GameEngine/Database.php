@@ -15,6 +15,9 @@ require_once(dirname(__FILE__).'/Catapult.php');
 // el conjunto activo (retardo, límite de tres, aldea sobre cuenta) antes de devolverlo,
 // y porque la pantalla del Tesoro lee el catálogo de nombres sin cargar el motor.
 require_once(dirname(__FILE__).'/Artefact.php');
+// Qué aldea es la de una Maravilla y qué reglas cambian ahí. Va acá porque la capa de
+// datos decide si una aldea puede recibir un artefacto, y la de la Maravilla no puede.
+require_once(dirname(__FILE__).'/Wonder.php');
 // Las dos pestañas de tropas del resumen de aldeas. Va acá por el mismo motivo que
 // Production.php: es una agregación sobre varias tablas que tiene que dar el mismo
 // número desde la plantilla y desde los checkers.

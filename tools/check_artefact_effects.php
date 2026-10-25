@@ -255,9 +255,13 @@ check(preg_match('/\$incomingTroopTypesVisible\)\s*\{.*?>0<.*?\}/s', $sources['i
     'con el artefacto, una unidad que NO viene se muestra en 0: es lo que revela el tipo');
 check(strpos($sources['Building'], 'ARTEFACT_STORAGE') !== false,
     'el plano de almacenamiento gatea el gran almacén y el gran granero');
-check(strpos($all, 'artefactTroopUpkeep(') !== false,
+// El consumo pasa por villageTroopUpkeep() (Wonder.php), que suma la mitad de la Maravilla
+// y toma el factor de dieta de artefactDietFactor(): una sola cuenta para las dos cosas.
+$wonderSource = file_get_contents($root.'/GameEngine/Wonder.php');
+check(preg_match('/function villageTroopUpkeep\(.*?artefactDietFactor\(/s', $wonderSource) === 1,
     'el consumo de cereal pasa por la función compartida de dieta');
-check(substr_count($all, 'artefactTroopUpkeep(') >= 2,
+check(strpos($sources['Village'], 'villageTroopUpkeep(') !== false
+    && strpos($sources['Automation'], 'villageTroopUpkeep(') !== false,
     'y la usan los DOS caminos de producción (dorf1 y el que acredita recursos)');
 check(strpos($sources['Automation'], 'ARTEFACT_CONFUSION') !== false,
     'la confusión del rival se aplica a las catapultas');

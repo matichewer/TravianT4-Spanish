@@ -194,8 +194,8 @@ check(strpos($automation, "require_once __DIR__.'/ArtefactRelease.php'") !== fal
     'Automation carga el módulo de liberación');
 check(strpos($automation, 'Prevention/artefactrelease.txt') !== false,
     'y el barrido tiene su propia marca de Prevention, para no consultar config en cada request');
-check(strpos($automation, 'artefactReleaseRunScheduled($database)') !== false,
-    'el barrido llama a la liberación programada');
+check(strpos($automation, "artefactReleaseRunScheduled(\$database, null, array(\$this, 'accrueWonderVillagesBeforePlans'))") !== false,
+    'el barrido llama a la liberación programada, y le pasa la acreditación de las Maravillas para el primer plano');
 check(strpos($automation, '[ARTEFACTOS]') !== false,
     'y deja rastro en el log: una liberación a medias tiene que poder verse en algún lado');
 

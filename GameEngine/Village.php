@@ -132,10 +132,15 @@ class Village {
 	private function calculateProduction() {
 		global $technology,$database,$session;
 		$upkeep = $technology->getUpkeep($this->unitall,0);
-		// El artefacto de dieta sale de una sola función compartida con el camino que
-		// acredita los recursos de verdad (Automation::bountycalculateProduction): acá
-		// había una cascada de tres `if` con los porcentajes al revés que el oficial.
-		$upkeepDetail = artefactTroopUpkeep($database, $session->uid, $this->wid, $upkeep);
+		// La mitad de consumo de la Maravilla sólo mira lo que está en la aldea; fuera de
+		// una Maravilla no hace falta ni pedirlo.
+		$stationedUpkeep = wonderVillage($this->resarray)
+			? $technology->getUpkeep($technology->getStationedUnits($this->wid),0)
+			: 0;
+		// La Maravilla y el artefacto de dieta salen de una sola función compartida con el
+		// camino que acredita los recursos de verdad (Automation::bountycalculateProduction):
+		// acá había una cascada de tres `if` con los porcentajes al revés que el oficial.
+		$upkeepDetail = villageTroopUpkeep($database, $session->uid, $this->wid, $this->resarray, $upkeep, $stationedUpkeep);
 		$heroData = $database->getHeroData($session->uid);
 		$heroProduction = heroVillageResourceBonus($heroData, $this->wid, SPEED);
 
@@ -148,7 +153,10 @@ class Village {
 		}
 		$this->productionBreakdown['crop']['population'] = $this->pop;
 		$this->productionBreakdown['crop']['upkeep'] = $upkeep;
-		$this->productionBreakdown['crop']['artefact_saving'] = $upkeepDetail['saving'];
+		$this->productionBreakdown['crop']['wonder_saving'] = $upkeepDetail['wonder_saving'];
+		$this->productionBreakdown['crop']['artefact_saving'] = $upkeepDetail['artefact_saving'];
+		// Lo que de verdad se paga: la barra de recursos lo muestra como consumo.
+		$this->productionBreakdown['crop']['upkeep_charged'] = $upkeepDetail['charged'];
 
 		$this->production['crop'] = $cropProduction - $this->pop - $upkeepDetail['charged'] + $heroProduction['crop'];
 	}

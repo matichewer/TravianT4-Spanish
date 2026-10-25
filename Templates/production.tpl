@@ -31,6 +31,9 @@ function productionBreakdownTooltip($resource, $label, $details, $total) {
 	if($resource === 'crop') {
 		$lines[] = 'Población: −'.productionBreakdownNumber($details['population']);
 		$lines[] = 'Consumo de tropas: −'.productionBreakdownNumber($details['upkeep']);
+		if(!empty($details['wonder_saving'])) {
+			$lines[] = 'Aldea de la Maravilla (consumo ahorrado): +'.productionBreakdownNumber($details['wonder_saving']);
+		}
 		// El ahorro puede ser negativo: un artefacto del necio en su cara mala cobra de
 		// más en vez de ahorrar, y el jugador tiene que poder ver de dónde sale.
 		if($details['artefact_saving'] > 0) {

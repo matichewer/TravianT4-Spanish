@@ -458,15 +458,20 @@ function natarWonderVillageName($wref, $x = null, $y = null) {
  * oficial se corrigio el instalador y las dos copias del panel quedaron poniendola igual,
  * asi que una Maravilla creada desde el panel nacia otra vez inconquistable sin catapultas.
  *
- * Sin residencia ni palacio, como en el original. Tesoro 10, escondite 10, Maravilla en
- * la ranura 99, edificio principal y punto de reunion en 1.
+ * Sin residencia ni palacio, como en el original. Escondite 10, Maravilla en la ranura
+ * 99, edificio principal y punto de reunion en 1.
+ *
+ * Y sin Tesoro: el oficial no deja tener uno en la aldea de la Maravilla, que es lo que
+ * obliga a guardar el plano en otra aldea. Antes nacian con un Tesoro 10 que sobrevivia a
+ * la conquista, y desde ahi se podia subir y recibir el plano o cualquier artefacto. El
+ * campo 22 no se toca a proposito: si la aldea ya esta aprovisionada puede tener ahi un
+ * almacen. Los mundos que ya lo tienen se limpian con tools/fix_wonder_treasury.php.
  */
 function natarWonderBuildings($wref) {
     global $database;
     $wref = (int)$wref;
     return mysqli_query($database->connection,
         "UPDATE ".TB_PREFIX."fdata SET "
-        ."`f22t` = 27, `f22` = 10, "      // tesoro
         ."`f28t` = 0,  `f28` = 0, "       // sin residencia: ver el comentario de arriba
         ."`f19t` = 23, `f19` = 10, "      // escondite
         ."`f99t` = 40, "                  // la Maravilla

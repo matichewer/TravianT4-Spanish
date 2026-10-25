@@ -19,6 +19,10 @@ if($bindicate == 1) {
 	echo "<p><span class=\"none\"><b>".htmlspecialchars(wonderPlanMessage($wonderStatus), ENT_QUOTES, 'UTF-8')."</b></span></p>";
 	echo "<p class=\"none\">Planos activos: ".(int)$wonderStatus['own']." tuyo(s) y "
 		.(int)$wonderStatus['allies']." de tu alianza.</p>";
+} else if($bindicate == 13) {
+	// El Tesoro que traían de fábrica las Aldeas de la Maravilla: no se puede subir porque
+	// en esta aldea no puede haber Tesoro (ver Building::canBuild()).
+	echo "<p><span class=\"none\"><b>En la aldea de la Maravilla no puede haber Tesoro: el plano de construcción se guarda en otra aldea.</b></span></p>";
 } else {
 	$loopsame = $building->isCurrent($id)?1:0;
         $doublebuild = 0;
@@ -32,6 +36,10 @@ if($bindicate == 1) {
 	// de sesión: sin él, un enlace de afuera podía gastarlo desde el navegador del
 	// jugador. La duración ya no viaja por la URL, la calcula el servidor.
 	$masterToken = urlencode((string)$session->mchecker);
+	// Oficial: en la aldea de la Maravilla no funciona ningún atajo con oro, ni el
+	// constructor maestro ni el mercader NPC. El servidor ya los rechaza; esto evita
+	// ofrecer botones que no hacen nada.
+	$goldShortcutsAvailable = !wonderVillage($village->resarray);
 ?>
 <div id="contract" class="contractWrapper">
 <div class="contractText">Costo de mejora al nivel <?php echo $upgradeLevel; ?> </div>
@@ -57,7 +65,7 @@ $totalres = $uprequire['wood']+$uprequire['clay']+$uprequire['iron']+$uprequire[
 $availres = $wood+$clay+$iron+$crop;
 if($availres >= $totalres){ $style = "npc"; } else { $style = "npc_inactive"; $disable = "disabled=\"disabled\""; }
 if($session->plus) {
-if($session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
+if($goldShortcutsAvailable && $session->userinfo['gold'] >= 3 && $building->getTypeLevel(17) >= 1) {
 echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"icon\" title=\"Mercader NPC: cambia tus recursos sobrantes por los que faltan para esta mejora, a cambio de oro\" onclick=\"window.location.href = 'build.php?gid=17&t=3&r1=".$uprequire['wood']."&r2=".$uprequire['clay']."&r3=".$uprequire['iron']."&r4=".$uprequire['crop']."'; return false;\">&nbsp;<img src=\"img/x.gif\" style=\"margin-top:6px;\" class=\"".$style."\" alt=\"NPC\" title=\"Mercader NPC: cambia tus recursos sobrantes por los que faltan para esta mejora, a cambio de oro\"></button>";
 }
 
@@ -72,7 +80,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 ?>	</br>
 <?php
 	if($id <= 18) {
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
@@ -80,7 +88,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 		echo '<font color="#B3B3B3">(costo: <img src="'.GP_LOCATE.'img/a/gold_g.gif" alt="Oro" title="Oro"/>1)</font>';
 	}
 	}else{
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
@@ -97,7 +105,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 ?>	</br>
 <?php
 	if($id <= 18) {
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
@@ -105,7 +113,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 		echo '<font color="#B3B3B3">(costo: <img src="'.GP_LOCATE.'img/a/gold_g.gif" alt="Oro" title="Oro"/>1)</font>';
 	}
 	}else{
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
@@ -138,7 +146,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 ?>	</br>
 <?php
 	if($id <= 18) {
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf1.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{
@@ -146,7 +154,7 @@ echo "&nbsp;&nbsp;<button ".$disable." type=\"button\" value=\"npc\" class=\"ico
 		echo '<font color="#B3B3B3">(costo: <img src="'.GP_LOCATE.'img/a/gold_g.gif" alt="Oro" title="Oro"/>1)</font>';
 	}
 	}else{
-	if($session->gold >= 1 && $village->master == 0){
+	if($goldShortcutsAvailable && $session->gold >= 1 && $village->master == 0){
 	    echo "<a class=\"build\" href=\"dorf2.php?master=$bid&id=$id&c=$masterToken\">Construir con maestro constructor </a>";
 		echo '(costo: <img src="'.GP_LOCATE.'img/a/gold.gif" alt="Oro" title="Oro"/>1)';
 	}else{

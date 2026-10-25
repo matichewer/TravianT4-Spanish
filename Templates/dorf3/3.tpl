@@ -15,6 +15,7 @@ include('menu.tpl');
 // En orden de fundación, igual que el cartel lateral. Ver GameEngine/VillageOverview.php.
 $varray = villageOverviewVillages($session->uid);
 $timer = 1;
+$overviewHeroData = $database->getHeroData($session->uid);
 foreach($varray as $vil){
 	$vid = $vil['wref'];
 	$vdata = $database->getVillage($vid);
@@ -36,13 +37,20 @@ foreach($varray as $vil){
 		array($session->bonus1 == 1,$session->bonus2 == 1,$session->bonus3 == 1,$session->bonus4 == 1),
 		SPEED
 	);
-	$prod_wood = $vgross['production']['wood'];
-	$prod_clay = $vgross['production']['clay'];
-	$prod_iron = $vgross['production']['iron'];
-	$prod_crop = $vgross['production']['crop'];
+	// El héroe y el consumo de tropas, con las mismas funciones que Village::calculateProduction():
+	// acá se restaba el mantenimiento crudo, sin dieta ni Maravilla, y no se sumaba el héroe,
+	// así que los tiempos de llenado no eran los de dorf1.
+	$heroProduction = heroVillageResourceBonus($overviewHeroData, $vid, SPEED);
+	$prod_wood = $vgross['production']['wood'] + $heroProduction['wood'];
+	$prod_clay = $vgross['production']['clay'] + $heroProduction['clay'];
+	$prod_iron = $vgross['production']['iron'] + $heroProduction['iron'];
 
-	$prod_crop -= $pop;
-    $prod_crop -= $technology->getUpkeep($technology->getAllUnits($vid),0);
+	$upkeep = $technology->getUpkeep($technology->getAllUnits($vid),0);
+	$stationedUpkeep = wonderVillage($vresarray)
+		? $technology->getUpkeep($technology->getStationedUnits($vid),0)
+		: 0;
+	$upkeepDetail = villageTroopUpkeep($database, $session->uid, $vid, $vresarray, $upkeep, $stationedUpkeep);
+	$prod_crop = $vgross['production']['crop'] + $heroProduction['crop'] - $pop - $upkeepDetail['charged'];
 
 	$percentW = floor($wood/($maxs/100));
 	$percentC = floor($clay/($maxs/100));
