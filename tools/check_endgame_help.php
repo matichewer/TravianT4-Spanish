@@ -199,6 +199,16 @@ check(strpos($building, 'case 27:') !== false,
 check(preg_match('/no se puede construir (<b>)?Tesoro/ui', $page) === 1,
     'y la página lo avisa, que es lo que explica por qué el plano se puede robar');
 
+// El plano de almacenamiento habilita construir el gran almacén y el gran granero, no
+// ampliarlos: lo ya construido sube sin él (Building::canBuild() no lo pide). La página
+// decía lo contrario, y es lo primero que un jugador mira antes de soltar el plano.
+check(strpos($page, 'se sigue ampliando sin el plano') !== false,
+    'la página dice que lo ya construido se sigue ampliando sin el plano, que es lo que hace el motor');
+check(preg_match('/dej[aá]s de poder ampliarlos/u', $page) !== 1,
+    'y ya no dice que sin el plano dejan de poder ampliarse');
+check(strpos($building, 'Habilita CONSTRUIR uno nuevo, y nada más') !== false,
+    'y el motor documenta la misma regla');
+
 // La otra: las aldeas de artefacto no reponen tropas, al revés que una aldea de jugador.
 check(strpos($page, 'no se repone nunca') !== false,
     'la página avisa que la guarnición de una aldea de artefacto no se repone');

@@ -732,10 +732,15 @@ class Building {
 	 *
 	 * Pasa por el conjunto activo como cualquier otro artefacto, así que un plano recién
 	 * capturado no habilita nada hasta que pasa el retardo, y un plano desplazado del
-	 * podio de tres activos deja de habilitar. Es lo oficial ("mientras poseas ese
-	 * artefacto puedes construir y ampliar esos edificios") y el motivo por el que el
-	 * plano no puede tener su propia consulta: era el único artefacto que hacía efecto
-	 * y lo hacía sin mirar ninguna de las dos reglas.
+	 * podio de tres activos deja de habilitar. Por eso el plano no puede tener su propia
+	 * consulta: era el único artefacto que hacía efecto y lo hacía sin mirar ninguna de
+	 * las dos reglas.
+	 *
+	 * Habilita CONSTRUIR uno nuevo, y nada más: lo que ya está construido se sigue
+	 * ampliando sin el plano, porque la mejora pasa por canBuild() y no por
+	 * meetRequirement(). Es una decisión de este repo, documentada en AGENTS.md: la fuente
+	 * oficial actual dice sólo que el plano "grants the ability to construct" y no habla
+	 * de ampliar.
 	 */
 	public function hasStorageArtefact() {
 		global $database,$session,$village;

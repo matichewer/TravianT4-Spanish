@@ -244,6 +244,21 @@ $stub->artefacts = array(wvArt(ARTEFACT_STORAGE, ARTEFACT_SIZE_LARGE, WV_WW));
 check($building->meetRequirement(38), 'el plano grande de cuenta vale en cualquier aldea');
 $stub->artefacts = array();
 
+// Lo ya construido se sigue ampliando sin el plano: el plano habilita construir, no subir
+// de nivel. Es una decisión de este repo (la fuente oficial sólo dice "construct"), y
+// endgame.php la anuncia así; si se cambia, hay que cambiar las dos cosas juntas.
+$fields = wvFields(false);
+$fields['f30'] = 5;
+$fields['f30t'] = 38;
+$fields['f31'] = 5;
+$fields['f31t'] = 39;
+wvUseVillage(WV_NORMAL, $fields);
+check(in_array($building->canBuild(30, 38), array(8, 9), true),
+    'sin plano, un gran almacén ya construido en una aldea normal se sigue ampliando');
+check(in_array($building->canBuild(31, 39), array(8, 9), true), 'y un gran granero también');
+check(is_array($building->masterBuildingRequest(30, 38)), 'también con el constructor maestro');
+check(!$building->meetRequirement(38), 'pero uno nuevo sigue pidiendo el plano');
+
 $list = file_get_contents($root.'/Templates/Build/avaliable.tpl');
 check(substr_count($list, '$storageUnlocked = $building->storageGreatBuildingsUnlocked();') === 1,
     'la lista de construcciones pregunta lo mismo que el motor');
