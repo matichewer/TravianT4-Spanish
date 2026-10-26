@@ -809,6 +809,7 @@ div.village2 table th,div.village2 table td{padding:0;background:none;}div.villa
 div.village2 table tbody td{padding:1px 2px;background:none;}div.village2 div#village_map{width:628px;height:534px;position:relative;}
 div.village2 div#village_map img{position:absolute;}div.village2 div#village_map .wall{top:0;left:0;}
 div.village2 div#village_map img.clickareas{width:628px;height:534px;position:relative;z-index:98;}
+div.village2 div#village_map .rallyPointWonderLevel{left:444px;top:242px;}
 div.village2 div#village_map img.iso{background-image:url(../../img/g/iso.png);}
 .ie6 div.village2 div#village_map img.iso{background-image:url(../../img/g/iso.gif);}
 div.village2 div#village_map div#levels{width:628px;height:534px;position:absolute;top:0;left:0;z-index:97;visibility:hidden;}

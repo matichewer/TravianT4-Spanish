@@ -15,7 +15,7 @@ $vref = $_SESSION['wid'];
 $wwname = $database->getWWName($vref);
 
 if($village->resarray['f99'] < 5){
-echo 'WW name. 
+echo '<p>Puedes elegir el nombre de la Maravilla del mundo cuando alcance el nivel 5.</p>
 			<center>Nombre de la Maravilla del mundo <input class="text" name="wwname" id="wwname" disabled="disabled" value="'.$wwname.'" maxlength="20"> 
 <button type="submit" value="ok" name="s1" id="btn_train" value="ok" class="startTraining" disabled="disabled">
                     <div class="button-container"><div class="button-position"><div class="btl"><div class="btr"><div class="btc"></div></div></div><div class="bml"><div class="bmr"><div class="bmc"></div></div></div><div class="bbl"><div class="bbr"><div class="bbc"></div></div></div></div><div class="button-contents">OK</div></div>

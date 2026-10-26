@@ -160,6 +160,9 @@ if($village->resarray['f39'] != 0 || $constructionLevel !== false) {
 $badgeState = $building->badgeUpgradeState(39, $village->resarray['f39t']);
 $badgeLabel = ($constructionLevel !== false) ? $constructionLevel : $village->resarray['f39'];
 $badgeClass = "l39 levelBadge levelBadge".ucfirst($badgeState).(($constructionLevel !== false) ? " levelBadgeBuilding" : "");
+if ($rallyPointSuffix !== '') {
+    $badgeClass .= ' rallyPointWonderLevel';
+}
 echo "<div class=\"".$badgeClass."\"><div class=\"levelBadgeLabel\">".$badgeLabel."</div></div>";
 }
 $constructionLevel = $building->constructionTargetLevel(40);
