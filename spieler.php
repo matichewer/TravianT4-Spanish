@@ -3,6 +3,8 @@
 include("GameEngine/Village.php");
 $start = $generator->pageLoadTimeStart();
 $profile->procProfile($_POST);
+// Account updates already set their destination. Do not replace it with the profile redirect.
+if(isset($_POST['ft']) && $_POST['ft'] === 'p3') { exit; }
 $profile->procSpecial($_GET);
 if(isset($_GET['newdid'])) {
 	$_SESSION['wid'] = $_GET['newdid'];

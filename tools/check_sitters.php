@@ -14,6 +14,7 @@ require 'GameEngine/Profile.php';
 mysql_query('CREATE TEMPORARY TABLE '.TB_PREFIX.'users (id INT PRIMARY KEY, username VARCHAR(50), password VARCHAR(32), email VARCHAR(100), access INT, sit1 INT DEFAULT 0, sit2 INT DEFAULT 0)');
 mysql_query("INSERT INTO ".TB_PREFIX."users (id,username,password,email,access) VALUES (10,'Owner','hash','mail',2),(11,'First','hash','mail',2),(12,'Second','hash','mail',2),(13,'Banned','hash','mail',".BANNED."),(1,'Support','hash','mail',2),(14,'Other','hash','mail',2)");
 $session = new class {
+    public $gold = 0;
     public $uid = 10, $username = 'Owner', $checker = 'token', $is_sitter = 0, $userinfo;
     function changeChecker() { $this->checker .= 'x'; }
 };
@@ -60,5 +61,28 @@ verify((int)$database->getUserField(10,'sit2',0) === 0, 'Sitter cannot appoint a
 $session->is_sitter = 0;
 submitSitter(array('v2'=>'Second','a'=>'wrong'));
 verify((int)$database->getUserField(10,'sit2',0) === 0, 'Invalid form token rejected');
+// Render the real account tab after the redirect, including a partial success.
+mysql_query('CREATE TEMPORARY TABLE '.TB_PREFIX.'deleting (uid INT, timestamp INT)');
+mysql_query('INSERT INTO '.TB_PREFIX.'deleting VALUES (10,0)');
+mysql_query('UPDATE '.TB_PREFIX.'users SET sit1=0,sit2=0 WHERE id=10');
+$errors = submitSitter(array('v1'=>'First','v2'=>'Missing'));
+verify(isset($errors['sit']) && count($_SESSION['sitter_success']) === 1, 'Partial success retains success and error');
+$form = new Form;
+$session->userinfo = $database->getUserArray(10,1);
+ob_start();
+include 'Templates/Profile/account.tpl';
+$html = ob_get_clean();
+verify(strpos($html, 'Representante 1 agregado correctamente: First.') !== false, 'Success appears in real template');
+verify(strpos($html, 'No existe un jugador con ese nombre.') !== false, 'Error appears alongside success');
+verify(strpos($html, 'id="representantes"') !== false, 'Redirect anchor exists');
+verify(!isset($_SESSION['sitter_success']), 'Success notice is consumed once');
+ob_start();
+include 'Templates/Profile/account.tpl';
+$html = ob_get_clean();
+verify(strpos($html, 'agregado correctamente') === false, 'Refreshing does not repeat stale success');
+$errors = submitSitter(array('v2'=>'Second','a'=>'expired'));
+$form = new Form;
+verify(strpos($form->getError('sit'), 'venció') !== false, 'Expired token has visible feedback');
+
 ob_end_clean();
 echo "OK: sitter assignment, validation, error persistence, ownership, listing and removal\n";

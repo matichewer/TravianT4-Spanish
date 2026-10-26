@@ -1,4 +1,4 @@
-<form action="spieler.php" method="POST">
+<form action="spieler.php?s=3" method="POST">
 <input type="hidden" name="ft" value="p3">
 <input type="hidden" name="a" value="<?php echo htmlspecialchars($session->checker, ENT_QUOTES, 'UTF-8'); ?>">
 <input type="hidden" name="uid" value="<?php echo $session->uid; ?>" />
@@ -49,10 +49,16 @@ if($form->getError("email") != "") {
 echo "<span class=\"error\">".$form->getError('email')."</span>";
 }
 ?>
-<h4 class="round spacer">Representantes</h4>
+<h4 class="round spacer" id="representantes">Representantes</h4>
 <input type="hidden" name="sitter_flag_posted" value="1">
 
-<?php if($form->getError('sit') !== '') { echo '<p class="error">'.htmlspecialchars($form->getError('sit'), ENT_QUOTES, 'UTF-8').'</p>'; } ?>
+<?php
+foreach($_SESSION['sitter_success'] ?? array() as $sitterSuccess) {
+    echo '<p class="success" role="status">'.htmlspecialchars($sitterSuccess, ENT_QUOTES, 'UTF-8').'</p>';
+}
+unset($_SESSION['sitter_success']);
+?>
+<?php if($form->getError('sit') !== '') { echo '<p class="error" role="alert">'.htmlspecialchars($form->getError('sit'), ENT_QUOTES, 'UTF-8').'</p>'; } ?>
 <div class="text">Agrega un representante para que pueda administrar tu cuenta</div>
 
 <script type="text/javascript">

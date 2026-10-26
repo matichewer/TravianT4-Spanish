@@ -68,7 +68,14 @@ class Profile {
 	}
     private function updateAccount($post) {
         global $database,$session,$form;
-        if(!empty($session->is_sitter) || !isset($post['a']) || !hash_equals((string)$session->checker, (string)$post['a'])) { return; }
+        $sitterRequested = trim((string)($post['v1'] ?? '')) !== '' || trim((string)($post['v2'] ?? '')) !== '';
+        header('Location: spieler.php?s=3'.($sitterRequested ? '#representantes' : ''));
+        unset($_SESSION['sitter_success']);
+        if(!empty($session->is_sitter) || !isset($post['a']) || !hash_equals((string)$session->checker, (string)$post['a'])) {
+            $_SESSION['errorarray'] = array('sit' => 'La sesión del formulario venció. Vuelve a intentarlo.');
+            $_SESSION['valuearray'] = array();
+            return;
+        }
         $post['uid'] = (int)$session->uid;
         if(!empty($post['pw1']) || !empty($post['pw2']) || !empty($post['pw3'])) {
             if(!empty($post['pw2']) && $post['pw2'] == $post['pw3']) {
@@ -124,11 +131,11 @@ class Profile {
                 $form->addError('sit', 'No se pudo guardar el representante. Inténtalo nuevamente.');
             } else {
                 $owner['sit'.$slot] = $id;
+                $_SESSION['sitter_success'][] = 'Representante '.$slot.' agregado correctamente: '.$candidate['username'].'.';
             }
         }
         $_SESSION['valuearray'] = array();
         $_SESSION['errorarray'] = $form->getErrors();
-        header("Location: spieler.php?s=3");
     }
 
     private function removeSitter($get) {
