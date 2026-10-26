@@ -12,6 +12,7 @@
 <div id="village_map">
 <?php
 $queuedWallType = $building->walling();
+$rallyPointSuffix = ($village->resarray['f99t'] == 40) ? '_ww' : '';
 $wallType = $queuedWallType ?: (int)$village->resarray['f40t'];
 if($queuedWallType) {
 	$wtitle = $building->procResType($queuedWallType)." Nivel ".$village->resarray['f40'];
@@ -44,6 +45,10 @@ $coords = array(19=>"110,135,132,120,132,121,160,122,179,136,179,151,158,163,128
 "396,396,417,381,417,382,445,383,465,397,464,412,443,424,413,424,394,410",
 "398,212,412,250,369,301,394,323,445,286,453,233,427,183",
 "71,450,2,374,3,374,-10,243,13,142,120,81,214,34,340,18,500,43,615,130,641,239,643,350,601,425,534,494,358,534,282,532,180,526,77,456,117,378,163,413,242,442,331,454,425,443,499,417,576,344,596,304,598,221,571,157,481,90,385,61,313,56,217,72,135,113,77,165,46,217,44,269,65,326,119,379");
+// The Wonder uses a narrower rally point, with its own footprint.
+if ($rallyPointSuffix !== '') {
+    $coords[39] = "421,183,451,199,461,224,448,264,420,296,404,305,382,285,395,257,407,228,407,201";
+}
 for($t=19;$t<=40;$t++) {
 	if(($village->resarray['f99t'] == 40 AND ($t)=='26') or ($village->resarray['f99t'] == 40 AND ($t)=='30') or ($village->resarray['f99t'] == 40 AND ($t)=='31') or ($village->resarray['f99t'] == 40 AND ($t)=='32')) {
 	$title = $building->upgradeTooltip(99,$village->resarray['f99t']);
@@ -99,14 +104,14 @@ for ($i=1;$i<=20;$i++) {
 }
     if($village->resarray['f39'] == 0) {
             if($building->rallying()) {
-            echo "<img src=\"img/x.gif\" class=\"dx1 g16b\" alt=\"Plaza de reuniones ".$village->resarray['f39']."\" />";
+            echo "<img src=\"img/x.gif\" class=\"dx1 g16b".$rallyPointSuffix."\" alt=\"Plaza de reuniones ".$village->resarray['f39']."\" />";
             }
             else {
-            echo "<img src=\"img/x.gif\" class=\"dx1 g16e\" alt=\"Plaza de reuniones \" />";
+            echo "<img src=\"img/x.gif\" class=\"dx1 g16e".$rallyPointSuffix."\" alt=\"Plaza de reuniones \" />";
             }
         }
       else {
-      	echo "<img src=\"img/x.gif\" class=\"dx1 g16\" alt=\"Plaza de reuniones ".$village->resarray['f39']."\" />";
+        echo "<img src=\"img/x.gif\" class=\"dx1 g16".$rallyPointSuffix."\" alt=\"Plaza de reuniones ".$village->resarray['f39']."\" />";
       }
 ?>
 <?php
