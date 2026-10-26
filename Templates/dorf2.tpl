@@ -56,6 +56,12 @@ if ($rallyPointSuffix !== '') {
     }
 }
 for($t=19;$t<=40;$t++) {
+if ($t == 40 && $rallyPointSuffix !== '') {
+    // Cover the monument's silhouette beyond the four replaced building plots,
+    // including the taller stages. Plots and the rally point take priority; the outer wall does not.
+    $title = $building->upgradeTooltip(99, 40);
+    echo '<area href="build.php?id=99" title="'.$title.'" coords="280,40,335,40,370,85,397,135,425,175,451,215,430,265,405,305,365,332,225,332,175,305,155,270,155,215,175,175,210,140,245,90" shape="poly"/>';
+}
 	if(($village->resarray['f99t'] == 40 AND ($t)=='26') or ($village->resarray['f99t'] == 40 AND ($t)=='30') or ($village->resarray['f99t'] == 40 AND ($t)=='31') or ($village->resarray['f99t'] == 40 AND ($t)=='32')) {
 	$title = $building->upgradeTooltip(99,$village->resarray['f99t']);
 	echo "<area href=\"build.php?id=99\" title=\"$title\" coords=\"$coords[$t]\" shape=\"poly\"/>";
@@ -72,6 +78,7 @@ else {
 	echo "<area href=\"build.php?id=$t\" alt= \"$title\" title=\"$title\" coords=\"$coords[$t]\" shape=\"poly\"/>";
 }
 }
+
 ?>
 <?php
  if($village->resarray['f40'] == 0) { 
