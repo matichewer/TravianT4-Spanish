@@ -218,30 +218,33 @@
         		return $dbarray;
         	}
 
-        	function sitterLogin($username, $password) {
-        		$q = "SELECT sit1,sit2 FROM " . TB_PREFIX . "users where username = '$username' and access != " . BANNED;
-        		$result = mysqli_query($this->connection,$q);
-        		$dbarray = mysqli_fetch_array($result);
-        		if($dbarray['sit1'] != 0) {
-        			$q2 = "SELECT password FROM " . TB_PREFIX . "users where id = " . $dbarray['sit1'] . " and access != " . BANNED;
-        			$result2 = mysqli_query($this->connection,$q2);
-        			$pw_sit1 = mysqli_fetch_array($result2);
-        		}
-				if($dbarray['sit2'] != 0) {
-        			$q3 = "SELECT password FROM " . TB_PREFIX . "users where id = " . $dbarray['sit2'] . " and access != " . BANNED;
-        			$result3 = mysqli_query($this->connection,$q3);
-        			$pw_sit2 = mysqli_fetch_array($result3);
-        		}
-        		if($dbarray['sit1'] != 0 || $dbarray['sit2'] != 0) {
-        			if($pw_sit1['password'] == md5($password) || $pw_sit2['password'] == md5($password)) {
-        				return true;
-        			} else {
-        				return false;
-        			}
-        		} else {
-        			return false;
-        		}
-        	}
+            function sitterLogin($username, $password) {
+                $username = mysqli_real_escape_string($this->connection, $username);
+                $pw_sit1 = $pw_sit2 = array('password' => null);
+                $q = "SELECT sit1,sit2 FROM " . TB_PREFIX . "users where username = '$username' and access != " . BANNED;
+                $result = mysqli_query($this->connection,$q);
+                $dbarray = mysqli_fetch_array($result);
+                if(!$dbarray) { return false; }
+                if($dbarray['sit1'] != 0) {
+                    $q2 = "SELECT password FROM " . TB_PREFIX . "users where id = " . $dbarray['sit1'] . " and access != " . BANNED;
+                    $result2 = mysqli_query($this->connection,$q2);
+                    $pw_sit1 = mysqli_fetch_array($result2) ?: array('password' => null);
+                }
+                if($dbarray['sit2'] != 0) {
+                    $q3 = "SELECT password FROM " . TB_PREFIX . "users where id = " . $dbarray['sit2'] . " and access != " . BANNED;
+                    $result3 = mysqli_query($this->connection,$q3);
+                    $pw_sit2 = mysqli_fetch_array($result3) ?: array('password' => null);
+                }
+                if($dbarray['sit1'] != 0 || $dbarray['sit2'] != 0) {
+                    if($pw_sit1['password'] == md5($password) || $pw_sit2['password'] == md5($password)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
 
         	function setDeleting($uid, $mode) {
         		$time = time() + 72 * 3600;

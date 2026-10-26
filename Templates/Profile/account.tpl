@@ -1,5 +1,6 @@
-﻿<form action="spieler.php" method="POST">
+<form action="spieler.php" method="POST">
 <input type="hidden" name="ft" value="p3">
+<input type="hidden" name="a" value="<?php echo htmlspecialchars($session->checker, ENT_QUOTES, 'UTF-8'); ?>">
 <input type="hidden" name="uid" value="<?php echo $session->uid; ?>" />
 	
 <h4 class="round">Cambiar contraseña</h4>
@@ -51,6 +52,7 @@ echo "<span class=\"error\">".$form->getError('email')."</span>";
 <h4 class="round spacer">Representantes</h4>
 <input type="hidden" name="sitter_flag_posted" value="1">
 
+<?php if($form->getError('sit') !== '') { echo '<p class="error">'.htmlspecialchars($form->getError('sit'), ENT_QUOTES, 'UTF-8').'</p>'; } ?>
 <div class="text">Agrega un representante para que pueda administrar tu cuenta</div>
 
 <script type="text/javascript">
@@ -104,42 +106,19 @@ if($session->userinfo['sit2'] != 0) {
 
 <div class="text">Estas son las cuentas que representas</div>
 
-<table class="sitters transparent">
-				<tbody><tr>
-		<th>
-				<div class="boxes boxesColor lightGreen"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Cuenta 1				</span>	</div>
-				</div>
-		</th><td>
+<table class="sitters transparent"><tbody>
 <?php
-if(!$database->getSitee1($session->uid)){
-	echo '<span class="none">No representas ninguna cuenta</span>';
-    }else{
-    $getsit1 = $database->getSitee1($session->uid);
-    echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = 'spieler.php?s=3&e=3&id=".$session->uid."&owner=".$getsit1['id']."&a=".$session->checker."&type=3'; return false;\"><img src=\"img/x.gif\" class=\"del\" alt=\"helyettes\"></button>";
-    echo "&nbsp;".$getsit1['username']."";
-    }
-	
+$represented = $database->getSitee($session->uid);
+if(empty($represented)) { echo '<tr><td>No representas ninguna cuenta</td></tr>'; }
+foreach($represented as $representedAccount) {
+    $ownerId = (int)$representedAccount['id'];
+    $ownerName = htmlspecialchars($database->getUserField($ownerId, 'username', 0), ENT_QUOTES, 'UTF-8');
+    $removeUrl = 'spieler.php?s=3&e=3&id='.(int)$session->uid.'&owner='.$ownerId.'&a='.urlencode($session->checker).'&type=3';
+    echo '<tr><td><a class="delete" href="'.htmlspecialchars($removeUrl, ENT_QUOTES, 'UTF-8').'">Dejar de representar</a> &nbsp;'.$ownerName.'</td></tr>';
+}
 ?>
-</td>
-	</tr>
-				<tr>
-		<th>
-				<div class="boxes boxesColor orange"><div class="boxes-tl"></div><div class="boxes-tr"></div><div class="boxes-tc"></div><div class="boxes-ml"></div><div class="boxes-mr"></div><div class="boxes-mc"></div><div class="boxes-bl"></div><div class="boxes-br"></div><div class="boxes-bc"></div><div class="boxes-contents"><span>Cuenta 2</span>	</div>
-				</div>
-		</th><td>
-<?php
-if(!$database->getSitee2($session->uid)){
-	echo '<span class="none">No representas ninguna cuenta</span>';
-    }else{
-    $getsit2 = $database->getSitee2($session->uid);
-    echo "<button type=\"button\" value=\"del\" class=\"icon\" onclick=\"window.location.href = 'spieler.php?s=3&e=3&id=".$session->uid."&owner=".$getsit2['id']."&a=".$session->checker."&type=3'; return false;\"><img src=\"img/x.gif\" class=\"del\" alt=\"helyettes\"></button>";
-    echo "&nbsp;".$getsit2['username']."";
-    }
-	
-?></td>
-	</tr>
-			</tbody></table>
-            
+</tbody></table>
+
 <h4 class="round spacer">Eliminar cuenta</h4>
 <table cellpadding="1" cellspacing="1" id="del_acc" class="account transparent">
 	<tbody>
