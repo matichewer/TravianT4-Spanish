@@ -48,6 +48,12 @@ $coords = array(19=>"110,135,132,120,132,121,160,122,179,136,179,151,158,163,128
 // The Wonder uses a narrower rally point, with its own footprint.
 if ($rallyPointSuffix !== '') {
     $coords[39] = "421,183,451,199,461,224,448,264,420,296,404,305,382,285,395,257,407,228,407,201";
+    // The displaced level badge extends beyond the plaza's stone footprint.
+    // Put its hit area first so the entire circle opens the rally point.
+    if ($village->resarray['f39'] != 0 || $building->constructionTargetLevel(39) !== false) {
+        $title = $building->upgradeTooltip(39, 16);
+        echo '<area href="build.php?id=39" title="'.$title.'" coords="459,257,16" shape="circle"/>';
+    }
 }
 for($t=19;$t<=40;$t++) {
 	if(($village->resarray['f99t'] == 40 AND ($t)=='26') or ($village->resarray['f99t'] == 40 AND ($t)=='30') or ($village->resarray['f99t'] == 40 AND ($t)=='31') or ($village->resarray['f99t'] == 40 AND ($t)=='32')) {
