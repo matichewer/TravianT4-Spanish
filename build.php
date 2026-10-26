@@ -15,7 +15,7 @@ if(isset($_GET['newdid'])) {
 	header("Location: ".$newdidLocation);
 	exit;
 }
-if(isset($_GET['id']) && is_scalar($_GET['id']) && (string)$_GET['id'] === '99' && $village->natar == 0){
+if(isset($_GET['id']) && is_scalar($_GET['id']) && (string)$_GET['id'] === '99' && !wonderVillage($village->resarray)){
 	header("Location: dorf2.php");
 	exit;
 }
@@ -67,7 +67,9 @@ if(isset($_POST['t']) && is_scalar($_POST['t'])){
 }
 
 if(isset($_GET['id'])) {
-	if(!is_scalar($_GET['id']) || !ctype_digit((string)$_GET['id']) || (int)$_GET['id'] < 1 || (int)$_GET['id'] > 40){
+	// The Wonder lives outside the regular building slots, in field 99.
+	if(!is_scalar($_GET['id']) || !ctype_digit((string)$_GET['id']) || (int)$_GET['id'] < 1
+		|| ((int)$_GET['id'] > 40 && !((int)$_GET['id'] === 99 && wonderVillage($village->resarray)))){
         $_GET['id'] = "1";
     }
 	if($village->resarray['f'.$_GET['id'].'t'] == 17) {
